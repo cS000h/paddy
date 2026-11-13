@@ -1,0 +1,48 @@
+// 测试里搭场景用的小工具。规则测试一律通过端口发命令，不直接改世界的数据。
+import assert from 'node:assert/strict';
+import { createGame } from '../src/port/game.js';
+
+/** 新开一局，写入检查总是开着。 */
+export const newGame = (seed = 1) => createGame({ seed, debug: true });
+
+/** 站在菜地左上角那一格的正上方，面朝下。菜地是 x 6–17、y 19–25。 */
+export const FIELD = Object.freeze({
+  x: 6,
+  y: 19,
+  at: Object.freeze({ x: 6, y: 18, dir: 'down' }),
+});
+
+/** 发一条必须成功的命令，返回它引起的事实类型。 */
+export function must(game, type, input = {}) {
+  const out = game.dispatch(type, input);
+  assert.equal(out.ok, true, `${type} 应该成功，却被拒绝：${out.reason}`);
+  return out.facts.map(f => f.type);
+}
+
+/** 发一条必须被拒绝的命令，返回拒绝的原因。 */
+export function refused(game, type, input = {}) {
+  const before = game.revision();
+  const out = game.dispatch(type, input);
+  assert.equal(out.ok, false, `${type} 应该被拒绝`);
+  assert.equal(game.revision(), before, '被拒绝的命令不该改变世界');
+  return out.reason;
+}
+
+/** 在菜地的一格上锄地、播种、浇水。 */
+export function plant(game, spot = FIELD) {
+  must(game, 'farm.till', spot);
+  must(game, 'farm.sow', spot);
+  must(game, 'farm.water', spot);
+}
+
+/** 种下一棵青菜并养到成熟（每天浇水，睡三觉）。 */
+export function growOne(game, spot = FIELD) {
+  plant(game, spot);
+  for (let day = 0; day < 3; day++) {
+    must(game, 'sleep');
+    if (day < 2) must(game, 'farm.water', spot);
+  }
+}
+
+export const plotAt = (game, x, y) =>
+  game.ask('farm.plots', 'yard').find(p => p.x === x && p.y === y);

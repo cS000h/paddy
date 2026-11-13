@@ -1,0 +1,114 @@
+{
+  "format": "dao.save",
+  "version": 1,
+  "state": {
+    "revision": 25,
+    "world": {
+      "meta": {
+        "version": 1,
+        "seed": 20261113,
+        "nextId": 1
+      },
+      "notes": {
+        "list": []
+      },
+      "clock": {
+        "day": 4,
+        "minute": 450
+      },
+      "people": {
+        "hero": {
+          "energy": 98,
+          "map": "yard",
+          "x": 7,
+          "y": 18,
+          "dir": "down"
+        },
+        "shi": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "gui": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        }
+      },
+      "player": {
+        "controls": "hero"
+      },
+      "households": {
+        "home": {
+          "members": ["hero"],
+          "coins": 16,
+          "items": {
+            "seed.qingcai": 9
+          },
+          "can": 1
+        }
+      },
+      "land": {
+        "yard": {
+          "plots": {
+            "6,19": {
+              "wet": false,
+              "crop": null,
+              "age": 0
+            },
+            "7,19": {
+              "wet": false,
+              "crop": null,
+              "age": 0
+            },
+            "8,19": {
+              "wet": false,
+              "crop": "qingcai",
+              "age": 3
+            }
+          }
+        }
+      },
+      "bonds": {
+        "known": {
+          "shi": 1,
+          "gui": 2
+        },
+        "talked": {
+          "shi": 4
+        },
+        "gifted": {
+          "gui": 4
+        },
+        "owed": [
+          {
+            "from": "gui",
+            "day": 5
+          }
+        ]
+      },
+      "basket": {
+        "goods": {
+          "veg.qingcai": 1
+        },
+        "order": {
+          "seed.qingcai": 4
+        }
+      },
+      "guide": {
+        "done": {
+          "till": 1,
+          "sow": 1,
+          "water": 1,
+          "harvest": 4,
+          "meet": 4,
+          "gift": 4
+        }
+      }
+    }
+  }
+}
