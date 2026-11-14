@@ -71,7 +71,7 @@ export class VillageScene extends Phaser.Scene {
 
     this.cleanups = [
       bindKeyboard(this, intents),
-      bindPointer(this, intents),
+      bindPointer(this, intents, this.deps.platform),
       intents.on('act', () => this.act()),
       intents.on('tap', p => this.tap(p.x, p.y)),
       game.onCommit(facts => this.onFacts(facts)),

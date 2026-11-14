@@ -34,11 +34,19 @@ body {
   touch-action: none;
 }
 
-#app,
+/* #app 的宽高和旋转由平台层设置（手机竖着拿时整个画面转 90 度，保证横屏） */
+#app {
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  transform-origin: top left;
+}
+
 #stage,
 .layer,
 #ui {
-  position: fixed;
+  position: absolute;
   inset: 0;
 }
 
@@ -406,7 +414,7 @@ button {
 .stick {
   position: absolute;
   left: calc(18px + var(--safe-l));
-  bottom: calc(96px + var(--safe-b));
+  bottom: calc(22px + var(--safe-b));
   width: 104px;
   height: 104px;
   border-radius: 50%;
@@ -428,7 +436,7 @@ button {
 .do {
   position: absolute;
   right: calc(20px + var(--safe-r));
-  bottom: calc(104px + var(--safe-b));
+  bottom: calc(30px + var(--safe-b));
   width: 76px;
   height: 76px;
   border-radius: 50%;
@@ -442,35 +450,84 @@ button {
   display: none !important;
 }
 
-@media (max-width: 720px) {
-  /* 窄屏：体力那一条排到日期下面，不和日期挤在一行 */
-  .vitals {
-    top: calc(64px + var(--safe-t));
-    right: auto;
-    left: calc(10px + var(--safe-l));
-    gap: 8px;
-    padding: 6px 8px;
-  }
-  .date b {
-    font-size: 13px;
-  }
-  .bar {
-    width: 56px;
-  }
-  .toolbar button {
-    width: 52px;
-    height: 56px;
-  }
-  .hint {
-    bottom: calc(86px + var(--safe-b));
-  }
-  .journal {
-    background: rgba(246, 241, 227, 0.98);
-    top: auto;
-    right: 10px;
-    left: 10px;
-    bottom: calc(86px + var(--safe-b));
-    width: auto;
-    max-height: 55%;
-  }
+/* 窄窗口（宽不到 720）：只会出现在电脑上把窗口拉窄的时候，手机一律是横屏。
+   这里不用媒体查询：画面可能是转过来的，要以平台层量出来的大小为准。 */
+.narrow .vitals {
+  top: calc(64px + var(--safe-t));
+  right: auto;
+  left: calc(10px + var(--safe-l));
+  gap: 8px;
+  padding: 6px 8px;
+}
+
+.narrow .bar {
+  width: 56px;
+}
+
+.narrow .journal {
+  top: auto;
+  right: 10px;
+  left: 10px;
+  bottom: calc(86px + var(--safe-b));
+  width: auto;
+  max-height: 55%;
+  background: rgba(246, 241, 227, 0.98);
+}
+
+/* 矮屏幕（高不到 520）：横着的手机。面板收紧，手记默认收起。 */
+.compact .date {
+  padding: 5px 10px 5px 6px;
+}
+
+.compact .seal {
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+}
+
+.compact .date b {
+  font-size: 13px;
+}
+
+.compact .vitals {
+  padding: 5px 8px;
+}
+
+.compact .toolbar {
+  bottom: calc(8px + var(--safe-b));
+  padding: 4px;
+}
+
+.compact .toolbar button {
+  width: 50px;
+  height: 52px;
+}
+
+.compact .toolbar img {
+  width: 28px;
+  height: 28px;
+}
+
+.compact .hint {
+  bottom: calc(72px + var(--safe-b));
+}
+
+.compact .journal {
+  top: calc(52px + var(--safe-t));
+  width: 232px;
+  max-height: calc(100% - 132px);
+  background: rgba(246, 241, 227, 0.98);
+}
+
+.compact .stick {
+  width: 96px;
+  height: 96px;
+}
+
+.compact .modal {
+  padding-bottom: calc(10px + var(--safe-b));
+}
+
+.compact .sheet {
+  padding: 12px 16px 10px;
 }

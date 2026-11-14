@@ -33,17 +33,23 @@ export function bindKeyboard(scene, intents) {
   };
 }
 
-/** 指针：点一下世界里的位置 = “去那儿，能做事就做”；滚轮换工具。鼠标和手指走的是同一条路。 */
-export function bindPointer(scene, intents) {
-  const down = pointer => {
-    if (pointer.button > 0) return;
-    intents.emit('tap', { x: pointer.worldX, y: pointer.worldY });
+/**
+ * 指针：点一下世界里的位置 = “去那儿，能做事就做”；滚轮换工具。鼠标和手指走的是同一条路。
+ * 位置不用引擎自己算的：手机竖着拿时画面是转过来的，要先请平台把屏幕坐标换算成画面坐标。
+ */
+export function bindPointer(scene, intents, platform) {
+  const canvas = scene.game.canvas;
+  const down = event => {
+    if (event.button > 0) return;
+    const local = platform.viewport.toLocal(event.clientX, event.clientY);
+    const point = scene.cameras.main.getWorldPoint(local.x, local.y);
+    intents.emit('tap', { x: point.x, y: point.y });
   };
-  const wheel = (pointer, over, dx, dy) => intents.emit('tool.step', { by: dy > 0 ? 1 : -1 });
-  scene.input.on('pointerdown', down);
-  scene.input.on('wheel', wheel);
+  const wheel = event => intents.emit('tool.step', { by: event.deltaY > 0 ? 1 : -1 });
+  canvas.addEventListener('pointerdown', down);
+  canvas.addEventListener('wheel', wheel, { passive: true });
   return () => {
-    scene.input.off('pointerdown', down);
-    scene.input.off('wheel', wheel);
+    canvas.removeEventListener('pointerdown', down);
+    canvas.removeEventListener('wheel', wheel);
   };
 }

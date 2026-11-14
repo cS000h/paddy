@@ -1,5 +1,5 @@
 // 运行环境：浏览器。凡是“换一个环境就要换写法”的东西都收在平台层：
-// 存档放哪、怎么知道窗口被切走了、是键鼠还是触屏、怎么出声。
+// 存档放哪、怎么知道窗口被切走了、画面朝哪个方向、是键鼠还是触屏、怎么出声。
 // 以后要上桌面壳（Electron、Tauri）或别的平台，照着这个文件的形状再写一个，其余代码不动。
 
 const SAVE_KEY = 'dao.save.v1';
@@ -34,17 +34,63 @@ function storage() {
   };
 }
 
+// 画面的方向和大小。手机、平板这类用手指的设备一律横屏：竖着拿的时候，把整个画面转 90 度。
+// 浏览器不允许网页直接锁定屏幕方向（只有全屏或装成应用后才行），所以用旋转来保证横屏；
+// 能锁的环境里也顺手锁一下。画面转了以后，屏幕上的坐标要换算回画面里的坐标，都从这里问。
+function viewport(root) {
+  const coarse = matchMedia('(pointer: coarse)');
+  const listeners = new Set();
+  let state = { width: innerWidth, height: innerHeight, rotated: false };
+  const measure = () => {
+    const rotated = coarse.matches && innerHeight > innerWidth;
+    state = rotated
+      ? { width: innerHeight, height: innerWidth, rotated }
+      : { width: innerWidth, height: innerHeight, rotated };
+    root.style.width = state.width + 'px';
+    root.style.height = state.height + 'px';
+    root.style.transform = rotated ? 'translateX(' + innerWidth + 'px) rotate(90deg)' : '';
+    root.classList.toggle('rotated', rotated);
+    root.classList.toggle('narrow', state.width < 720);
+    root.classList.toggle('compact', state.height < 520);
+    listeners.forEach(fn => fn(state));
+  };
+  addEventListener('resize', measure);
+  coarse.addEventListener('change', measure);
+  measure();
+  return {
+    /** 画面的宽、高（已经是横过来之后的），以及有没有转。 */
+    size: () => state,
+    onChange(fn) {
+      listeners.add(fn);
+      return () => listeners.delete(fn);
+    },
+    /** 屏幕上的一点 → 画面里的一点。 */
+    toLocal: (clientX, clientY) =>
+      state.rotated ? { x: clientY, y: innerWidth - clientX } : { x: clientX, y: clientY },
+    /** 屏幕上的一段位移 → 画面里的位移。 */
+    toLocalDelta: (dx, dy) => (state.rotated ? { x: dy, y: -dx || 0 } : { x: dx, y: dy }),
+    /** 能锁定横屏的环境（全屏、装成应用）里锁一下；不能锁就算了。 */
+    lockLandscape() {
+      try {
+        screen.orientation?.lock?.('landscape')?.catch?.(() => {});
+      } catch {
+        /* 这个浏览器不支持 */
+      }
+    },
+  };
+}
+
 // 设备：现在是用手指还是用键鼠。不看机器“有没有触屏”（触屏笔记本两样都有），
 // 而是看主要的指点方式，再跟着玩家最近一次实际用的是什么来切换。
-function device() {
+function device(view) {
   const coarse = matchMedia('(pointer: coarse)');
   const listeners = new Set();
   let touch = coarse.matches;
   const read = () => ({
     touch,
     keyboard: !touch,
-    narrow: innerWidth < 720,
-    portrait: innerHeight > innerWidth,
+    narrow: view.size().width < 720, // 窄：手记收成抽屉
+    compact: view.size().height < 520, // 矮：横着的手机，面板要省着用
   });
   const notify = () => listeners.forEach(fn => fn(read()));
   const use = next => {
@@ -55,7 +101,7 @@ function device() {
   addEventListener('pointerdown', event => event.pointerType === 'touch' && use(true), true);
   addEventListener('keydown', () => use(false), true);
   coarse.addEventListener('change', () => use(coarse.matches));
-  addEventListener('resize', notify);
+  view.onChange(notify);
   return {
     profile: read,
     onChange(fn) {
@@ -126,11 +172,14 @@ function audio() {
   };
 }
 
-export function createWebPlatform() {
+/** @param {HTMLElement} root 整个游戏画面的最外层元素（横屏时转的就是它） */
+export function createWebPlatform(root) {
+  const view = viewport(root);
   return {
     name: 'web',
     storage: storage(),
-    device: device(),
+    viewport: view,
+    device: device(view),
     audio: audio(),
     /** 窗口被切走或要关掉时调用 fn（用来存档、松开按键）。 */
     onHide(fn) {

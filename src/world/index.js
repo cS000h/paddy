@@ -13,6 +13,7 @@ import { VillageScene } from './scene.js';
  */
 export function createWorld(deps) {
   const { parent, ...sceneDeps } = deps;
+  const view = deps.platform.viewport;
   const phaser = new Phaser.Game({
     type: Phaser.AUTO,
     parent,
@@ -23,14 +24,21 @@ export function createWorld(deps) {
     disableContextMenu: true,
     audio: { noAudio: true },
     input: { activePointers: 2 },
-    scale: { mode: Phaser.Scale.RESIZE, width: '100%', height: '100%' },
+    // 画布多大由平台说了算（手机竖着拿时画面是转过来的，不能让引擎自己去量）
+    width: view.size().width,
+    height: view.size().height,
+    scale: { mode: Phaser.Scale.NONE },
   });
   phaser.scene.add('village', VillageScene, true, sceneDeps);
   const scene = () => phaser.scene.getScene('village');
+  const offResize = view.onChange(size => phaser.scale.resize(size.width, size.height));
   return {
     /** 操控的人此刻站在哪一格、面朝哪边；场景还没起来时是 null。 */
     heroAt: () => (scene()?.player ? scene().at() : null),
     scene,
-    destroy: () => phaser.destroy(true),
+    destroy() {
+      offResize();
+      phaser.destroy(true);
+    },
   };
 }

@@ -11,7 +11,7 @@ import { CALENDAR } from '../content/calendar.js';
 import { TOOLS } from '../content/items.js';
 import { MAPS } from '../content/maps/index.js';
 
-const platform = createWebPlatform();
+const platform = createWebPlatform(document.getElementById('app'));
 const debug = platform.debug();
 const onError = error => console.error(error);
 

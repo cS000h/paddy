@@ -42,7 +42,8 @@ export function createPanels({ root, game, intents, shell, platform, actions }) 
   );
   const sky = document.getElementById('sky');
   const veil = document.getElementById('veil');
-  let journalOpen = !platform.device.profile().narrow;
+  const small = profile => profile.narrow || profile.compact;
+  let journalOpen = !small(platform.device.profile());
   let toastTimer = 0;
 
   function renderHud() {
@@ -162,8 +163,13 @@ export function createPanels({ root, game, intents, shell, platform, actions }) 
   const stickMove = event => {
     const box = el.stick.getBoundingClientRect();
     const radius = box.width / 2;
-    let x = (event.clientX - box.left - radius) / radius;
-    let y = (event.clientY - box.top - radius) / radius;
+    // 手指离圆心的位移；画面转过来的时候，方向也要跟着转
+    const offset = platform.viewport.toLocalDelta(
+      event.clientX - box.left - radius,
+      event.clientY - box.top - radius,
+    );
+    let x = offset.x / radius;
+    let y = offset.y / radius;
     const length = Math.hypot(x, y);
     if (length > 1) {
       x /= length;
@@ -177,6 +183,7 @@ export function createPanels({ root, game, intents, shell, platform, actions }) 
     intents.setMove('stick', 0, 0);
   };
   el.stick.addEventListener('pointerdown', event => {
+    platform.viewport.lockLandscape();
     el.stick.setPointerCapture(event.pointerId);
     stickMove(event);
   });
@@ -190,7 +197,7 @@ export function createPanels({ root, game, intents, shell, platform, actions }) 
     game.onCommit(renderHud),
     shell.subscribe(state => (renderShell(state), renderToast(state))),
     platform.device.onChange(profile => {
-      if (profile.narrow && journalOpen) {
+      if (small(profile) && journalOpen) {
         journalOpen = false;
         renderHud();
       }
