@@ -6,7 +6,33 @@ import { SAVE_VERSION } from '../sim/index.js';
 export const SAVE_FORMAT = 'dao.save';
 
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
-const MIGRATIONS = {};
+// 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
+const MIGRATIONS = {
+  // 2：身体与行囊（M1）。每个自家人多了饥、渴、心情和一只行囊；原来家里的菜种和菜算作带在身上，
+  // 这样升级之后照旧能下地播种、拿菜送人；另外补上 0.12 开局时家里的那点存粮。
+  1(state) {
+    const w = state.world;
+    w.meta.version = 2;
+    w.ledger = { seq: 0, list: [] };
+    w.vitals = {};
+    w.packs = {};
+    for (const home of Object.values(w.households))
+      for (const id of home.members) {
+        w.vitals[id] = { hunger: 60, thirst: 80, mood: 62, stuffed: 0, sweat: 0, buff: null };
+        w.packs[id] = { cap: 6, big: false, items: {}, flask: 0 };
+      }
+    const home = w.households.home;
+    w.packs[w.player.controls].items = home.items;
+    home.items = { rice: 3, egg: 2, potato: 2, herb: 1, bean: 1, wood: 4, salt: 4, cake: 2 };
+    w.notes.list.push({
+      id: w.meta.nextId++,
+      day: w.clock.day,
+      title: '桂嫂来过',
+      text: '“光种菜可不行，人是铁饭是钢。”檐下多了一只旧橱柜，里头有米、鸡蛋、土豆、豆子和两块米糕，墙根码着几根柴。饿了渴了，别硬撑。',
+    });
+    return state;
+  },
+};
 
 /** 把一份存档变成当前版本的 {revision, world}。认不出来就抛错，不会悄悄开新档。 */
 export function loadSave(saved) {

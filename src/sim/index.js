@@ -12,13 +12,29 @@ import { core, SAVE_VERSION } from './plugins/core.js';
 import { clock } from './plugins/clock.js';
 import { people } from './plugins/people.js';
 import { household } from './plugins/household.js';
+import { body } from './plugins/body.js';
+import { pack } from './plugins/pack.js';
+import { water } from './plugins/water.js';
 import { land } from './plugins/land.js';
 import { social } from './plugins/social.js';
 import { basket } from './plugins/basket.js';
 import { guide } from './plugins/guide.js';
 
 export { SAVE_VERSION };
-export const PLUGINS = Object.freeze([core, clock, people, household, land, social, basket, guide]);
+// 顺序有讲究：后面的插件建自己的数据时，可以读前面的（比如身体和行囊按“户里有谁”来建）。
+export const PLUGINS = Object.freeze([
+  core,
+  clock,
+  people,
+  household,
+  body,
+  pack,
+  water,
+  land,
+  social,
+  basket,
+  guide,
+]);
 
 /**
  * @param {object} [options]

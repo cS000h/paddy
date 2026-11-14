@@ -7,6 +7,8 @@ export const GOALS = Object.freeze([
   { id: 'sow', on: 'plot.sown', text: '种下第一粒菜种', hint: '换成菜种，对着锄过的地' },
   { id: 'water', on: 'plot.watered', text: '给它浇上水', hint: '水壶空了就去水缸、水井或溪边' },
   { id: 'meet', on: 'person.talked', text: '和乡邻打个招呼', hint: '走到石伯或桂嫂身边按 E' },
+  { id: 'drink', on: 'water.drunk', text: '渴了喝口水', hint: '水井、水缸、溪边都能喝' },
+  { id: 'eat', on: 'meal.eaten', text: '饿了吃点东西', hint: '打开行囊，米糕拿起来就能吃' },
   {
     id: 'harvest',
     on: 'crop.harvested',

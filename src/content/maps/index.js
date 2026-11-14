@@ -51,7 +51,20 @@ export function waterSource(map, x, y) {
   return groundAt(map, x, y).water === true || index(map).acts.get(key(x, y))?.act === 'water';
 }
 
-/** 这一格上可以互动的物件（门、水缸、收菜筐、路牌），没有就是 null。 */
+/** 这一格的水能不能喝、是哪种水：'well' | 'vat' | 'creek'；不能喝是 null。水田的水不能喝。 */
+export function drinkSource(map, x, y) {
+  const thing = index(map).acts.get(key(x, y));
+  return (thing && OBJECTS[thing.kind].drink) || groundAt(map, x, y).drink || null;
+}
+
+/** 这一格在不在自家院子里（在院里才够得着家里存的东西）。 */
+export function isHome(map, x, y) {
+  if (!map.home) return false;
+  const [x0, y0, x1, y1] = map.home;
+  return x >= x0 && x <= x1 && y >= y0 && y <= y1;
+}
+
+/** 这一格上可以互动的物件（门、水缸、橱柜、收菜筐、路牌），没有就是 null。 */
 export function actAt(map, x, y) {
   return index(map).acts.get(key(x, y)) || null;
 }

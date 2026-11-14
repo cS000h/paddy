@@ -1,19 +1,19 @@
 // 地面和物件的种类表：规则用它判断“能不能走、能不能锄”，画面用它决定画什么。
 
-// 地面字符。walk = 能走；farm = 能锄地；water = 能在旁边打水。
+// 地面字符。walk = 能走；farm = 能锄地；water = 能在旁边打水；drink = 能喝（喝的是哪种水）。
 export const GROUND = Object.freeze({
   '.': { id: 'grass', walk: true },
   p: { id: 'earth', walk: true },
   s: { id: 'stone', walk: true },
   f: { id: 'field', walk: true, farm: true },
   b: { id: 'bridge', walk: true },
-  w: { id: 'water', walk: false, water: true },
+  w: { id: 'water', walk: false, water: true, drink: 'creek' },
   r: { id: 'paddy', walk: false, water: true },
   '#': { id: 'thicket', walk: false },
 });
 
 // 物件种类。foot = 相对锚点格 [dx0, dy0, dx1, dy1] 的占地（挡路）范围；没有 foot 的不挡路。
-// act = 走到旁边按互动键时发生什么（由外壳解释）。
+// act = 走到旁边按互动键时发生什么（由外壳解释）；drink = 能喝的水（见 content/body.js 的 DRINKS）。
 export const OBJECTS = Object.freeze({
   'house.hero': { foot: [-3, -4, 3, 0], act: 'door.hero' },
   'house.gui': { foot: [-3, -4, 3, 0], act: 'door.gui' },
@@ -21,8 +21,9 @@ export const OBJECTS = Object.freeze({
   'fence.v': { foot: [0, 0, 0, 0] },
   'gate.post': { foot: [0, 0, 0, 0] },
   'gate.arch': {},
-  vat: { foot: [0, 0, 0, 0], act: 'water' },
-  well: { foot: [0, 0, 0, 0], act: 'water' },
+  vat: { foot: [0, 0, 0, 0], act: 'water', drink: 'vat' },
+  well: { foot: [0, 0, 0, 0], act: 'water', drink: 'well' },
+  cupboard: { foot: [0, 0, 0, 0], act: 'store' },
   basket: { foot: [0, 0, 0, 0], act: 'basket' },
   table: { foot: [0, 0, 1, 0] },
   haystack: { foot: [0, 0, 1, 0] },

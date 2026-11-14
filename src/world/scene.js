@@ -23,7 +23,8 @@ import { PEOPLE, ON_MAP } from '../content/people.js';
 const ACT_HINT = {
   'door.hero': '回屋歇息',
   'door.gui': '敲敲门',
-  water: '打水',
+  water: '喝水、打水',
+  store: '收拾橱柜',
   basket: '看看收菜筐',
   sign: '看路牌',
 };
@@ -128,8 +129,7 @@ export class VillageScene extends Phaser.Scene {
     if (person) return { kind: 'person', person, ...t };
     const thing = actAt(this.map, t.x, t.y);
     if (thing) return { kind: 'thing', thing, ...t };
-    if (this.deps.shell.get().tool === 'can' && waterSource(this.map, t.x, t.y))
-      return { kind: 'water', ...t };
+    if (waterSource(this.map, t.x, t.y)) return { kind: 'water', ...t };
     return { kind: 'plot', ...t };
   }
 
@@ -164,7 +164,7 @@ export class VillageScene extends Phaser.Scene {
     const t = this.target();
     if (t.kind === 'person') return this.talk(t.person);
     if (t.kind === 'thing') return this.touch(t.thing);
-    if (t.kind === 'water') return this.swing('can', t, () => this.send('farm.refill', t));
+    if (t.kind === 'water') return shell.set({ modal: { kind: 'water', x: t.x, y: t.y } });
     if (!farmable(this.map, t.x, t.y)) return undefined;
     const tool = shell.get().tool;
     const reason = game.ask('farm.why', tool, t.x, t.y, this.at());
@@ -235,7 +235,8 @@ export class VillageScene extends Phaser.Scene {
     const { shell, platform } = this.deps;
     this.player.face(dirTo(this.player.tile, thing));
     if (thing.act === 'water')
-      return this.swing('can', thing, () => this.send('farm.refill', thing));
+      return shell.set({ modal: { kind: 'water', x: thing.x, y: thing.y } });
+    if (thing.act === 'store') return shell.set({ modal: { kind: 'store' } });
     platform.audio.play('talk');
     if (thing.act === 'door.hero') return shell.set({ modal: { kind: 'sleep' } });
     if (thing.act === 'basket') return shell.set({ modal: { kind: 'basket' } });

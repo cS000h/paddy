@@ -1,7 +1,7 @@
 // 素材总表：名字 → 小图。画面只按名字取图，所以以后把某张程序画的图换成手绘的图，
 // 只要在这里换掉它的来源，别处不用动。
 import { Grid } from './pixel.js';
-import { SHADOW } from './palette.js';
+import { P, SHADOW } from './palette.js';
 import { house } from './house.js';
 import {
   broadTree,
@@ -15,6 +15,9 @@ import {
 import * as props from './props.js';
 import { soilTile, cropFrames, cursor, icon } from './tiles.js';
 import { personSheet, LOOK_NAMES, FRAME_W, FRAME_H, POSES, DIRS } from './people.js';
+import { plants } from './items-plants.js';
+import { pantry } from './items-pantry.js';
+import { things } from './items-things.js';
 
 export { paintGround, TILE } from './ground.js';
 export { FRAME_W, FRAME_H, POSES, DIRS, LOOK_NAMES };
@@ -29,6 +32,7 @@ const OBJECT_MAKERS = {
   'gate.post': () => props.gatePost(),
   'gate.arch': () => props.gateArch(),
   vat: () => props.vat(),
+  cupboard: () => props.cupboard(),
   well: () => props.well(),
   basket: () => props.basket(),
   table: () => props.table(),
@@ -73,6 +77,18 @@ export function soilSet() {
 }
 
 export { cropFrames, cursor, icon, personSheet };
+
+// 物品的图标：键和 content/pantry.js 里的物品一一对应（测试会检查）。
+const ITEM_MAKERS = { ...plants, ...pantry, ...things };
+
+export const ITEM_ICONS = Object.keys(ITEM_MAKERS);
+
+/** 某样物品的图标：16×16，描好了边。 */
+export function itemIcon(id) {
+  const make = ITEM_MAKERS[id];
+  if (!make) throw new Error('没有这样物品的图标：' + id);
+  return new Grid(16, 16).blit(make(), 0, 0).outline(P.ink1);
+}
 
 /** 人脚下的一小片影子。 */
 export function personShadow() {

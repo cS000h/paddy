@@ -47,6 +47,29 @@ function run(type, input) {
 
 // 面板上的按钮能做的事。按钮写 data-do="名字"，带的 data-* 会传进来。
 const actions = {
+  bag() {
+    shell.set({ modal: { kind: 'bag' } });
+  },
+  eat({ item }) {
+    run('eat', { item, at: here() });
+  },
+  sip() {
+    run('sip', { at: here() });
+  },
+  packPut({ item, n }) {
+    run('pack.put', { item, n: n === 'all' ? n : Number(n), at: here() });
+  },
+  packTake({ item, n }) {
+    run('pack.take', { item, n, at: here() });
+  },
+  drink() {
+    const m = shell.get().modal;
+    run('drink', { x: m.x, y: m.y, at: here() });
+  },
+  refill() {
+    const m = shell.get().modal;
+    run('farm.refill', { x: m.x, y: m.y, at: here() });
+  },
   async sleep() {
     shell.set({ modal: null, veil: 1 });
     await wait(650);
@@ -59,9 +82,9 @@ const actions = {
     if (notes.length) shell.set({ modal: { kind: 'notes', day, notes } });
     else shell.toast(`第 ${day} 日的清早。`);
   },
-  gift({ to }) {
+  gift({ to, item }) {
     const modal = shell.get().modal;
-    const out = run('gift', { to, item: 'veg.qingcai', at: here() });
+    const out = run('gift', { to, item, at: here() });
     if (!out.ok) return;
     const line = out.facts.find(f => f.type === 'gift.given').data.line;
     shell.set({ modal: { ...modal, line, gifted: true } });
@@ -92,7 +115,15 @@ const actions = {
   },
 };
 
-createPanels({ root: document.getElementById('ui'), game, intents, shell, platform, actions });
+createPanels({
+  root: document.getElementById('ui'),
+  game,
+  intents,
+  shell,
+  platform,
+  actions,
+  here,
+});
 
 intents.on('tool', data => {
   const id = data.id || TOOLS[data.index]?.id;

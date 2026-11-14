@@ -9,26 +9,37 @@ const COMMANDS = [
   'basket.order',
   'basket.put',
   'clock.advance',
+  'drink',
+  'eat',
   'farm.harvest',
   'farm.refill',
   'farm.sow',
   'farm.till',
   'farm.water',
   'gift',
+  'pack.put',
+  'pack.take',
   'person.place',
+  'sip',
   'sleep',
   'talk',
 ];
 const QUERIES = [
+  'action.cost',
   'basket',
+  'body',
   'bonds',
   'clock',
+  'drink.why',
   'farm.plots',
   'farm.why',
+  'goods',
   'guide',
   'hero',
   'home',
+  'ledger',
   'notes',
+  'pack',
 ];
 
 test('端口对外只有这几样', () => {
@@ -54,7 +65,12 @@ test('命令清单和查询清单', () => {
 
 test('每个查询开局就能回答，答案是纯数据', () => {
   const g = newGame();
-  const args = { 'farm.plots': ['yard'], 'farm.why': ['hoe', 6, 19, FIELD.at] };
+  const args = {
+    'action.cost': ['hoe'],
+    'drink.why': [18, 18, { x: 17, y: 18, dir: 'right' }],
+    'farm.plots': ['yard'],
+    'farm.why': ['hoe', 6, 19, FIELD.at],
+  };
   for (const name of QUERIES) {
     const answer = g.ask(name, ...(args[name] || []));
     assert.deepEqual(
@@ -100,7 +116,7 @@ test('每条成功的命令通知一次；被拒绝的不通知；可以只听�
   g.on('plot.tilled', f => tilled.push(f.data));
   must(g, 'farm.till', FIELD);
   g.dispatch('farm.till', FIELD);
-  assert.deepEqual(commits, [['energy.spent', 'plot.tilled', 'guide.done']]);
+  assert.deepEqual(commits, [['action.performed', 'plot.tilled', 'guide.done']]);
   assert.deepEqual(tilled, [{ map: 'yard', x: 6, y: 19 }]);
   off();
   must(g, 'farm.sow', FIELD);

@@ -1,17 +1,16 @@
 // L2 规则：种田。一律通过端口发命令。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, refused, plant, growOne, plotAt, FIELD } from '../helpers.js';
+import { newGame, must, refused, plant, growOne, plotAt, carried, FIELD } from '../helpers.js';
 
 test('锄地、播种、浇水，各扣各的体力和物料', () => {
   const g = newGame();
-  assert.deepEqual(must(g, 'farm.till', FIELD), ['energy.spent', 'plot.tilled', 'guide.done']);
+  assert.deepEqual(must(g, 'farm.till', FIELD), ['action.performed', 'plot.tilled', 'guide.done']);
   must(g, 'farm.sow', FIELD);
   must(g, 'farm.water', FIELD);
   assert.equal(g.ask('hero').energy, 100 - 4 - 1 - 2);
-  const home = g.ask('home');
-  assert.equal(home.items.find(i => i.id === 'seed.qingcai').n, 11);
-  assert.equal(home.can, 9);
+  assert.equal(carried(g, 'seed.qingcai'), 11, '菜种是从身上拿的');
+  assert.equal(g.ask('home').can, 9);
   assert.deepEqual(plotAt(g, FIELD.x, FIELD.y), {
     x: 6,
     y: 19,
@@ -60,11 +59,11 @@ test('浇过水的作物每天长一截，三个早晨后成熟；没浇水就�
   assert.equal(plotAt(g, 6, 19).ripe, true);
 });
 
-test('采收：菜进了家当，这一格还是锄过的地', () => {
+test('采收：菜进了行囊，这一格还是锄过的地', () => {
   const g = newGame();
   growOne(g);
   assert.ok(must(g, 'farm.harvest', FIELD).includes('crop.harvested'));
-  assert.equal(g.ask('home').items.find(i => i.id === 'veg.qingcai').n, 1);
+  assert.equal(carried(g, 'veg.qingcai'), 1);
   assert.deepEqual(plotAt(g, 6, 19), {
     x: 6,
     y: 19,

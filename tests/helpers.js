@@ -46,3 +46,25 @@ export function growOne(game, spot = FIELD) {
 
 export const plotAt = (game, x, y) =>
   game.ask('farm.plots', 'yard').find(p => p.x === x && p.y === y);
+
+/** 身上带着几份某样东西。 */
+export const carried = (game, item) => game.ask('pack').items.find(i => i.id === item)?.n || 0;
+
+/** 家里存着几份某样东西。 */
+export const stored = (game, item) => game.ask('home').items.find(i => i.id === item)?.n || 0;
+
+/** 站在自家院子里（橱柜、灶台都在这儿）。 */
+export const HOME = Object.freeze({ x: 8, y: 11, dir: 'down' });
+
+/** 站在水井左边，面朝水井。水井在 (18, 18)。 */
+export const WELL = Object.freeze({
+  x: 18,
+  y: 18,
+  at: Object.freeze({ x: 17, y: 18, dir: 'right' }),
+});
+
+/** 让时间过去 minutes 分钟（一次最多走两个钟头）。 */
+export function wait(game, minutes) {
+  for (let left = minutes; left > 0; left -= 120)
+    must(game, 'clock.advance', { minutes: Math.min(120, left) });
+}

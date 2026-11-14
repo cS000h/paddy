@@ -113,4 +113,13 @@ crops.forEach((c, i) => over(sheet, c, 110 + i * 20, 134));
   over(sheet, soil[`wet.${m}`], 200 + i * 18, 152);
 });
 writeFileSync(path.join(out, 'sprites.png'), gridToPng(enlarge(sheet, 4)));
+
+// 物品图标的总览：按登记的顺序一行 12 个，垫着宣纸的颜色
+const perRow = 12;
+const icons = new Grid(perRow * 20 + 4, Math.ceil(art.ITEM_ICONS.length / perRow) * 20 + 4);
+for (let i = 0; i < icons.data.length; i++) icons.data[i] = 0xffe3f1f6 >>> 0;
+art.ITEM_ICONS.forEach((id, i) =>
+  over(icons, art.itemIcon(id), 4 + (i % perRow) * 20, 4 + Math.floor(i / perRow) * 20),
+);
+writeFileSync(path.join(out, 'items.png'), gridToPng(enlarge(icons, 5)));
 console.log('写好了：', out);

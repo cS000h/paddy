@@ -6,22 +6,23 @@
 //   farm.refill  {x, y, at} → can.refilled      （挨着水缸、水井、水沟或溪水）
 //   day.started  → 浇过水的作物长一天，然后土干掉
 // 每条命令里的 at 是操控的人此刻站的格子；目标格必须挨着他。
+// 菜种从身上拿（人在院里时家里存的也算），收下来的菜先进行囊。
 // “为什么不行”只写在 why() 一处：命令用它拒绝，画面用同一个它来提示，两边不会说法不一。
 import { is } from '../../kernel/schema.js';
-import { CROPS, ITEMS, TOOLS, CAN_CAPACITY, cropStage, isRipe } from '../../content/items.js';
-import { MAPS, farmable, waterSource } from '../../content/maps/index.js';
+import { CROPS, ITEMS, CAN_CAPACITY, cropStage, isRipe } from '../../content/items.js';
+import { MAPS, farmable, waterSource, isHome } from '../../content/maps/index.js';
 import { near } from './people.js';
 
 const key = (x, y) => `${x},${y}`;
-const energyOf = Object.fromEntries(TOOLS.map(t => [t.id, t.energy]));
+const SEED = 'seed.qingcai'; // 现在只有青菜一种；M5 把别的作物搬进来时改成“手里选的那一种”
 
 export const land = {
   id: 'sim.land',
   provides: ['land'],
-  requires: ['schema', 'commands', 'reactions', 'queries', 'people', 'store'],
+  requires: ['schema', 'commands', 'reactions', 'queries', 'people', 'store', 'pack'],
   writes: ['land'],
   install(ctx) {
-    const { schema, commands, reactions, queries, people, store } = ctx.services;
+    const { schema, commands, reactions, queries, people, store, pack } = ctx.services;
 
     schema.slice('land', {
       initial: () => Object.fromEntries(Object.keys(MAPS).map(id => [id, { plots: {} }])),
@@ -46,8 +47,10 @@ export const land = {
     // 在 (x, y) 做 action 为什么不行；能做就返回 null。只读。
     function why(w, action, x, y, at = null) {
       const p = people.me(w);
+      const id = people.who(w);
       const map = MAPS[p.map];
       const here = at || p;
+      const home = isHome(map, here.x, here.y);
       if (!is.int(x, 0, 999) || !is.int(y, 0, 999) || !near(here, { x, y }))
         return '够不着，走近一点';
       const plot = plotAt(w, p.map, x, y);
@@ -62,7 +65,9 @@ export const land = {
       if (!plot) return farmable(map, x, y) ? '先用锄头把地锄松' : '这儿不是菜地';
       if (action === 'seed') {
         if (plot.crop) return '这一格已经种上了';
-        return store.count(w, 'seed.qingcai') > 0 ? null : '种子用完了，托阿满捎一些来';
+        if (pack.count(w, id, SEED) > 0) return null;
+        if (store.count(w, SEED) < 1) return '种子用完了，托阿满捎一些来';
+        return home ? null : '菜种在家里的橱柜里，先回去拿上';
       }
       if (action === 'can') {
         if (plot.wet) return '今天浇过了，土还润着';
@@ -70,7 +75,8 @@ export const land = {
       }
       if (action === 'hand') {
         if (!plot.crop) return '这一格还没种东西';
-        return isRipe(plot.crop, plot.age) ? null : `${CROPS[plot.crop].name}还没长成`;
+        if (!isRipe(plot.crop, plot.age)) return `${CROPS[plot.crop].name}还没长成`;
+        return home || pack.fits(w, id, CROPS[plot.crop].produce) ? null : '行囊满了，先回家放一放';
       }
       return '不知道要做什么';
     }
@@ -83,8 +89,8 @@ export const land = {
         const p = people.place(w, input.at);
         const reason = why(w, action, input.x, input.y);
         if (reason) return { ok: false, reason };
-        people.spend(w, draft, action, energyOf[action] || 0, fact);
-        run(w, p.map, input.x, input.y, fact, input);
+        people.spend(w, draft, action, fact);
+        run(w, p.map, input.x, input.y, fact, people.who(w));
       };
 
     commands.register(
@@ -97,11 +103,10 @@ export const land = {
 
     commands.register(
       'farm.sow',
-      farm('seed', (w, map, x, y, fact) => {
-        const seed = 'seed.qingcai';
-        store.take(w, seed, 1);
+      farm('seed', (w, map, x, y, fact, id) => {
+        pack.use(w, id, SEED, 1, '播种');
         const plot = plotAt(w, map, x, y);
-        plot.crop = ITEMS[seed].crop;
+        plot.crop = ITEMS[SEED].crop;
         plot.age = 0;
         fact('plot.sown', { map, x, y, crop: plot.crop });
       }),
@@ -118,10 +123,10 @@ export const land = {
 
     commands.register(
       'farm.harvest',
-      farm('hand', (w, map, x, y, fact) => {
+      farm('hand', (w, map, x, y, fact, id) => {
         const plot = plotAt(w, map, x, y);
         const def = CROPS[plot.crop];
-        store.add(w, def.produce, def.yield);
+        pack.receive(w, id, def.produce, def.yield, '地里收的');
         fact('crop.harvested', { map, x, y, crop: def.id, item: def.produce, n: def.yield });
         plot.crop = null;
         plot.age = 0;

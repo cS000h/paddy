@@ -1,19 +1,24 @@
 // 乡邻。现在只有最小的一圈：打招呼、送一把菜、第二天收到回礼。
 //   talk {to, at}        → person.talked {to, first, line}      每人每天头一回说话，熟悉 +1
-//   gift {to, item, at}  → gift.given {to, item, line}          每人每天收一回，熟悉 +2
+//   gift {to, item, at}  → gift.given {to, item, liked, line}   每人每天收一回，熟悉 +2；
+//                                                                送到心坎上（合他口味的东西）+3
 //   day.started          → gift.returned {from, item, n}        昨天收了菜的人留下回礼和便条
 // 说哪句话由规则决定并写进事实里，画面只管显示。
 import { is, check } from '../../kernel/schema.js';
-import { PEOPLE, ON_MAP, LINES, RETURN_GIFT } from '../../content/people.js';
-import { ITEMS } from '../../content/items.js';
+import { refuse } from '../../kernel/dispatch.js';
+import { PEOPLE, ON_MAP, LINES, RETURN_GIFT, FESTIVE } from '../../content/people.js';
+import { ITEMS, CROPS } from '../../content/items.js';
+import { giftable } from '../../content/pantry.js';
+
+const homeGrown = item => Object.values(CROPS).some(crop => crop.produce === item);
 
 export const social = {
   id: 'sim.social',
   provides: ['social'],
-  requires: ['schema', 'commands', 'reactions', 'queries', 'core', 'people', 'store'],
+  requires: ['schema', 'commands', 'reactions', 'queries', 'core', 'people', 'pack'],
   writes: ['bonds'],
   install(ctx) {
-    const { schema, commands, reactions, queries, core, people, store } = ctx.services;
+    const { schema, commands, reactions, queries, core, people, pack } = ctx.services;
 
     schema.slice('bonds', {
       initial: () => ({
@@ -35,7 +40,7 @@ export const social = {
     });
 
     const target = (w, input) => {
-      if (!ON_MAP.includes(input.to)) throw new Error('这个人不在附近');
+      if (!ON_MAP.includes(input.to)) refuse('这个人不在附近');
       people.place(w, input.at);
       return w.bonds;
     };
@@ -56,14 +61,25 @@ export const social = {
     commands.register('gift', ({ draft, input, fact }) => {
       const w = draft.world;
       const b = target(w, input);
-      if (ITEMS[input.item]?.kind !== 'produce') return { ok: false, reason: '这个不好拿去送人' };
+      const person = PEOPLE[input.to];
+      if (!giftable(input.item)) return { ok: false, reason: '这个不好拿去送人' };
       if (b.gifted[input.to] === w.clock.day)
-        return { ok: false, reason: `${PEOPLE[input.to].name}今天已经收过了，改天再送` };
-      store.take(w, input.item, 1);
+        return { ok: false, reason: `${person.name}今天已经收过了，改天再送` };
+      pack.use(w, people.who(w), input.item, 1, `送给${person.name}`);
+      // 合口味的东西和过节的吃食，对方格外高兴；自家地里长的，有它自己的一句话
+      const liked = person.treats.includes(input.item) || FESTIVE.includes(input.item);
+      const lines = LINES[input.to];
+      const line = liked ? lines.treat : homeGrown(input.item) ? lines.gift : lines.thanks;
       b.gifted[input.to] = w.clock.day;
-      b.known[input.to] += 2;
+      b.known[input.to] += liked ? 3 : 2;
       b.owed.push({ from: input.to, day: w.clock.day + 1 });
-      fact('gift.given', { to: input.to, item: input.item, line: LINES[input.to].gift });
+      fact('gift.given', {
+        to: input.to,
+        item: input.item,
+        liked,
+        line: line.replace('{n}', ITEMS[input.item].name),
+      });
+      return undefined;
     });
 
     reactions.on(
@@ -72,7 +88,7 @@ export const social = {
         const w = s.world;
         for (const o of w.bonds.owed.filter(x => x.day <= w.clock.day)) {
           const g = RETURN_GIFT[o.from];
-          store.add(w, g.item, g.n);
+          pack.receive(w, people.who(w), g.item, g.n, `${PEOPLE[o.from].name}的回礼`);
           core.post(w, { title: `${PEOPLE[o.from].name}的回礼`, text: g.text });
           emit('gift.returned', { from: o.from, item: g.item, n: g.n });
         }

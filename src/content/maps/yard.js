@@ -49,6 +49,7 @@ const objects = [
   ...fenceTop,
   ['gate.arch', 7, 14],
   ['vat', 12, 10],
+  ['cupboard', 6, 10],
   ['tree.peach', 4, 10],
   ['table', 5, 12],
   ['haystack', 12, 12],
@@ -135,6 +136,8 @@ export const yard = Object.freeze({
     'gui.lane': [29, 14, 'down'],
     'gui.home': [30, 10, 'up'],
   }),
+  // 自家的院子（篱笆以内）：[x0, y0, x1, y1]。站在这里面，才够得着家里存的东西
+  home: Object.freeze([4, 10, 13, 13]),
   // 走到这些位置就算“回家了”，人从画面上消失
   offstage: Object.freeze(['shi.home', 'gui.home']),
 });

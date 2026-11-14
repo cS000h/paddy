@@ -1,0 +1,128 @@
+/* 行囊、流水和矮屏的纸面共用布局。 */
+.meter,
+.coins {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.meter .bar {
+  display: block;
+  width: 48px;
+}
+.meter.energy .bar {
+  width: 64px;
+}
+.meter em {
+  font-style: normal;
+}
+.meter.low i {
+  background: var(--cinnabar);
+}
+.sheet {
+  max-height: 100%;
+  overflow: auto;
+  touch-action: pan-y;
+}
+.sheet.wide {
+  width: min(820px, 100%);
+}
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.items li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--paper-3);
+}
+.items .what {
+  flex: 1;
+  min-width: 0;
+}
+.items .what b {
+  margin-left: 8px;
+  font-size: 12px;
+}
+.items small {
+  display: block;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+.items .acts {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.items button {
+  padding: 6px 9px;
+  min-height: 36px;
+}
+.items img,
+.gifts img {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+.gifts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sheet .aside {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.feed {
+  position: absolute;
+  top: 76px;
+  left: 16px;
+  pointer-events: none !important;
+  font-size: 12px;
+}
+.feed p {
+  padding: 4px 8px;
+  background: var(--paper);
+  margin: 4px 0;
+  transition: opacity 0.5s;
+}
+.feed b {
+  margin-right: 10px;
+}
+.feed .gone {
+  opacity: 0;
+}
+.compact .vitals {
+  gap: 5px;
+  font-size: 12px;
+}
+.compact .meter .bar {
+  width: 26px;
+}
+.compact .meter.energy .bar {
+  width: 36px;
+}
+.compact .vitals button {
+  padding: 5px;
+  min-height: 32px;
+}
+.compact .sheet p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.compact .sheet h2 {
+  margin-bottom: 6px;
+}
+.compact .buff {
+  display: none;
+}
+.narrow .two {
+  grid-template-columns: 1fr;
+}

@@ -7,7 +7,7 @@ import { createReactions } from '../../src/kernel/reactions.js';
 import { createCompute, part } from '../../src/kernel/compute.js';
 import { createQueries } from '../../src/kernel/queries.js';
 import { createGuard } from '../../src/kernel/guard.js';
-import { createDispatcher } from '../../src/kernel/dispatch.js';
+import { createDispatcher, refuse } from '../../src/kernel/dispatch.js';
 import { createPluginHost } from '../../src/kernel/plugin-host.js';
 
 // 一个最小的内核：一格计数器，方便各条测试复用。
@@ -194,4 +194,36 @@ test('数据切片：谁登记谁负责校验，问题带着切片名', () => {
     () => schema.slice('a', { initial: () => 0, validate: () => true }),
     /already registered/,
   );
+});
+
+test('refuse()：服务里说“做不了”，命令被拒绝、世界不动，而且不算程序出错', () => {
+  const events = createEvents();
+  const errors = [];
+  const dispatcher = createDispatcher({
+    initialState: { revision: 0, world: { n: 0 } },
+    problems: () => [],
+    events,
+    reactions: null,
+    onError: error => errors.push(error.message),
+  });
+  const spend = (world, n) => {
+    if (n > 3) refuse('太累了');
+    world.n += n;
+  };
+  dispatcher.commands.register('work', ({ draft, input }) => {
+    draft.world.n += 1; // 拒绝之前改过的东西也要一起作废
+    spend(draft.world, input.n);
+  });
+  dispatcher.commands.register('crash', () => {
+    throw new Error('bug');
+  });
+  const send = (type, input = {}) =>
+    dispatcher.dispatch({ ...input, type, revision: dispatcher.snapshot().revision });
+  assert.deepEqual(send('work', { n: 9 }), { ok: false, reason: '太累了' });
+  assert.equal(dispatcher.snapshot().world.n, 0);
+  assert.deepEqual(errors, [], '拒绝不报给 onError');
+  assert.equal(send('crash').reason, 'bug');
+  assert.deepEqual(errors, ['bug'], '真出错才报');
+  assert.equal(send('work', { n: 2 }).ok, true);
+  assert.equal(dispatcher.snapshot().world.n, 3);
 });

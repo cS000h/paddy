@@ -200,6 +200,32 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     assert.equal(await wide.page.locator('#app.compact .stick').isVisible(), true);
     await frames(wide.page, 30);
     await shot(wide.page, 'smoke-phone-landscape.png');
+    // M1：从世界走到橱柜，真的点按钮存取、吃米糕，再去水缸喝水。
+    for (const session of [desk, wide]) {
+      const p = session.page;
+      await p.evaluate(() => window.__dao.shell.set({ modal: null }));
+      await tap(p, 6, 10);
+      await frames(p, 900);
+      await p.waitForSelector('button[data-do="packPut"][data-item="rice"]');
+      const before = await p.evaluate(() => window.__dao.game.ask('body').hunger);
+      await p.locator('button[data-do="packPut"][data-item="rice"][data-n="1"]').click();
+      await p.locator('button[data-do="eat"][data-item="cake"]').last().click();
+      assert.ok((await p.evaluate(() => window.__dao.game.ask('body').hunger)) > before);
+      await p.waitForTimeout(250);
+      const box = await p.locator('.sheet').boundingBox();
+      assert.ok(box.y >= 0 && box.y + box.height <= p.viewportSize().height);
+      await shot(p, session === desk ? 'm1-store-desktop.png' : 'm1-store-phone.png');
+      await p.locator('button[data-do="close"]').click();
+      await tap(p, 12, 10);
+      await frames(p, 300);
+      await p.locator('button[data-do="drink"]').click();
+      assert.equal(await p.evaluate(() => window.__dao.game.ask('body').thirst), 100);
+      await p.locator('button[data-do="close"]').click();
+      await p.locator('button[data-do="bag"]').click();
+      assert.match(await p.locator('.sheet h2').textContent(), /行囊/);
+      await p.locator('button[data-do="close"]').click();
+      assert.deepEqual(session.errors, []);
+    }
     assert.deepEqual(wide.errors, []);
   } finally {
     await browser.close();

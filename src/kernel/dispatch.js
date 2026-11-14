@@ -6,6 +6,15 @@ import { immutableCopy } from './events.js';
 //  * initial state is verified after plugins install (slices are registered by plugins);
 //  * onCommit fires exactly once per successful command, so the UI renders and saves once
 //    (0.5 re-rendered and re-saved for every published fact, plus once more in the UI).
+// New in 稻: refuse(reason). A rule (or a service it calls) that cannot go ahead throws a Refusal.
+// The command is rejected with that reason like any thrown error, but it is not reported to
+// onError: "you are too tired" is an answer for the player, not a fault in the program.
+class Refusal extends Error {}
+/** Reject the running command with a reason for the player. Never returns. */
+function refuse(reason) {
+  throw new Refusal(reason);
+}
+
 function createDispatcher({
   initialState,
   problems,
@@ -118,7 +127,7 @@ function createDispatcher({
         }
         return outcome;
       } catch (error) {
-        if (onError) onError(error, command);
+        if (onError && !(error instanceof Refusal)) onError(error, command);
         return { ok: false, reason: error?.message || String(error) };
       } finally {
         busy = false;
@@ -127,4 +136,4 @@ function createDispatcher({
   });
 }
 
-export { createDispatcher };
+export { createDispatcher, Refusal, refuse };

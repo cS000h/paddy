@@ -7,7 +7,7 @@ import path from 'node:path';
 import { createGame } from '../../src/port/game.js';
 import { SAVE_FORMAT } from '../../src/port/save.js';
 import { SAVE_VERSION } from '../../src/sim/index.js';
-import { newGame, must, growOne, FIELD } from '../helpers.js';
+import { newGame, must, growOne, carried, FIELD } from '../helpers.js';
 
 const fixtures = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
 
@@ -20,7 +20,7 @@ test('存档经过一次 JSON 往返，读回来和原来一模一样，还能�
   assert.equal(JSON.stringify(back.save()), text);
   assert.equal(back.revision(), g.revision());
   must(back, 'farm.harvest', FIELD);
-  assert.equal(back.ask('home').items.find(i => i.id === 'veg.qingcai').n, 1);
+  assert.equal(carried(back, 'veg.qingcai'), 1);
 });
 
 test('认不出来的存档会被拒绝，不会悄悄开新档', () => {

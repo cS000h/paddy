@@ -1,4 +1,6 @@
-// 物品、作物、工具的数据。只有数据，没有规则；数值都是游戏尺度，不是农事建议。
+// 作物和工具的数据，以及物品总表的出口。只有数据，没有规则；数值都是游戏尺度，不是农事建议。
+// 物品在 pantry.js；花多少体力在 actions.js。
+export { ITEMS } from './pantry.js';
 
 export const CROPS = Object.freeze({
   qingcai: {
@@ -12,17 +14,12 @@ export const CROPS = Object.freeze({
   },
 });
 
-export const ITEMS = Object.freeze({
-  'seed.qingcai': { id: 'seed.qingcai', name: '青菜种子', kind: 'seed', crop: 'qingcai', buy: 2 },
-  'veg.qingcai': { id: 'veg.qingcai', name: '青菜', kind: 'produce', sell: 6 },
-});
-
 // 工具栏的顺序就是数字键 1–4 的顺序。
 export const TOOLS = Object.freeze([
-  { id: 'hoe', name: '锄头', verb: '锄地', energy: 4 },
-  { id: 'seed', name: '菜种', verb: '播种', energy: 1 },
-  { id: 'can', name: '水壶', verb: '浇水', energy: 2 },
-  { id: 'hand', name: '采收', verb: '采收', energy: 1 },
+  { id: 'hoe', name: '锄头', verb: '锄地' },
+  { id: 'seed', name: '菜种', verb: '播种' },
+  { id: 'can', name: '水壶', verb: '浇水' },
+  { id: 'hand', name: '采收', verb: '采收' },
 ]);
 
 export const CAN_CAPACITY = 10;

@@ -5,6 +5,7 @@ import * as art from '../../src/art/index.js';
 import { P, SHADOW } from '../../src/art/palette.js';
 import { MAPS, GROUND, OBJECTS } from '../../src/content/maps/index.js';
 import { PEOPLE, ON_MAP } from '../../src/content/people.js';
+import { ITEMS } from '../../src/content/items.js';
 
 const palette = new Set([...Object.values(P), SHADOW]);
 const tiles = MAPS.yard.ground.map(row => [...row].map(ch => GROUND[ch].id));
@@ -67,6 +68,21 @@ test('人物：地图上的人都有外观；每张图 6 列 4 行，每帧都�
           sheet.get(art.FRAME_W - 1 - x, art.FRAME_H * 2 + y),
         );
   }
+});
+
+test('物品图标：每样物品都有一张，16×16，只用调色板的颜色，没有两张是一样的', () => {
+  assert.deepEqual([...art.ITEM_ICONS].sort(), Object.keys(ITEMS).sort());
+  const seen = new Map();
+  for (const id of art.ITEM_ICONS) {
+    const g = art.itemIcon(id);
+    assert.deepEqual([g.w, g.h], [16, 16]);
+    assert.ok(g.data.filter(c => c !== 0).length >= 40, `${id} 的图标太空`);
+    assert.deepEqual(offPalette(g), [], `${id} 用了调色板以外的颜色`);
+    const key = g.data.join(',');
+    assert.ok(!seen.has(key), `${id} 和 ${seen.get(key)} 的图标一模一样`);
+    seen.set(key, id);
+  }
+  assert.throws(() => art.itemIcon('nothing'), /没有这样物品的图标/);
 });
 
 test('地块和图标：32 张土、4 个作物阶段、5 个图标，都是 16×16', () => {

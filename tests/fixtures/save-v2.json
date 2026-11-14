@@ -1,0 +1,343 @@
+{
+  "format": "dao.save",
+  "version": 2,
+  "state": {
+    "revision": 25,
+    "world": {
+      "meta": {
+        "version": 2,
+        "seed": 20261113,
+        "nextId": 1
+      },
+      "notes": {
+        "list": []
+      },
+      "ledger": {
+        "seq": 28,
+        "list": [
+          {
+            "seq": 1,
+            "who": "hero",
+            "k": "energy",
+            "d": -4,
+            "why": "锄地"
+          },
+          {
+            "seq": 2,
+            "who": "hero",
+            "k": "energy",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 3,
+            "who": "hero",
+            "k": "pack:seed.qingcai",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 4,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "浇水"
+          },
+          {
+            "seq": 5,
+            "who": "hero",
+            "k": "energy",
+            "d": -4,
+            "why": "锄地"
+          },
+          {
+            "seq": 6,
+            "who": "hero",
+            "k": "energy",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 7,
+            "who": "hero",
+            "k": "pack:seed.qingcai",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 8,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "浇水"
+          },
+          {
+            "seq": 9,
+            "who": "hero",
+            "k": "energy",
+            "d": -4,
+            "why": "锄地"
+          },
+          {
+            "seq": 10,
+            "who": "hero",
+            "k": "energy",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 11,
+            "who": "hero",
+            "k": "pack:seed.qingcai",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 12,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "浇水"
+          },
+          {
+            "seq": 13,
+            "who": "hero",
+            "k": "energy",
+            "d": 21,
+            "why": "睡了一觉"
+          },
+          {
+            "seq": 14,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "浇水"
+          },
+          {
+            "seq": 15,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "浇水"
+          },
+          {
+            "seq": 16,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "浇水"
+          },
+          {
+            "seq": 17,
+            "who": "hero",
+            "k": "energy",
+            "d": 6,
+            "why": "睡了一觉"
+          },
+          {
+            "seq": 18,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "浇水"
+          },
+          {
+            "seq": 19,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "浇水"
+          },
+          {
+            "seq": 20,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "浇水"
+          },
+          {
+            "seq": 21,
+            "who": "hero",
+            "k": "energy",
+            "d": 6,
+            "why": "睡了一觉"
+          },
+          {
+            "seq": 22,
+            "who": "hero",
+            "k": "energy",
+            "d": -1,
+            "why": "采收"
+          },
+          {
+            "seq": 23,
+            "who": "hero",
+            "k": "pack:veg.qingcai",
+            "d": 1,
+            "why": "地里收的"
+          },
+          {
+            "seq": 24,
+            "who": "hero",
+            "k": "energy",
+            "d": -1,
+            "why": "采收"
+          },
+          {
+            "seq": 25,
+            "who": "hero",
+            "k": "pack:veg.qingcai",
+            "d": 1,
+            "why": "地里收的"
+          },
+          {
+            "seq": 26,
+            "who": "hero",
+            "k": "pack:veg.qingcai",
+            "d": -1,
+            "why": "送给桂嫂"
+          },
+          {
+            "seq": 27,
+            "who": "hero",
+            "k": "pack:veg.qingcai",
+            "d": -1,
+            "why": "放进收菜筐"
+          },
+          {
+            "seq": 28,
+            "who": "hero",
+            "k": "coins",
+            "d": -8,
+            "why": "托阿满捎青菜种子"
+          }
+        ]
+      },
+      "clock": {
+        "day": 4,
+        "minute": 450
+      },
+      "people": {
+        "hero": {
+          "energy": 98,
+          "map": "yard",
+          "x": 7,
+          "y": 18,
+          "dir": "down"
+        },
+        "shi": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "gui": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        }
+      },
+      "player": {
+        "controls": "hero"
+      },
+      "households": {
+        "home": {
+          "members": ["hero"],
+          "coins": 16,
+          "items": {
+            "rice": 3,
+            "veg.qingcai": 2,
+            "egg": 2,
+            "potato": 2,
+            "herb": 1,
+            "bean": 1,
+            "wood": 4,
+            "salt": 4
+          },
+          "can": 1
+        }
+      },
+      "vitals": {
+        "hero": {
+          "hunger": 43,
+          "thirst": 58,
+          "mood": 62,
+          "stuffed": 0,
+          "sweat": 2,
+          "buff": null
+        }
+      },
+      "packs": {
+        "hero": {
+          "cap": 6,
+          "big": false,
+          "items": {
+            "seed.qingcai": 9,
+            "cake": 2
+          },
+          "flask": 0
+        }
+      },
+      "land": {
+        "yard": {
+          "plots": {
+            "6,19": {
+              "wet": false,
+              "crop": null,
+              "age": 0
+            },
+            "7,19": {
+              "wet": false,
+              "crop": null,
+              "age": 0
+            },
+            "8,19": {
+              "wet": false,
+              "crop": "qingcai",
+              "age": 3
+            }
+          }
+        }
+      },
+      "bonds": {
+        "known": {
+          "shi": 1,
+          "gui": 2
+        },
+        "talked": {
+          "shi": 4
+        },
+        "gifted": {
+          "gui": 4
+        },
+        "owed": [
+          {
+            "from": "gui",
+            "day": 5
+          }
+        ]
+      },
+      "basket": {
+        "goods": {
+          "veg.qingcai": 1
+        },
+        "order": {
+          "seed.qingcai": 4
+        }
+      },
+      "guide": {
+        "done": {
+          "till": 1,
+          "sow": 1,
+          "water": 1,
+          "harvest": 4,
+          "meet": 4,
+          "gift": 4
+        }
+      }
+    }
+  }
+}
