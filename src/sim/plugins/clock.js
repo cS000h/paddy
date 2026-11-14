@@ -45,6 +45,11 @@ export const clock = {
     ctx.provide(
       'clock',
       Object.freeze({
+        elapse: ctx.own((w, minutes, fact) => {
+          const from = w.clock.minute;
+          w.clock.minute = Math.min(CALENDAR.dayEnd, from + minutes);
+          fact('time.passed', { day: w.clock.day, from, minute: w.clock.minute });
+        }),
         // 过到第二天早上。返回刚结束的那一天是不是睡晚了。
         nextDay: ctx.own((w, fact) => {
           const minute = w.clock.minute;

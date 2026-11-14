@@ -8,6 +8,18 @@ export const SAVE_FORMAT = 'dao.save';
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
 const MIGRATIONS = {
+  3(state) {
+    const w = state.world;
+    w.meta.version = 4;
+    w.weather = { now: 'sunny', history: ['sunny'] };
+    w.outings = Object.fromEntries(
+      Object.keys(w.packs).map(id => [id, { counts: {}, fish: null }]),
+    );
+    w.homesteads = Object.fromEntries(
+      Object.keys(w.households).map(id => [id, { coop: false, hens: 0, fed: 0, eggs: 0 }]),
+    );
+    return state;
+  },
   2(state) {
     const w = state.world;
     w.meta.version = 3;

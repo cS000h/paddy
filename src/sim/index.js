@@ -20,6 +20,9 @@ import { social } from './plugins/social.js';
 import { basket } from './plugins/basket.js';
 import { cooking } from './plugins/cooking.js';
 import { foodEffects } from './plugins/food-effects.js';
+import { weather } from './plugins/weather.js';
+import { gathering } from './plugins/gathering.js';
+import { homestead } from './plugins/homestead.js';
 import { guide } from './plugins/guide.js';
 
 export { SAVE_VERSION };
@@ -32,6 +35,9 @@ export const PLUGINS = Object.freeze([
   body,
   pack,
   water,
+  weather,
+  gathering,
+  homestead,
   cooking,
   foodEffects,
   land,

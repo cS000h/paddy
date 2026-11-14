@@ -60,7 +60,7 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: 'b6db7e47' };
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '8ed92243' };
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};

@@ -239,6 +239,12 @@ export const pack = {
         use,
         receive,
         flask,
+        big: (w, id) => w.packs[id].big,
+        upgrade: ctx.own((w, id) => {
+          if (w.packs[id].big) refuse('已经有大背篓');
+          w.packs[id].big = true;
+          w.packs[id].cap = 8;
+        }),
         dishes: (w, id) => w.packs[id].dishes,
         putDish: ctx.own((w, id, dish) => {
           if (room(w, id) < (dish.method === 'stew' ? 2 : 1)) refuse(FULL);

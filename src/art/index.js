@@ -12,6 +12,7 @@ import {
   bambooGrove,
   bush,
 } from './trees.js';
+import { wildProps } from './wild.js';
 import { stove } from './kitchen.js';
 import * as props from './props.js';
 import { soilTile, cropFrames, cursor, icon } from './tiles.js';
@@ -26,6 +27,7 @@ export { Grid };
 
 // 物件的画法。同一种物件有几个样子的（树、石头、花），按位置换种子，画出来各不相同。
 const OBJECT_MAKERS = {
+  ...wildProps,
   'house.hero': () => house('hero', 11),
   'house.gui': () => house('gui', 23),
   'fence.h': seed => props.fenceH(seed),

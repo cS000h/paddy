@@ -251,6 +251,41 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.locator('[data-do="close"]').click();
       assert.deepEqual(session.errors, []);
     }
+    // M3：走到竹林、工作台和钓点，在两种设备上操作。
+    for (const session of [desk, wide]) {
+      const p = session.page;
+      await tap(p, 16, 8);
+      await frames(p, 1200);
+      await p.locator('[data-do="activity"][data-id="bamboo"]').click();
+      assert.ok(
+        await p.evaluate(() => window.__dao.game.ask('pack').items.some(i => i.id === 'strip')),
+      );
+      await p.locator('[data-do="close"]').click();
+      await tap(p, 5, 11);
+      await frames(p, 1200);
+      await p.locator('[data-do="activity"][data-id="weave"]').click();
+      assert.ok(
+        await p.evaluate(() =>
+          window.__dao.game.ask('goods', window.__dao.world.heroAt()).some(i => i.id === 'basket'),
+        ),
+      );
+      await p.locator('[data-do="close"]').click();
+      await tap(p, 38, 20);
+      await frames(p, 1600);
+      await p.locator('[data-do="activity"][data-id="fish"]').click();
+      await p.waitForTimeout(250);
+      await shot(p, session === desk ? 'm3-fish-desktop.png' : 'm3-fish-phone.png');
+      if (session === desk) await p.keyboard.press('Space');
+      else await p.locator('[data-do="fishReel"]').tap();
+      await p.waitForSelector('[data-do="activity"][data-id="fish"]');
+      assert.equal(await p.evaluate(() => window.__dao.game.ask('outings', 'fish').pending), false);
+      assert.equal(
+        await p.evaluate(() => window.__dao.game.ask('outings', 'fish').options[0].left),
+        2,
+      );
+      await p.locator('[data-do="close"]').click();
+      assert.deepEqual(session.errors, []);
+    }
     assert.deepEqual(wide.errors, []);
   } finally {
     await browser.close();
