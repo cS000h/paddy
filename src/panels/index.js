@@ -40,7 +40,7 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
       ${meter('hunger', '饱')}${meter('thirst', '水')}${meter('mood', '心')}
       <span class="buff" data-id="buff" hidden></span>
       <span class="coins"><img class="pixel" width="16" height="16" src="${toolIconUrl('coin')}" alt="铜钱" /><span data-id="coins"></span></span>
-      <button data-do="bag">行囊</button><button data-do="journal">手记</button><button data-do="mute" data-id="mute"></button>
+      <button data-do="book">册子</button><button data-do="bag">行囊</button><button data-do="journal">手记</button><button data-do="mute" data-id="mute"></button>
     </div>
     <div class="feed" data-id="feed"></div>
     <aside class="card journal" data-id="journal" hidden></aside>
@@ -247,7 +247,14 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
     offAct,
     offCancel,
     // 世界变了：重画常驻的面板、冒出新的流水；开着的小窗也跟着重画（里面的数可能变了）
-    game.onCommit(() => {
+    game.onCommit(facts => {
+      for (const f of facts.filter(f => f.type === 'achievement.earned')) {
+        const stamp = document.createElement('div');
+        stamp.className = 'award-stamp';
+        stamp.textContent = '印 · ' + f.data.name;
+        root.append(stamp);
+        setTimeout(() => stamp.remove(), 3200);
+      }
       renderHud();
       renderFeed();
       if (shell.get().modal) renderModal(shell.get());

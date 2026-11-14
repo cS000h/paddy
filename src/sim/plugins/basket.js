@@ -10,10 +10,21 @@ import { BASKET_WARES, basketTakes } from '../../content/pantry.js';
 export const basket = {
   id: 'sim.basket',
   provides: ['basket'],
-  requires: ['schema', 'commands', 'reactions', 'queries', 'core', 'people', 'store', 'pack'],
+  requires: [
+    'schema',
+    'commands',
+    'reactions',
+    'queries',
+    'core',
+    'people',
+    'store',
+    'pack',
+    'compute',
+  ],
   writes: ['basket'],
   install(ctx) {
-    const { schema, commands, reactions, queries, core, people, store, pack } = ctx.services;
+    const { schema, commands, reactions, queries, core, people, store, pack, compute } =
+      ctx.services;
 
     const goodsOk = g =>
       is.obj(g) &&
@@ -57,7 +68,17 @@ export const basket = {
         const w = s.world;
         const sold = Object.entries(w.basket.goods);
         if (sold.length) {
-          const coins = sold.reduce((sum, [item, n]) => sum + ITEMS[item].sell * n, 0);
+          const coins = sold.reduce(
+            (sum, [item, n]) =>
+              sum +
+              compute.run(
+                'sale.price',
+                { w, who: people.who(w), item },
+                { value: ITEMS[item].sell, parts: [] },
+              ).value *
+                n,
+            0,
+          );
           store.earn(w, coins, '阿满留下的菜钱');
           const what = sold.map(([item, n]) => `${ITEMS[item].name} ${n} 份`).join('、');
           core.post(w, {

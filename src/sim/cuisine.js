@@ -1,6 +1,6 @@
 // 做饭预览和出锅共用这一条计算路径，避免面板承诺与实际结果不一致。
 import { ITEMS, seasonal, inSeason } from '../content/pantry.js';
-import { METHODS, QUALITY } from '../content/recipes.js';
+import { METHODS, QUALITY, HEAT } from '../content/recipes.js';
 import { BUFFS, buffUses } from '../content/body.js';
 import { dateOf } from '../content/calendar.js';
 import { dishName, quality } from './cuisine-name.js';
@@ -62,6 +62,7 @@ export function previewMeal(w, input, compute, who) {
     },
   );
   const bonus = compute.run('cook.heat', { w, who }, { value: 0, parts: [] }).value;
+  r.heat = method === 'mix' ? null : { ...HEAT[method], half: HEAT[method].half + bonus };
   const q = quality(method, heat, bonus);
   r.quality = q;
   r.full = Math.round(r.full * QUALITY[q].full);

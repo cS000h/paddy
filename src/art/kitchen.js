@@ -10,3 +10,13 @@ export function stove() {
   g.line(24, 2, 19, 14, P.t2).rect(23, 1, 3, 4, P.t0).set(11, 10, P.g4).set(17, 11, P.y0);
   return { grid: g, ax: 16, ay: 34 };
 }
+
+export function bookshelf() {
+  const g = new Grid(24, 30);
+  g.ellipse(12, 28, 11, 2, SHADOW).rect(2, 3, 20, 24, P.t3).rect(4, 5, 16, 20, P.t1);
+  for (const y of [6, 16]) {
+    for (let x = 5; x < 19; x += 4) g.rect(x, y, 3, 8, x % 3 ? P.paper1 : P.i2);
+    g.hline(3, 20, y + 9, P.t4);
+  }
+  return { grid: g, ax: 12, ay: 30 };
+}

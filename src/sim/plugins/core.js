@@ -1,15 +1,17 @@
 // 世界的底座：存档版本、随机种子、晨间便条、变化流水。
 import { is, check } from '../../kernel/schema.js';
+import { SKILLS } from '../../content/growth.js';
 import { ITEMS } from '../../content/items.js';
 import { BUFFS, LEDGER_LABELS } from '../../content/body.js';
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 const LEDGER_MAX = 60;
 
 // 流水里的一条，写成给玩家看的字：“饱腹 +14”“米糕 −1”“解馋 ×2”。
 function ledgerText(k, d) {
   const [kind, id] = k.split(':');
+  if (kind === 'xp') return `${SKILLS[id]?.name || '本事'}经验 ${d > 0 ? '+' : '−'}${Math.abs(d)}`;
   if (kind === 'buff') return `${BUFFS[id]?.name || id} ×${d}`;
   const label =
     kind === 'item' || kind === 'pack' ? ITEMS[id]?.name || id : LEDGER_LABELS[kind] || kind;

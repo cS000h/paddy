@@ -19,10 +19,10 @@ const SEED = 'seed.qingcai'; // 现在只有青菜一种；M5 把别的作物搬
 export const land = {
   id: 'sim.land',
   provides: ['land'],
-  requires: ['schema', 'commands', 'reactions', 'queries', 'people', 'store', 'pack'],
+  requires: ['schema', 'commands', 'reactions', 'queries', 'people', 'store', 'pack', 'compute'],
   writes: ['land'],
   install(ctx) {
-    const { schema, commands, reactions, queries, people, store, pack } = ctx.services;
+    const { schema, commands, reactions, queries, people, store, pack, compute } = ctx.services;
 
     schema.slice('land', {
       initial: () => Object.fromEntries(Object.keys(MAPS).map(id => [id, { plots: {} }])),
@@ -126,8 +126,13 @@ export const land = {
       farm('hand', (w, map, x, y, fact, id) => {
         const plot = plotAt(w, map, x, y);
         const def = CROPS[plot.crop];
-        pack.receive(w, id, def.produce, def.yield, '地里收的');
-        fact('crop.harvested', { map, x, y, crop: def.id, item: def.produce, n: def.yield });
+        const n = compute.run(
+          'action.yield',
+          { w, who: id, action: { id: 'harvest', kind: 'farm' } },
+          { value: def.yield, parts: [] },
+        ).value;
+        pack.receive(w, id, def.produce, n, '地里收的');
+        fact('crop.harvested', { map, x, y, crop: def.id, item: def.produce, n });
         plot.crop = null;
         plot.age = 0;
       }),

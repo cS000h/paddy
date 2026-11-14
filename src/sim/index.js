@@ -23,6 +23,9 @@ import { foodEffects } from './plugins/food-effects.js';
 import { weather } from './plugins/weather.js';
 import { gathering } from './plugins/gathering.js';
 import { homestead } from './plugins/homestead.js';
+import { growth } from './plugins/growth.js';
+import { growthPerks } from './plugins/growth-perks.js';
+import { achievements } from './plugins/achievements.js';
 import { guide } from './plugins/guide.js';
 
 export { SAVE_VERSION };
@@ -43,6 +46,9 @@ export const PLUGINS = Object.freeze([
   land,
   social,
   basket,
+  growth,
+  growthPerks,
+  achievements,
   guide,
 ]);
 

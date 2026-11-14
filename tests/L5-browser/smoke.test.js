@@ -84,6 +84,8 @@ async function open(browser, port, options) {
   page.on('console', message => message.type() === 'error' && errors.push(message.text()));
   await page.goto(`http://127.0.0.1:${port}/?debug`);
   await page.waitForFunction(() => window.__dao?.world.scene()?.player, null, { timeout: 15000 });
+  await page.locator('[data-do="originPick"][data-id="later"]').click();
+  await page.locator('[data-do="originPick"][data-id="quiet"]').click();
   return { page, errors };
 }
 
@@ -283,6 +285,26 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
         await p.evaluate(() => window.__dao.game.ask('outings', 'fish').options[0].left),
         2,
       );
+      await p.locator('[data-do="close"]').click();
+      assert.deepEqual(session.errors, []);
+    }
+    // M4：开局选择已在open里点击；册子的三个分页能翻，成就随行动落印。
+    for (const session of [desk, wide]) {
+      const p = session.page;
+      assert.equal(
+        await p.evaluate(
+          () => window.__dao.game.ask('growth').traits.filter(t => t.owned).length >= 2,
+        ),
+        true,
+      );
+      await p.locator('[data-do="book"]').click();
+      await p.locator('[data-do="bookTab"][data-tab="traits"]').click();
+      assert.match(await p.locator('.sheet').textContent(), /慢热/);
+      await p.locator('[data-do="bookTab"][data-tab="achievements"]').click();
+      assert.ok((await p.locator('.achievement-seal.earned').count()) > 0);
+      await p.waitForTimeout(250);
+      await shot(p, session === desk ? 'm4-book-desktop.png' : 'm4-book-phone.png');
+      await p.locator('[data-do="bookPage"]').last().click();
       await p.locator('[data-do="close"]').click();
       assert.deepEqual(session.errors, []);
     }

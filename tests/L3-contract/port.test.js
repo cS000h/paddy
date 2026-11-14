@@ -25,6 +25,7 @@ const COMMANDS = [
   'gather',
   'gift',
   'homestead',
+  'origin.choose',
   'pack.put',
   'pack.take',
   'person.place',
@@ -33,6 +34,7 @@ const COMMANDS = [
   'talk',
 ];
 const QUERIES = [
+  'achievements',
   'action.cost',
   'basket',
   'body',
@@ -43,6 +45,7 @@ const QUERIES = [
   'farm.plots',
   'farm.why',
   'goods',
+  'growth',
   'guide',
   'hero',
   'home',
@@ -129,7 +132,9 @@ test('每条成功的命令通知一次；被拒绝的不通知；可以只听�
   g.on('plot.tilled', f => tilled.push(f.data));
   must(g, 'farm.till', FIELD);
   g.dispatch('farm.till', FIELD);
-  assert.deepEqual(commits, [['action.performed', 'plot.tilled', 'guide.done']]);
+  assert.deepEqual(commits, [
+    ['action.performed', 'plot.tilled', 'achievement.earned', 'guide.done'],
+  ]);
   assert.deepEqual(tilled, [{ map: 'yard', x: 6, y: 19 }]);
   off();
   must(g, 'farm.sow', FIELD);

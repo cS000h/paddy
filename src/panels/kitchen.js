@@ -63,7 +63,7 @@ export function recipesView(m, game, esc, here) {
  <div class="row"><button data-do="recipePage" data-page="${Math.max(0, page - 1)}">上一页</button><button data-do="recipePage" data-page="${Math.min(pages - 1, page + 1)}">下一页</button><button class="main" data-do="backKitchen">回灶台</button></div>`;
 }
 export function heatView(m, game, esc) {
-  const h = HEAT[m.method];
+  const h = game.ask('cook.preview', m).heat || HEAT[m.method];
   return `<h2>守着这锅火<small>${esc(h.word)}</small></h2><p>指针到了青色一段，按空格或点“出锅”。正中最好，太早夹生，太晚会焦。</p>
  <div class="timing"><span class="zone" style="left:${h.center - h.half}%;width:${h.half * 2}%"></span><i data-timing></i></div>
  <div class="row"><button data-do="backKitchen">先不做了</button><button class="main" data-do="cookFinish">出锅</button></div>`;

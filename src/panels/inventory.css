@@ -169,3 +169,67 @@
   width: 4px;
   background: var(--cinnabar);
 }
+
+.origin-choices {
+  display: grid;
+  gap: 10px;
+}
+.origin-choices button {
+  text-align: left;
+  padding: 12px;
+}
+.origin-choices small {
+  display: block;
+  color: var(--ink-2);
+  margin-top: 4px;
+}
+.active-perk {
+  color: var(--green) !important;
+}
+.achievement-seal {
+  border: 2px solid var(--paper-3);
+  padding: 5px;
+  color: var(--ink-3);
+}
+.achievement-seal.earned {
+  border-color: var(--cinnabar);
+  color: var(--cinnabar);
+  transform: rotate(-8deg);
+}
+.compact .origin-choices {
+  gap: 5px;
+}
+.compact .origin-choices button {
+  padding: 8px;
+  font-size: 13px;
+}
+
+.award-stamp {
+  position: absolute;
+  top: 28%;
+  left: 50%;
+  z-index: 35;
+  pointer-events: none !important;
+  transform: translateX(-50%) rotate(-6deg);
+  border: 3px double var(--cinnabar);
+  color: var(--cinnabar);
+  background: var(--paper);
+  padding: 12px 24px;
+  font-weight: bold;
+  animation: stamp-in 3.2s both;
+}
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    scale: 1.6;
+  }
+  12%,
+  80% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 1;
+  }
+}

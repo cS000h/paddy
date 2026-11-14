@@ -65,9 +65,18 @@ export const social = {
       const line = first
         ? lines.first
         : lines.daily[Math.floor(core.random(w) * lines.daily.length)];
-      if (b.talked[input.to] !== w.clock.day) b.known[input.to] += 1;
+      const gained = b.talked[input.to] !== w.clock.day;
+      if (gained) {
+        const gain = compute.run(
+          'relation.gain',
+          { w, who: people.who(w), source: 'talk.life' },
+          { value: 1, parts: [] },
+        );
+        b.known[input.to] = Math.min(999, b.known[input.to] + gain.value);
+        if (gain.parts.some(p => p.id === 'buff.guest')) body.useBuff(w, people.who(w), 'guest');
+      }
       b.talked[input.to] = w.clock.day;
-      fact('person.talked', { to: input.to, first, line });
+      fact('person.talked', { who: people.who(w), to: input.to, first, gained, line });
     });
 
     commands.register('gift', ({ draft, input, fact }) => {

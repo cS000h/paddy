@@ -33,6 +33,7 @@ export const OBJECTS = Object.freeze({
   coop: { foot: [0, 0, 0, 0], act: 'housework' },
   workbench: { foot: [0, 0, 0, 0], act: 'housework' },
   pickleJar: { foot: [0, 0, 0, 0], act: 'housework' },
+  bookshelf: { foot: [0, 0, 0, 0], act: 'book' },
   stove: { foot: [0, 0, 0, 0], act: 'kitchen' },
   cupboard: { foot: [0, 0, 0, 0], act: 'store' },
   basket: { foot: [0, 0, 0, 0], act: 'basket' },

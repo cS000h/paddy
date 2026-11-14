@@ -10,6 +10,7 @@ export const ACT_HINT = {
   basket: '看看收菜筐',
   sign: '看路牌',
   kitchen: '生火做饭',
+  book: '翻一翻册子',
 };
 export function touchThing(scene, thing) {
   const { shell, platform } = scene.deps;
@@ -24,6 +25,7 @@ export function touchThing(scene, thing) {
     store: 'store',
     basket: 'basket',
     kitchen: 'kitchen',
+    book: 'book',
     'door.hero': 'sleep',
   }[thing.act];
   if (kind) return shell.set({ modal: { kind, x: thing.x, y: thing.y } });

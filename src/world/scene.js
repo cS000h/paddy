@@ -141,7 +141,13 @@ export class VillageScene extends Phaser.Scene {
       hint = { text: reason || '打水', ok: !reason };
     } else if (farmable(this.map, t.x, t.y)) {
       const reason = game.ask('farm.why', tool, t.x, t.y, this.at());
-      hint = { text: reason || toolVerb(tool), ok: !reason };
+      const cost = game.ask('action.cost', tool);
+      const detail = cost.parts.map(p => p.label + (p.delta > 0 ? '+' : '') + p.delta).join('、');
+      hint = {
+        text:
+          reason || `${toolVerb(tool)} · 体力${cost.value}${detail ? '（' + detail + '）' : ''}`,
+        ok: !reason,
+      };
     }
     const old = shell.get().hint;
     if (old?.text !== hint?.text || old?.ok !== hint?.ok) shell.set({ hint });

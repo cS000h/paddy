@@ -5,7 +5,12 @@ import { newGame, must, refused, plant, growOne, plotAt, carried, FIELD } from '
 
 test('锄地、播种、浇水，各扣各的体力和物料', () => {
   const g = newGame();
-  assert.deepEqual(must(g, 'farm.till', FIELD), ['action.performed', 'plot.tilled', 'guide.done']);
+  assert.deepEqual(must(g, 'farm.till', FIELD), [
+    'action.performed',
+    'plot.tilled',
+    'achievement.earned',
+    'guide.done',
+  ]);
   must(g, 'farm.sow', FIELD);
   must(g, 'farm.water', FIELD);
   assert.equal(g.ask('hero').energy, 100 - 4 - 1 - 2);
@@ -96,8 +101,8 @@ test('水壶会空，挨着水缸、水井、水沟或溪水才能打满', () =>
 test('体力用完就干不动了，睡一觉恢复；睡得太晚回不满', () => {
   const g = newGame();
   let n = 0;
-  for (let y = 19; y <= 25 && n < 25; y++)
-    for (let x = 6; x <= 17 && n < 25; x++, n++)
+  for (let y = 19; y <= 25 && g.ask('hero').energy > 0; y++)
+    for (let x = 6; x <= 17 && g.ask('hero').energy > 0; x++, n++)
       must(g, 'farm.till', { x, y, at: { x, y, dir: 'down' } });
   assert.equal(g.ask('hero').energy, 0);
   assert.equal(

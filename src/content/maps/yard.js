@@ -50,6 +50,7 @@ const objects = [
   ['gate.arch', 7, 14],
   ['vat', 12, 10],
   ['stove', 11, 10],
+  ['bookshelf', 7, 12],
   ['workbench', 5, 11, { station: 'workbench', label: '篾条与木墩' }],
   ['coop', 13, 11, { station: 'coop', label: '院角鸡窝' }],
   ['pickleJar', 4, 11, { station: 'pickle', label: '腌菜坛' }],
