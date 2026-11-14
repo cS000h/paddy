@@ -1,0 +1,476 @@
+/* 界面面板的样子：宣纸底、墨色字、朱砂点缀。世界在画布里，这里只管盖在上面的东西。 */
+:root {
+  --paper: #f6f1e3;
+  --paper-2: #ece4d0;
+  --paper-3: #ddd3ba;
+  --ink: #2b3436;
+  --ink-2: #55635d;
+  --ink-3: #8a958b;
+  --green: #6d935b;
+  --cinnabar: #b5462f;
+  --shadow: 0 2px 10px rgba(43, 52, 54, 0.18);
+  --serif: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #cfdcb8;
+  color: var(--ink);
+  font-family: var(--serif);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
+#app,
+#stage,
+.layer,
+#ui {
+  position: fixed;
+  inset: 0;
+}
+
+#stage canvas {
+  display: block;
+  image-rendering: pixelated;
+}
+
+.layer {
+  pointer-events: none;
+}
+
+.sky {
+  mix-blend-mode: multiply;
+  background: #fff;
+  transition: background-color 3s linear;
+}
+
+.paper {
+  background:
+    radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(236, 228, 208, 0.5) 100%),
+    linear-gradient(to bottom, rgba(246, 241, 227, 0.55), transparent 16%);
+}
+
+.veil {
+  background: var(--paper);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+#ui {
+  pointer-events: none;
+  padding: calc(10px + var(--safe-t)) calc(10px + var(--safe-r)) calc(10px + var(--safe-b))
+    calc(10px + var(--safe-l));
+}
+
+#ui > * {
+  pointer-events: auto;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 1px solid rgba(43, 52, 54, 0.22);
+  background: var(--paper);
+  border-radius: 6px;
+}
+
+.card {
+  background: rgba(246, 241, 227, 0.92);
+  border: 1px solid rgba(43, 52, 54, 0.16);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+/* 左上：日期和钟点 */
+.date {
+  position: absolute;
+  top: calc(10px + var(--safe-t));
+  left: calc(10px + var(--safe-l));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 8px 8px;
+}
+
+.seal {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--cinnabar);
+  border-radius: 4px;
+  color: var(--cinnabar);
+  font-size: 20px;
+  font-weight: 700;
+  transform: rotate(-4deg);
+}
+
+.date b {
+  display: block;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+}
+
+.date small {
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+/* 右上：体力、铜钱、按钮 */
+.vitals {
+  position: absolute;
+  top: calc(10px + var(--safe-t));
+  right: calc(10px + var(--safe-r));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.bar {
+  width: 86px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--paper-3);
+  overflow: hidden;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: var(--green);
+  transition: width 0.25s ease;
+}
+
+.bar.low i {
+  background: var(--cinnabar);
+}
+
+.pixel {
+  image-rendering: pixelated;
+  vertical-align: middle;
+}
+
+.vitals button {
+  padding: 4px 9px;
+  font-size: 13px;
+}
+
+/* 下方正中：工具栏和它上面的提示条 */
+.toolbar {
+  position: absolute;
+  left: 50%;
+  bottom: calc(12px + var(--safe-b));
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+}
+
+.toolbar button {
+  position: relative;
+  width: 58px;
+  height: 62px;
+  padding: 4px 0 0;
+  background: var(--paper-2);
+  font-size: 12px;
+}
+
+.toolbar button.on {
+  background: var(--paper);
+  border-color: var(--cinnabar);
+  box-shadow: 0 0 0 2px rgba(181, 70, 47, 0.22);
+  transform: translateY(-3px);
+}
+
+.toolbar img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 2px;
+}
+
+.toolbar em {
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  color: var(--ink-3);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.toolbar i {
+  position: absolute;
+  top: 2px;
+  right: 5px;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(96px + var(--safe-b));
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(43, 52, 54, 0.78);
+  color: var(--paper);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.hint.no {
+  background: rgba(127, 139, 130, 0.82);
+}
+
+.hint kbd {
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid rgba(246, 241, 227, 0.5);
+  border-radius: 3px;
+  font: inherit;
+  font-size: 11px;
+}
+
+.toast {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  transform: translateX(-50%);
+  max-width: 80vw;
+  padding: 8px 16px;
+  background: rgba(246, 241, 227, 0.96);
+  border: 1px solid rgba(43, 52, 54, 0.2);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none !important;
+}
+
+.toast.show {
+  opacity: 1;
+}
+
+/* 手记：宽屏靠右，窄屏从底下升起 */
+.journal {
+  position: absolute;
+  top: calc(64px + var(--safe-t));
+  right: calc(10px + var(--safe-r));
+  width: 250px;
+  max-height: calc(100% - 180px);
+  overflow: auto;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.journal h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  letter-spacing: 0.2em;
+}
+
+.journal h3 {
+  margin: 12px 0 4px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(43, 52, 54, 0.2);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.journal ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journal li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.journal li.done {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.journal li small {
+  display: block;
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
+.journal .danger {
+  margin-top: 12px;
+  padding: 3px 10px;
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+/* 对话和各种小窗：一张从底下展开的宣纸 */
+.modal {
+  z-index: 20;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px 16px calc(24px + var(--safe-b));
+  background: rgba(43, 52, 54, 0.12);
+}
+
+.sheet {
+  width: min(560px, 100%);
+  padding: 18px 20px 16px;
+  background: var(--paper);
+  border: 1px solid rgba(43, 52, 54, 0.2);
+  border-top: 3px solid var(--ink-2);
+  border-radius: 4px 4px 8px 8px;
+  box-shadow: 0 8px 30px rgba(43, 52, 54, 0.25);
+  animation: unroll 0.22s ease-out;
+}
+
+@keyframes unroll {
+  from {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+}
+
+.sheet h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-size: 17px;
+}
+
+.sheet h2 small {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.sheet p {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.sheet .row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.sheet button {
+  padding: 7px 16px;
+  font-size: 14px;
+}
+
+.sheet button.main {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.sheet button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* 触屏：左下摇杆，右下一个“做”的按钮 */
+.stick {
+  position: absolute;
+  left: calc(18px + var(--safe-l));
+  bottom: calc(96px + var(--safe-b));
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: rgba(246, 241, 227, 0.4);
+  border: 1px solid rgba(43, 52, 54, 0.25);
+}
+
+.stick i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  margin: -22px;
+  border-radius: 50%;
+  background: rgba(43, 52, 54, 0.55);
+}
+
+.do {
+  position: absolute;
+  right: calc(20px + var(--safe-r));
+  bottom: calc(104px + var(--safe-b));
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(181, 70, 47, 0.86);
+  border-color: rgba(127, 48, 37, 0.9);
+  color: var(--paper);
+  font-size: 17px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  /* 窄屏：体力那一条排到日期下面，不和日期挤在一行 */
+  .vitals {
+    top: calc(64px + var(--safe-t));
+    right: auto;
+    left: calc(10px + var(--safe-l));
+    gap: 8px;
+    padding: 6px 8px;
+  }
+  .date b {
+    font-size: 13px;
+  }
+  .bar {
+    width: 56px;
+  }
+  .toolbar button {
+    width: 52px;
+    height: 56px;
+  }
+  .hint {
+    bottom: calc(86px + var(--safe-b));
+  }
+  .journal {
+    background: rgba(246, 241, 227, 0.98);
+    top: auto;
+    right: 10px;
+    left: 10px;
+    bottom: calc(86px + var(--safe-b));
+    width: auto;
+    max-height: 55%;
+  }
+}

@@ -20,6 +20,7 @@ export const OBJECTS = Object.freeze({
   'fence.h': { foot: [0, 0, 0, 0] },
   'fence.v': { foot: [0, 0, 0, 0] },
   'gate.post': { foot: [0, 0, 0, 0] },
+  'gate.arch': {},
   vat: { foot: [0, 0, 0, 0], act: 'water' },
   well: { foot: [0, 0, 0, 0], act: 'water' },
   basket: { foot: [0, 0, 0, 0], act: 'basket' },

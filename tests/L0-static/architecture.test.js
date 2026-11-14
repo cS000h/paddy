@@ -5,9 +5,10 @@
 //   port    ← sim, content
 //   art     ← 什么都不依赖（纯像素运算）
 //   platform← 什么都不依赖（运行环境的差异：存储、生命周期、设备）
-//   world   ← port, content, art, platform, phaser
-//   panels  ← port, content, art, platform
-//   app     ← port, content, art, platform, world, panels
+//   shell   ← content（外壳共用的东西：输入意图、界面状态；不碰浏览器）
+//   world   ← port, content, art, platform, shell, phaser
+//   panels  ← port, content, art, platform, shell
+//   app     ← port, content, art, platform, shell, world, panels
 // 另外：规则一侧（kernel/sim/port/content/art）不许碰浏览器、时钟和无种子的随机数。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -25,12 +26,13 @@ const MAY_IMPORT = {
   port: ['sim', 'content'],
   art: [],
   platform: [],
-  world: ['port', 'content', 'art', 'platform'],
-  panels: ['port', 'content', 'art', 'platform'],
-  app: ['port', 'content', 'art', 'platform', 'world', 'panels'],
+  shell: ['content'],
+  world: ['port', 'content', 'art', 'platform', 'shell'],
+  panels: ['port', 'content', 'art', 'platform', 'shell'],
+  app: ['port', 'content', 'art', 'platform', 'shell', 'world', 'panels'],
 };
 const PACKAGES = { world: ['phaser'] };
-const PURE = ['kernel', 'content', 'sim', 'port', 'art'];
+const PURE = ['kernel', 'content', 'sim', 'port', 'art', 'shell'];
 const FORBIDDEN_IN_PURE = [
   /\bdocument\./,
   /\bwindow\./,

@@ -47,6 +47,7 @@ const objects = [
   ['house.hero', 8, 9],
   ['house.gui', 30, 9],
   ...fenceTop,
+  ['gate.arch', 7, 14],
   ['vat', 12, 10],
   ['tree.peach', 4, 10],
   ['table', 5, 12],
