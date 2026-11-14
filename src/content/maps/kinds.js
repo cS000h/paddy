@@ -23,6 +23,7 @@ export const OBJECTS = Object.freeze({
   'gate.arch': {},
   vat: { foot: [0, 0, 0, 0], act: 'water', drink: 'vat' },
   well: { foot: [0, 0, 0, 0], act: 'water', drink: 'well' },
+  stove: { foot: [0, 0, 0, 0], act: 'kitchen' },
   cupboard: { foot: [0, 0, 0, 0], act: 'store' },
   basket: { foot: [0, 0, 0, 0], act: 'basket' },
   table: { foot: [0, 0, 1, 0] },

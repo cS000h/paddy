@@ -3,6 +3,8 @@
 // 所以饿了、渴了、有本事、吃了什么，都能在同一个地方加减，提示里说的和实际扣的也是同一个数。
 //   kind：farm 农活 | forage 采集 | fish 钓鱼 | craft 手艺 | cook 做饭 | chore 杂事 | rest 歇息
 export const ACTIONS = Object.freeze({
+  cook: { id: 'cook', kind: 'cook', energy: 4, outdoor: false, label: '生火做饭' },
+  mix: { id: 'mix', kind: 'cook', energy: 2, outdoor: false, label: '拌菜' },
   hoe: { id: 'hoe', kind: 'farm', energy: 4, outdoor: true, label: '锄地' },
   seed: { id: 'seed', kind: 'farm', energy: 1, outdoor: true, label: '播种' },
   can: { id: 'can', kind: 'farm', energy: 2, outdoor: true, label: '浇水' },

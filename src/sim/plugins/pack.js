@@ -5,6 +5,7 @@
 //   pack.put  {item, n | 'all', at}  从家里拿上（要在院里）    → pack.changed
 //   pack.take {item, n | 'all', at}  放回家里（要在院里）      → pack.changed
 //   eat       {item, at}             直接吃：零嘴，或能生吃的  → meal.eaten {line}
+import { validDish } from '../dish.js';
 import { is, check } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { ITEMS } from '../../content/items.js';
@@ -29,7 +30,10 @@ export const pack = {
         Object.fromEntries(
           Object.values(world.households)
             .flatMap(h => h.members)
-            .map(id => [id, { cap: PACK_SLOTS, big: false, items: { ...START_PACK }, flask: 0 }]),
+            .map(id => [
+              id,
+              { cap: PACK_SLOTS, big: false, items: { ...START_PACK }, flask: 0, dishes: [] },
+            ]),
         ),
       validate: (all, w) =>
         check([
@@ -40,17 +44,28 @@ export const pack = {
                 is.int(p.cap, 4, 12) &&
                 typeof p.big === 'boolean' &&
                 is.int(p.flask, 0, BODY.flaskSips) &&
+                is.arr(p.dishes, 12) &&
+                p.dishes.every(validDish) &&
                 is.obj(p.items) &&
                 Object.entries(p.items).every(([k, n]) => ITEMS[k]?.carry && is.int(n, 1, 999)),
             ),
             'fields',
           ],
-          [Object.values(all).every(p => sizeOf(p.items) <= p.cap), 'over capacity'],
+          [
+            Object.values(all).every(
+              p =>
+                sizeOf(p.items) + p.dishes.reduce((n, d) => n + (d.method === 'stew' ? 2 : 1), 0) <=
+                p.cap,
+            ),
+            'over capacity',
+          ],
         ]),
     });
 
     const count = (w, id, item) => w.packs[id].items[item] || 0;
-    const used = (w, id) => sizeOf(w.packs[id].items);
+    const used = (w, id) =>
+      sizeOf(w.packs[id].items) +
+      w.packs[id].dishes.reduce((n, d) => n + (d.method === 'stew' ? 2 : 1), 0);
     const room = (w, id) => w.packs[id].cap - used(w, id);
     /** 还放不放得下：已经有这样东西就能接着放，否则要有空格。 */
     const fits = (w, id, item) =>
@@ -205,13 +220,37 @@ export const pack = {
         big: p.big,
         atHome: home,
         items: Object.entries(p.items).map(view),
+        dishes: p.dishes,
         flask: hasFlask ? { left: p.flask, max: BODY.flaskSips } : null,
       };
     });
 
     ctx.provide(
       'pack',
-      Object.freeze({ count, used, room, fits, put, take, reach, has, use, receive, flask }),
+      Object.freeze({
+        count,
+        used,
+        room,
+        fits,
+        put,
+        take,
+        reach,
+        has,
+        use,
+        receive,
+        flask,
+        dishes: (w, id) => w.packs[id].dishes,
+        putDish: ctx.own((w, id, dish) => {
+          if (room(w, id) < (dish.method === 'stew' ? 2 : 1)) refuse(FULL);
+          w.packs[id].dishes.push(dish);
+        }),
+        takeDish: ctx.own((w, id, dishId) => {
+          const list = w.packs[id].dishes;
+          const i = list.findIndex(d => d.id === dishId);
+          if (i < 0) refuse('身上没有这份饭');
+          return list.splice(i, 1)[0];
+        }),
+      }),
     );
   },
 };

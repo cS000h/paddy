@@ -49,6 +49,7 @@ const objects = [
   ...fenceTop,
   ['gate.arch', 7, 14],
   ['vat', 12, 10],
+  ['stove', 11, 10],
   ['cupboard', 6, 10],
   ['tree.peach', 4, 10],
   ['table', 5, 12],

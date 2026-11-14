@@ -1,6 +1,7 @@
 // 行囊和橱柜两个小窗里写什么。
 //   bag   随时能开：身上带着什么，哪些能直接吃，水壶里还有几口
 //   store 站在橱柜跟前才开：左边是家里存的，右边是身上带的，来回倒腾
+import { dishRows } from './kitchen.js';
 import { itemImg } from './icons.js';
 
 // 直接吃下去是什么效果，写成一行小字。
@@ -52,7 +53,7 @@ export function bagView(modal, game, esc, here) {
     : '家里存的东西在院里的橱柜里，出了院子就够不着了。';
   return `<h2>行囊<small>${pack.used}/${pack.cap} 格 · 一格放一样东西</small></h2>
     ${bodyLine(game, esc)}
-    <ul class="items">${items || empty('空的')}${flaskRow(pack)}</ul>
+    <ul class="items">${items || empty('空的')}${dishRows(pack.dishes, esc, true)}${flaskRow(pack)}</ul>
     <p class="aside">${where}</p>
     <div class="row"><button class="main" data-do="close">好</button></div>`;
 }

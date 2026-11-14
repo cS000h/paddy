@@ -9,6 +9,10 @@ const COMMANDS = [
   'basket.order',
   'basket.put',
   'clock.advance',
+  'cook',
+  'dish.eat',
+  'dish.pack',
+  'dish.store',
   'drink',
   'eat',
   'farm.harvest',
@@ -30,6 +34,7 @@ const QUERIES = [
   'body',
   'bonds',
   'clock',
+  'cook.preview',
   'drink.why',
   'farm.plots',
   'farm.why',
@@ -37,6 +42,7 @@ const QUERIES = [
   'guide',
   'hero',
   'home',
+  'kitchen',
   'ledger',
   'notes',
   'pack',
@@ -59,8 +65,8 @@ test('端口对外只有这几样', () => {
 
 test('命令清单和查询清单', () => {
   const g = createGame();
-  assert.deepEqual(g.commands(), COMMANDS);
-  assert.deepEqual(g.queries(), QUERIES);
+  assert.deepEqual(g.commands(), [...COMMANDS].sort());
+  assert.deepEqual(g.queries(), [...QUERIES].sort());
 });
 
 test('每个查询开局就能回答，答案是纯数据', () => {

@@ -20,14 +20,7 @@ import {
 import { walkable, farmable, waterSource, actAt, spot } from '../content/maps/index.js';
 import { PEOPLE, ON_MAP } from '../content/people.js';
 
-const ACT_HINT = {
-  'door.hero': '回屋歇息',
-  'door.gui': '敲敲门',
-  water: '喝水、打水',
-  store: '收拾橱柜',
-  basket: '看看收菜筐',
-  sign: '看路牌',
-};
+import { ACT_HINT, touchThing } from './interactions.js';
 
 export class VillageScene extends Phaser.Scene {
   constructor() {
@@ -232,18 +225,7 @@ export class VillageScene extends Phaser.Scene {
   }
 
   touch(thing) {
-    const { shell, platform } = this.deps;
-    this.player.face(dirTo(this.player.tile, thing));
-    if (thing.act === 'water')
-      return shell.set({ modal: { kind: 'water', x: thing.x, y: thing.y } });
-    if (thing.act === 'store') return shell.set({ modal: { kind: 'store' } });
-    platform.audio.play('talk');
-    if (thing.act === 'door.hero') return shell.set({ modal: { kind: 'sleep' } });
-    if (thing.act === 'basket') return shell.set({ modal: { kind: 'basket' } });
-    if (thing.act === 'sign') return shell.set({ modal: { kind: 'sign', text: thing.text } });
-    return shell.set({
-      modal: { kind: 'sign', text: '门虚掩着，屋里飘出饭菜的香味。桂嫂大概在灶上忙。' },
-    });
+    return touchThing(this, thing);
   }
 
   /** 点了世界里的一个位置：走过去；那儿有事可做就做。 */

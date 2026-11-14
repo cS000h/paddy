@@ -53,6 +53,7 @@
 | L2-01 | L2   | sim     | fast rules         | `tests/L2-rules/farming.test.js`       | 锄地、播种、浇水、生长、采收、打水、体力，以及每一种拒绝的原因                                                                                                 |
 | L2-02 | L2   | sim     | fast rules         | `tests/L2-rules/village.test.js`       | 时间推进与过夜、打招呼、送菜与回礼、收菜筐买卖、手记                                                                                                           |
 | L2-03 | L2   | sim     | fast rules         | `tests/L2-rules/body.test.js`          | 饥、渴、心情随时间和干活变化；饿了渴了撑了更费体力；吃零嘴、喝水、竹筒水壶；行囊 6 格、和橱柜存取、满了的提示                                                  |
+| L2-04 | L2   | sim     | fast rules         | `tests/L2-rules/cooking.test.js`       | 0.12对照、预览与出锅、食材柴火回滚、熟食存取吃送和行囊占格                                                                                                     |
 | L3-01 | L3   | port    | fast contract      | `tests/L3-contract/port.test.js`       | 端口对外的命令、查询、结果形状、通知次数；外壳改不了规则里的数据                                                                                               |
 | L3-02 | L3   | port    | fast contract save | `tests/L3-contract/save.test.js`       | 存档往返不走样；坏存档被拒绝；每个存档版本的样本都能升级并继续玩                                                                                               |
 | L4-01 | L4   | sim     | fast replay golden | `tests/L4-replay/replay.test.js`       | 随机乱玩不会坏；同一种子结果逐字节相同；固定种子的最终世界指纹不变（基线）                                                                                     |

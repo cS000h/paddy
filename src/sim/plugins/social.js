@@ -15,10 +15,22 @@ const homeGrown = item => Object.values(CROPS).some(crop => crop.produce === ite
 export const social = {
   id: 'sim.social',
   provides: ['social'],
-  requires: ['schema', 'commands', 'reactions', 'queries', 'core', 'people', 'pack'],
+  requires: [
+    'schema',
+    'commands',
+    'reactions',
+    'queries',
+    'core',
+    'people',
+    'pack',
+    'kitchen',
+    'compute',
+    'body',
+  ],
   writes: ['bonds'],
   install(ctx) {
-    const { schema, commands, reactions, queries, core, people, pack } = ctx.services;
+    const { schema, commands, reactions, queries, core, people, pack, kitchen, compute, body } =
+      ctx.services;
 
     schema.slice('bonds', {
       initial: () => ({
@@ -62,22 +74,33 @@ export const social = {
       const w = draft.world;
       const b = target(w, input);
       const person = PEOPLE[input.to];
-      if (!giftable(input.item)) return { ok: false, reason: '这个不好拿去送人' };
+      if (!input.dish && !giftable(input.item)) return { ok: false, reason: '这个不好拿去送人' };
       if (b.gifted[input.to] === w.clock.day)
         return { ok: false, reason: `${person.name}今天已经收过了，改天再送` };
-      pack.use(w, people.who(w), input.item, 1, `送给${person.name}`);
+      const dish = input.dish ? kitchen.take(w, people.who(w), input.dish) : null;
+      if (!dish) pack.use(w, people.who(w), input.item, 1, `送给${person.name}`);
       // 合口味的东西和过节的吃食，对方格外高兴；自家地里长的，有它自己的一句话
-      const liked = person.treats.includes(input.item) || FESTIVE.includes(input.item);
+      const liked = dish
+        ? person.favorite === dish.base || dish.buff === person.likes
+        : person.treats.includes(input.item) || FESTIVE.includes(input.item);
       const lines = LINES[input.to];
       const line = liked ? lines.treat : homeGrown(input.item) ? lines.gift : lines.thanks;
       b.gifted[input.to] = w.clock.day;
-      b.known[input.to] += liked ? 3 : 2;
+      const gain = compute.run(
+        'relation.gain',
+        { w, who: people.who(w), source: 'gift' },
+        { value: liked ? 3 : 2, parts: [] },
+      );
+      b.known[input.to] = Math.min(999, b.known[input.to] + gain.value);
+      if (gain.parts.some(p => p.id === 'buff.guest')) body.useBuff(w, people.who(w), 'guest');
       b.owed.push({ from: input.to, day: w.clock.day + 1 });
       fact('gift.given', {
         to: input.to,
-        item: input.item,
+        item: input.item || null,
+        dish: dish?.base || null,
+        who: people.who(w),
         liked,
-        line: line.replace('{n}', ITEMS[input.item].name),
+        line: line.replace('{n}', dish?.name || ITEMS[input.item].name),
       });
       return undefined;
     });

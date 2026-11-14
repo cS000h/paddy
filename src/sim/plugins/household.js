@@ -94,7 +94,18 @@ export const household = {
 
     ctx.provide(
       'store',
-      Object.freeze({ count, items, water, add, take, pay, earn, pour, refill }),
+      Object.freeze({
+        id: w => Object.keys(w.households).find(k => w.households[k].members.includes(who(w))),
+        count,
+        items,
+        water,
+        add,
+        take,
+        pay,
+        earn,
+        pour,
+        refill,
+      }),
     );
   },
 };

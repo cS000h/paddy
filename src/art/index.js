@@ -12,6 +12,7 @@ import {
   bambooGrove,
   bush,
 } from './trees.js';
+import { stove } from './kitchen.js';
 import * as props from './props.js';
 import { soilTile, cropFrames, cursor, icon } from './tiles.js';
 import { personSheet, LOOK_NAMES, FRAME_W, FRAME_H, POSES, DIRS } from './people.js';
@@ -32,6 +33,7 @@ const OBJECT_MAKERS = {
   'gate.post': () => props.gatePost(),
   'gate.arch': () => props.gateArch(),
   vat: () => props.vat(),
+  stove,
   cupboard: () => props.cupboard(),
   well: () => props.well(),
   basket: () => props.basket(),

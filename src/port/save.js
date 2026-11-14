@@ -8,6 +8,15 @@ export const SAVE_FORMAT = 'dao.save';
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
 const MIGRATIONS = {
+  2(state) {
+    const w = state.world;
+    w.meta.version = 3;
+    w.kitchens = Object.fromEntries(
+      Object.keys(w.households).map(id => [id, { dishes: [], known: {}, fires: 0 }]),
+    );
+    for (const p of Object.values(w.packs)) p.dishes = [];
+    return state;
+  },
   // 2：身体与行囊（M1）。每个自家人多了饥、渴、心情和一只行囊；原来家里的菜种和菜算作带在身上，
   // 这样升级之后照旧能下地播种、拿菜送人；另外补上 0.12 开局时家里的那点存粮。
   1(state) {

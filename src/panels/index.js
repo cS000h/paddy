@@ -1,5 +1,6 @@
 // 界面面板：日期、身体（体力、饱、水、心情）、工具栏、提示条、流水、手记、各种小窗、触屏的摇杆和按钮。
 // 面板不改世界：要做事就发意图或调用 actions（由 app 提供），要显示就问端口。
+import { animateTiming } from './timing.js';
 import { TOOLS } from '../content/items.js';
 import { modalView } from './modals.js';
 import { toolIconUrl } from './icons.js';
@@ -242,6 +243,7 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
   el.stick.addEventListener('pointercancel', stickEnd);
 
   const offs = [
+    animateTiming(root, shell),
     offAct,
     offCancel,
     // 世界变了：重画常驻的面板、冒出新的流水；开着的小窗也跟着重画（里面的数可能变了）

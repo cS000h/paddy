@@ -1,6 +1,7 @@
 // 启动入口：把平台、规则（经由端口）、输入意图、世界画面、界面面板接到一起。
 // 这里也放“跨着几块的流程”：过夜、送礼、收菜筐、存档、时间流逝。
 import '../panels/style.css';
+import { kitchenActions } from './kitchen.js';
 import { createGame } from '../port/game.js';
 import { createWebPlatform } from '../platform/web.js';
 import { createIntents } from '../shell/intents.js';
@@ -47,6 +48,7 @@ function run(type, input) {
 
 // 面板上的按钮能做的事。按钮写 data-do="名字"，带的 data-* 会传进来。
 const actions = {
+  ...kitchenActions({ game, shell, run, here }),
   bag() {
     shell.set({ modal: { kind: 'bag' } });
   },
@@ -82,9 +84,9 @@ const actions = {
     if (notes.length) shell.set({ modal: { kind: 'notes', day, notes } });
     else shell.toast(`第 ${day} 日的清早。`);
   },
-  gift({ to, item }) {
+  gift({ to, item, dish }) {
     const modal = shell.get().modal;
-    const out = run('gift', { to, item, at: here() });
+    const out = run('gift', { to, item, dish: dish ? Number(dish) : null, at: here() });
     if (!out.ok) return;
     const line = out.facts.find(f => f.type === 'gift.given').data.line;
     shell.set({ modal: { ...modal, line, gifted: true } });

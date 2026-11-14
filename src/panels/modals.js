@@ -1,11 +1,15 @@
 // 各种小窗里写什么。每种小窗一个函数，返回一段 HTML；按钮上的 data-do 说明点了以后做什么。
 // 加一种小窗 = 在 VIEWS 里加一个函数，再让 app 的 actions 认得它的按钮。
 // 每个函数拿到 (modal, game, esc, here)：here 是操控的人此刻站的格子，问“够得着什么”时要带上。
+import { kitchenView, recipesView, heatView } from './kitchen.js';
 import { PEOPLE } from '../content/people.js';
 import { itemImg } from './icons.js';
 import { bagView, storeView } from './bag.js';
 
 const VIEWS = {
+  kitchen: kitchenView,
+  recipes: recipesView,
+  heat: heatView,
   water(modal, game, esc, here) {
     const reason = game.ask('drink.why', modal.x, modal.y, here);
     return `<h2>水边</h2><p>${esc(reason || '喝口水歇歇，也可以灌满浇菜的水壶。')}</p>
@@ -17,6 +21,13 @@ const VIEWS = {
     const person = PEOPLE[modal.who];
     const bond = game.ask('bonds').find(b => b.id === modal.who);
     const gifts = game.ask('goods', here).filter(item => item.gift);
+    const meals = game.ask('kitchen', here);
+    const dishGifts = [...meals.dishes, ...meals.carried]
+      .map(
+        d =>
+          `<button data-do="gift" data-to="${modal.who}" data-dish="${d.id}">端一份${esc(d.name)}</button>`,
+      )
+      .join('');
     let give = '';
     if (modal.gifted) give = '';
     else if (bond.giftedToday)
@@ -31,7 +42,7 @@ const VIEWS = {
         )
         .join('')}</div>`;
     return `<h2>${esc(person.name)}<small>${esc(person.role)} · ${esc(modal.doing)}</small></h2>
-      <p>${esc(modal.line)}</p>${give}
+      <p>${esc(modal.line)}</p>${give}${!modal.gifted && !bond.giftedToday ? `<div class="gifts">${dishGifts}</div>` : ''}
       <div class="row"><button class="main" data-do="close">好</button></div>`;
   },
 
@@ -97,7 +108,7 @@ const VIEWS = {
 };
 
 // 内容多的小窗用宽一点的纸。
-const WIDE = new Set(['store', 'basket']);
+const WIDE = new Set(['store', 'basket', 'kitchen', 'recipes']);
 
 /** 一个小窗的 HTML。 */
 export function modalView(modal, game, esc, here) {

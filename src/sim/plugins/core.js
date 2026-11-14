@@ -3,7 +3,7 @@ import { is, check } from '../../kernel/schema.js';
 import { ITEMS } from '../../content/items.js';
 import { BUFFS, LEDGER_LABELS } from '../../content/body.js';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 const LEDGER_MAX = 60;
 

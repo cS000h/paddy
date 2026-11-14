@@ -226,6 +226,31 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.locator('button[data-do="close"]').click();
       assert.deepEqual(session.errors, []);
     }
+    // M2：从灶台选食材，键盘/手指收火，端走和吃饭，翻菜谱。
+    for (const session of [desk, wide]) {
+      const p = session.page;
+      await tap(p, 11, 10);
+      await frames(p, 500);
+      await p.locator('[data-do="cookPick"][data-item="rice"]').click();
+      await p.locator('[data-do="cookPick"][data-item="egg"]').click();
+      await p.locator('[data-do="cookMethod"][data-method="fry"]').click();
+      assert.match(await p.locator('.sheet').textContent(), /蛋炒饭/);
+      await p.waitForTimeout(250);
+      await shot(p, session === desk ? 'm2-kitchen-desktop.png' : 'm2-kitchen-phone.png');
+      await p.locator('[data-do="cookHeat"]').click();
+      if (session === desk) await p.keyboard.press('Space');
+      else await p.locator('[data-do="cookFinish"]').tap();
+      await p.waitForSelector('[data-do="dishPack"]');
+      await p.locator('[data-do="dishPack"]').first().click();
+      assert.equal(await p.evaluate(() => window.__dao.game.ask('pack').dishes.length), 1);
+      await p.locator('[data-do="dishEat"]').first().click();
+      await p.locator('[data-do="recipes"]').click();
+      assert.match(await p.locator('h2').last().textContent(), /做过 1/);
+      await p.locator('[data-do="recipePage"]').last().click();
+      await p.locator('[data-do="backKitchen"]').click();
+      await p.locator('[data-do="close"]').click();
+      assert.deepEqual(session.errors, []);
+    }
     assert.deepEqual(wide.errors, []);
   } finally {
     await browser.close();
