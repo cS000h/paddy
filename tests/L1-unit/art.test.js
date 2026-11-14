@@ -96,3 +96,17 @@ test('地块和图标：32 张土、4 个作物阶段、5 个图标，都是 16�
   }
   assert.notDeepEqual(soil['dry.15'].data, soil['wet.15'].data, '干土和湿土要看得出区别');
 });
+
+test('四季换色与七种作物都只用调色板，四阶段彼此可分', () => {
+  for (const id of ['qingcai', 'chive', 'cucumber', 'longbean', 'pumpkin', 'radish', 'cabbage']) {
+    const frames = art.cropSet(id);
+    assert.equal(frames.length, 4);
+    for (const g of frames) {
+      assert.equal(g.w, 16);
+      for (let season = 0; season < 4; season++) {
+        const colored = art.seasonGrid(g, season);
+        for (const c of colored.data) assert.ok(c === 0 || Object.values(P).includes(c));
+      }
+    }
+  }
+});

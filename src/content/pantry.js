@@ -86,12 +86,12 @@ const RAW = {
   candy: snack('麦芽糖', 2, { full: 2, energy: 1, mood: 5, buff: 'treat', why: '甜得粘牙', water: -4 }),
   // —— 种子（播种的季节）
   'seed.qingcai': seed('青菜种子', 2, [0, 2], { crop: 'qingcai', short: '菜种' }),
-  seedCuke: seed('黄瓜种', 3, [1]),
-  seedBean: seed('豆角种', 3, [1]),
-  seedPumpkin: seed('南瓜种', 4, [0]),
-  seedRadish: seed('萝卜种', 2, [2]),
-  seedCabbage: seed('白菜种', 2, [2, 3]),
-  seedChive: seed('韭菜根', 4, [0, 1]),
+  seedCuke: seed('黄瓜种', 3, [1], { crop: 'cucumber' }),
+  seedBean: seed('豆角种', 3, [1], { crop: 'longbean' }),
+  seedPumpkin: seed('南瓜种', 4, [0], { crop: 'pumpkin' }),
+  seedRadish: seed('萝卜种', 2, [2], { crop: 'radish' }),
+  seedCabbage: seed('白菜种', 2, [2, 3], { crop: 'cabbage' }),
+  seedChive: seed('韭菜根', 4, [0, 1], { crop: 'chive' }),
   // —— 材料和手艺活
   wood: stuff('柴', 'material', 2),
   log: stuff('木头', 'material', 2, { ...NO, text: '山上砍的，回院劈开就是柴' }),
@@ -188,6 +188,12 @@ export const START_PACK = Object.freeze({ 'seed.qingcai': 12, cake: 2 });
 // 托阿满捎得到的东西（村口的杂货铺开张之前，买东西只有这一条路）。
 export const BASKET_WARES = Object.freeze([
   'seed.qingcai',
+  'seedChive',
+  'seedCuke',
+  'seedBean',
+  'seedPumpkin',
+  'seedRadish',
+  'seedCabbage',
   'rice',
   'egg',
   'potato',

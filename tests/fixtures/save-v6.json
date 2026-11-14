@@ -1,0 +1,476 @@
+{
+  "format": "dao.save",
+  "version": 6,
+  "state": {
+    "revision": 19,
+    "world": {
+      "meta": {
+        "version": 6,
+        "seed": 1841898558,
+        "nextId": 4
+      },
+      "notes": {
+        "list": [
+          {
+            "id": 1,
+            "day": 2,
+            "title": "清早的天色",
+            "text": "多云，12°上下。看云色，明天可能阴（把握50%）。"
+          },
+          {
+            "id": 2,
+            "day": 3,
+            "title": "清早的天色",
+            "text": "阴，11°上下。看云色，明天可能多云（把握50%）。"
+          },
+          {
+            "id": 3,
+            "day": 4,
+            "title": "清早的天色",
+            "text": "多云，11°上下。看云色，明天可能多云（把握50%）。"
+          }
+        ]
+      },
+      "ledger": {
+        "seq": 29,
+        "list": [
+          {
+            "seq": 1,
+            "who": "hero",
+            "k": "energy",
+            "d": -4,
+            "why": "锄地"
+          },
+          {
+            "seq": 2,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 3,
+            "who": "hero",
+            "k": "energy",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 4,
+            "who": "hero",
+            "k": "pack:seed.qingcai",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 5,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 6,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "浇水"
+          },
+          {
+            "seq": 7,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 8,
+            "who": "hero",
+            "k": "energy",
+            "d": -4,
+            "why": "锄地"
+          },
+          {
+            "seq": 9,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 10,
+            "who": "hero",
+            "k": "energy",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 11,
+            "who": "hero",
+            "k": "pack:seed.qingcai",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 12,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 13,
+            "who": "hero",
+            "k": "energy",
+            "d": -1,
+            "why": "浇水（农事熟手−1）"
+          },
+          {
+            "seq": 14,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 15,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "锄地（农事熟手−1，早起的人−1）"
+          },
+          {
+            "seq": 16,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 17,
+            "who": "hero",
+            "k": "pack:seed.qingcai",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 18,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 19,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 20,
+            "who": "hero",
+            "k": "energy",
+            "d": 15,
+            "why": "睡了一觉"
+          },
+          {
+            "seq": 21,
+            "who": "hero",
+            "k": "pack:veg.qingcai",
+            "d": 2,
+            "why": "地里收的"
+          },
+          {
+            "seq": 22,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 3,
+            "why": "农事"
+          },
+          {
+            "seq": 23,
+            "who": "hero",
+            "k": "pack:veg.qingcai",
+            "d": 2,
+            "why": "地里收的"
+          },
+          {
+            "seq": 24,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 3,
+            "why": "农事"
+          },
+          {
+            "seq": 25,
+            "who": "hero",
+            "k": "xp:social",
+            "d": 1,
+            "why": "人情"
+          },
+          {
+            "seq": 26,
+            "who": "hero",
+            "k": "pack:veg.qingcai",
+            "d": -1,
+            "why": "送给桂嫂"
+          },
+          {
+            "seq": 27,
+            "who": "hero",
+            "k": "xp:social",
+            "d": 2,
+            "why": "人情"
+          },
+          {
+            "seq": 28,
+            "who": "hero",
+            "k": "pack:veg.qingcai",
+            "d": -1,
+            "why": "放进收菜筐"
+          },
+          {
+            "seq": 29,
+            "who": "hero",
+            "k": "coins",
+            "d": -8,
+            "why": "托阿满捎青菜种子"
+          }
+        ]
+      },
+      "clock": {
+        "day": 4,
+        "minute": 450
+      },
+      "people": {
+        "hero": {
+          "energy": 100,
+          "map": "yard",
+          "x": 7,
+          "y": 18,
+          "dir": "down"
+        },
+        "shi": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "gui": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        }
+      },
+      "player": {
+        "controls": "hero"
+      },
+      "households": {
+        "home": {
+          "members": ["hero"],
+          "coins": 16,
+          "items": {
+            "rice": 3,
+            "veg.qingcai": 2,
+            "egg": 2,
+            "potato": 2,
+            "herb": 1,
+            "bean": 1,
+            "wood": 4,
+            "salt": 4
+          },
+          "can": 7
+        }
+      },
+      "vitals": {
+        "hero": {
+          "hunger": 43,
+          "thirst": 59,
+          "mood": 62,
+          "stuffed": 0,
+          "sweat": 0,
+          "buff": null
+        }
+      },
+      "packs": {
+        "hero": {
+          "cap": 6,
+          "big": false,
+          "items": {
+            "seed.qingcai": 9,
+            "cake": 2,
+            "veg.qingcai": 2
+          },
+          "flask": 0,
+          "dishes": []
+        }
+      },
+      "weather": {
+        "now": "cloudy",
+        "today": "cloudy",
+        "history": ["sunny", "cloudy", "overcast", "cloudy"],
+        "tomorrow": "cloudy",
+        "forecast": "cloudy",
+        "acc": 50,
+        "jitter": -1,
+        "wetDays": 0,
+        "dryDays": 4,
+        "looked": 0
+      },
+      "sensations": {
+        "hero": {
+          "chill": null
+        }
+      },
+      "outings": {
+        "hero": {
+          "counts": {},
+          "fish": null
+        }
+      },
+      "homesteads": {
+        "home": {
+          "coop": false,
+          "hens": 0,
+          "fed": 0,
+          "eggs": 0
+        }
+      },
+      "kitchens": {
+        "home": {
+          "dishes": [],
+          "known": {},
+          "fires": 0
+        }
+      },
+      "land": {
+        "yard": {
+          "plots": {
+            "6,19": {
+              "wet": true,
+              "crop": null,
+              "age": 0,
+              "water": 13,
+              "drained": false,
+              "fert": 4,
+              "weeds": false,
+              "bugs": false,
+              "fed": 0,
+              "last": "qingcai"
+            },
+            "7,19": {
+              "wet": true,
+              "crop": null,
+              "age": 0,
+              "water": 13,
+              "drained": false,
+              "fert": 4,
+              "weeds": false,
+              "bugs": false,
+              "fed": 0,
+              "last": "qingcai"
+            },
+            "8,19": {
+              "wet": true,
+              "crop": "qingcai",
+              "age": 3,
+              "water": 13,
+              "drained": false,
+              "fert": 6,
+              "weeds": false,
+              "bugs": false,
+              "fed": 0,
+              "last": null
+            }
+          }
+        }
+      },
+      "bonds": {
+        "known": {
+          "shi": 1,
+          "gui": 2
+        },
+        "talked": {
+          "shi": 4
+        },
+        "gifted": {
+          "gui": 4
+        },
+        "owed": [
+          {
+            "from": "gui",
+            "day": 5
+          }
+        ]
+      },
+      "basket": {
+        "goods": {
+          "veg.qingcai": 1
+        },
+        "order": {
+          "seed.qingcai": 4
+        }
+      },
+      "growth": {
+        "hero": {
+          "xp": {
+            "farm": 24,
+            "cook": 0,
+            "forage": 0,
+            "social": 3,
+            "sky": 0,
+            "craft": 0
+          },
+          "traits": ["earlybird"],
+          "counters": {
+            "wetOut": 0,
+            "cold": 2,
+            "hot": 0,
+            "dawn": 11,
+            "meals": 0
+          },
+          "origin": null
+        }
+      },
+      "achievements": {
+        "hero": {
+          "counts": {
+            "soil1": 1,
+            "soil20": 3,
+            "seed1": 1,
+            "seed30": 3,
+            "level5": 3,
+            "water20": 3,
+            "trait4": 1,
+            "days7": 3,
+            "harvest1": 1,
+            "harvest30": 4,
+            "talk10": 1,
+            "gift1": 1,
+            "gift10": 1
+          },
+          "earned": {
+            "soil1": 1,
+            "seed1": 1,
+            "harvest1": 4,
+            "gift1": 4
+          }
+        }
+      },
+      "guide": {
+        "done": {
+          "till": 1,
+          "sow": 1,
+          "water": 1,
+          "harvest": 4,
+          "meet": 4,
+          "gift": 4
+        }
+      }
+    }
+  }
+}

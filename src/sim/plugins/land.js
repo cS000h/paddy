@@ -11,18 +11,33 @@
 import { is } from '../../kernel/schema.js';
 import { CROPS, ITEMS, CAN_CAPACITY, cropStage, isRipe } from '../../content/items.js';
 import { MAPS, farmable, waterSource, isHome } from '../../content/maps/index.js';
+import { dateOf } from '../../content/calendar.js';
+import { installLandCare } from '../land-care.js';
 import { near } from './people.js';
 
 const key = (x, y) => `${x},${y}`;
-const SEED = 'seed.qingcai'; // 现在只有青菜一种；M5 把别的作物搬进来时改成“手里选的那一种”
+const SEED = 'seed.qingcai';
+const cropOf = seed => Object.values(CROPS).find(c => c.seed === seed);
 
 export const land = {
   id: 'sim.land',
   provides: ['land'],
-  requires: ['schema', 'commands', 'reactions', 'queries', 'people', 'store', 'pack', 'compute'],
+  requires: [
+    'schema',
+    'commands',
+    'reactions',
+    'queries',
+    'people',
+    'store',
+    'pack',
+    'compute',
+    'core',
+    'weather',
+  ],
   writes: ['land'],
   install(ctx) {
-    const { schema, commands, reactions, queries, people, store, pack, compute } = ctx.services;
+    const { schema, commands, reactions, queries, people, store, pack, compute, core, weather } =
+      ctx.services;
 
     schema.slice('land', {
       initial: () => Object.fromEntries(Object.keys(MAPS).map(id => [id, { plots: {} }])),
@@ -36,6 +51,13 @@ export const land = {
               return (
                 farmable(MAPS[id], x, y) &&
                 typeof p.wet === 'boolean' &&
+                is.int(p.water, 0, 30) &&
+                is.int(p.fert, 0, 10) &&
+                typeof p.weeds === 'boolean' &&
+                typeof p.bugs === 'boolean' &&
+                typeof p.drained === 'boolean' &&
+                is.int(p.fed) &&
+                (p.last === null || Object.hasOwn(CROPS, p.last)) &&
                 (p.crop === null || (Object.hasOwn(CROPS, p.crop) && is.int(p.age, 0, 99)))
               );
             }),
@@ -45,7 +67,7 @@ export const land = {
     const plotAt = (w, map, x, y) => w.land[map].plots[key(x, y)] || null;
 
     // 在 (x, y) 做 action 为什么不行；能做就返回 null。只读。
-    function why(w, action, x, y, at = null) {
+    function why(w, action, x, y, at = null, seed = SEED) {
       const p = people.me(w);
       const id = people.who(w);
       const map = MAPS[p.map];
@@ -65,12 +87,15 @@ export const land = {
       if (!plot) return farmable(map, x, y) ? '先用锄头把地锄松' : '这儿不是菜地';
       if (action === 'seed') {
         if (plot.crop) return '这一格已经种上了';
-        if (pack.count(w, id, SEED) > 0) return null;
-        if (store.count(w, SEED) < 1) return '种子用完了，托阿满捎一些来';
+        const crop = cropOf(seed);
+        if (!crop) return '没有这种菜种';
+        if (!crop.seasons.includes(dateOf(w.clock.day).season)) return `这个时节种不了${crop.name}`;
+        if (pack.count(w, id, seed) > 0) return null;
+        if (store.count(w, seed) < 1) return '种子用完了，托阿满捎一些来';
         return home ? null : '菜种在家里的橱柜里，先回去拿上';
       }
       if (action === 'can') {
-        if (plot.wet) return '今天浇过了，土还润着';
+        if (plot.water >= 14) return '土还润着，不必再浇';
         return store.water(w) > 0 ? null : '水壶空了，去水缸、水井或溪边打水';
       }
       if (action === 'hand') {
@@ -87,26 +112,38 @@ export const land = {
       ({ draft, input, fact }) => {
         const w = draft.world;
         const p = people.place(w, input.at);
-        const reason = why(w, action, input.x, input.y);
+        const reason = why(w, action, input.x, input.y, null, input.seed || SEED);
         if (reason) return { ok: false, reason };
         people.spend(w, draft, action, fact);
-        run(w, p.map, input.x, input.y, fact, people.who(w));
+        run(w, p.map, input.x, input.y, fact, people.who(w), input);
       };
 
     commands.register(
       'farm.till',
       farm('hoe', (w, map, x, y, fact) => {
-        w.land[map].plots[key(x, y)] = { wet: false, crop: null, age: 0 };
+        w.land[map].plots[key(x, y)] = {
+          wet: false,
+          crop: null,
+          age: 0,
+          water: 0,
+          drained: false,
+          fert: 6,
+          weeds: false,
+          bugs: false,
+          fed: 0,
+          last: null,
+        };
         fact('plot.tilled', { map, x, y });
       }),
     );
 
     commands.register(
       'farm.sow',
-      farm('seed', (w, map, x, y, fact, id) => {
-        pack.use(w, id, SEED, 1, '播种');
+      farm('seed', (w, map, x, y, fact, id, input) => {
+        const seed = input.seed || SEED;
+        pack.use(w, id, seed, 1, '播种');
         const plot = plotAt(w, map, x, y);
-        plot.crop = ITEMS[SEED].crop;
+        plot.crop = cropOf(seed).id;
         plot.age = 0;
         fact('plot.sown', { map, x, y, crop: plot.crop });
       }),
@@ -116,7 +153,9 @@ export const land = {
       'farm.water',
       farm('can', (w, map, x, y, fact) => {
         store.pour(w);
-        plotAt(w, map, x, y).wet = true;
+        const p = plotAt(w, map, x, y);
+        p.water = Math.min(p.drained ? 24 : 30, p.water + 18);
+        p.wet = p.water >= 8;
         fact('plot.watered', { map, x, y });
       }),
     );
@@ -128,13 +167,20 @@ export const land = {
         const def = CROPS[plot.crop];
         const n = compute.run(
           'action.yield',
-          { w, who: id, action: { id: 'harvest', kind: 'farm' } },
+          { w, who: id, action: { id: 'harvest', kind: 'farm', plot } },
           { value: def.yield, parts: [] },
         ).value;
         pack.receive(w, id, def.produce, n, '地里收的');
         fact('crop.harvested', { map, x, y, crop: def.id, item: def.produce, n });
-        plot.crop = null;
-        plot.age = 0;
+        plot.fert = Math.max(0, plot.fert - (plot.last === plot.crop && !def.regrow ? 3 : 2));
+        plot.bugs = false;
+        if (def.regrow) plot.age = def.regrow;
+        else {
+          plot.last = plot.crop;
+          plot.crop = null;
+          plot.age = 0;
+          plot.weeds = false;
+        }
       }),
     );
 
@@ -146,29 +192,7 @@ export const land = {
       }),
     );
 
-    // 清早：昨天浇过水的作物长一天；然后所有的土都干了。
-    reactions.on(
-      'day.started',
-      (s, e, emit) => {
-        for (const [map, m] of Object.entries(s.world.land))
-          for (const [k, plot] of Object.entries(m.plots)) {
-            if (plot.crop && plot.wet && !isRipe(plot.crop, plot.age)) {
-              plot.age += 1;
-              const [x, y] = k.split(',').map(Number);
-              emit('crop.grew', {
-                map,
-                x,
-                y,
-                crop: plot.crop,
-                age: plot.age,
-                ripe: isRipe(plot.crop, plot.age),
-              });
-            }
-            plot.wet = false;
-          }
-      },
-      { priority: 30 },
-    );
+    installLandCare(ctx, plotAt);
 
     queries.define('farm.plots', (w, map) =>
       Object.entries(w.land[map].plots).map(([k, p]) => {
@@ -183,7 +207,7 @@ export const land = {
         };
       }),
     );
-    queries.define('farm.why', (w, action, x, y, at) => why(w, action, x, y, at));
+    queries.define('farm.why', (w, action, x, y, at, seed) => why(w, action, x, y, at, seed));
 
     ctx.provide('land', Object.freeze({ plotAt, why }));
   },

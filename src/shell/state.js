@@ -4,6 +4,7 @@ import { TOOLS } from '../content/items.js';
 
 export function createShellState() {
   let state = Object.freeze({
+    seed: 'seed.qingcai',
     tool: TOOLS[0].id, // 当前工具
     modal: null, // 弹着的东西：null，或 {kind: 'talk' | 'sleep' | 'basket' | 'sign' | 'notes', …}
     hint: null, // 面前这一格能做什么：{text, ok}

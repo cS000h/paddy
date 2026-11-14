@@ -2,15 +2,80 @@
 // 物品在 pantry.js；花多少体力在 actions.js。
 export { ITEMS } from './pantry.js';
 
+// 一格地的产量沿用像素版尺度；季节、成熟时间、留根再生来自0.12。
 export const CROPS = Object.freeze({
   qingcai: {
     id: 'qingcai',
     name: '青菜',
     seed: 'seed.qingcai',
     produce: 'veg.qingcai',
-    days: 3, // 需要浇过水的 3 个早晨
-    stages: 4, // 外观阶段：下种、出苗、长叶、成熟
+    seasons: [0, 2],
+    days: 3,
+    stages: 4,
     yield: 1,
+  },
+  chive: {
+    id: 'chive',
+    name: '韭菜',
+    seed: 'seedChive',
+    produce: 'chive',
+    seasons: [0, 1, 2],
+    days: 3,
+    stages: 4,
+    yield: 1,
+    regrow: 1,
+  },
+  cucumber: {
+    id: 'cucumber',
+    name: '黄瓜',
+    seed: 'seedCuke',
+    produce: 'cucumber',
+    seasons: [1],
+    days: 4,
+    stages: 4,
+    yield: 1,
+    thirsty: true,
+  },
+  longbean: {
+    id: 'longbean',
+    name: '豆角',
+    seed: 'seedBean',
+    produce: 'longbean',
+    seasons: [1, 2],
+    days: 4,
+    stages: 4,
+    yield: 1,
+  },
+  pumpkin: {
+    id: 'pumpkin',
+    name: '南瓜',
+    seed: 'seedPumpkin',
+    produce: 'pumpkin',
+    seasons: [0, 1, 2],
+    days: 6,
+    stages: 4,
+    yield: 1,
+  },
+  radish: {
+    id: 'radish',
+    name: '萝卜',
+    seed: 'seedRadish',
+    produce: 'radish',
+    seasons: [2, 3],
+    days: 4,
+    stages: 4,
+    yield: 1,
+  },
+  cabbage: {
+    id: 'cabbage',
+    name: '白菜',
+    seed: 'seedCabbage',
+    produce: 'cabbage',
+    seasons: [2, 3],
+    days: 5,
+    stages: 4,
+    yield: 1,
+    hardy: true,
   },
 });
 

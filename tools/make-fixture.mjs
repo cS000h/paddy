@@ -23,9 +23,13 @@ const run = (type, input) => {
 };
 for (const x of [6, 7, 8])
   for (const step of ['farm.till', 'farm.sow', 'farm.water']) run(step, spot(x, 19));
-for (let day = 0; day < 3; day++) {
+for (let day = 0; day < 12 && !game.ask('farm.plots', 'yard').every(p => p.ripe); day++) {
+  for (const x of [6, 7, 8]) {
+    const p = game.ask('farm.detail', x, 19);
+    if (p.water > 26 && !p.drained) run('farm.care', { ...spot(x, 19), kind: 'drain' });
+    if (p.water < 14) run('farm.water', spot(x, 19));
+  }
   run('sleep', {});
-  if (day < 2) for (const x of [6, 7, 8]) run('farm.water', spot(x, 19));
 }
 run('farm.harvest', spot(6, 19));
 run('farm.harvest', spot(7, 19));

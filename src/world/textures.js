@@ -3,6 +3,7 @@
 // icon:<名字>、person:<外观>（每帧一个编号）、shadow、fx:<名字>。
 import * as art from '../art/index.js';
 import { GROUND } from '../content/maps/index.js';
+import { CROPS } from '../content/items.js';
 import { P } from '../art/palette.js';
 
 export function gridToCanvas(grid) {
@@ -33,7 +34,10 @@ function puff(size, color) {
 export function buildTextures(scene, map) {
   const add = (key, grid) => scene.textures.addCanvas(key, gridToCanvas(grid));
   const tiles = map.ground.map(row => [...row].map(ch => GROUND[ch].id));
-  add('ground', art.paintGround(tiles, 7));
+  const ground = art.paintGround(tiles, 7);
+  add('ground', ground);
+  for (let season = 0; season < 4; season++)
+    add('ground:' + season, art.seasonGrid(ground, season));
 
   const anchors = {};
   for (const [kind, x, y] of map.objects) {
@@ -42,10 +46,14 @@ export function buildTextures(scene, map) {
     if (anchors[key]) continue;
     const sprite = art.objectSprite(kind, variant);
     add(key, sprite.grid);
+    for (let season = 0; season < 4; season++)
+      add(key + ':' + season, art.seasonGrid(sprite.grid, season));
     anchors[key] = { ox: sprite.ax / sprite.grid.w, oy: sprite.ay / sprite.grid.h };
   }
 
   for (const [key, grid] of Object.entries(art.soilSet())) add('soil:' + key, grid);
+  for (const id of Object.keys(CROPS))
+    art.cropSet(id).forEach((g, stage) => add(`crop:${id}:${stage}`, g));
   art.cropFrames().forEach((grid, stage) => add('crop:' + stage, grid));
   add('cursor:ok', art.cursor(true));
   add('cursor:no', art.cursor(false));

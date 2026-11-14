@@ -1,3 +1,5 @@
+import { weatherEffects } from './weather.js';
+import { refreshPlots } from './plots.js';
 // 村庄场景：把地面、物件、人摆出来，镜头跟着操控的人，把“意图”变成走路和命令。
 // 这里只通过端口（deps.game）碰规则：发命令用 dispatch，问情况用 ask，听结果用 onCommit。
 import Phaser from 'phaser';
@@ -37,14 +39,16 @@ export class VillageScene extends Phaser.Scene {
     this.busy = false;
     this.hintKey = '';
     const { anchors } = buildTextures(this, map);
-    this.add.image(0, 0, 'ground').setOrigin(0).setDepth(-1000);
+    this.groundImage = this.add.image(0, 0, 'ground').setOrigin(0).setDepth(-1000);
+    this.scenery = [];
     for (const [kind, x, y] of map.objects) {
       const key = `obj:${kind}:${(x * 7 + y * 13) % 4}`;
       const a = anchors[key];
-      this.add
+      const sprite = this.add
         .image(x * TILE + 8, (y + 1) * TILE, key)
         .setOrigin(a.ox, a.oy)
         .setDepth((y + 1) * TILE);
+      this.scenery.push({ sprite, key });
     }
     this.plots = new Map();
     this.cursor = this.add.image(0, 0, 'cursor:ok').setOrigin(0).setDepth(-800).setVisible(false);
@@ -55,6 +59,7 @@ export class VillageScene extends Phaser.Scene {
     const minute = game.ask('clock').minute;
     this.villagers = ON_MAP.map(id => new Villager(this, map, id, PEOPLE[id].look, minute));
     this.effects = createEffects(this, map);
+    this.weatherFx = weatherEffects(this);
 
     const camera = this.cameras.main;
     camera.setBounds(0, 0, map.width * TILE, map.height * TILE);
@@ -96,6 +101,7 @@ export class VillageScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    this.weatherFx.update(time, this.deps.game.ask('weather').code);
     const dt = Math.min(0.05, delta / 1000);
     const { intents, shell } = this.deps;
     for (const v of this.villagers) v.follow(dt);
@@ -140,7 +146,7 @@ export class VillageScene extends Phaser.Scene {
       const reason = game.ask('farm.why', 'refill', t.x, t.y, this.at());
       hint = { text: reason || '打水', ok: !reason };
     } else if (farmable(this.map, t.x, t.y)) {
-      const reason = game.ask('farm.why', tool, t.x, t.y, this.at());
+      const reason = game.ask('farm.why', tool, t.x, t.y, this.at(), shell.get().seed);
       const cost = game.ask('action.cost', tool);
       const detail = cost.parts.map(p => p.label + (p.delta > 0 ? '+' : '') + p.delta).join('、');
       hint = {
@@ -166,9 +172,9 @@ export class VillageScene extends Phaser.Scene {
     if (t.kind === 'water') return shell.set({ modal: { kind: 'water', x: t.x, y: t.y } });
     if (!farmable(this.map, t.x, t.y)) return undefined;
     const tool = shell.get().tool;
-    const reason = game.ask('farm.why', tool, t.x, t.y, this.at());
+    const reason = game.ask('farm.why', tool, t.x, t.y, this.at(), shell.get().seed);
     if (reason) return this.refuse(reason);
-    return this.swing(tool, t, () => this.send(COMMAND_OF[tool], t));
+    return this.swing(tool, t, () => this.send(COMMAND_OF[tool], t, { seed: shell.get().seed }));
   }
 
   send(type, t, extra = {}) {
@@ -260,7 +266,7 @@ export class VillageScene extends Phaser.Scene {
       if (farm) {
         // 手指点地：当前工具不合适就自动换成合适的那一件
         const at = this.at();
-        const why = (tool, x, y) => game.ask('farm.why', tool, x, y, at);
+        const why = (tool, x, y) => game.ask('farm.why', tool, x, y, at, shell.get().seed);
         if (why(shell.get().tool, tile.x, tile.y)) {
           const better = bestTool(why, tile.x, tile.y);
           if (better) shell.set({ tool: better });
@@ -287,7 +293,10 @@ export class VillageScene extends Phaser.Scene {
         (this.effects.harvested(d.x, d.y), platform.audio.play('harvest'), (plots = true));
       else if (f.type === 'can.refilled')
         (this.effects.refilled(d.x * TILE + 8, d.y * TILE + 8), platform.audio.play('refill'));
-      else if (f.type === 'time.passed') this.retime(false);
+      else if (f.type === 'plot.cared' || f.type === 'weather.changed') {
+        plots = true;
+        this.retime(false);
+      } else if (f.type === 'time.passed') this.retime(false);
       else if (f.type === 'day.started') {
         const bed = spot(this.map, 'hero.bed');
         this.player.stop();
@@ -306,47 +315,15 @@ export class VillageScene extends Phaser.Scene {
 
   /** 时间变了：天色、村民的去向、炊烟。 */
   retime(jump) {
-    const { minute } = this.deps.game.ask('clock');
+    const { minute, season } = this.deps.game.ask('clock');
+    this.groundImage.setTexture('ground:' + season);
+    for (const { sprite, key } of this.scenery) sprite.setTexture(key + ':' + season);
     this.deps.shell.set({ tint: skyTint(minute) });
     for (const v of this.villagers) v.retime(minute, jump);
     this.effects.setCooking((minute >= 660 && minute < 780) || (minute >= 1020 && minute < 1140));
   }
 
-  /** 按规则里的田地状态重画每一格：土的干湿和拼接、作物的阶段。 */
   refreshPlots() {
-    const list = this.deps.game.ask('farm.plots', this.map.id);
-    const has = new Set(list.map(p => p.x + ',' + p.y));
-    for (const [key, sprites] of this.plots) {
-      if (has.has(key)) continue;
-      sprites.soil.destroy();
-      sprites.crop.destroy();
-      this.plots.delete(key);
-    }
-    for (const p of list) {
-      const key = p.x + ',' + p.y;
-      const mask =
-        (has.has(`${p.x},${p.y - 1}`) ? 1 : 0) |
-        (has.has(`${p.x + 1},${p.y}`) ? 2 : 0) |
-        (has.has(`${p.x},${p.y + 1}`) ? 4 : 0) |
-        (has.has(`${p.x - 1},${p.y}`) ? 8 : 0);
-      let sprites = this.plots.get(key);
-      if (!sprites) {
-        sprites = {
-          soil: this.add
-            .image(p.x * TILE, p.y * TILE, 'soil:dry.0')
-            .setOrigin(0)
-            .setDepth(-900),
-          crop: this.add.image(p.x * TILE + 8, (p.y + 1) * TILE - 2, 'crop:0').setOrigin(0.5, 1),
-          stage: -2,
-        };
-        sprites.crop.setDepth((p.y + 1) * TILE - 3);
-        this.plots.set(key, sprites);
-      }
-      sprites.soil.setTexture(`soil:${p.wet ? 'wet' : 'dry'}.${mask}`);
-      sprites.crop.setVisible(p.stage >= 0);
-      if (p.stage >= 0) sprites.crop.setTexture('crop:' + p.stage);
-      if (p.stage > sprites.stage && sprites.stage !== -2) this.effects.pop(sprites.crop);
-      sprites.stage = p.stage;
-    }
+    refreshPlots(this);
   }
 }

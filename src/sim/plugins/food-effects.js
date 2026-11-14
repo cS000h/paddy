@@ -13,6 +13,39 @@ export const foodEffects = {
       },
       { priority: 60 },
     );
+    compute.tap(
+      'action.cost',
+      (r, { w, who, action }) => {
+        const type = body.buff(w, who)?.type;
+        if (!['warm', 'cool'].includes(type) || !action.outdoor) return;
+        const extra = r.parts
+          .filter(
+            p =>
+              (type === 'warm' && ['weather.wet', 'trait.rainwalker'].includes(p.id)) ||
+              (p.id === 'body.comfort' &&
+                (type === 'warm' ? /冷/.test(p.label) : /热/.test(p.label))),
+          )
+          .reduce((n, p) => n + p.delta, 0);
+        if (extra > 0) compute.part(r, 'buff.' + type, type === 'warm' ? '暖身' : '清凉', -extra);
+      },
+      { priority: 60 },
+    );
+    compute.tap(
+      'body.feel',
+      (r, { w, who }) => {
+        const type = body.buff(w, who)?.type;
+        if (type === 'warm' && r.value < 18) compute.part(r, 'buff.warm', '热汤暖身', 3);
+        if (type === 'cool' && r.value >= 26) compute.part(r, 'buff.cool', '凉菜解暑', -3);
+      },
+      { priority: 20 },
+    );
+    compute.tap(
+      'chill.chance',
+      (r, { w, who }) => {
+        if (body.buff(w, who)?.type === 'warm') r.value *= 0.3;
+      },
+      { priority: 60 },
+    );
     for (const [pipe, type, label, kinds] of [
       ['action.yield', 'fresh', '清爽', ['forage', 'fish']],
       ['relation.gain', 'guest', '好客', null],

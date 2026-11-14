@@ -34,7 +34,7 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
   const meter = (id, label) =>
     `<span class="meter ${id}" data-id="${id}"><b>${label}</b><span class="bar"><i></i></span></span>`;
   root.innerHTML = `
-    <div class="card date"><span class="seal">稻</span><div><b data-id="date"></b><small data-id="time"></small></div></div>
+    <div class="card date"><span class="seal">稻</span><div><b data-id="date"></b><small data-id="time"></small><button data-do="weather" data-id="weather"></button></div></div>
     <div class="card vitals">
       <span class="meter energy"><b>体力</b><span class="bar" data-id="bar"><i></i></span><em data-id="energy"></em></span>
       ${meter('hunger', '饱')}${meter('thirst', '水')}${meter('mood', '心')}
@@ -72,6 +72,8 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
     const home = game.ask('home');
     const body = game.ask('body');
     const pack = game.ask('pack');
+    const weather = game.ask('weather');
+    el.weather.textContent = `${weather.name} ${weather.temperature}° · ${game.ask('comfort').word}`;
     el.date.textContent = `${clock.seasonName} · 第 ${clock.dayOfSeason} 日`;
     el.time.textContent = `${clock.period} ${clock.clock} · ${clock.hour}`;
     el.bar.firstElementChild.style.width = `${(hero.energy / hero.energyMax) * 100}%`;
@@ -94,14 +96,15 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
       hand: carried('veg.qingcai') || '',
     };
     const current = shell.get().tool;
-    el.toolbar.innerHTML = TOOLS.map(
-      (
-        tool,
-        i,
-      ) => `<button data-tool="${tool.id}" class="${tool.id === current ? 'on' : ''}" title="${tool.verb}">
+    el.toolbar.innerHTML =
+      TOOLS.map(
+        (
+          tool,
+          i,
+        ) => `<button data-tool="${tool.id}" class="${tool.id === current ? 'on' : ''}" title="${tool.verb}">
         <em>${i + 1}</em><i>${badge[tool.id] ?? ''}</i>
         <img class="pixel" src="${toolIconUrl(tool.id)}" alt="" />${tool.name}</button>`,
-    ).join('');
+      ).join('') + '<button data-do="seeds">选种</button><button data-do="field">田地</button>';
     if (journalOpen) renderJournal(pack);
     el.journal.hidden = !journalOpen;
   }

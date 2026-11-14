@@ -214,6 +214,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.locator('button[data-do="eat"][data-item="cake"]').last().click();
       assert.ok((await p.evaluate(() => window.__dao.game.ask('body').hunger)) > before);
       await p.waitForTimeout(250);
+      await p.waitForTimeout(250);
       const box = await p.locator('.sheet').boundingBox();
       assert.ok(box.y >= 0 && box.y + box.height <= p.viewportSize().height);
       await shot(p, session === desk ? 'm1-store-desktop.png' : 'm1-store-phone.png');
@@ -305,6 +306,34 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.waitForTimeout(250);
       await shot(p, session === desk ? 'm4-book-desktop.png' : 'm4-book-phone.png');
       await p.locator('[data-do="bookPage"]').last().click();
+      await p.locator('[data-do="close"]').click();
+      assert.deepEqual(session.errors, []);
+    }
+    // M5：实际点击预报、选种、田地护理，并确认矮屏可以滚动到操作按钮。
+    for (const session of [desk, wide]) {
+      const p = session.page;
+      await p.locator('[data-do="weather"]').click();
+      await p.locator('[data-do="skyLook"]').click();
+      assert.equal(await p.evaluate(() => window.__dao.game.ask('weather').looked), true);
+      await p.waitForTimeout(250);
+      await shot(p, session === desk ? 'm5-weather-desktop.png' : 'm5-weather-phone.png');
+      await p.locator('[data-do="close"]').click();
+      await p.locator('[data-do="seeds"]').click();
+      assert.equal(await p.locator('[data-do="seedChoose"]').count(), 7);
+      await p.locator('[data-do="seedChoose"][data-seed="seed.qingcai"]').click();
+      // 沿用已种好的田；点击种植完的地会走近，朝向该格。
+      await tap(p, 8, 20);
+      await frames(p, 1600);
+      await p.locator('[data-do="field"]').click();
+      await p.locator('[data-do="fieldCare"][data-kind="drain"]').click();
+      assert.equal(
+        await p.evaluate(() => window.__dao.game.ask('farm.detail', 8, 20).drained),
+        true,
+      );
+      await p.waitForTimeout(250);
+      const box = await p.locator('.sheet').boundingBox();
+      assert.ok(box.y >= 0 && box.y + box.height <= p.viewportSize().height);
+      await shot(p, session === desk ? 'm5-field-desktop.png' : 'm5-field-phone.png');
       await p.locator('[data-do="close"]').click();
       assert.deepEqual(session.errors, []);
     }

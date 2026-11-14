@@ -98,7 +98,7 @@ test('点一下菜地该用哪件工具：空地锄、锄过的下种、种上�
   assert.equal(bestTool(why, 6, 19), null, '今天没事可做了');
   for (let day = 0; day < 3; day++) {
     must(g, 'sleep');
-    if (day < 2) must(g, 'farm.water', spot);
+    if (day < 2 && !g.ask('farm.why', 'can', spot.x, spot.y, spot.at)) must(g, 'farm.water', spot);
   }
   assert.equal(bestTool(why, 6, 19), 'hand');
 });

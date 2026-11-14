@@ -3,7 +3,7 @@ export const CALENDAR = Object.freeze({
   dayStart: 6 * 60, // 一天从 06:00 开始
   dayEnd: 24 * 60, // 到 24:00 时间停住，等玩家回屋歇息（不催促）
   lateSleep: 22 * 60, // 这之后才睡，第二天体力回不满
-  seasonDays: 28,
+  seasonDays: 14,
   seasons: ['春', '夏', '秋', '冬'],
   realSecondsPerGameMinute: 0.7, // 外壳用：现实 0.7 秒 = 游戏 1 分钟
   tickMinutes: 10, // 外壳每凑满 10 分钟，给规则发一条“时间前进”

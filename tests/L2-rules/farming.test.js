@@ -37,7 +37,7 @@ test('顺序不对、够不着、不是菜地，都会被拒绝并说明原因',
   must(g, 'farm.sow', FIELD);
   assert.equal(refused(g, 'farm.sow', FIELD), '这一格已经种上了');
   must(g, 'farm.water', FIELD);
-  assert.equal(refused(g, 'farm.water', FIELD), '今天浇过了，土还润着');
+  assert.equal(refused(g, 'farm.water', FIELD), '土还润着，不必再浇');
   assert.equal(refused(g, 'farm.harvest', FIELD), '青菜还没长成');
 });
 
@@ -50,18 +50,17 @@ test('画面问“为什么不行”和命令拒绝的原因是同一句话', ()
   assert.equal(g.ask('farm.why', 'hoe', FIELD.x, FIELD.y, FIELD.at), null);
 });
 
-test('浇过水的作物每天长一截，三个早晨后成熟；没浇水就不长', () => {
+test('土里的水会保留，雨水补湿，足够湿润的青菜能生长', () => {
   const g = newGame();
   plant(g);
+  assert.equal(g.ask('farm.detail', 6, 19).water, 18);
   assert.ok(must(g, 'sleep').includes('crop.grew'));
   assert.equal(plotAt(g, 6, 19).stage, 1);
-  assert.equal(plotAt(g, 6, 19).wet, false, '过了一夜土就干了');
-  assert.ok(!must(g, 'sleep').includes('crop.grew'), '没浇水不长');
-  must(g, 'farm.water', FIELD);
+  assert.equal(plotAt(g, 6, 19).wet, true);
+  assert.equal(g.ask('farm.detail', 6, 19).water, 16);
+  assert.equal(refused(g, 'farm.water', FIELD), '土还润着，不必再浇');
   must(g, 'sleep');
-  must(g, 'farm.water', FIELD);
-  must(g, 'sleep');
-  assert.equal(plotAt(g, 6, 19).ripe, true);
+  assert.ok(g.ask('farm.detail', 6, 19).age >= 1);
 });
 
 test('采收：菜进了行囊，这一格还是锄过的地', () => {
@@ -72,7 +71,7 @@ test('采收：菜进了行囊，这一格还是锄过的地', () => {
   assert.deepEqual(plotAt(g, 6, 19), {
     x: 6,
     y: 19,
-    wet: false,
+    wet: plotAt(g, 6, 19).wet,
     crop: null,
     stage: -1,
     ripe: false,

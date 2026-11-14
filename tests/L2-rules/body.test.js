@@ -26,13 +26,13 @@ test('开局不饿不渴；时间过去，肚子慢慢空、口慢慢干，日�
   assert.deepEqual([b.hungerWord, b.thirstWord, b.moodWord], ['不饿', '不渴', '平静']);
   wait(g, 180); // 06:00 → 09:00，一个时辰
   const later = g.ask('body');
-  assert.deepEqual([later.hunger, later.thirst, later.mood], [55, 76, 63]);
+  assert.deepEqual([later.hunger, later.thirst, later.mood], [55, 76, 64]);
   wait(g, 900); // → 24:00
   const night = g.ask('body');
-  assert.deepEqual([night.hunger, night.thirst, night.mood], [30, 59, 68], '天黑以后口干得慢一半');
+  assert.deepEqual([night.hunger, night.thirst, night.mood], [30, 59, 74], '天黑以后口干得慢一半');
   must(g, 'sleep');
   const dawn = g.ask('body');
-  assert.deepEqual([dawn.hunger, dawn.thirst, dawn.mood], [25, 53, 66], '一夜又饿又渴，熬夜心情差');
+  assert.deepEqual([dawn.hunger, dawn.thirst, dawn.mood], [25, 53, 72], '一夜又饿又渴，熬夜心情差');
 });
 
 test('吃零嘴：管饱、回体力、心情好一点，甜的口干，还带一份增益', () => {
@@ -100,12 +100,15 @@ test('饿着干活更费体力、心情往下掉，空着肚子睡歇不回来�
   assert.ok(whys(g).includes('锄地（饿得没劲+2）'), '流水里写明多花在哪儿');
   const mood = g.ask('body').mood;
   wait(g, 144); // 过了正午这个时辰
-  assert.equal(g.ask('body').mood, mood - 2);
+  assert.equal(g.ask('body').mood, mood - 1);
   assert.ok(whys(g).includes('饿得心慌'));
   must(g, 'sleep');
   assert.equal(g.ask('hero').energy, 80, '空着肚子睡的，少歇回 20');
   assert.ok(whys(g).includes('睡了一觉（空着肚子睡的）'));
-  assert.equal(g.ask('notes', g.ask('clock').day)[0].title, '醒来');
+  assert.equal(
+    g.ask('notes', g.ask('clock').day).some(n => n.title === '醒来'),
+    true,
+  );
   must(g, 'eat', { item: 'cake' });
   must(g, 'eat', { item: 'cake' });
   assert.equal(g.ask('body').hunger, 10 + 28);

@@ -35,13 +35,16 @@ export function plant(game, spot = FIELD) {
   must(game, 'farm.water', spot);
 }
 
-/** 种下一棵青菜并养到成熟（每天浇水，睡三觉）。 */
+/** 根据土壤湿度照料一棵青菜，雨水也算浇灌。 */
 export function growOne(game, spot = FIELD) {
   plant(game, spot);
-  for (let day = 0; day < 3; day++) {
+  for (let day = 0; day < 12 && !plotAt(game, spot.x, spot.y).ripe; day++) {
+    const p = game.ask('farm.detail', spot.x, spot.y);
+    if (p.water > 26 && !p.drained) must(game, 'farm.care', { ...spot, kind: 'drain' });
+    if (p.water < 14) must(game, 'farm.water', spot);
     must(game, 'sleep');
-    if (day < 2) must(game, 'farm.water', spot);
   }
+  assert.ok(plotAt(game, spot.x, spot.y).ripe, '照料后的青菜应当成熟');
 }
 
 export const plotAt = (game, x, y) =>
