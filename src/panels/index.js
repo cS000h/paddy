@@ -130,6 +130,7 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
             `<li><span>${esc(b.name)}<small>${esc(b.role)}</small></span><span>${b.known ? '熟悉 ' + b.known : '还没说过话'}</span></li>`,
         )
         .join('')}</ul>
+      <button data-do="saves">进度与玩法</button>
       <button class="danger" data-do="reset">重新开始</button>`;
   }
 

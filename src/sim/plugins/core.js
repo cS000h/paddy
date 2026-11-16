@@ -4,7 +4,7 @@ import { SKILLS } from '../../content/growth.js';
 import { ITEMS } from '../../content/items.js';
 import { BUFFS, LEDGER_LABELS } from '../../content/body.js';
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 const LEDGER_MAX = 60;
 

@@ -1,3 +1,4 @@
+import { saveActions } from './saves.js';
 import { marketActions } from './market.js';
 // 启动入口：把平台、规则（经由端口）、输入意图、世界画面、界面面板接到一起。
 // 这里也放“跨着几块的流程”：过夜、送礼、收菜筐、存档、时间流逝。
@@ -20,12 +21,17 @@ const platform = createWebPlatform(document.getElementById('app'));
 const debug = platform.debug();
 const onError = error => console.error(error);
 
-// 读档；读不了就开新的一局，旧档留在原处不删（下一次保存才会盖掉）。
+// 读档失败时仅开临时体验局，暂停自动保存，绝不覆盖浏览器原档。
 let game;
+let loadProblem = '';
+let saving = true;
+let saveTimer = 0;
 try {
   game = createGame({ saved: platform.storage.load(), seed: platform.seed(), debug, onError });
 } catch (error) {
-  console.warn('存档读不了，开新的一局：', error);
+  console.warn('存档读不了，已保护原档：', error);
+  loadProblem = '原来的进度暂时读不了，已停止自动覆盖。请先导出浏览器原档留作备份。';
+  saving = false;
   game = createGame({ seed: platform.seed(), debug, onError });
 }
 
@@ -52,6 +58,17 @@ function run(type, input) {
 
 // 面板上的按钮能做的事。按钮写 data-do="名字"，带的 data-* 会传进来。
 const actions = {
+  ...saveActions({
+    game,
+    shell,
+    platform,
+    here,
+    loadProblem,
+    stopSaving: () => {
+      saving = false;
+      clearTimeout(saveTimer);
+    },
+  }),
   ...marketActions({ game, shell, run, here }),
   ...fieldActions({ game, shell, run, here, world }),
   ...growthActions({ game, shell, run }),
@@ -137,6 +154,7 @@ createPanels({
 
 growthNotices(game, shell);
 if (!game.ask('growth').origin) shell.set({ modal: { kind: 'origin' } });
+if (loadProblem) actions.saves();
 
 intents.on('tool', data => {
   const id = data.id || TOOLS[data.index]?.id;
@@ -145,9 +163,14 @@ intents.on('tool', data => {
 intents.on('tool.step', data => shell.stepTool(data.by));
 
 // 存档：每次世界有变化之后稍等一下再存；窗口被切走时立刻存，并记下站在哪儿。
-let saving = true;
-let saveTimer = 0;
-const saveNow = () => saving && platform.storage.save(game.save());
+let warnedSave = false;
+const saveNow = () => {
+  if (!saving) return;
+  if (!platform.storage.save(game.save()) && !warnedSave) {
+    warnedSave = true;
+    shell.toast('进度暂时存不进浏览器，请在行囊里打开“进度与玩法”导出备份。');
+  }
+};
 game.onCommit(() => {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveNow, 400);

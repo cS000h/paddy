@@ -133,7 +133,11 @@ export const growth = {
           id,
           emit,
           'cook',
-          1 + d.ingredients + ({ great: 2, good: 1 }[d.quality] || 0) + (d.first ? 2 : 0),
+          1 +
+            d.ingredients +
+            ({ great: 2, good: 1 }[d.quality] || 0) +
+            (d.first ? 2 : 0) +
+            (d.cut === 'shred' ? 1 : 0),
           'cook',
         );
       },

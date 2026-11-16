@@ -2,37 +2,8 @@
 // 存档放哪、怎么知道窗口被切走了、画面朝哪个方向、是键鼠还是触屏、怎么出声。
 // 以后要上桌面壳（Electron、Tauri）或别的平台，照着这个文件的形状再写一个，其余代码不动。
 
-const SAVE_KEY = 'dao.save.v1';
-
-function storage() {
-  return {
-    /** 读存档；没有或读不了就返回 null。 */
-    load() {
-      try {
-        const text = localStorage.getItem(SAVE_KEY);
-        return text ? JSON.parse(text) : null;
-      } catch {
-        return null;
-      }
-    },
-    /** 写存档；写不了（隐私模式、空间满）返回 false，不抛错。 */
-    save(data) {
-      try {
-        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-        return true;
-      } catch {
-        return false;
-      }
-    },
-    clear() {
-      try {
-        localStorage.removeItem(SAVE_KEY);
-      } catch {
-        /* 清不掉就算了 */
-      }
-    },
-  };
-}
+import { createStorage } from './storage.js';
+import { files } from './files.js';
 
 // 画面的方向和大小。手机、平板这类用手指的设备一律横屏：竖着拿的时候，把整个画面转 90 度。
 // 浏览器不允许网页直接锁定屏幕方向（只有全屏或装成应用后才行），所以用旋转来保证横屏；
@@ -177,7 +148,8 @@ export function createWebPlatform(root) {
   const view = viewport(root);
   return {
     name: 'web',
-    storage: storage(),
+    storage: createStorage(),
+    files,
     viewport: view,
     device: device(view),
     audio: audio(),

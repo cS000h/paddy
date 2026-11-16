@@ -1,3 +1,4 @@
+import { savesView } from './saves.js';
 import { marketView, teaView } from './market.js';
 // 各种小窗里写什么。每种小窗一个函数，返回一段 HTML；按钮上的 data-do 说明点了以后做什么。
 // 加一种小窗 = 在 VIEWS 里加一个函数，再让 app 的 actions 认得它的按钮。
@@ -11,6 +12,7 @@ import { itemImg } from './icons.js';
 import { bagView, storeView } from './bag.js';
 
 const VIEWS = {
+  saves: savesView,
   market: marketView,
   tea: teaView,
   weather: weatherView,

@@ -2,7 +2,7 @@ import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { dateOf } from '../../content/calendar.js';
 import { TEAS } from '../../content/market.js';
-import { PEOPLE } from '../../content/people.js';
+import { CHESS_TEXT, TEA_GOSSIP } from '../../content/life-text.js';
 import { atStation } from '../stations.js';
 export const teahouse = {
   id: 'sim.teahouse',
@@ -76,7 +76,8 @@ export const teahouse = {
         body.drink(w, id, 40, '喝茶');
         body.mood(w, id, 2, '坐下喝碗茶');
         pack.flask.fill(w, id);
-        line = TEAS[dateOf(w.clock.day).season][1];
+        const tea = TEAS[dateOf(w.clock.day).season];
+        line = `你要了一碗${tea[0]}。${tea[1]}。`;
         fact('water.drunk', { who: id, source: 'tea', line });
       } else {
         w.teaDays[id][kind] = w.clock.day;
@@ -85,10 +86,7 @@ export const teahouse = {
           const to = present(w, 'shi') ? 'shi' : 'zhou';
           social.relate(w, to, 1, '下了一盘棋');
           body.mood(w, id, 4, '下了盘棋');
-          line =
-            core.random(w) < 0.35
-              ? `${PEOPLE[to].name}看了半天棋盘：“这盘你赢了，再来，再来。”`
-              : `${PEOPLE[to].name}把棋子一个个摆回去：“下棋跟过日子一样，急不得。”`;
+          line = CHESS_TEXT[to][core.random(w) < 0.35 ? 0 : 1];
           clock.elapse(w, 180, fact);
         } else if (kind === 'hawk') {
           store.earn(w, 3, '帮阿满卖菜');
@@ -97,7 +95,7 @@ export const teahouse = {
           line = '你帮着称菜、找零，阿满负责跟人抬杠。一筐菜卖完，他塞给你三个钱。';
           clock.elapse(w, 180, fact);
         } else {
-          line = `茶客们说：明天可能${weather.view(w).forecast.name}。${(w.clock.day + 1) % 5 === 0 ? '明天是集日，想买肉就早些来。' : '后山的茶垄有人照看，沿溪上山便是。'}`;
+          line = `你端着茶碗，听邻桌东一句西一句：几个老人看着天说，明天可能${weather.view(w).forecast.name}。${(w.clock.day + 1) % 5 === 0 ? '明天是集日，有人说杀猪的老张要来摆摊，想吃肉的趁早。' : core.stable(TEA_GOSSIP, w.clock.day)}`;
           core.post(w, { title: '茶摊上听来的', text: line });
         }
       }

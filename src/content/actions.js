@@ -13,6 +13,8 @@ export const ACTIONS = Object.freeze({
   drain: { id: 'drain', kind: 'farm', energy: 8, outdoor: true, label: '挖排水沟' },
   ...OUTDOOR,
   ...HOMEWORK,
+  cookShred: { id: 'cookShred', kind: 'cook', energy: 5, outdoor: false, label: '切丝做饭' },
+  mixShred: { id: 'mixShred', kind: 'cook', energy: 3, outdoor: false, label: '切丝拌菜' },
   cook: { id: 'cook', kind: 'cook', energy: 4, outdoor: false, label: '生火做饭' },
   mix: { id: 'mix', kind: 'cook', energy: 2, outdoor: false, label: '拌菜' },
   hoe: { id: 'hoe', kind: 'farm', energy: 4, outdoor: true, label: '锄地' },

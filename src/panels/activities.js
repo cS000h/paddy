@@ -1,3 +1,4 @@
+import { ACTIVITY_HINTS } from '../content/life-text.js';
 import { FISH_TIMING } from '../content/activities.js';
 export function activityView(m, game, esc, here) {
   const query = m.group === 'outing' ? 'outings' : 'homestead';
@@ -7,11 +8,12 @@ export function activityView(m, game, esc, here) {
       ? `<p>${data.coop ? '鸡窝搭好了' : '先用三根柴搭窝'} · ${data.hens}只鸡 · ${data.eggs}个蛋</p>`
       : '';
   return `<h2>${esc(m.label || '院里院外')}<small>${data.weather ? esc(data.weather.name) : '慢慢做，不着急'}</small></h2>${extra}
+ ${m.line ? `<p class="activity-story">${esc(m.line)}</p>` : ''}
  ${data.pending && m.station === 'fish' ? '<button class="main" data-do="resumeFish">浮漂还在水里，继续钓</button>' : ''}
  <ul class="items">${data.options
    .map(
      a => `<li><span class="what">${esc(a.label)}<small>${a.materials || ''} · 体力 ${a.cost.value}${a.left !== undefined ? ' · 今天还剩' + a.left + '次' : ''}</small>
- <small>${esc(a.reason || a.cost.parts.map(p => p.label + (p.delta > 0 ? '+' : '') + p.delta).join('、') || '可以动手')}</small></span>
+ <small>${esc(ACTIVITY_HINTS[a.id] || '')}</small><small>${esc(a.reason || a.cost.parts.map(p => p.label + (p.delta > 0 ? '+' : '') + p.delta).join('、') || '')}</small></span>
  <button data-do="activity" data-id="${a.id}" ${a.reason ? 'disabled' : ''}>${a.id === 'fish' ? '下竿' : '动手'}</button></li>`,
    )
    .join('')}</ul>

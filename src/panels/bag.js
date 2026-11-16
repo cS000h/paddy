@@ -55,7 +55,7 @@ export function bagView(modal, game, esc, here) {
     ${bodyLine(game, esc)}
     <ul class="items">${items || empty('空的')}${dishRows(pack.dishes, esc, true)}${flaskRow(pack)}</ul>
     <p class="aside">${where}</p>
-    <div class="row"><button class="main" data-do="close">好</button></div>`;
+    <div class="row"><button data-do="saves">进度与玩法</button><button class="main" data-do="close">好</button></div>`;
 }
 
 export function storeView(modal, game, esc, here) {
@@ -88,5 +88,5 @@ export function storeView(modal, game, esc, here) {
       <section><h3>身上带的<small>${pack.used}/${pack.cap} 格</small></h3>
         <ul class="items">${carried || empty('空的')}${flaskRow(pack)}</ul></section>
     </div>
-    <div class="row"><button class="main" data-do="close">好</button></div>`;
+    <div class="row"><button data-do="saves">进度与玩法</button><button class="main" data-do="close">好</button></div>`;
 }

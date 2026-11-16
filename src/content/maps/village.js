@@ -114,7 +114,7 @@ export const market = map(
   [
     route(1, 14, 'yard', 'west', '回小院'),
     route(26, 14, 'tea', 'south', '去樟树茶摊'),
-    ['house.gui', 14, 8],
+    ['house.gui', 14, 8, { text: '杂货铺的门开着。要买卖东西，到门前柜台看看。' }],
     ['marketCounter', 14, 10, { shop: 'market', label: '小乔照看的柜台' }],
     ['rack', 19, 10],
     ['jars', 10, 11],

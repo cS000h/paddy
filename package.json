@@ -16,7 +16,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "art:sheet": "node tools/art-sheet.mjs"
+    "art:sheet": "node tools/art-sheet.mjs",
+    "build:offline": "node tools/build-offline.mjs"
   },
   "dependencies": {
     "phaser": "^4.2.1"

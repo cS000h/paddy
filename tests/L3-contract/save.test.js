@@ -52,3 +52,31 @@ test('每个存档版本都有样本，样本都能升到当前版本并继续�
     assert.ok(g.ask('clock').day >= 2);
   }
 });
+
+test('第4日的初版存档升级后仍停在第4日，钱、种下的菜和乡邻熟悉度不被重开', () => {
+  const old = JSON.parse(readFileSync(path.join(fixtures, 'save-v1.json'), 'utf8'));
+  old.state.world.clock.day = 4;
+  const before = JSON.stringify(old);
+  const g = createGame({ saved: old, debug: true });
+  assert.equal(g.ask('clock').day, 4);
+  for (const [id, h] of Object.entries(old.state.world.households)) {
+    const now = g.save().state.world.households[id];
+    assert.equal(now.coins, h.coins);
+    assert.equal(now.can, h.can);
+    assert.deepEqual(now.members, h.members);
+    for (const [item, n] of Object.entries(h.items)) {
+      const carried = h.members.reduce(
+        (sum, who) => sum + (g.save().state.world.packs[who].items[item] || 0),
+        0,
+      );
+      assert.ok((now.items[item] || 0) + carried >= n, '原有物品保留，种子迁到行囊');
+    }
+  }
+  for (const [id, value] of Object.entries(old.state.world.bonds.known))
+    assert.equal(g.save().state.world.bonds.known[id], value);
+  assert.equal(
+    Object.keys(g.save().state.world.land.yard.plots).length,
+    Object.keys(old.state.world.land.yard.plots).length,
+  );
+  assert.equal(JSON.stringify(old), before, '迁移不改调用者持有的原档');
+});

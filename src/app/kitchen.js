@@ -1,19 +1,36 @@
+import { QUALITY } from '../content/recipes.js';
 import { timingValue } from '../shell/timing.js';
 export function kitchenActions({ game, shell, run, here }) {
   const edit = patch => shell.set({ modal: { ...shell.get().modal, ...patch } });
   const input = () => {
     const m = shell.get().modal;
-    return { items: m.items || [], spices: m.spices || [], method: m.method || 'stew', at: here() };
+    return {
+      items: m.items || [],
+      spices: m.spices || [],
+      method: m.method || 'stew',
+      cut: m.cut || null,
+      at: here(),
+    };
   };
   function cook(heat = null) {
     const out = run('cook', { ...input(), heat });
     if (out.ok) {
       const d = out.facts.find(f => f.type === 'meal.cooked').data;
-      shell.set({ modal: { kind: 'kitchen' } });
-      shell.toast(`${d.servings}份${d.name}出锅了。`);
+      const line = `${d.method === 'mix' ? '切好拌匀，撒一撮盐。' : QUALITY[d.quality].line}${d.servings}份${d.name}${d.method === 'mix' ? '摆上了桌' : '出锅了'}。${d.first ? '头一回做这道菜，记进了菜谱。' : ''}${d.seasonal ? '都是当季的东西，闻着就鲜。' : ''}`;
+      shell.set({ modal: { kind: 'kitchen', line } });
     }
   }
   return {
+    cookCut({ cut }) {
+      edit({ cut: cut || null });
+    },
+    cookRecipe({ name }) {
+      const r = game.ask('kitchen', here()).recipes.find(r => r.name === name);
+      if (r)
+        shell.set({
+          modal: { kind: 'kitchen', items: r.items, spices: r.spices, method: r.method },
+        });
+    },
     cookPick({ item }) {
       const items = shell.get().modal.items || [];
       if (items.includes(item)) edit({ items: items.filter(k => k !== item) });

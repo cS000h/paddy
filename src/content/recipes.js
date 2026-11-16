@@ -44,3 +44,20 @@ export const RECIPES=[
   ['酸辣土豆丝','fry',['potato'],['vinegar','chili']],['糖醋萝卜','mix',['radish'],['sugar','vinegar']],['拍黄瓜','mix',['cucumber'],['vinegar']],['葱花炒蛋','fry',['egg'],['scallion']],
   ['辣炒豆角','fry',['longbean'],['chili']],['酱香芋头','stew',['taro'],['soy']],
 ];
+
+// 刀工沿用 0.12：合适的切法放宽火候三格；切丝多花一点体力。
+export const CUTS = {
+  chunk: { name: '切块', word: '块', fit: ['stew', 'roast'], tip: '炖、烤合适；炒不透，拌不入味' },
+  shred: {
+    name: '切丝',
+    word: '丝',
+    fit: ['fry', 'mix'],
+    tip: '炒、拌合适，费工夫；一炖就烂，一烤就焦',
+  },
+  slice: {
+    name: '切片',
+    word: '片',
+    fit: ['fry', 'stew', 'mix'],
+    tip: '炒、煮、拌都行；烤着容易干',
+  },
+};

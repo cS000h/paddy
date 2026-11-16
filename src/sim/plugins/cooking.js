@@ -53,7 +53,8 @@ export const cooking = {
         k = home(w),
         p = preview(w, input);
       if (k.dishes.length + p.servings > 40) refuse('灶台摆满了，先吃掉一些');
-      people.spend(w, draft, p.method === 'mix' ? 'mix' : 'cook', fact);
+      const action = (p.method === 'mix' ? 'mix' : 'cook') + (p.cut === 'shred' ? 'Shred' : '');
+      people.spend(w, draft, action, fact);
       if (p.method !== 'mix') {
         pack.use(w, id, 'wood', 1, '烧火');
         k.fires++;

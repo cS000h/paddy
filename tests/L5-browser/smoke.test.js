@@ -370,7 +370,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await tap(p, 17, 10);
       await frames(p, 400);
       await p.locator('[data-do="teaDo"][data-kind="listen"]').click();
-      assert.match(await p.locator('.sheet').textContent(), /茶客们说/);
+      assert.match(await p.locator('.sheet').textContent(), /听邻桌东一句西一句/);
       await p.locator('[data-do="close"]').click();
       await go(26, 14, 'river');
       await shot(p, session === desk ? 'river-desktop.png' : 'river-phone.png');

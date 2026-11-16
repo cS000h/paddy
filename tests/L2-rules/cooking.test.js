@@ -79,3 +79,28 @@ test('柴用尽不扣食材，汤菜装不下也不从灶台消失', () => {
   assert.match(g.dispatch('dish.pack', { id: dishes[2].id, at }).reason, /行囊满/);
   assert.deepEqual(g.save(), packed);
 });
+
+test('刀工与黄酒沿用0.12：匹配切法饱腹加二、火候放宽，切丝多耗体力并长厨艺', () => {
+  const g = newGame();
+  const base = g.ask('cook.preview', { items: ['potato'], method: 'fry' });
+  const shred = g.ask('cook.preview', { items: ['potato'], method: 'fry', cut: 'shred' });
+  const chunk = g.ask('cook.preview', { items: ['potato'], method: 'fry', cut: 'chunk' });
+  assert.equal(shred.full, base.full + 2);
+  assert.equal(shred.heat.half, base.heat.half + 3);
+  assert.equal(chunk.heat.half, base.heat.half - 3);
+  const fish = g.ask('cook.preview', { items: ['fish'], method: 'stew' });
+  const wine = g.ask('cook.preview', { items: ['fish'], method: 'stew', spices: ['wine'] });
+  assert.equal(wine.heat.half, fish.heat.half + 3);
+  const plain = newGame();
+  must(plain, 'cook', { items: ['potato'], method: 'fry', at });
+  must(g, 'cook', { items: ['potato'], method: 'fry', cut: 'shred', at });
+  assert.equal(g.ask('hero').energy, plain.ask('hero').energy - 1);
+  const skill = game => game.ask('growth').skills.find(s => s.id === 'cook');
+  assert.equal(skill(g).xp, skill(plain).xp + 1);
+  assert.equal(g.ask('kitchen', at).dishes[0].cut, 'shred');
+  const saved = JSON.parse(JSON.stringify(g.save()));
+  assert.deepEqual(createGame({ saved, debug: true }).save(), g.save());
+  const before = g.save();
+  assert.equal(g.dispatch('cook', { ...meal, cut: '不存在' }).ok, false);
+  assert.deepEqual(g.save(), before);
+});

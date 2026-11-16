@@ -1,13 +1,14 @@
 import { is } from '../kernel/schema.js';
 import { ITEMS } from '../content/items.js';
 import { BUFFS } from '../content/body.js';
-import { METHODS, QUALITY } from '../content/recipes.js';
+import { METHODS, QUALITY, CUTS } from '../content/recipes.js';
 // 家里的菜和端在身上的菜共用同一份校验。
 export const validDish = d =>
   is.obj(d) &&
   is.int(d.id, 1) &&
   is.str(d.name, 40) &&
   is.str(d.base, 40) &&
+  (d.cut === null || Object.hasOwn(CUTS, d.cut)) &&
   is.int(d.day, 1) &&
   is.int(d.full, 0, 100) &&
   is.int(d.energy, 0, 100) &&

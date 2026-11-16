@@ -31,13 +31,20 @@ export function createWorld(deps) {
   });
   phaser.scene.add('village', VillageScene, true, sceneDeps);
   const scene = () => phaser.scene.getScene('village');
-  const offResize = view.onChange(size => phaser.scale.resize(size.width, size.height));
+  // 单文件脚本可能早于 DOM 就绪执行，手机首次布局会先发 resize；等引擎有画布再同步。
+  const resize = size => {
+    if (phaser.scale.canvas) phaser.scale.resize(size.width, size.height);
+  };
+  const ready = () => resize(view.size());
+  phaser.events.once(Phaser.Core.Events.READY, ready);
+  const offResize = view.onChange(resize);
   return {
     /** 操控的人此刻站在哪一格、面朝哪边；场景还没起来时是 null。 */
     heroAt: () => (scene()?.player ? scene().at() : null),
     scene,
     destroy() {
       offResize();
+      phaser.events.off(Phaser.Core.Events.READY, ready);
       phaser.destroy(true);
     },
   };

@@ -1,13 +1,13 @@
 // 做饭预览和出锅共用这一条计算路径，避免面板承诺与实际结果不一致。
 import { ITEMS, seasonal, inSeason } from '../content/pantry.js';
-import { METHODS, QUALITY, HEAT } from '../content/recipes.js';
+import { METHODS, QUALITY, HEAT, CUTS } from '../content/recipes.js';
 import { BUFFS, buffUses } from '../content/body.js';
 import { dateOf } from '../content/calendar.js';
 import { dishName, quality } from './cuisine-name.js';
 import { buffOf, tasteOf } from './cuisine-taste.js';
 import { refuse } from '../kernel/dispatch.js';
 export function previewMeal(w, input, compute, who) {
-  const { items = [], method = 'stew', spices = [], heat = null } = input;
+  const { items = [], method = 'stew', spices = [], heat = null, cut = null } = input;
   if (
     !Array.isArray(items) ||
     items.length < 1 ||
@@ -26,6 +26,7 @@ export function previewMeal(w, input, compute, who) {
   if (method === 'mix' && !items.every(k => ITEMS[k].tags.includes('raw')))
     refuse('这些食材不能生拌，得下锅');
   if (heat !== null && (!Number.isFinite(heat) || heat < 0 || heat > 100)) refuse('火候没看清');
+  if (cut !== null && !Object.hasOwn(CUTS, cut)) refuse('没有这种切法');
   const I = k => ITEMS[k];
   const si = dateOf(w.clock.day).season;
   const season = items.some(k => seasonal(k, si)) && items.every(k => inSeason(k, si));
@@ -38,6 +39,19 @@ export function previewMeal(w, input, compute, who) {
     items.reduce((n, k) => n + I(k).full, 0),
   );
   if (season) full = Math.round(full * 1.1);
+  const cutBonus = cut ? (CUTS[cut].fit.includes(method) ? 3 : -3) : 0;
+  if (cutBonus > 0) full += 2;
+  if (
+    cut &&
+    !name.named &&
+    items.filter(k => !['rice', 'egg'].includes(k)).length === 1 &&
+    !/[丝片块]$|粥|饭|汤|羹|煲/.test(name.name)
+  )
+    name.name += CUTS[cut].word;
+  const wineBonus =
+    spices.includes('wine') && items.some(k => I(k).tags.some(t => ['meat', 'fishy'].includes(t)))
+      ? 3
+      : 0;
   const r = compute.run(
     'meal.preview',
     { w, who, items, method },
@@ -48,6 +62,7 @@ export function previewMeal(w, input, compute, who) {
       ingredients: [...items],
       spices: [...spices],
       method,
+      cut,
       full,
       energy: { stew: 12, fry: 8, roast: 8, mix: 6 }[method] + meat * 4,
       buff: buff.type,
@@ -61,7 +76,16 @@ export function previewMeal(w, input, compute, who) {
       notes: [...taste.notes],
     },
   );
-  const bonus = compute.run('cook.heat', { w, who }, { value: 0, parts: [] }).value;
+  if (cut)
+    r.notes.push(
+      cutBonus > 0
+        ? `${CUTS[cut].name}：和${METHODS[method]}正对路，火候好拿捏，更入味`
+        : `${CUTS[cut].name}：${CUTS[cut].tip}，火候更难拿捏`,
+    );
+  if (wineBonus) r.notes.push('黄酒去腥：火候好拿捏些');
+  if (cut === 'shred') r.notes.push('切丝费些工夫：体力多用一点，厨艺经验多一点');
+  const bonus =
+    compute.run('cook.heat', { w, who }, { value: 0, parts: [] }).value + cutBonus + wineBonus;
   r.heat = method === 'mix' ? null : { ...HEAT[method], half: HEAT[method].half + bonus };
   const q = quality(method, heat, bonus);
   r.quality = q;

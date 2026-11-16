@@ -1,5 +1,5 @@
 import { itemImg } from './icons.js';
-import { METHODS, HEAT } from '../content/recipes.js';
+import { METHODS, HEAT, CUTS } from '../content/recipes.js';
 import { ITEMS } from '../content/items.js';
 export function dishRows(dishes, esc, carry = false) {
   return dishes
@@ -17,7 +17,7 @@ export function kitchenView(m, game, esc, here) {
     method = m.method || 'stew';
   const goods = game.ask('goods', here),
     k = game.ask('kitchen', here);
-  const p = game.ask('cook.preview', { items, spices, method });
+  const p = game.ask('cook.preview', { items, spices, method, cut: m.cut || null });
   const options = goods
     .filter(i => i.cook)
     .map(
@@ -33,6 +33,7 @@ export function kitchenView(m, game, esc, here) {
     )
     .join('');
   return `<h2>家里的灶台<small>挑一至三样食材，做一顿自己的饭</small></h2>
+ ${m.line ? `<p class="activity-story">${esc(m.line)}</p>` : ''}
  <nav class="tabs"><button data-do="recipes">翻菜谱</button><button data-do="close">离开灶台</button></nav>
  <div class="two"><section><h3>下锅的东西</h3><div class="choices">${options}</div>
  <h3>怎么做</h3><div class="choices">${Object.entries(METHODS)
@@ -41,7 +42,16 @@ export function kitchenView(m, game, esc, here) {
        `<button class="${method === id ? 'chosen' : ''}" data-do="cookMethod" data-method="${id}">${name}</button>`,
    )
    .join('')}</div>
- <h3>添两勺滋味</h3><div class="choices">${seasoning || '<small>托阿满捎些调料来</small>'}<button data-do="cookClearSpice">不放调料</button></div></section>
+ <h3>案板上的功夫</h3><div class="choices"><button data-do="cookCut" data-cut="" class="${m.cut ? '' : 'chosen'}">家常切法</button>${Object.entries(
+   CUTS,
+ )
+   .map(
+     ([id, c]) =>
+       `<button data-do="cookCut" data-cut="${id}" class="${m.cut === id ? 'chosen' : ''}">${c.name}</button>`,
+   )
+   .join('')}</div>
+ <p class="aside">${m.cut ? esc(CUTS[m.cut].tip) : '切块、切丝、切片，各有合适的做法。'}</p>
+ <h3>添两勺滋味</h3><div class="choices">${seasoning || '<small>去村口杂货铺看看调料</small>'}<button data-do="cookClearSpice">不放调料</button></div></section>
  <section><h3>${p.ok ? esc(p.name) : '等你下锅'}</h3><p>${p.ok ? `${p.servings}份 · 饱腹 +${p.full} · 体力 +${p.energy}<br>${esc(p.why)}——${esc(p.buffText)}` : esc(p.reason)}</p>
  <p class="aside">${p.ok ? esc(p.notes.join('；')) : ''}</p><p class="aside">${method === 'mix' ? '凉拌不用柴' : '每锅用一根柴 · 家里和身上共' + (goods.find(i => i.id === 'wood')?.n || 0) + '根'}</p>
  <div class="row"><button data-do="cookPlain" ${p.ok ? '' : 'disabled'}>稳稳做家常饭</button>
@@ -57,7 +67,7 @@ export function recipesView(m, game, esc, here) {
    .slice(page * 8, page * 8 + 8)
    .map(
      r =>
-       `<li><span class="what">${r.known ? '✓ ' : ''}${esc(r.name)}<small>${METHODS[r.method]} · ${[...r.items, ...r.spices].map(k => ITEMS[k].name).join('、')}${r.known ? ' · 做过' + r.times + '回' : ''}</small></span></li>`,
+       `<li><span class="what">${r.known ? '✓ ' : ''}${esc(r.name)}<small>${METHODS[r.method]} · ${[...r.items, ...r.spices].map(k => ITEMS[k].name).join('、')}${r.known ? ' · 做过' + r.times + '回' : ''}</small></span><button data-do="cookRecipe" data-name="${esc(r.name)}">照着做</button></li>`,
    )
    .join('')}</ul>
  <div class="row"><button data-do="recipePage" data-page="${Math.max(0, page - 1)}">上一页</button><button data-do="recipePage" data-page="${Math.min(pages - 1, page + 1)}">下一页</button><button class="main" data-do="backKitchen">回灶台</button></div>`;
