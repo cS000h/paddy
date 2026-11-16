@@ -141,25 +141,29 @@ export class Walker {
 /** 村民：按作息表去该去的位置，到了就面朝规定的方向；“回家了”就从画面上消失。 */
 export class Villager extends Walker {
   constructor(scene, map, id, look, minute) {
-    const first = scheduleAt(id, minute);
-    const at = spot(map, first.spot);
-    super(scene, look, at.x, at.y, at.dir);
+    const first = scene.deps.game.ask('residents').find(p => p.id === id);
+    super(scene, look, first.x, first.y, first.dir);
     this.id = id;
     this.map = map;
     this.speed = 30;
     this.plan = first;
     this.doing = first.doing;
-    this.setVisible(!map.offstage.includes(first.spot));
+    this.setVisible(first.visible && first.map === map.id);
   }
 
   /** 时间变了：看看是不是该换地方了。 */
   retime(minute, jump = false) {
-    const plan = scheduleAt(this.id, minute);
-    if (plan === this.plan) return;
+    const plan = this.scene.deps.game.ask('residents').find(p => p.id === this.id);
+    if (!jump && JSON.stringify(plan) === JSON.stringify(this.plan)) return;
     this.plan = plan;
     this.doing = plan.doing;
-    const goal = spot(this.map, plan.spot);
-    const offstage = this.map.offstage.includes(plan.spot);
+    const goal = plan;
+    const offstage = !plan.visible || plan.map !== this.map.id;
+    if (offstage) {
+      this.stop();
+      this.setVisible(false);
+      return;
+    }
     const settle = () => {
       this.face(goal.dir);
       this.setVisible(!offstage);

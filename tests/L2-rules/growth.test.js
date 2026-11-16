@@ -51,7 +51,7 @@ test('熟悉度与厨艺做出特质；获得后预览与出锅仍一致', () =>
   must(g, 'talk', { to: 'shi' });
   assert.ok(once > before);
   assert.equal(skill(g, 'social').xp, once);
-  const at = { x: 10, y: 10 };
+  const at = { x: 10, y: 11 };
   for (const items of [
     ['rice', 'egg'],
     ['rice', 'potato'],

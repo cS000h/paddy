@@ -1,9 +1,10 @@
 // 地图查询。规则和画面都从这里问“这一格是什么”，所以两边不会各有一套说法。
 import { GROUND, OBJECTS } from './kinds.js';
+import { cottage, creek, tea, market, river, hill } from './village.js';
 import { yard } from './yard.js';
 
 export { GROUND, OBJECTS };
-export const MAPS = Object.freeze({ yard });
+export const MAPS = Object.freeze({ yard, cottage, creek, tea, market, river, hill });
 export const START_MAP = 'yard';
 
 const key = (x, y) => `${x},${y}`;

@@ -10,7 +10,7 @@ import { refuse } from '../../kernel/dispatch.js';
 import { PEOPLE, HERO, ON_MAP } from '../../content/people.js';
 import { ENERGY_MAX } from '../../content/items.js';
 import { ACTIONS } from '../../content/actions.js';
-import { MAPS, START_MAP, spot, walkable, isHome } from '../../content/maps/index.js';
+import { MAPS, START_MAP, spot, walkable, isHome, actAt } from '../../content/maps/index.js';
 
 const DIRS = ['up', 'down', 'left', 'right'];
 const sign = n => (n > 0 ? '+' + n : '−' + -n);
@@ -126,6 +126,20 @@ export const people = {
       const before = p.energy;
       p.energy = Math.max(0, Math.min(ENERGY_MAX, before + n));
       core.log(w, id, 'energy', p.energy - before, why);
+    });
+
+    commands.register('travel', ({ draft, input, fact }) => {
+      const w = draft.world,
+        p = place(w, input.at),
+        from = p.map;
+      const door = actAt(MAPS[from], input.x, input.y);
+      if (!door?.to || !near(p, door)) refuse('走到路口或门边再过去');
+      const dest = MAPS[door.to],
+        at = spot(dest, door.arrival);
+      if (!walkable(dest, at.x, at.y)) refuse('那边暂时过不去');
+      p.map = dest.id;
+      Object.assign(p, at);
+      fact('person.travelled', { who: who(w), from, to: p.map, ...at, name: dest.name });
     });
 
     commands.register('person.place', ({ draft, input }) => {

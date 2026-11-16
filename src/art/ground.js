@@ -51,7 +51,12 @@ export function paintGround(tiles, seed = 1) {
       const band = noise(x * 0.35, y, 7, seed + 2);
       const fleck = hash2(x, y, seed + 3);
       let c;
-      if (kind === 'grass') {
+      if (kind === 'boards') {
+        c = y % 8 === 0 ? P.t2 : x % 48 === 0 ? P.t1 : P.t0;
+      } else if (kind === 'wall') {
+        c = y % 16 === 0 ? P.l3 : P.l1;
+        if (x % 64 < 3) c = P.t2;
+      } else if (kind === 'grass') {
         c = patch < 0.42 ? P.g1 : patch < 0.8 ? P.g2 : P.g3;
         if (band > 0.86 && c === P.g2) c = P.g1;
         if (fleck < 0.003) c = P.g4;

@@ -46,6 +46,14 @@ const LOOKS = {
   },
 };
 
+// 新村民沿用同一张远景纸娃娃，不增加近脸细节。
+Object.assign(LOOKS, {
+  aman: { ...LOOKS.hero, cloth: P.g4, shade: P.g6, sash: P.t3, hat: true },
+  qiao: { ...LOOKS.gui, cloth: P.p1, shade: P.p3, trim: P.l0, scarf: false },
+  zhou: { ...LOOKS.shi, cloth: P.i2, shade: P.i3, pants: P.t3, hat: false },
+  yun: { ...LOOKS.gui, cloth: P.n0, shade: P.n2, trim: P.i0, apron: false },
+});
+
 // 头的轮廓：从头顶往下 12 行，每行的 [左, 右]。
 const HEAD = [
   [4, 11],

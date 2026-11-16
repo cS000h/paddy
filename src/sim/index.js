@@ -27,6 +27,9 @@ import { homestead } from './plugins/homestead.js';
 import { growth } from './plugins/growth.js';
 import { growthPerks } from './plugins/growth-perks.js';
 import { achievements } from './plugins/achievements.js';
+import { residents } from './plugins/residents.js';
+import { teahouse } from './plugins/teahouse.js';
+import { market } from './plugins/market.js';
 import { guide } from './plugins/guide.js';
 
 export { SAVE_VERSION };
@@ -51,6 +54,9 @@ export const PLUGINS = Object.freeze([
   growth,
   growthPerks,
   achievements,
+  residents,
+  market,
+  teahouse,
   guide,
 ]);
 

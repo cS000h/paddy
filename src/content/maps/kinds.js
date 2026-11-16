@@ -2,6 +2,8 @@
 
 // 地面字符。walk = 能走；farm = 能锄地；water = 能在旁边打水；drink = 能喝（喝的是哪种水）。
 export const GROUND = Object.freeze({
+  o: { id: 'boards', walk: true },
+  v: { id: 'wall', walk: false },
   '.': { id: 'grass', walk: true },
   p: { id: 'earth', walk: true },
   s: { id: 'stone', walk: true },
@@ -15,6 +17,13 @@ export const GROUND = Object.freeze({
 // 物件种类。foot = 相对锚点格 [dx0, dy0, dx1, dy1] 的占地（挡路）范围；没有 foot 的不挡路。
 // act = 走到旁边按互动键时发生什么（由外壳解释）；drink = 能喝的水（见 content/body.js 的 DRINKS）。
 export const OBJECTS = Object.freeze({
+  bed: { foot: [-1, -1, 1, 0], act: 'sleep' },
+  roomWindow: {},
+  rug: {},
+  boat: {},
+  route: { act: 'travel' },
+  teaCounter: { foot: [-1, 0, 1, 0], act: 'tea' },
+  marketCounter: { foot: [-1, 0, 1, 0], act: 'market' },
   'house.hero': { foot: [-3, -4, 3, 0], act: 'door.hero' },
   'house.gui': { foot: [-3, -4, 3, 0], act: 'door.gui' },
   'fence.h': { foot: [0, 0, 0, 0] },

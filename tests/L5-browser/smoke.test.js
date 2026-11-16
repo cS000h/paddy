@@ -232,7 +232,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     // M2：从灶台选食材，键盘/手指收火，端走和吃饭，翻菜谱。
     for (const session of [desk, wide]) {
       const p = session.page;
-      await tap(p, 11, 10);
+      await tap(p, 10, 10);
       await frames(p, 500);
       await p.locator('[data-do="cookPick"][data-item="rice"]').click();
       await p.locator('[data-do="cookPick"][data-item="egg"]').click();
@@ -264,7 +264,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
         await p.evaluate(() => window.__dao.game.ask('pack').items.some(i => i.id === 'strip')),
       );
       await p.locator('[data-do="close"]').click();
-      await tap(p, 5, 11);
+      await tap(p, 4, 12);
       await frames(p, 1200);
       await p.locator('[data-do="activity"][data-id="weave"]').click();
       assert.ok(
@@ -335,6 +335,61 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       assert.ok(box.y >= 0 && box.y + box.height <= p.viewportSize().height);
       await shot(p, session === desk ? 'm5-field-desktop.png' : 'm5-field-phone.png');
       await p.locator('[data-do="close"]').click();
+      assert.deepEqual(session.errors, []);
+    }
+    // M6与小屋：不通过传送调试接口，沿真实路口走过每张地图。
+    for (const session of [desk, wide]) {
+      const p = session.page;
+      const go = async (x, y, id) => {
+        await tap(p, x, y);
+        await frames(p, 1600);
+        await p.waitForFunction(id => window.__dao.world.scene().map.id === id, id);
+        await frames(p, 30);
+        assert.equal(await p.evaluate(() => window.__dao.game.ask('hero').map), id);
+      };
+      await go(8, 9, 'cottage');
+      await shot(p, session === desk ? 'cottage-desktop.png' : 'cottage-phone.png');
+      await tap(p, 15, 7);
+      await frames(p, 400);
+      await p.locator('[data-do="cookPick"][data-item="potato"]').click();
+      await p.locator('[data-do="cookPlain"]').click();
+      assert.match(await p.locator('.sheet').textContent(), /土豆/);
+      await p.locator('[data-do="close"]').click();
+      await go(9, 14, 'yard');
+      await go(2, 14, 'market');
+      await tap(p, 14, 10);
+      await frames(p, 400);
+      await p.locator('[data-do="marketBuy"][data-item="rice"]').click();
+      assert.ok(
+        await p.evaluate(() => window.__dao.game.ask('pack').items.some(i => i.id === 'rice')),
+      );
+      await p.waitForTimeout(250);
+      await shot(p, session === desk ? 'market-desktop.png' : 'market-phone.png');
+      await p.locator('[data-do="close"]').click();
+      await go(26, 14, 'tea');
+      await tap(p, 17, 10);
+      await frames(p, 400);
+      await p.locator('[data-do="teaDo"][data-kind="listen"]').click();
+      assert.match(await p.locator('.sheet').textContent(), /茶客们说/);
+      await p.locator('[data-do="close"]').click();
+      await go(26, 14, 'river');
+      await shot(p, session === desk ? 'river-desktop.png' : 'river-phone.png');
+      await go(12, 4, 'creek');
+      await go(12, 3, 'hill');
+      assert.ok(
+        await p.evaluate(() =>
+          window.__dao.world.scene().villagers.some(v => v.id === 'yun' && v.sprite.visible),
+        ),
+      );
+      await shot(p, session === desk ? 'hill-desktop.png' : 'hill-phone.png');
+      await go(12, 20, 'creek');
+      await go(1, 14, 'yard');
+      await go(8, 9, 'cottage');
+      // 新标签页自己的自动存档；重载应还在屋里，没有覆盖用户浏览器进度。
+      await p.waitForTimeout(500);
+      await p.reload();
+      await p.waitForFunction(() => window.__dao?.world.scene()?.player);
+      assert.equal(await p.evaluate(() => window.__dao.game.ask('hero').map), 'cottage');
       assert.deepEqual(session.errors, []);
     }
     assert.deepEqual(wide.errors, []);

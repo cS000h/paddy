@@ -1,3 +1,4 @@
+import { MAPS } from '../content/maps/index.js';
 import { weatherEffects } from './weather.js';
 import { refreshPlots } from './plots.js';
 // 村庄场景：把地面、物件、人摆出来，镜头跟着操控的人，把“意图”变成走路和命令。
@@ -39,6 +40,7 @@ export class VillageScene extends Phaser.Scene {
     this.busy = false;
     this.hintKey = '';
     const { anchors } = buildTextures(this, map);
+    this.anchors = anchors;
     this.groundImage = this.add.image(0, 0, 'ground').setOrigin(0).setDepth(-1000);
     this.scenery = [];
     for (const [kind, x, y] of map.objects) {
@@ -48,7 +50,7 @@ export class VillageScene extends Phaser.Scene {
         .image(x * TILE + 8, (y + 1) * TILE, key)
         .setOrigin(a.ox, a.oy)
         .setDepth((y + 1) * TILE);
-      this.scenery.push({ sprite, key });
+      this.scenery.push({ sprite, key, kind, look: null });
     }
     this.plots = new Map();
     this.cursor = this.add.image(0, 0, 'cursor:ok').setOrigin(0).setDepth(-800).setVisible(false);
@@ -65,10 +67,12 @@ export class VillageScene extends Phaser.Scene {
     camera.setBounds(0, 0, map.width * TILE, map.height * TILE);
     camera.startFollow(this.player.sprite, true, 0.14, 0.14, 0, 10);
     camera.setRoundPixels(true);
-    this.scale.on('resize', () => this.fit());
+    const fit = () => this.fit();
+    this.scale.on('resize', fit);
     this.fit();
 
     this.cleanups = [
+      () => this.scale.off('resize', fit),
       bindKeyboard(this, intents),
       bindPointer(this, intents, this.deps.platform),
       intents.on('act', () => this.act()),
@@ -77,7 +81,21 @@ export class VillageScene extends Phaser.Scene {
     ];
     this.events.once('shutdown', () => this.cleanups.forEach(off => off()));
     this.refreshPlots();
+    this.relook();
     this.retime(true);
+  }
+
+  /** 有的物件随规则里的状态换样子。现在只有鸡窝：还没搭是一块空地，养了鸡能看见鸡。 */
+  relook() {
+    const coops = this.scenery.filter(s => s.kind === 'coop');
+    if (!coops.length) return;
+    const home = this.deps.game.ask('homestead', 'coop');
+    const look = !home.coop ? 'site' : home.hens > 0 ? 'hens' : null;
+    for (const s of coops) {
+      s.look = look;
+      const a = this.anchors[look ? s.key + '@' + look : s.key];
+      s.sprite.setOrigin(a.ox, a.oy);
+    }
   }
 
   /** 按窗口大小挑一个整数倍的放大倍数：横向至少看得到 17 格，纵向至少 10 格。 */
@@ -101,7 +119,7 @@ export class VillageScene extends Phaser.Scene {
   }
 
   update(time, delta) {
-    this.weatherFx.update(time, this.deps.game.ask('weather').code);
+    this.weatherFx.update(time, this.map.indoor ? 'sunny' : this.deps.game.ask('weather').code);
     const dt = Math.min(0.05, delta / 1000);
     const { intents, shell } = this.deps;
     for (const v of this.villagers) v.follow(dt);
@@ -141,7 +159,7 @@ export class VillageScene extends Phaser.Scene {
     this.hintKey = key;
     let hint = null;
     if (t.kind === 'person') hint = { text: `和${PEOPLE[t.person.id].name}说话`, ok: true };
-    else if (t.kind === 'thing') hint = { text: ACT_HINT[t.thing.act], ok: true };
+    else if (t.kind === 'thing') hint = { text: t.thing.label || ACT_HINT[t.thing.act], ok: true };
     else if (t.kind === 'water') {
       const reason = game.ask('farm.why', 'refill', t.x, t.y, this.at());
       hint = { text: reason || '打水', ok: !reason };
@@ -283,6 +301,12 @@ export class VillageScene extends Phaser.Scene {
     let plots = false;
     for (const f of facts) {
       const d = f.data;
+      if (f.type === 'person.travelled') {
+        this.player.stop();
+        this.deps.shell.toast(d.name);
+        this.scene.restart({ ...this.deps, map: MAPS[d.to] });
+        return;
+      }
       if (f.type === 'plot.tilled')
         (this.effects.tilled(d.x, d.y), platform.audio.play('hoe'), (plots = true));
       else if (f.type === 'plot.sown')
@@ -293,17 +317,22 @@ export class VillageScene extends Phaser.Scene {
         (this.effects.harvested(d.x, d.y), platform.audio.play('harvest'), (plots = true));
       else if (f.type === 'can.refilled')
         (this.effects.refilled(d.x * TILE + 8, d.y * TILE + 8), platform.audio.play('refill'));
-      else if (f.type === 'plot.cared' || f.type === 'weather.changed') {
+      else if (f.type === 'home.worked') {
+        this.relook();
+        this.retime(false);
+      } else if (f.type === 'plot.cared' || f.type === 'weather.changed') {
         plots = true;
         this.retime(false);
       } else if (f.type === 'time.passed') this.retime(false);
       else if (f.type === 'day.started') {
-        const bed = spot(this.map, 'hero.bed');
+        const hero = this.deps.game.ask('hero');
+        const bed = { x: hero.x, y: hero.y };
         this.player.stop();
         this.player.px = bed.x * TILE + 8;
         this.player.py = bed.y * TILE + 13;
         this.player.face('down');
         this.player.sync();
+        this.relook();
         this.retime(true);
         platform.audio.play('day');
         plots = true;
@@ -317,8 +346,9 @@ export class VillageScene extends Phaser.Scene {
   retime(jump) {
     const { minute, season } = this.deps.game.ask('clock');
     this.groundImage.setTexture('ground:' + season);
-    for (const { sprite, key } of this.scenery) sprite.setTexture(key + ':' + season);
-    this.deps.shell.set({ tint: skyTint(minute) });
+    for (const { sprite, key, look } of this.scenery)
+      sprite.setTexture((look ? key + '@' + look : key) + ':' + season);
+    this.deps.shell.set({ tint: this.map.indoor ? '#ffffff' : skyTint(minute) });
     for (const v of this.villagers) v.retime(minute, jump);
     this.effects.setCooking((minute >= 660 && minute < 780) || (minute >= 1020 && minute < 1140));
   }

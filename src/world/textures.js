@@ -32,7 +32,13 @@ function puff(size, color) {
 }
 
 export function buildTextures(scene, map) {
-  const add = (key, grid) => scene.textures.addCanvas(key, gridToCanvas(grid));
+  const add = (key, grid) => {
+    if (scene.textures.exists(key)) {
+      if (!key.startsWith('ground')) return scene.textures.get(key);
+      scene.textures.remove(key);
+    }
+    return scene.textures.addCanvas(key, gridToCanvas(grid));
+  };
   const tiles = map.ground.map(row => [...row].map(ch => GROUND[ch].id));
   const ground = art.paintGround(tiles, 7);
   add('ground', ground);
@@ -44,11 +50,15 @@ export function buildTextures(scene, map) {
     const variant = art.variantAt(x, y);
     const key = `obj:${kind}:${variant}`;
     if (anchors[key]) continue;
-    const sprite = art.objectSprite(kind, variant);
-    add(key, sprite.grid);
-    for (let season = 0; season < 4; season++)
-      add(key + ':' + season, art.seasonGrid(sprite.grid, season));
-    anchors[key] = { ox: sprite.ax / sprite.grid.w, oy: sprite.ay / sprite.grid.h };
+    // 平常的样子，加上它随状态换的几副样子（键是“物件@样子”）
+    for (const look of [null, ...art.objectLooks(kind)]) {
+      const name = look ? key + '@' + look : key;
+      const sprite = art.objectSprite(kind, variant, look);
+      add(name, sprite.grid);
+      for (let season = 0; season < 4; season++)
+        add(name + ':' + season, art.seasonGrid(sprite.grid, season));
+      anchors[name] = { ox: sprite.ax / sprite.grid.w, oy: sprite.ay / sprite.grid.h };
+    }
   }
 
   for (const [key, grid] of Object.entries(art.soilSet())) add('soil:' + key, grid);
@@ -76,6 +86,7 @@ export function buildTextures(scene, map) {
     );
     art.DIRS.forEach((dir, row) => {
       const frame = col => ({ key: 'person:' + look, frame: row * art.POSES.length + col });
+      if (scene.anims.exists(`${look}:walk:${dir}`)) return;
       scene.anims.create({
         key: `${look}:walk:${dir}`,
         frames: [1, 2, 3, 0].map(frame),

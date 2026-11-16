@@ -34,8 +34,16 @@ const COMMANDS = [
   'sky.look',
   'sleep',
   'talk',
+  'travel',
+  'market.visit',
+  'market.buy',
+  'market.sell',
+  'tea.do',
 ];
 const QUERIES = [
+  'residents',
+  'market',
+  'tea',
   'achievements',
   'action.cost',
   'basket',

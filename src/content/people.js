@@ -13,13 +13,13 @@ export const PEOPLE = Object.freeze({
     likes: 'hearty', taste: '扎实顶饱的饭菜', treats: ['tea', 'bean', 'strip'] },
   gui: { id: 'gui', favorite: '青菜蛋花汤', name: '桂嫂', role: '隔壁邻居', look: 'gui', hobby: '腌菜、纳鞋底、听戏',
     likes: 'warm', taste: '热乎乎的汤', treats: ['ginger', 'egg', 'herb'] },
-  aman: { id: 'aman', favorite: '蛋炒饭', name: '阿满', role: '送菜的', look: null, hobby: '哼小调、跟人抬杠',
+  aman: { id: 'aman', favorite: '蛋炒饭', name: '阿满', role: '送菜的', look: 'aman', hobby: '哼小调、跟人抬杠',
     likes: 'hearty', taste: '扎实顶饱的家常饭', treats: ['cake', 'melon', 'pickle'] },
-  qiao: { id: 'qiao', favorite: '香草烤土豆', name: '小乔', role: '杂货铺帮工', look: null, hobby: '画画、跟猫斗智',
+  qiao: { id: 'qiao', favorite: '香草烤土豆', name: '小乔', role: '杂货铺帮工', look: 'qiao', hobby: '画画、跟猫斗智',
     likes: 'fresh', taste: '带香草味的清爽吃食', treats: ['melon', 'cake', 'fish'] },
-  zhou: { id: 'zhou', favorite: '姜丝鱼汤', name: '老周', role: '渡口撑船的', look: null, hobby: '讲古、补网、哼渔歌',
+  zhou: { id: 'zhou', favorite: '姜丝鱼汤', name: '老周', role: '渡口撑船的', look: 'zhou', hobby: '讲古、补网、哼渔歌',
     likes: 'warm', taste: '热汤，最好带点姜', treats: ['ginger', 'pickle', 'tea'] },
-  yun: { id: 'yun', favorite: '南瓜粥', name: '云姑', role: '后山种茶的', look: null, hobby: '唱山歌、认草药',
+  yun: { id: 'yun', favorite: '南瓜粥', name: '云姑', role: '后山种茶的', look: 'yun', hobby: '唱山歌、认草药',
     likes: 'treat', taste: '甜糯的东西', treats: ['chestnut', 'mushroom', 'cake'] },
 });
 
@@ -27,10 +27,14 @@ export const PEOPLE = Object.freeze({
 export const FESTIVE = Object.freeze(['zongzi', 'mooncake', 'niangao']);
 
 // 已经出现在地图上的人。其余四位等对应的地方做出来再登场。
-export const ON_MAP = Object.freeze(['shi', 'gui']);
+export const ON_MAP = Object.freeze(['shi', 'gui', 'aman', 'qiao', 'zhou', 'yun']);
 
 // 一天里人在哪儿：从 `from` 分钟起，去地图上叫 `spot` 的位置，做 `doing` 这件事。
 export const SCHEDULES = Object.freeze({
+  aman: [{ from: 0, map: 'yard', spot: 'aman.field', doing: '蹲在田埂上看菜' }],
+  qiao: [{ from: 0, map: 'market', spot: 'qiao.counter', doing: '趴在柜台上算账' }],
+  zhou: [{ from: 0, map: 'river', spot: 'zhou.ferry', doing: '蹲在船头补网' }],
+  yun: [{ from: 0, map: 'hill', spot: 'yun.tea', doing: '在茶垄间采茶' }],
   shi: [
     { from: 0, spot: 'shi.field', doing: '弯腰看土' },
     { from: 11 * 60 + 30, spot: 'shi.rest', doing: '在树荫下歇晌' },
@@ -61,6 +65,48 @@ export function scheduleAt(id, minute) {
 // `gift` 是收到自家种的菜时说的；`treat` 是收到合心意的东西、`thanks` 是收到别的东西时说的，
 // 里面的 {n} 换成那样东西的名字。
 export const LINES = Object.freeze({
+  ...{
+    aman: {
+      first: '“菜筐装满了，走路都得斜着走。你说，黄瓜为什么就不能长直点？”',
+      daily: [
+        '“菜筐装满了，走路都得斜着走。你说，黄瓜为什么就不能长直点？”',
+        '“你刚回来，可能还不知道：谁家的豆子先熟，问我准没错。”',
+      ],
+      gift: '“给我的？谢啦！等送完这趟菜就吃。”',
+      treat: '“{n}！你怎么知道我好这口？”',
+      thanks: '“给我的？那我揣兜里，路上吃。”',
+    },
+    qiao: {
+      first: '“店里的猫又把账本占了。要不你来劝劝它？”',
+      daily: [
+        '“店里的猫又把账本占了。要不你来劝劝它？”',
+        '“你知道吗，这只猫叫‘掌柜’。它真觉得这店是它的。”',
+      ],
+      gift: '“谢谢！我先藏柜台底下，不然掌柜要来抢。”',
+      treat: '“{n}！掌柜你看，有人疼我！”',
+      thanks: '“谢啦，我先藏柜台底下。”',
+    },
+    zhou: {
+      first: '“这条河啊，从山里来，往海里去。我在这儿撑了四十年船，它一天也没歇过。”',
+      daily: [
+        '“这条河啊，从山里来，往海里去。我在这儿撑了四十年船，它一天也没歇过。”',
+        '“想学钓鱼？先学坐得住。坐不住的人，鱼都看得出来。”',
+      ],
+      gift: '“给我的？好，好。”他把{n}小心放进船舱，“等收了网再吃。”',
+      treat: '“{n}好，老头子正缺这个。”',
+      thanks: '“给我的？好，好，放船上。”',
+    },
+    yun: {
+      first: '“你……你是新搬来的吧？我叫云姑，住在山上。”她说完就低下头，继续干活了。',
+      daily: [
+        '“我小时候跟奶奶在山上采药。她说草木都认人，你对它好，它就长给你看。”',
+        '“山歌？我……我只在没人的时候唱。”',
+      ],
+      gift: '“谢谢……”她把{n}小心收进竹篓，“我留着慢慢吃。”',
+      treat: '“{n}……”她眼睛亮了一下，“谢谢。”',
+      thanks: '“谢谢……”她小心地收进竹篓。',
+    },
+  },
   shi: {
     first: '“住下了？”他直起腰看了看你那块地，“土是好土。先锄，再下种，浇透。”',
     daily: [
@@ -90,6 +136,28 @@ export const LINES = Object.freeze({
 
 // 回礼：收了你的菜，第二天早上会留下点东西（0.12 的“回音”）。
 export const RETURN_GIFT = Object.freeze({
+  ...{
+    aman: {
+      item: 'veg.qingcai',
+      n: 2,
+      text: '门边放着一把还带露水的青菜，叶子底下压着张纸条：“昨天的饭香！菜拿去吃，别客气——满”',
+    },
+    qiao: {
+      item: 'bean',
+      n: 1,
+      text: '门把手上挂着一小袋豆子，袋子上画了只猫爪印。',
+    },
+    zhou: {
+      item: 'fish',
+      n: 2,
+      text: '门口的竹篮里躺着两条鲫鱼，鳃还一张一合。篮柄上缠着一截渔线。',
+    },
+    yun: {
+      item: 'tea',
+      n: 1,
+      text: '窗台上放着一小包新茶，用干荷叶包着，系了根草绳。闻着清清的。',
+    },
+  },
   shi: {
     item: 'seed.qingcai',
     n: 3,
@@ -101,3 +169,58 @@ export const RETURN_GIFT = Object.freeze({
     text: '门槛上搁着一只粗瓷碗，碗底压着一小包菜种。隔着墙，桂嫂喊：“碗不急着还！”',
   },
 });
+
+// 0.12原有的各地点动作描述。
+export const DOING = {
+  aman: {
+    field: '蹲在田埂上看菜',
+    tea: '坐着剥茶叶蛋',
+    market: '跟小乔对账',
+    yard: '在门口歇脚',
+    river: '骑着三轮车给老周送菜',
+  },
+  gui: {
+    yard: '隔着墙在晾衣裳',
+    tea: '和街坊说着话',
+    market: '挑着鸡蛋',
+  },
+  shi: {
+    field: '弯腰看土',
+    tea: '端着茶杯不说话',
+    yard: '在檐下编竹筐',
+  },
+  qiao: {
+    market: '趴在柜台上算账',
+    creek: '在溪边踩水',
+    tea: '给茶摊送货',
+  },
+  zhou: {
+    river: '蹲在船头补网',
+    tea: '端着茶碗讲古',
+  },
+  yun: {
+    hill: '在茶垄间采茶',
+    tea: '在集上摆茶叶摊',
+    creek: '在溪边洗茶篓',
+  },
+};
+export const RAIN_DOING = {
+  gui: {
+    yard: '在屋檐下择菜',
+  },
+  shi: {
+    yard: '在檐下听雨',
+  },
+  qiao: {
+    market: '和猫一起看雨',
+  },
+  aman: {
+    tea: '在棚子下拧衣角的水',
+  },
+  zhou: {
+    river: '披着蓑衣坐在船篷下',
+  },
+  yun: {
+    hill: '在茶棚下拣茶',
+  },
+};

@@ -96,6 +96,7 @@ export const growth = {
           g = mine(w, id);
         if (!g) return;
         const skill = {
+          social: 'social',
           farm: 'farm',
           forage: 'forage',
           fish: 'forage',

@@ -44,20 +44,21 @@ for (let x = 3; x <= 14; x++)
   else if (x === 7 || x === 10) fenceTop.push(['gate.post', x, 14]);
 
 const objects = [
-  ['house.hero', 8, 9],
+  ['house.hero', 8, 9, { to: 'cottage', arrival: 'entry', label: '进小屋' }],
   ['house.gui', 30, 9],
   ...fenceTop,
   ['gate.arch', 7, 14],
-  ['vat', 12, 10],
-  ['stove', 11, 10],
-  ['bookshelf', 7, 12],
-  ['workbench', 5, 11, { station: 'workbench', label: '篾条与木墩' }],
-  ['coop', 13, 11, { station: 'coop', label: '院角鸡窝' }],
-  ['pickleJar', 4, 11, { station: 'pickle', label: '腌菜坛' }],
+  // 檐下一排：橱柜、（门）、灶台、水缸、腌菜坛
   ['cupboard', 6, 10],
+  ['stove', 10, 10],
+  ['vat', 12, 10],
+  ['pickleJar', 13, 10, { station: 'pickle', label: '腌菜坛' }],
+  // 院子里：桃树下的木墩、石桌、东南角的鸡窝
   ['tree.peach', 4, 10],
-  ['table', 5, 12, { station: 'rest', label: '檐下小桌' }],
-  ['haystack', 12, 12],
+  ['workbench', 4, 12, { station: 'workbench', label: '木墩' }],
+  ['table', 6, 12, { station: 'rest', label: '院里的石桌' }],
+  ['coop', 13, 12, { station: 'coop', label: '院角的鸡窝' }],
+  ['haystack', 16, 11],
   ['basket', 10, 13],
   ['flowers', 4, 13],
   ['flowers', 6, 13],
@@ -69,8 +70,9 @@ const objects = [
   ['jars', 28, 10],
   ['flowers', 27, 13],
   ['flowers', 34, 13],
-  ['sign', 42, 14, { text: '往东过了石桥，是樟树茶摊。路还没修好，过些日子再去。' }],
-  ['sign', 2, 14, { text: '往西是石伯家，再远就是村口了。' }],
+  ['route', 42, 14, { to: 'tea', arrival: 'west', label: '去樟树茶摊' }],
+  ['route', 2, 14, { to: 'market', arrival: 'west', label: '去村口杂货铺' }],
+  ['route', 17, 4, { to: 'creek', arrival: 'west', label: '去溪边竹径' }],
   // 北边的林子：前后两排，围住院子
   ['tree.broad', 1, 3],
   ['bamboo', 3, 2],
@@ -137,6 +139,12 @@ export const yard = Object.freeze({
   objects: Object.freeze(objects),
   // 有名字的位置：作息表和开局位置用名字指过来。[x, y, 面朝方向]
   spots: Object.freeze({
+    west: [2, 15, 'right'],
+    east: [42, 15, 'left'],
+    'creek.entry': [17, 5, 'down'],
+    'aman.field': [20, 20, 'left'],
+    'shi.yard': [8, 12, 'right'],
+    'gui.yard': [30, 10, 'down'],
     start: [8, 11, 'down'],
     'hero.bed': [8, 10, 'down'],
     'shi.field': [23, 22, 'right'],

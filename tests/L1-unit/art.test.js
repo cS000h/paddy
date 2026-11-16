@@ -110,3 +110,13 @@ test('四季换色与七种作物都只用调色板，四阶段彼此可分', ()
     }
   }
 });
+
+test('小屋与村路的每张地面都能画出来且只用调色板', () => {
+  for (const map of Object.values(MAPS)) {
+    const tiles = map.ground.map(row => [...row].map(ch => GROUND[ch].id));
+    const grid = art.paintGround(tiles, 7);
+    assert.equal(grid.w, map.width * 16);
+    assert.equal(grid.h, map.height * 16);
+    assert.deepEqual(offPalette(grid), [], map.id);
+  }
+});

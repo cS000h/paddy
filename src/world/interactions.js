@@ -1,7 +1,11 @@
 // 地点交互集中在这里；这里只开面板，规则仍由端口决定。
 import { dirTo } from './logic.js';
 export const ACT_HINT = {
-  'door.hero': '回屋歇息',
+  'door.hero': '进小屋',
+  travel: '沿路走去',
+  sleep: '躺下歇息',
+  market: '看看今日的货',
+  tea: '坐下喝茶',
   outing: '找些东西',
   housework: '看看能做什么',
   'door.gui': '敲敲门',
@@ -16,19 +20,33 @@ export function touchThing(scene, thing) {
   const { shell, platform } = scene.deps;
   scene.player.face(dirTo(scene.player.tile, thing));
   platform.audio.play('talk');
+  if (thing.to) {
+    const out = scene.send('travel', thing);
+    if (!out.ok) shell.toast(out.reason);
+    return;
+  }
   if (['outing', 'housework'].includes(thing.act))
     return shell.set({
       modal: { kind: 'activity', station: thing.station, label: thing.label, group: thing.act },
     });
+  if (thing.act === 'market') {
+    const out = scene.send('market.visit', thing, { shop: thing.shop });
+    if (!out.ok) return;
+  }
   const kind = {
     water: 'water',
     store: 'store',
     basket: 'basket',
     kitchen: 'kitchen',
     book: 'book',
-    'door.hero': 'sleep',
+    sleep: 'sleep',
+    tea: 'tea',
+    market: 'market',
   }[thing.act];
-  if (kind) return shell.set({ modal: { kind, x: thing.x, y: thing.y } });
+  if (kind)
+    return shell.set({
+      modal: { kind, shop: thing.shop, label: thing.label, x: thing.x, y: thing.y },
+    });
   return shell.set({
     modal: { kind: 'sign', text: thing.text || '门虚掩着，屋里飘出饭菜的香味。桂嫂大概在灶上忙。' },
   });

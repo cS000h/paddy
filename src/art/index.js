@@ -1,5 +1,6 @@
 // 素材总表：名字 → 小图。画面只按名字取图，所以以后把某张程序画的图换成手绘的图，
 // 只要在这里换掉它的来源，别处不用动。
+import { indoors } from './indoors.js';
 import { Grid } from './pixel.js';
 import { P, SHADOW } from './palette.js';
 import { house } from './house.js';
@@ -12,7 +13,7 @@ import {
   bambooGrove,
   bush,
 } from './trees.js';
-import { wildProps } from './wild.js';
+import { wildProps, wildLooks } from './wild.js';
 import { stove, bookshelf } from './kitchen.js';
 import * as props from './props.js';
 import { soilTile, cropFrames, cursor, icon } from './tiles.js';
@@ -27,6 +28,7 @@ export { Grid };
 
 // 物件的画法。同一种物件有几个样子的（树、石头、花），按位置换种子，画出来各不相同。
 const OBJECT_MAKERS = {
+  ...indoors,
   ...wildProps,
   'house.hero': () => house('hero', 11),
   'house.gui': () => house('gui', 23),
@@ -61,10 +63,16 @@ const VARIANTS = 4;
 
 export const OBJECT_KINDS = Object.keys(OBJECT_MAKERS);
 
-/** 某种物件的第 n 个样子：{grid, ax, ay}。 */
-export function objectSprite(kind, variant = 0) {
-  const make = OBJECT_MAKERS[kind];
-  if (!make) throw new Error('没有这种物件的画法：' + kind);
+// 有的物件随规则里的状态换一副样子（鸡窝：还没搭、养了鸡）。世界按状态来挑，没有就用平常的样子。
+const OBJECT_LOOKS = { ...wildLooks };
+
+/** 某种物件除了平常的样子，还有哪几副样子。 */
+export const objectLooks = kind => Object.keys(OBJECT_LOOKS[kind] || {});
+
+/** 某种物件的第 n 个样子：{grid, ax, ay}。look 给了，就是它在那种情形下的样子。 */
+export function objectSprite(kind, variant = 0, look = null) {
+  const make = look ? OBJECT_LOOKS[kind]?.[look] : OBJECT_MAKERS[kind];
+  if (!make) throw new Error('没有这种物件的画法：' + kind + (look ? '@' + look : ''));
   return make(101 + (variant % VARIANTS) * 37 + kind.length);
 }
 

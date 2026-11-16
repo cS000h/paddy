@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { newGame, must, wait, stored, carried, growOne, FIELD } from '../helpers.js';
 import { createGame } from '../../src/port/game.js';
 const at = { x: 35, y: 17 };
-const bench = { x: 6, y: 11 };
+const bench = { x: 5, y: 12 };
 test('溪边采集每天两次，远处拒绝，拿来的食材能煮成饭', () => {
   const g = newGame();
   assert.equal(g.dispatch('gather', { id: 'forage' }).ok, false);
@@ -13,10 +13,10 @@ test('溪边采集每天两次，远处拒绝，拿来的食材能煮成饭', ()
   assert.match(g.dispatch('gather', { id: 'forage', at }).reason, /今天/);
   assert.deepEqual(g.save(), before);
   const ingredient = g.ask('pack').items.find(i => i.cook).id;
-  must(g, 'cook', { items: [ingredient], method: 'stew', at: { x: 10, y: 10 } });
+  must(g, 'cook', { items: [ingredient], method: 'stew', at: { x: 10, y: 11 } });
   must(g, 'dish.eat', {
-    id: g.ask('kitchen', { x: 10, y: 10 }).dishes[0].id,
-    at: { x: 10, y: 10 },
+    id: g.ask('kitchen', { x: 10, y: 11 }).dishes[0].id,
+    at: { x: 10, y: 11 },
   });
   must(g, 'sleep');
   assert.equal(g.ask('outings', 'forage', at).options[0].left, 2);
@@ -85,7 +85,7 @@ test('腌菜确实扣三份菜和一份盐，雨后菌子可采', () => {
   const g = newGame(21);
   growOne(g);
   must(g, 'farm.harvest', FIELD);
-  must(g, 'homestead', { id: 'pickle', at: { x: 4, y: 12 } });
+  must(g, 'homestead', { id: 'pickle', at: { x: 13, y: 11 } });
   assert.equal(carried(g, 'pickle'), 3);
   assert.equal(stored(g, 'salt'), 3);
   assert.equal(stored(g, 'veg.qingcai') + carried(g, 'veg.qingcai'), 0);

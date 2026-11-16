@@ -82,7 +82,10 @@ test('人物：地图上的人都有作息、台词和回礼，作息指向存�
     assert.ok(LINES[id]?.first && LINES[id].daily.length >= 2 && LINES[id].gift, `${id} 台词不全`);
     assert.ok(ITEMS[RETURN_GIFT[id].item], `${id} 的回礼不是登记过的物品`);
     for (const entry of SCHEDULES[id])
-      assert.ok(MAPS.yard.spots[entry.spot], `${id} 的作息指向不存在的位置 ${entry.spot}`);
+      assert.ok(
+        MAPS[entry.map || 'yard'].spots[entry.spot],
+        `${id} 的作息指向不存在的位置 ${entry.spot}`,
+      );
     assert.equal(scheduleAt(id, 0), SCHEDULES[id][0]);
     assert.equal(scheduleAt(id, 23 * 60), SCHEDULES[id].at(-1));
   }
@@ -179,4 +182,32 @@ test('日历：日期和钟点的换算', () => {
   assert.deepEqual(timeOf(6 * 60), { clock: '06:00', hour: '卯时', period: '清晨' });
   assert.equal(timeOf(12 * 60).hour, '午时');
   assert.equal(timeOf(24 * 60).period, '夜深');
+});
+
+test('每个出入口的落脚处存在且可走；小屋家具和全部地点能从小院到达', () => {
+  const seen = new Set(['yard']),
+    todo = ['yard'];
+  while (todo.length) {
+    const map = MAPS[todo.shift()];
+    for (const [kind, x, y, data] of map.objects) {
+      if (!data?.to) continue;
+      const dest = MAPS[data.to];
+      assert.ok(dest, data.to);
+      const at = spot(dest, data.arrival);
+      assert.ok(walkable(dest, at.x, at.y));
+      assert.ok(
+        [
+          [0, 1],
+          [0, -1],
+          [1, 0],
+          [-1, 0],
+        ].some(([dx, dy]) => walkable(map, x + dx, y + dy)),
+      );
+      if (!seen.has(dest.id)) {
+        seen.add(dest.id);
+        todo.push(dest.id);
+      }
+    }
+  }
+  assert.deepEqual([...seen].sort(), Object.keys(MAPS).sort());
 });

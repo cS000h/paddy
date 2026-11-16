@@ -26,6 +26,7 @@ export const social = {
     'kitchen',
     'compute',
     'body',
+    'residents',
   ],
   writes: ['bonds'],
   install(ctx) {
@@ -54,6 +55,8 @@ export const social = {
     const target = (w, input) => {
       if (!ON_MAP.includes(input.to)) refuse('这个人不在附近');
       people.place(w, input.at);
+      const p = ctx.services.residents.positions(w).find(p => p.id === input.to);
+      if (!p.visible || p.map !== people.me(w).map) refuse('这个人不在附近');
       return w.bonds;
     };
 
@@ -140,6 +143,19 @@ export const social = {
       })),
     );
 
-    ctx.provide('social', Object.freeze({}));
+    ctx.provide(
+      'social',
+      Object.freeze({
+        relate: ctx.own((w, to, n, source) => {
+          const q = compute.run(
+            'relation.gain',
+            { w, who: people.who(w), source: 'talk' },
+            { value: n, parts: [] },
+          );
+          w.bonds.known[to] = Math.min(999, w.bonds.known[to] + q.value);
+          core.log(w, people.who(w), 'relation:' + to, q.value, source);
+        }),
+      }),
+    );
   },
 };

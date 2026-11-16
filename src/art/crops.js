@@ -1,39 +1,183 @@
-// 菜苗保留相同轮廓语法；架上瓜豆、割后韭菜与结球蔬菜一眼可分。
-import { Grid } from './pixel.js';
-import { P } from './palette.js';
+// 七种作物在地里的样子。每种四个阶段：下种、出苗、长叶、成熟；前两个阶段都一样（土里的种子、
+// 两片嫩芽），后两个阶段各画各的：韭菜一丛细叶，黄瓜豆角爬上架子，南瓜贴着地长，萝卜露出白肩，
+// 白菜卷成一棵。每张 16×16，底边对着格子的底边；字符的颜色见 items-kit.js 的 INK。
+import { Grid, fromText } from './pixel.js';
+import { INK } from './items-kit.js';
 import { cropFrames } from './tiles.js';
+
+// [长叶, 成熟]
+const LATER = {
+  chive: [
+    [
+      '......G...D.....',
+      '...g..G.g.D..g..',
+      '...g.gG.g.Dg.g..',
+      '....ggG.gDDgg...',
+      '....gGGggDDg....',
+      '.....gGgDDg.....',
+      '......LLLL......',
+    ],
+    [
+      '....G.....D.....',
+      '....G..g..D..g..',
+      '..g.G..g.gD..g..',
+      '..g.Gg.g.gD.gg..',
+      '..g.GgGggDD.g...',
+      '...gGgGggDDgg...',
+      '...gGgGgDDDg....',
+      '....GgGgDDgg....',
+      '....gGggDDg.....',
+      '.....gGgDg......',
+      '......LLLL......',
+    ],
+  ],
+  cucumber: [
+    [
+      '....t......t....',
+      '....t.GG...t....',
+      '...GtGggG..t....',
+      '..GggtggGGgt....',
+      '...ggtGggggtG...',
+      '....tgggGggtg...',
+      '...GtgGgggGt....',
+      '..GggtggGggtG...',
+      '...ggt.gggGtg...',
+      '....t.Ggg..t....',
+      '....t..gg..t....',
+      '....t..g...t....',
+      '....T..g...T....',
+    ],
+    [
+      '....t..y...t....',
+      '....t.GgG..ty...',
+      '...GtGggGg.t....',
+      '..GggtVVgGgtG...',
+      '...ggtVVggVVg...',
+      '....tgVGg.VVg...',
+      '...GtgVVgGVGt...',
+      '..Gggt.VggVVtG..',
+      '...ggt.gggVVg...',
+      '....t.Ggg..t....',
+      '....t..gg..t....',
+      '....t..g...t....',
+      '....T..g...T....',
+    ],
+  ],
+  longbean: [
+    [
+      '....t......t....',
+      '....t.GG...t.p..',
+      '...GtGggG..t....',
+      '..GggtggGGgt....',
+      '.p.ggtGggggtG...',
+      '....tgggGggtg...',
+      '...GtgGgggGt....',
+      '..GggtggGggtG...',
+      '...ggt.gggGtg...',
+      '....t.Ggg..t....',
+      '....t..gg..t....',
+      '....t..g...t....',
+      '....T..g...T....',
+    ],
+    [
+      '....t..p...t....',
+      '....t.GgG..t.p..',
+      '...GtGggGg.t....',
+      '..GggtlglGgtG...',
+      '...ggtlglgltg...',
+      '....tglGlglt....',
+      '...GtglglGltG...',
+      '..Gggtl.lgltg...',
+      '...ggtl.gg.t....',
+      '....t.l.g..t....',
+      '....t..gg..t....',
+      '....t..g...t....',
+      '....T..g...T....',
+    ],
+  ],
+  pumpkin: [
+    [
+      '.....y..........',
+      '....yyy...GG....',
+      '..GG.y..gGggG...',
+      '.GggG.gg.gggg...',
+      '.gggggDgg.gg.G..',
+      '..gg.gDggGgggg..',
+      '..G.ggggggggg...',
+      '....gg..ggg.....',
+    ],
+    [
+      '.......D........',
+      '...GG.yyy..GG...',
+      '..Ggg.yoyy.ggG..',
+      '.GggyyyoyyyYgg..',
+      '.ggyzyyoyyyYYg..',
+      '..gyyyyoyyyoY...',
+      '..GyyyoyyyoYYG..',
+      '...gyyoyyyYYg...',
+      '....YYYYYYY.....',
+    ],
+  ],
+  radish: [
+    [
+      '.......G........',
+      '...g..GgG..g....',
+      '....g.GgG.g.....',
+      '..G..gGgGg..G...',
+      '...Gg.gGg.gG....',
+      '....GggGggG.....',
+      '.....gggGg......',
+      '......gGg.......',
+    ],
+    [
+      '.......G........',
+      '..g...GgG...g...',
+      '...g..GgG..g....',
+      '.G..g.GgG.g..G..',
+      '..Gg.gGgGg.gG...',
+      '...GggGgGggG....',
+      '....GggGggG.....',
+      '.....gwwwg......',
+      '.....wwwwW......',
+      '.....wwwWx......',
+      '......wWx.......',
+    ],
+  ],
+  cabbage: [
+    [
+      '....l..G..l.....',
+      '...lGl.G.lGl....',
+      '..lGllGlGllGl...',
+      '...lGllMllGl....',
+      '..l.lGlMlGl.l...',
+      '...llGlMlGll....',
+      '.....lwWwl......',
+    ],
+    [
+      '.....llGll......',
+      '....lGllGlG.....',
+      '...lGllMllGl....',
+      '...llGlMlGll....',
+      '...lGllMllGl....',
+      '...wllGMGllW....',
+      '...wwllMllWW....',
+      '...wwwlllWWx....',
+      '...wwwwwWWWx....',
+      '....wwwwWWx.....',
+      '....wwwwWWx.....',
+      '.....wwWWx......',
+    ],
+  ],
+};
+
+const frame = rows => {
+  const src = fromText(rows, INK);
+  return new Grid(16, 16).blit(src, 0, 16 - src.h);
+};
+
+/** 某种作物的四个阶段。没有单独画法的（青菜）用通用的那一套。 */
 export function cropSet(id) {
-  const frames = cropFrames();
-  if (id === 'qingcai') return frames;
-  return frames.map((base, stage) => {
-    if (stage < 2) return base;
-    const g = new Grid(16, 16);
-    if (['cucumber', 'longbean'].includes(id)) {
-      g.line(3, 15, 5, 1, P.t2).line(13, 15, 11, 1, P.t2).hline(3, 13, 4, P.t0);
-      g.line(5, 13, 10, 3, P.g6).ellipse(6, 7, 3, 2, P.g4).ellipse(10, 5, 3, 2, P.g3);
-      if (stage === 3)
-        for (const x of [5, 9, 12])
-          g.rect(x, 7, id === 'cucumber' ? 2 : 1, 6, id === 'cucumber' ? P.g7 : P.g5);
-    } else if (id === 'chive') {
-      for (let x = 3; x < 14; x += 2)
-        g.line(8, 14, x, stage === 3 ? 2 : 6, x % 4 === 1 ? P.g3 : P.g6);
-      g.hline(6, 10, 14, P.l1);
-    } else if (id === 'pumpkin') {
-      g.line(2, 12, 14, 10, P.g6).ellipse(5, 9, 4, 3, P.g4).ellipse(11, 9, 3, 2, P.g3);
-      if (stage === 3)
-        g.ellipse(8, 11, 5, 4, P.y2).ellipse(8, 11, 3, 4, P.y1).line(8, 7, 9, 5, P.g6);
-    } else if (id === 'radish') {
-      g.ellipse(8, 11, 3, 3, P.l1).line(8, 13, 8, 15, P.l0);
-      g.line(8, 9, 5, 3, P.g5)
-        .line(8, 9, 11, 3, P.g6)
-        .ellipse(5, 4, 2, 2, P.g3)
-        .ellipse(11, 4, 2, 2, P.g4);
-    } else {
-      g.ellipse(8, 9, 6, stage === 3 ? 6 : 4, P.g6)
-        .ellipse(8, 9, 5, 5, P.g3)
-        .ellipse(8, 8, 3, 5, P.g1)
-        .line(8, 5, 8, 14, P.l1);
-    }
-    return g;
-  });
+  const base = cropFrames();
+  if (!LATER[id]) return base;
+  return [base[0], base[1], ...LATER[id].map(frame)];
 }

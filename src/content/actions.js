@@ -4,6 +4,8 @@ import { OUTDOOR, HOMEWORK } from './activities.js';
 // 所以饿了、渴了、有本事、吃了什么，都能在同一个地方加减，提示里说的和实际扣的也是同一个数。
 //   kind：farm 农活 | forage 采集 | fish 钓鱼 | craft 手艺 | cook 做饭 | chore 杂事 | rest 歇息
 export const ACTIONS = Object.freeze({
+  hawk: { id: 'hawk', label: '吆喝卖菜', kind: 'social', energy: 4, outdoor: true },
+  teaChat: { id: 'teaChat', label: '茶摊闲坐', kind: 'social', energy: 0 },
   sky: { id: 'sky', kind: 'sky', energy: 0, outdoor: true, label: '抬头看天' },
   weed: { id: 'weed', kind: 'farm', energy: 4, outdoor: true, label: '拔草' },
   bugs: { id: 'bugs', kind: 'farm', energy: 2, outdoor: true, label: '捉虫' },

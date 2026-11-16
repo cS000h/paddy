@@ -1,3 +1,4 @@
+import { marketActions } from './market.js';
 // 启动入口：把平台、规则（经由端口）、输入意图、世界画面、界面面板接到一起。
 // 这里也放“跨着几块的流程”：过夜、送礼、收菜筐、存档、时间流逝。
 import '../panels/style.css';
@@ -51,6 +52,7 @@ function run(type, input) {
 
 // 面板上的按钮能做的事。按钮写 data-do="名字"，带的 data-* 会传进来。
 const actions = {
+  ...marketActions({ game, shell, run, here }),
   ...fieldActions({ game, shell, run, here, world }),
   ...growthActions({ game, shell, run }),
   ...activityActions({ game, shell, run, here }),

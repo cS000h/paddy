@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newGame, must } from '../helpers.js';
 import { createGame } from '../../src/port/game.js';
-const at = { x: 10, y: 10, dir: 'right' };
+const at = { x: 10, y: 11, dir: 'up' };
 const meal = { items: ['potato', 'bean'], method: 'stew', at };
 test('0.12菜谱对照：蛋炒饭、土豆炖豆子、香草烤土豆的名称与性味', () => {
   const g = newGame();

@@ -1,3 +1,4 @@
+import { marketView, teaView } from './market.js';
 // 各种小窗里写什么。每种小窗一个函数，返回一段 HTML；按钮上的 data-do 说明点了以后做什么。
 // 加一种小窗 = 在 VIEWS 里加一个函数，再让 app 的 actions 认得它的按钮。
 // 每个函数拿到 (modal, game, esc, here)：here 是操控的人此刻站的格子，问“够得着什么”时要带上。
@@ -10,6 +11,8 @@ import { itemImg } from './icons.js';
 import { bagView, storeView } from './bag.js';
 
 const VIEWS = {
+  market: marketView,
+  tea: teaView,
   weather: weatherView,
   seeds: seedsView,
   field: fieldView,
@@ -118,7 +121,7 @@ const VIEWS = {
 };
 
 // 内容多的小窗用宽一点的纸。
-const WIDE = new Set(['store', 'basket', 'kitchen', 'recipes']);
+const WIDE = new Set(['store', 'basket', 'kitchen', 'recipes', 'market']);
 
 /** 一个小窗的 HTML。 */
 export function modalView(modal, game, esc, here) {

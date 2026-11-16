@@ -32,7 +32,7 @@ export function kitchenView(m, game, esc, here) {
         `<button data-do="cookSpice" data-item="${i.id}">${esc(i.name)} ${spices.filter(k => k === i.id).length}/2</button>`,
     )
     .join('');
-  return `<h2>檐下灶台<small>挑一至三样食材，做一顿自己的饭</small></h2>
+  return `<h2>家里的灶台<small>挑一至三样食材，做一顿自己的饭</small></h2>
  <nav class="tabs"><button data-do="recipes">翻菜谱</button><button data-do="close">离开灶台</button></nav>
  <div class="two"><section><h3>下锅的东西</h3><div class="choices">${options}</div>
  <h3>怎么做</h3><div class="choices">${Object.entries(METHODS)

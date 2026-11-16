@@ -86,17 +86,19 @@ export function createEffects(scene, map) {
 
   // 桂嫂家的炊烟：做饭的钟点才冒
   const gui = map.objects.find(([kind]) => kind === 'house.gui');
-  const smoke = scene.add
-    .particles(gui[1] * TILE + 40, (gui[2] + 1) * TILE - 88, 'fx:smoke', {
-      speedY: { min: -14, max: -8 },
-      speedX: { min: 2, max: 7 },
-      scale: { start: 0.5, end: 1.5 },
-      alpha: { start: 0.8, end: 0 },
-      lifespan: 3200,
-      frequency: 420,
-    })
-    .setDepth(9000);
-  smoke.stop();
+  const smoke = gui
+    ? scene.add
+        .particles(gui[1] * TILE + 40, (gui[2] + 1) * TILE - 88, 'fx:smoke', {
+          speedY: { min: -14, max: -8 },
+          speedX: { min: 2, max: 7 },
+          scale: { start: 0.5, end: 1.5 },
+          alpha: { start: 0.8, end: 0 },
+          lifespan: 3200,
+          frequency: 420,
+        })
+        .setDepth(9000)
+    : null;
+  smoke?.stop();
 
   return {
     tilled(x, y) {
@@ -140,6 +142,7 @@ export function createEffects(scene, map) {
     },
     /** 做饭的钟点让烟囱冒烟。 */
     setCooking(on) {
+      if (!smoke) return;
       if (on && !smoke.emitting) smoke.start();
       else if (!on && smoke.emitting) smoke.stop();
     },
