@@ -63,8 +63,7 @@
 | L3-02 | L3   | port    | fast contract save | `tests/L3-contract/save.test.js`       | 存档往返不走样；坏存档被拒绝；每个存档版本的样本都能升级并继续玩                                                                                                                                                                                                                     |
 | L4-01 | L4   | sim     | fast replay golden | `tests/L4-replay/replay.test.js`       | 随机乱玩不会坏；同一种子结果逐字节相同；固定种子的最终世界指纹不变（基线）                                                                                                                                                                                                           |
 | L5-01 | L5   | app     | slow browser       | `tests/L5-browser/smoke.test.js`       | 构建结果在 Chrome 里能启动、鼠标点地种菜、键盘走路、过夜；手机竖着拿时画面转成横屏且手指点得准；桌面与矮屏橱柜吃喝、做饭掌火、菜谱、竹林编篮、钓鱼、开局两选、成长册子分页、天气预报、七种选种、田地护理与面板边界；小屋做饭、七张地图往返、柜台买卖、茶摊听闲话、室内读档；没有报错 |
-
-| L5-02 | L5 | app | slow browser save | `tests/L5-browser/offline.test.js` | 单文件断网启动、矮屏刀工做饭、导出导入、旧档升级、坏档保护、禁用本地存储时下载备份 |
+| L5-02 | L5   | app     | slow browser save  | `tests/L5-browser/offline.test.js`     | 单文件断网启动、矮屏刀工做饭、导出导入、旧档升级、坏档保护、禁用本地存储时下载备份                                                                                                                                                                                                   |
 
 ## 加一个测试的步骤
 

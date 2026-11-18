@@ -3,4 +3,6 @@ dist/
 .cache/
 *.log
 
+# 单文件离线包（npm run build:offline 写到 发布/）。release/ 是早先一版放过的位置，同样不进仓库。
 发布/
+release/
