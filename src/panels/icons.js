@@ -3,7 +3,7 @@ import { icon, itemIcon } from '../art/index.js';
 
 const cache = new Map();
 
-function toUrl(grid) {
+export function toUrl(grid) {
   const canvas = document.createElement('canvas');
   canvas.width = grid.w;
   canvas.height = grid.h;

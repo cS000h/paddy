@@ -16,8 +16,8 @@ export function kitchenActions({ game, shell, run, here }) {
   function cook(heat = null) {
     const out = run('cook', { ...input(), heat });
     if (out.ok) {
-      const line = out.facts.find(f => f.type === 'meal.cooked').data.line;
-      shell.set({ modal: { kind: 'kitchen', line } });
+      const { line, ids } = out.facts.find(f => f.type === 'meal.cooked').data;
+      shell.set({ modal: { kind: 'kitchen', line, servedId: ids[0] } });
     }
   }
   return {

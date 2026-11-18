@@ -6,9 +6,43 @@ import { P, SHADOW } from '../../src/art/palette.js';
 import { MAPS, GROUND, OBJECTS } from '../../src/content/maps/index.js';
 import { PEOPLE, ON_MAP } from '../../src/content/people.js';
 import { ITEMS } from '../../src/content/items.js';
+import { RECIPES, QUALITY } from '../../src/content/recipes.js';
+import { COOKED_ITEMS } from '../../src/art/cooked-food.js';
+import { createHash } from 'node:crypto';
 
 const palette = new Set([...Object.values(P), SHADOW]);
 const tiles = MAPS.yard.ground.map(row => [...row].map(ch => GROUND[ch].id));
+
+test('每样食材有熟料，每道菜的成品可分，锅中有动作', () => {
+  assert.deepEqual(
+    [...COOKED_ITEMS].sort(),
+    Object.keys(ITEMS)
+      .filter(k => ITEMS[k].cook)
+      .sort(),
+  );
+  const plates = new Map();
+  for (const [base, method, items, spices = []] of RECIPES) {
+    const s = { base, method, items, spices };
+    const plate = art.cookingFrame(s, 0, true);
+    assert.deepEqual(offPalette(plate), [], base);
+    const hash = createHash('sha256').update(plate.bytes()).digest('hex');
+    assert.ok(!plates.has(hash), base + ' / ' + plates.get(hash));
+    plates.set(hash, base);
+    if (method !== 'mix') {
+      const grades = Object.keys(QUALITY).map(quality =>
+        createHash('sha256')
+          .update(art.cookingFrame({ ...s, quality }, 0, true).bytes())
+          .digest('hex'),
+      );
+      assert.equal(new Set(grades).size, grades.length, base + '的各档火候');
+    }
+    const first = art.cookingFrame(s, 0);
+    const moving = art.cookingFrame(s, 4);
+    assert.deepEqual([moving.w, moving.h], [64, 50]);
+    assert.deepEqual(offPalette(moving), [], base);
+    assert.notDeepEqual(first.data, moving.data, base);
+  }
+});
 
 function offPalette(grid) {
   const strays = new Set();

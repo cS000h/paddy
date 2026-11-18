@@ -4,13 +4,14 @@ import { METHODS, HEAT, CUTS } from '../content/recipes.js';
 import { ITEMS } from '../content/items.js';
 import { button, actions, close, title, para, itemRow, esc, paged } from './html.js';
 import { timingBar } from './timing.js';
+import { stovePicture, servedImg } from './stove-picture.js';
 
 /** 做好的饭菜，一份一行：能吃，灶上的能端走，带着的能放回。carry = 这些是身上带着的。 */
 export const dishRows = (dishes, carry = false) =>
   dishes
     .map(d =>
       itemRow({
-        icon: d.ingredients[0],
+        image: servedImg(d),
         name: d.name,
         notes: [`饱腹 +${d.full} · ${d.buffText}${carry ? ' · 带着' : ' · 灶上'}`],
         acts:
@@ -49,7 +50,11 @@ function picker(m, goods) {
     .filter(i => i.kind === 'spice' && i.id !== 'salt')
     .map(i => {
       const used = spices.filter(k => k === i.id).length;
-      return button('cookSpice', `${i.name} ${used}/2`, { data: { item: i.id } });
+      return button('cookSpice', '', {
+        data: { item: i.id },
+        chosen: used > 0,
+        html: `${itemImg(i.id)}${esc(i.name)} <small>${used}/2</small>`,
+      });
     });
   return `<section><h3>下锅的东西</h3>${choices(food)}
     <h3>怎么做</h3>${choices(methods)}
@@ -72,7 +77,7 @@ function preview(m, game, goods) {
     ? `<p>${p.servings}份 · 饱腹 +${p.full} · 体力 +${p.energy}<br>` +
       `${esc(p.why)}——${esc(p.buffText)}</p>${para(p.notes.join('；'), 'aside')}`
     : para(p.reason);
-  return `<section><h3>${p.ok ? esc(p.name) : '等你下锅'}</h3>${summary}${para(fire, 'aside')}
+  return `<section><h3>${p.ok ? esc(p.name) : '等你下锅'}</h3>${stovePicture({ ...input, base: p.base }, 'prep', p.ok)}${summary}${para(fire, 'aside')}
     ${actions(
       button('cookPlain', '稳稳做家常饭', { disabled: !p.ok }),
       button('cookHeat', method === 'mix' ? '拌匀装盘' : '亲自掌火', {
@@ -85,10 +90,11 @@ function preview(m, game, goods) {
 export function kitchenView(m, game, here) {
   const goods = game.ask('goods', here);
   const kitchen = game.ask('kitchen', here);
+  const served = [...kitchen.dishes, ...kitchen.carried].find(d => d.id === m.servedId);
   return `${title('家里的灶台', '挑一至三样食材，做一顿自己的饭')}
-    ${para(m.line, 'activity-story')}
+    ${served ? `<p class="activity-story cooked-story">${servedImg(served)}${esc(m.line)}</p>` : para(m.line, 'activity-story')}
     <nav class="tabs">${button('recipes', '翻菜谱')}${close('离开灶台', false)}</nav>
-    <div class="two">${picker(m, goods)}${preview(m, game, goods)}</div>
+    <div class="two kitchen-layout">${picker(m, goods)}${preview(m, game, goods)}</div>
     <h3>做好的饭菜</h3>
     <ul class="items">${dishRows(kitchen.dishes)}${dishRows(kitchen.carried, true)}</ul>`;
 }
@@ -99,6 +105,7 @@ export function recipesView(m, game, here) {
   const rows = book.items.map(r => {
     const parts = [...r.items, ...r.spices].map(k => ITEMS[k].name).join('、');
     return itemRow({
+      image: servedImg(r),
       name: `${r.known ? '✓ ' : ''}${r.name}`,
       notes: [`${METHODS[r.method]} · ${parts}${r.known ? ` · 做过${r.times}回` : ''}`],
       acts: button('cookRecipe', '照着做', { data: { name: r.name } }),
@@ -111,8 +118,10 @@ export function recipesView(m, game, here) {
 }
 
 export function heatView(m, game) {
-  const heat = game.ask('cook.preview', m).heat || HEAT[m.method];
+  const preview = game.ask('cook.preview', m);
+  const heat = preview.heat || HEAT[m.method];
   return `${title('守着这锅火', heat.word)}
+    ${stovePicture({ ...m, base: preview.base }, 'heat')}
     ${para('指针到了青色一段，按空格或点“出锅”。正中最好，太早夹生，太晚会焦。')}
     ${timingBar(heat.center, heat.half)}
     ${actions(button('backKitchen', '先不做了'), button('cookFinish', '出锅', { main: true }))}`;

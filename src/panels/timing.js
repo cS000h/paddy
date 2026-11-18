@@ -6,7 +6,16 @@ export function animateTiming(root, shell) {
     if (!live) return;
     const m = shell.get().modal,
       needle = root.querySelector('[data-timing]');
-    if (needle && m?.started !== undefined) needle.style.left = timingValue(now - m.started) + '%';
+    if (needle && m?.started !== undefined) {
+      const value = timingValue(now - m.started);
+      needle.style.left = value + '%';
+      if (m.kind === 'heat') {
+        const art = root.querySelector('[data-cook-heat]');
+        const pose = String(Math.round((value * 7) / 100));
+        if (art && art.style.getPropertyValue('--pose') !== pose)
+          art.style.setProperty('--pose', pose);
+      }
+    }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

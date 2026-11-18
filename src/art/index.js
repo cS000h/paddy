@@ -142,3 +142,4 @@ export function personShadow() {
 export { seasonGrid } from './seasons.js';
 export { plotMark, PLOT_MARKS } from './plot-marks.js';
 export { cropSet } from './crops.js';
+export { cookingFrame, prepBoard, COOK_FRAMES } from './cooking-frames.js';

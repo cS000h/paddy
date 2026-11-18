@@ -46,15 +46,15 @@ export const para = (text, cls = '') =>
 
 /**
  * 物品单里的一行：左边图标，中间名字和几行小字，右边按钮。
- * @param {{icon?: string, name: string, count?: number|string, notes?: string[], acts?: string}} row
+ * @param {{icon?: string, image?: string, name: string, count?: number|string, notes?: string[], acts?: string}} row
  */
-export function itemRow({ icon = '', name, count = '', notes = [], acts = '' }) {
+export function itemRow({ icon = '', image = '', name, count = '', notes = [], acts = '' }) {
   const small = notes
     .filter(Boolean)
     .map(note => `<small>${esc(note)}</small>`)
     .join('');
   return (
-    `<li>${icon ? itemImg(icon) : ''}<span class="what">${esc(name)}` +
+    `<li>${image || (icon ? itemImg(icon) : '')}<span class="what">${esc(name)}` +
     `${count !== '' ? `<b>×${count}</b>` : ''}${small}</span>` +
     `${acts ? `<span class="acts">${acts}</span>` : ''}</li>`
   );
