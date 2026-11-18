@@ -34,17 +34,18 @@ export const cooking = {
           Object.keys(w.households).map(id => [id, { dishes: [], known: {}, fires: 0 }]),
         ),
       validate: (all, w) =>
-        Object.entries(all).every(
-          ([id, k]) =>
-            w.households[id] &&
-            is.int(k.fires) &&
-            is.arr(k.dishes, 40) &&
-            k.dishes.every(validDish) &&
-            is.obj(k.known) &&
-            Object.values(k.known).every(
-              r => is.int(r.times, 1) && is.int(r.first, 1) && Object.hasOwn(QUALITY, r.best),
-            ),
-        ) || 'kitchens',
+        (is.keyedBy(all, Object.keys(w.households)) &&
+          Object.values(all).every(
+            k =>
+              is.int(k.fires) &&
+              is.arr(k.dishes, 40) &&
+              k.dishes.every(validDish) &&
+              is.obj(k.known) &&
+              Object.values(k.known).every(
+                r => is.int(r.times, 1) && is.int(r.first, 1) && Object.hasOwn(QUALITY, r.best),
+              ),
+          )) ||
+        'kitchens',
     });
     const home = w => w.kitchens[store.id(w)];
     const preview = (w, input) => previewMeal(w, input, compute, people.who(w));

@@ -35,18 +35,22 @@ export const growth = {
           ]),
         ),
       validate: (all, w) =>
-        Object.entries(all).every(
-          ([id, g]) =>
-            w.people[id] &&
-            Object.keys(SKILLS).every(k => is.int(g.xp[k])) &&
-            is.arr(g.traits, 12) &&
-            new Set(g.traits).size === g.traits.length &&
-            g.traits.every(k => TRAITS[k]) &&
-            ['wetOut', 'cold', 'hot', 'dawn', 'meals'].every(k => is.int(g.counters[k])) &&
-            (g.origin === null ||
-              (ORIGINS.route.some(o => o.id === g.origin.route) &&
-                ORIGINS.reply.some(o => o.id === g.origin.reply))),
-        ) || 'growth',
+        (is.keyedBy(all, Object.keys(w.packs)) &&
+          Object.values(all).every(
+            g =>
+              is.obj(g.xp) &&
+              Object.keys(SKILLS).every(k => is.int(g.xp[k])) &&
+              is.arr(g.traits, 12) &&
+              new Set(g.traits).size === g.traits.length &&
+              g.traits.every(k => Object.hasOwn(TRAITS, k)) &&
+              is.obj(g.counters) &&
+              ['wetOut', 'cold', 'hot', 'dawn', 'meals'].every(k => is.int(g.counters[k])) &&
+              (g.origin === null ||
+                (is.obj(g.origin) &&
+                  ORIGINS.route.some(o => o.id === g.origin.route) &&
+                  ORIGINS.reply.some(o => o.id === g.origin.reply))),
+          )) ||
+        'growth',
     });
     const mine = (w, id = people.who(w)) => w.growth[id];
     const lv = (w, k, id = people.who(w)) => level(mine(w, id)?.xp[k] || 0);

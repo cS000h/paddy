@@ -27,12 +27,14 @@ export const market = {
       initial: () => ({ day: 0, wares: { market: [], tea: [] } }),
       validate: s =>
         (is.int(s.day) &&
+          is.keyedBy(s.wares, ['market', 'tea']) &&
           ['market', 'tea'].every(
             k =>
               is.arr(s.wares[k], 80) &&
               s.wares[k].every(
                 x =>
-                  ITEMS[x.item] &&
+                  is.obj(x) &&
+                  Object.hasOwn(ITEMS, x.item) &&
                   is.int(x.left, 0, 99) &&
                   is.int(x.price, 1) &&
                   Array.isArray(x.why),

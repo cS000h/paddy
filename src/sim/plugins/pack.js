@@ -37,7 +37,13 @@ export const pack = {
         ),
       validate: (all, w) =>
         check([
-          [is.obj(all) && Object.keys(all).every(id => Object.hasOwn(w.people, id)), 'whose'],
+          [
+            is.keyedBy(
+              all,
+              Object.values(w.households).flatMap(h => h.members),
+            ),
+            'whose',
+          ],
           [
             Object.values(all).every(
               p =>
@@ -108,6 +114,17 @@ export const pack = {
         return 'pack';
       }
       if (!people.atHome(w, id)) refuse(FULL);
+      store.add(w, item, n, why);
+      return 'store';
+    }
+
+    /** 别人送来、捎来的东西（回礼、阿满捎的货）：行囊放得下就放，放不下就收进家里。
+     *  这是玩家推不掉的事，常在清早发生，所以从不拒绝；返回放在了哪儿。 */
+    function deliver(w, id, item, n = 1, why = null) {
+      if (fits(w, id, item)) {
+        put(w, id, item, n, why);
+        return 'pack';
+      }
       store.add(w, item, n, why);
       return 'store';
     }
@@ -235,6 +252,7 @@ export const pack = {
         has,
         use,
         receive,
+        deliver,
         flask,
         big: (w, id) => w.packs[id].big,
         upgrade: ctx.own((w, id) => {

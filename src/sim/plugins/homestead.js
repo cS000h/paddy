@@ -57,15 +57,16 @@ export const homestead = {
           Object.keys(w.households).map(id => [id, { coop: false, hens: 0, fed: 0, eggs: 0 }]),
         ),
       validate: (all, w) =>
-        Object.entries(all).every(
-          ([id, h]) =>
-            w.households[id] &&
-            typeof h.coop === 'boolean' &&
-            is.int(h.hens, 0, 4) &&
-            (h.coop || h.hens === 0) &&
-            is.int(h.fed) &&
-            is.int(h.eggs, 0, 12),
-        ) || 'homesteads',
+        (is.keyedBy(all, Object.keys(w.households)) &&
+          Object.values(all).every(
+            h =>
+              typeof h.coop === 'boolean' &&
+              is.int(h.hens, 0, 4) &&
+              (h.coop || h.hens === 0) &&
+              is.int(h.fed) &&
+              is.int(h.eggs, 0, 12),
+          )) ||
+        'homesteads',
     });
     const home = w => w.homesteads[store.id(w)];
     const totalGreens = (w, id) => GREENS.reduce((n, k) => n + pack.reach(w, id, k), 0);

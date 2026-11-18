@@ -11,14 +11,15 @@ export const achievements = {
       initial: (env, w) =>
         Object.fromEntries(Object.keys(w.packs).map(id => [id, { counts: {}, earned: {} }])),
       validate: (all, w) =>
-        Object.entries(all).every(
-          ([id, a]) =>
-            w.people[id] &&
-            is.obj(a.counts) &&
-            is.obj(a.earned) &&
-            Object.entries(a.counts).every(([k, n]) => ids.has(k) && is.int(n)) &&
-            Object.entries(a.earned).every(([k, d]) => ids.has(k) && is.int(d, 1)),
-        ) || 'achievements',
+        (is.keyedBy(all, Object.keys(w.packs)) &&
+          Object.values(all).every(
+            a =>
+              is.obj(a.counts) &&
+              is.obj(a.earned) &&
+              Object.entries(a.counts).every(([k, n]) => ids.has(k) && is.int(n)) &&
+              Object.entries(a.earned).every(([k, d]) => ids.has(k) && is.int(d, 1)),
+          )) ||
+        'achievements',
     });
     for (const event of new Set(ACHIEVEMENTS.map(a => a.event)))
       reactions.on(

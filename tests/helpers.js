@@ -15,7 +15,8 @@ export const FIELD = Object.freeze({
 /** 发一条必须成功的命令，返回它引起的事实类型。 */
 export function must(game, type, input = {}) {
   const out = game.dispatch(type, input);
-  assert.equal(out.ok, true, `${type} 应该成功，却被拒绝：${out.reason}`);
+  const why = out.fault ? `${out.reason}（${out.detail}）` : out.reason;
+  assert.equal(out.ok, true, `${type} 应该成功，却被拒绝：${why}`);
   return out.facts.map(f => f.type);
 }
 

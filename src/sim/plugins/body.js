@@ -39,7 +39,13 @@ export const body = {
         ),
       validate: (all, w) =>
         check([
-          [is.obj(all) && Object.keys(all).every(id => Object.hasOwn(w.people, id)), 'whose'],
+          [
+            is.keyedBy(
+              all,
+              Object.values(w.households).flatMap(h => h.members),
+            ),
+            'whose',
+          ],
           [
             Object.values(all).every(
               v =>

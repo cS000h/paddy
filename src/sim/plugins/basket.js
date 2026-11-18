@@ -91,7 +91,7 @@ export const basket = {
         // 一回买的可能不止一份（盐一包是四份）。东西先往身上放，放不下就收进橱柜
         for (const [item, bought] of Object.entries(w.basket.order)) {
           const n = bought * ITEMS[item].qty;
-          const where = pack.receive(w, people.who(w), item, n, '阿满捎来的');
+          const where = pack.deliver(w, people.who(w), item, n, '阿满捎来的');
           core.post(w, {
             title: '阿满捎来的',
             text:

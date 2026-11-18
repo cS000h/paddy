@@ -11,9 +11,9 @@ export const comfort = {
       initial: (env, w) =>
         Object.fromEntries(Object.keys(w.packs).map(id => [id, { chill: null }])),
       validate: (all, w) =>
-        Object.entries(all).every(
-          ([id, v]) => w.people[id] && (v.chill === null || is.int(v.chill, 1)),
-        ) || 'sensations',
+        (is.keyedBy(all, Object.keys(w.packs)) &&
+          Object.values(all).every(v => is.obj(v) && (v.chill === null || is.int(v.chill, 1)))) ||
+        'sensations',
     });
     const band = v => {
       const row = FEEL_BANDS.find(r => v <= Number(r[0]));

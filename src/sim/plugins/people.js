@@ -33,10 +33,7 @@ export const people = {
       },
       validate: all =>
         check([
-          [
-            is.obj(all) && Object.keys(all).every(id => Object.hasOwn(PEOPLE, id)),
-            'unknown person',
-          ],
+          [is.keyedBy(all, Object.keys(PEOPLE)), 'not everyone in content/people.js'],
           [
             Object.values(all).every(
               p =>
@@ -53,7 +50,12 @@ export const people = {
 
     schema.slice('player', {
       initial: () => ({ controls: HERO }),
-      validate: (p, w) => Object.hasOwn(w.people, p.controls) || 'controls nobody',
+      // 操控的人得是某一户里的人：身体、行囊、本事都按户里的人建
+      validate: (p, w) =>
+        (is.str(p.controls, 40) &&
+          Object.hasOwn(w.people, p.controls) &&
+          Object.values(w.households).some(h => h.members.includes(p.controls))) ||
+        'controls nobody in a household',
     });
 
     const who = w => w.player.controls;

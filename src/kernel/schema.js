@@ -62,6 +62,15 @@ const is = {
   str: (x, max = 400) => typeof x === 'string' && x.length <= max,
   arr: (x, max = 200) => Array.isArray(x) && x.length <= max,
   oneOf: (x, list) => list.includes(x),
+  // 每人一份、每户一份、每张地图一份的数据：得是普通对象，键和名单一一对应，不多不少。
+  // 只查“里面的每一项都对”不够：空对象、空数组、true 都能让“每一项”空空地成立，
+  // 读进来以后一问主角那一份就出错。
+  keyedBy: (x, keys) => {
+    if (!is.obj(x)) return false;
+    const want = new Set(keys);
+    const have = Object.keys(x);
+    return have.length === want.size && have.every(k => want.has(k));
+  },
 };
 // check([[cond, 'reason'], ...]) → true or the first failing reason
 const check = rules => {

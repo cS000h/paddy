@@ -222,8 +222,39 @@ test('refuse()：服务里说“做不了”，命令被拒绝、世界不动，
   assert.deepEqual(send('work', { n: 9 }), { ok: false, reason: '太累了' });
   assert.equal(dispatcher.snapshot().world.n, 0);
   assert.deepEqual(errors, [], '拒绝不报给 onError');
-  assert.equal(send('crash').reason, 'bug');
+  assert.deepEqual(send('crash'), { ok: false, reason: 'bug', fault: true });
   assert.deepEqual(errors, ['bug'], '真出错才报');
   assert.equal(send('work', { n: 2 }).ok, true);
   assert.equal(dispatcher.snapshot().world.n, 3);
+});
+
+test('反应里不许拒绝：跟着一件事发生的反应一拒绝，就算程序出错（行囊满了不能连觉都睡不了）', () => {
+  const events = createEvents();
+  const reactions = createReactions();
+  const errors = [];
+  const dispatcher = createDispatcher({
+    initialState: { revision: 0, world: { day: 1, gifts: 0 } },
+    problems: () => [],
+    events,
+    reactions,
+    onError: error => errors.push(error.message),
+  });
+  dispatcher.commands.register('sleep', ({ draft, fact }) => {
+    draft.world.day += 1;
+    fact('day.started');
+  });
+  reactions.on('day.started', () => refuse('行囊满了'), { owner: { id: 'gifts' } });
+  const out = dispatcher.dispatch({ type: 'sleep', revision: 0 });
+  assert.equal(out.ok, false);
+  assert.equal(out.fault, true);
+  assert.match(out.reason, /gifts refused while reacting to day\.started: 行囊满了/);
+  assert.equal(errors.length, 1);
+  assert.equal(dispatcher.snapshot().world.day, 1, '整条命令作废');
+});
+
+test('is.keyedBy：每人一份的数据，空对象、数组、true 都不算数，少一份多一份都不行', () => {
+  const people = ['hero', 'shi'];
+  assert.ok(is.keyedBy({ hero: 1, shi: 2 }, people));
+  for (const bad of [{}, [], true, 2.5, null, { hero: 1 }, { hero: 1, shi: 2, gui: 3 }])
+    assert.equal(is.keyedBy(bad, people), false, JSON.stringify(bad));
 });

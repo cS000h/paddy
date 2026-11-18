@@ -1,4 +1,5 @@
 import { immutableCopy } from './events.js';
+import { Refusal, refuse } from './refusal.js';
 
 // Command → draft → reactions (+ settle) → validate → commit → publish facts → onCommit once.
 // Changes from 0.5:
@@ -6,14 +7,9 @@ import { immutableCopy } from './events.js';
 //  * initial state is verified after plugins install (slices are registered by plugins);
 //  * onCommit fires exactly once per successful command, so the UI renders and saves once
 //    (0.5 re-rendered and re-saved for every published fact, plus once more in the UI).
-// New in 稻: refuse(reason). A rule (or a service it calls) that cannot go ahead throws a Refusal.
-// The command is rejected with that reason like any thrown error, but it is not reported to
-// onError: "you are too tired" is an answer for the player, not a fault in the program.
-class Refusal extends Error {}
-/** Reject the running command with a reason for the player. Never returns. */
-function refuse(reason) {
-  throw new Refusal(reason);
-}
+// New in 稻: refuse(reason) (see refusal.js). A rule that cannot go ahead throws a Refusal; the
+// command is rejected with that reason, and it is not reported to onError. Any other exception
+// is a fault in the program: the command is rejected too, with fault: true, and onError hears it.
 
 function createDispatcher({
   initialState,
@@ -127,8 +123,10 @@ function createDispatcher({
         }
         return outcome;
       } catch (error) {
-        if (onError && !(error instanceof Refusal)) onError(error, command);
-        return { ok: false, reason: error?.message || String(error) };
+        const reason = error?.message || String(error);
+        if (error instanceof Refusal) return { ok: false, reason };
+        if (onError) onError(error, command);
+        return { ok: false, reason, fault: true };
       } finally {
         busy = false;
       }

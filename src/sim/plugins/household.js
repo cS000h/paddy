@@ -25,7 +25,10 @@ export const household = {
           [
             Object.values(all).every(
               h =>
+                is.obj(h) &&
                 is.arr(h.members, 12) &&
+                h.members.every(id => typeof id === 'string') &&
+                new Set(h.members).size === h.members.length &&
                 is.int(h.coins) &&
                 is.int(h.can, 0, CAN_CAPACITY) &&
                 is.obj(h.items) &&

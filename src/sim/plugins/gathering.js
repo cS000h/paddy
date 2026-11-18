@@ -48,17 +48,19 @@ export const gathering = {
       initial: (env, w) =>
         Object.fromEntries(Object.keys(w.packs).map(id => [id, { counts: {}, fish: null }])),
       validate: (all, w) =>
-        Object.entries(all).every(
-          ([id, o]) =>
-            w.people[id] &&
-            is.obj(o.counts) &&
-            Object.values(o.counts).every(n => is.int(n, 0, 9999)) &&
-            (o.fish === null ||
-              (Number.isFinite(o.fish.roll) &&
-                o.fish.roll >= 0 &&
-                o.fish.roll < 1 &&
-                is.int(o.fish.day, 1))),
-        ) || 'outings',
+        (is.keyedBy(all, Object.keys(w.packs)) &&
+          Object.values(all).every(
+            o =>
+              is.obj(o.counts) &&
+              Object.values(o.counts).every(n => is.int(n, 0, 9999)) &&
+              (o.fish === null ||
+                (is.obj(o.fish) &&
+                  Number.isFinite(o.fish.roll) &&
+                  o.fish.roll >= 0 &&
+                  o.fish.roll < 1 &&
+                  is.int(o.fish.day, 1))),
+          )) ||
+        'outings',
     });
     const mine = w => w.outings[people.who(w)];
     const count = (w, id) => mine(w).counts[id] || 0;

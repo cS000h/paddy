@@ -38,9 +38,11 @@ export const teahouse = {
       initial: (env, w) =>
         Object.fromEntries(Object.keys(w.packs).map(id => [id, { chess: 0, hawk: 0, listen: 0 }])),
       validate: (all, w) =>
-        Object.entries(all).every(
-          ([id, v]) => w.people[id] && ['chess', 'hawk', 'listen'].every(k => is.int(v[k])),
-        ) || 'teaDays',
+        (is.keyedBy(all, Object.keys(w.packs)) &&
+          Object.values(all).every(
+            v => is.obj(v) && ['chess', 'hawk', 'listen'].every(k => is.int(v[k])),
+          )) ||
+        'teaDays',
     });
 
     const present = (w, id) =>

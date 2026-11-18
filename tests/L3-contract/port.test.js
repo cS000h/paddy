@@ -2,7 +2,7 @@
 // 并且同步检查 world / panels 里用到它们的地方。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame } from '../../src/port/game.js';
+import { createGame, MALFORMED_REASON } from '../../src/port/game.js';
 import { newGame, must, FIELD } from '../helpers.js';
 
 const COMMANDS = [
@@ -151,6 +151,47 @@ test('每条成功的命令通知一次；被拒绝的不通知；可以只听�
   off();
   must(g, 'farm.sow', FIELD);
   assert.equal(commits.length, 1);
+});
+
+test('一个听众出错，别的听众照常听到，错交给 onError；没给 onError 时命令做完再抛出来', () => {
+  const heard = [];
+  const g = createGame({ seed: 1, onError: (error, info) => heard.push([error.message, info]) });
+  const after = [];
+  g.onCommit(() => {
+    throw new Error('面板坏了');
+  });
+  g.onCommit(facts => after.push(facts.length)); // 比如自动存档
+  g.on('plot.tilled', () => {
+    throw new Error('画面坏了');
+  });
+  must(g, 'farm.till', FIELD);
+  assert.equal(after.length, 1, '前一个听众出错，后一个照样听到');
+  assert.deepEqual(heard, [
+    ['画面坏了', { listener: 'plot.tilled' }],
+    ['面板坏了', { listener: 'commit' }],
+  ]);
+  const quiet = newGame();
+  quiet.onCommit(() => {
+    throw new Error('没人接的错');
+  });
+  assert.throws(() => quiet.dispatch('farm.till', FIELD), /没人接的错/);
+  assert.equal(quiet.revision(), 1, '世界照常往前走了，只是错没有被吞掉');
+});
+
+test('命令的输入要是干净的数据：原型链上的名字、不是普通对象的值，挡在门口', () => {
+  const g = newGame();
+  for (const input of [
+    { item: 'constructor' },
+    { item: '__proto__' },
+    { at: { toString: 1 } },
+    { items: ['rice', 'hasOwnProperty'] },
+    { at: new Map() },
+  ]) {
+    const out = g.dispatch('eat', input);
+    assert.equal(out.ok, false, JSON.stringify(input));
+    assert.equal(out.reason, MALFORMED_REASON);
+  }
+  assert.equal(g.revision(), 0);
 });
 
 test('事实和存档都是冻结的，外壳改不了规则里的数据', () => {

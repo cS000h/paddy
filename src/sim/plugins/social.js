@@ -127,7 +127,7 @@ export const social = {
         const w = s.world;
         for (const o of w.bonds.owed.filter(x => x.day <= w.clock.day)) {
           const g = RETURN_GIFT[o.from];
-          pack.receive(w, people.who(w), g.item, g.n, `${PEOPLE[o.from].name}的回礼`);
+          pack.deliver(w, people.who(w), g.item, g.n, `${PEOPLE[o.from].name}的回礼`);
           core.post(w, { title: `${PEOPLE[o.from].name}的回礼`, text: g.text });
           emit('gift.returned', { from: o.from, item: g.item, n: g.n });
         }

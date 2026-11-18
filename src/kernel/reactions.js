@@ -4,6 +4,12 @@
 //                                                        e.g. body sense re-evaluates, the dawn digest is flushed.
 //                                                        If a settle hook emits, the queue runs again (max 4 rounds).
 // Any exception aborts the whole command; the dispatcher discards the draft.
+// A reaction may not refuse. A refusal is the player's command answering "can't do that", so it
+// belongs to the command itself; a reaction that refuses makes an unrelated command fail (a full
+// pack used to make sleep fail because a return gift arrived at dawn). It is turned into a fault,
+// which onError hears and the tests catch.
+import { Refusal } from './refusal.js';
+
 const MAX_EVENTS = 96;
 const clone = x => JSON.parse(JSON.stringify(x === undefined ? {} : x));
 
@@ -19,10 +25,17 @@ function createReactions({ guard = null } = {}) {
       if (i >= 0) list.splice(i, 1);
     };
   };
-  const call = (entry, draft, args) =>
-    guard
-      ? guard.run(entry.owner, draft, () => entry.fn(draft, ...args))
-      : entry.fn(draft, ...args);
+  const call = (entry, draft, args, what) => {
+    try {
+      return guard
+        ? guard.run(entry.owner, draft, () => entry.fn(draft, ...args))
+        : entry.fn(draft, ...args);
+    } catch (error) {
+      if (!(error instanceof Refusal)) throw error;
+      const who = entry.owner?.id || '?';
+      throw new Error(`${who} refused while reacting to ${what}: ${error.message}`);
+    }
+  };
 
   const api = {
     on(type, fn, { priority = 50, owner = null } = {}) {
@@ -44,13 +57,13 @@ function createReactions({ guard = null } = {}) {
             trace.push(`${event.type} → ${entry.owner?.id || '?'}`);
             const emit = (type, data) =>
               facts.push({ type, data: clone(data), by: entry.owner?.id });
-            call(entry, draft, [event, emit]);
+            call(entry, draft, [event, emit], event.type);
           }
         }
         const before = facts.length;
         for (const entry of [...settlers]) {
           const emit = (type, data) => facts.push({ type, data: clone(data), by: entry.owner?.id });
-          call(entry, draft, [emit]);
+          call(entry, draft, [emit], 'settle');
         }
         if (facts.length === before) break;
         if (round >= 4) throw new Error('Settle phase did not converge');

@@ -42,26 +42,30 @@ export const land = {
     schema.slice('land', {
       initial: () => Object.fromEntries(Object.keys(MAPS).map(id => [id, { plots: {} }])),
       validate: all =>
-        Object.entries(all).every(
-          ([id, m]) =>
-            Object.hasOwn(MAPS, id) &&
-            is.obj(m.plots) &&
-            Object.entries(m.plots).every(([k, p]) => {
-              const [x, y] = k.split(',').map(Number);
-              return (
-                farmable(MAPS[id], x, y) &&
-                typeof p.wet === 'boolean' &&
-                is.int(p.water, 0, SOIL.waterMax) &&
-                is.int(p.fert, 0, SOIL.fertMax) &&
-                typeof p.weeds === 'boolean' &&
-                typeof p.bugs === 'boolean' &&
-                typeof p.drained === 'boolean' &&
-                is.int(p.fed) &&
-                (p.last === null || Object.hasOwn(CROPS, p.last)) &&
-                (p.crop === null || (Object.hasOwn(CROPS, p.crop) && is.int(p.age, 0, 99)))
-              );
-            }),
-        ) || 'plots',
+        (is.keyedBy(all, Object.keys(MAPS)) &&
+          Object.entries(all).every(
+            ([id, m]) =>
+              is.obj(m) &&
+              is.obj(m.plots) &&
+              Object.entries(m.plots).every(([k, p]) => {
+                const [x, y] = k.split(',').map(Number);
+                return (
+                  k === key(x, y) &&
+                  farmable(MAPS[id], x, y) &&
+                  is.obj(p) &&
+                  typeof p.wet === 'boolean' &&
+                  is.int(p.water, 0, SOIL.waterMax) &&
+                  is.int(p.fert, 0, SOIL.fertMax) &&
+                  typeof p.weeds === 'boolean' &&
+                  typeof p.bugs === 'boolean' &&
+                  typeof p.drained === 'boolean' &&
+                  is.int(p.fed) &&
+                  (p.last === null || Object.hasOwn(CROPS, p.last)) &&
+                  (p.crop === null || (Object.hasOwn(CROPS, p.crop) && is.int(p.age, 0, 99)))
+                );
+              }),
+          )) ||
+        'plots',
     });
 
     const plotAt = (w, map, x, y) => w.land[map].plots[key(x, y)] || null;
