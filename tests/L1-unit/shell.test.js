@@ -15,6 +15,38 @@ import {
 import { MAPS, walkable } from '../../src/content/maps/index.js';
 import { newGame, must } from '../helpers.js';
 
+test('外壳状态和输入意图：一个听众出错，别的照常收到；没人接错时通知完再抛出', () => {
+  const errors = [];
+  const shell = createShellState({ onError: (e, where) => errors.push([e.message, where]) });
+  const seen = [];
+  shell.subscribe(() => {
+    throw new Error('面板坏了');
+  });
+  shell.subscribe(state => seen.push(state.tool));
+  shell.set({ tool: 'can' });
+  assert.deepEqual(seen, ['can']);
+  assert.deepEqual(errors, [['面板坏了', 'shell']]);
+
+  const intents = createIntents({ onError: (e, where) => errors.push([e.message, where]) });
+  const acted = [];
+  intents.on('act', () => {
+    throw new Error('世界坏了');
+  });
+  intents.on('act', () => acted.push(1));
+  intents.emit('act');
+  assert.deepEqual(acted, [1]);
+  assert.deepEqual(errors.at(-1), ['世界坏了', 'intent:act']);
+
+  const loud = createShellState();
+  const after = [];
+  loud.subscribe(() => {
+    throw new Error('没人接');
+  });
+  loud.subscribe(() => after.push(1));
+  assert.throws(() => loud.set({ tool: 'can' }), /没人接/);
+  assert.deepEqual(after, [1], '抛出之前，别的听众已经收到了');
+});
+
 test('意图：几个设备同时报方向，取最用力的那个；长度不超过 1', () => {
   const intents = createIntents();
   assert.deepEqual(intents.move(), { x: 0, y: 0 });

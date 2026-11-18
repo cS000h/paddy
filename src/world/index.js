@@ -1,6 +1,7 @@
 // 像素世界的入口。整个 world 层是“一种画法”：换引擎、换镜头、换画风，只动这一层。
 import Phaser from 'phaser';
 import { VillageScene } from './scene.js';
+import { guardFrames } from './safety.js';
 
 /**
  * @param {object} deps
@@ -10,9 +11,17 @@ import { VillageScene } from './scene.js';
  * @param {object} deps.shell    外壳状态（src/shell/state.js）
  * @param {object} deps.platform 平台（src/platform）
  * @param {object} deps.map      要显示的地图（src/content/maps）
+ * @param {(error: unknown, where: string) => void} [deps.report] 画面里出错交给谁（默认抛出）
  */
 export function createWorld(deps) {
-  const { parent, ...sceneDeps } = deps;
+  const {
+    parent,
+    report = error => {
+      throw error;
+    },
+    ...rest
+  } = deps;
+  const sceneDeps = { ...rest, report };
   const view = deps.platform.viewport;
   const phaser = new Phaser.Game({
     type: Phaser.AUTO,
@@ -28,6 +37,7 @@ export function createWorld(deps) {
     width: view.size().width,
     height: view.size().height,
     scale: { mode: Phaser.Scale.NONE },
+    callbacks: { postBoot: game => guardFrames(game, report) },
   });
   phaser.scene.add('village', VillageScene, true, sceneDeps);
   const scene = () => phaser.scene.getScene('village');

@@ -2,7 +2,7 @@
 // 面板不改世界：要做事就发意图或调用 actions（由 app 提供），要显示就问端口。
 // 这个文件只管接线；常驻的几块在 hud.js，手记在 journal.js，小窗在 modals.js，摇杆在 stick.js。
 import { animateTiming } from './timing.js';
-import { modalView, closesOnBackdrop } from './modals.js';
+import { modalView, brokenSheet, closesOnBackdrop } from './modals.js';
 import { HUD_HTML, renderHud, syncToolbar } from './hud.js';
 import { journalView, nextStepView } from './journal.js';
 import { bindStick } from './stick.js';
@@ -26,8 +26,20 @@ const worthSaying = e => {
  * @param {object} deps.platform 平台
  * @param {object} deps.actions 按钮名字 → 做什么（app 提供）
  * @param {() => object|undefined} deps.here 操控的人此刻站在哪一格
+ * @param {(error: unknown, where: string) => void} [deps.report] 面板里出错交给谁（默认抛出）
  */
-export function createPanels({ root, game, intents, shell, platform, actions, here }) {
+export function createPanels({
+  root,
+  game,
+  intents,
+  shell,
+  platform,
+  actions,
+  here,
+  report = error => {
+    throw error;
+  },
+}) {
   root.innerHTML = `${HUD_HTML}
     <aside class="card journal" data-id="journal" hidden></aside>
     <div class="hint" data-id="hint" hidden></div>
@@ -73,9 +85,16 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
     while (el.feed.children.length > 5) el.feed.firstElementChild.remove();
   }
 
+  // 小窗画不出来时，换一张说明的纸，玩家能关掉它接着玩；错交给 report
   function renderModal(state) {
     el.modal.hidden = !state.modal;
-    el.modal.innerHTML = state.modal ? modalView(state.modal, game, here()) : '';
+    if (!state.modal) return void (el.modal.innerHTML = '');
+    try {
+      el.modal.innerHTML = modalView(state.modal, game, here());
+    } catch (error) {
+      el.modal.innerHTML = brokenSheet();
+      report(error, 'panels:' + state.modal.kind);
+    }
   }
 
   function renderShell(state) {
@@ -123,9 +142,19 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
       return renderAll();
     }
     if (what === 'close') return shell.set({ modal: null });
-    if (what && actions[what]) return actions[what](button.dataset);
+    if (what && actions[what]) return run(() => actions[what](button.dataset), what);
     return undefined;
   });
+  // 按钮要做的事出错（包括 async 的），交给 report，不让它变成页面上没人接的错
+  function run(fn, what) {
+    try {
+      const out = fn();
+      if (out && typeof out.catch === 'function')
+        out.catch(error => report(error, 'action:' + what));
+    } catch (error) {
+      report(error, 'action:' + what);
+    }
+  }
   // 点小窗外面的空白处也能关掉（手机上长的小窗不用滚到底找按钮）；开局的选择除外。
   el.modal.addEventListener('click', event => {
     const modal = shell.get().modal;

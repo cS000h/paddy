@@ -63,6 +63,7 @@ npm run art:sheet # 不开浏览器，把整张场景和素材导出到 .cache/ 
 | 加一种小窗                           | 在 `src/panels/` 写视图函数、登记进 `modals.js` 的 `VIEWS`，用 `panels/html.js` 拼 |
 | 小窗按钮要做的事                     | `src/app/` 里按主题分的 `*Actions`（行囊吃喝在 `home.js`），`main.js` 只负责组装   |
 | 世界提示条和面板都要说的话           | `src/shell/words.js`（例如体力价钱的写法）                                         |
+| 程序出错时怎么记、怎么告诉玩家       | `src/app/problems.js`；画面一侧的保护在 `src/world/safety.js`                      |
 | 换引擎或换镜头                       | 只动 `src/world/`                                                                  |
 
 ## 写一个规则插件
@@ -106,6 +107,11 @@ export const example = {
   的直接拒绝。规则里查数据表仍然用 `Object.hasOwn`。
 - **加了新命令**，在 `tests/chaos.js` 里教乱玩的人怎么用它；不教的话 L4-03 会点名。
   加了新的存档数据，L3-03 会随机弄坏它，看校验挡不挡得住。
+
+外壳一侧（world、panels、app）出错的去处只有一个：`report(error, where)`（`src/app/problems.js`）。
+端口、外壳状态、输入意图的听众都各自隔开，一个出错不连累别的；画面每一帧、场景的 `update`
+和定时回调都包了一层（`src/world/safety.js`），一帧出错下一帧照常。新写的定时回调、异步按钮
+也照这样包：定时回调里用 `scene.guard(fn)`，按钮动作由面板统一接住。
 
 ## 人物设定
 

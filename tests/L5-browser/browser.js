@@ -22,10 +22,11 @@ export async function launch() {
   }
 }
 
-export function serve() {
+/** 伺服一个构建目录（默认 dist/；并行的测试各自构建到别处，免得互相覆盖）。 */
+export function serve(dir = dist) {
   const server = createServer(async (req, res) => {
     const name = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-    const file = path.join(dist, name === '/' ? 'index.html' : name);
+    const file = path.join(dir, name === '/' ? 'index.html' : name);
     try {
       const body = await readFile(file);
       const type = TYPES[path.extname(file)] || 'application/octet-stream';

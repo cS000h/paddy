@@ -2,7 +2,7 @@
 // 存档放哪、怎么知道窗口被切走了、画面朝哪个方向、是键鼠还是触屏、怎么出声。
 // 以后要上桌面壳（Electron、Tauri）或别的平台，照着这个文件的形状再写一个，其余代码不动。
 
-import { createStorage } from './storage.js';
+import { createStorage, KEY } from './storage.js';
 import { files } from './files.js';
 
 // 画面的方向和大小。手机、平板这类用手指的设备一律横屏：竖着拿的时候，把整个画面转 90 度。
@@ -164,6 +164,23 @@ export function createWebPlatform(root) {
         removeEventListener('pagehide', fn);
         removeEventListener('blur', fn);
       };
+    },
+    /** 页面上漏网的错（没人接的异常、没人等的 Promise 出错），交给 fn(error, where)。 */
+    onStray(fn) {
+      const error = event => fn(event.error || new Error(event.message || '页面出错'), 'page');
+      const rejection = event => fn(event.reason || new Error('Promise 出错'), 'promise');
+      addEventListener('error', error);
+      addEventListener('unhandledrejection', rejection);
+      return () => {
+        removeEventListener('error', error);
+        removeEventListener('unhandledrejection', rejection);
+      };
+    },
+    /** 另一个页面（同一个浏览器里开着的另一份游戏）写了存档时调用 fn。两边都自动存档会互相覆盖。 */
+    onOtherTab(fn) {
+      const handler = event => event.key === KEY && event.newValue !== null && fn();
+      addEventListener('storage', handler);
+      return () => removeEventListener('storage', handler);
     },
     /** 新开一局用的随机种子。 */
     seed: () => (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0,

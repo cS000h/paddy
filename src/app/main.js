@@ -1,5 +1,6 @@
 // 启动入口：把平台、规则（经由端口）、输入意图、世界画面、界面面板接到一起。
-// 这里只管组装和跨着几块的流程：读档、自动存档、时间流逝。面板按钮能做的事分在同目录的几个文件里。
+// 这里只管组装和跨着几块的流程：读档、自动存档、清早备份、时间流逝，以及出了岔子怎么办。
+// 面板按钮能做的事分在同目录的几个文件里。
 import '../panels/style.css';
 import { createGame } from '../port/game.js';
 import { createWebPlatform } from '../platform/web.js';
@@ -10,6 +11,8 @@ import { createPanels } from '../panels/index.js';
 import { CALENDAR } from '../content/calendar.js';
 import { TOOLS } from '../content/items.js';
 import { MAPS } from '../content/maps/index.js';
+import { createProblems } from './problems.js';
+import { showFallback } from './fallback.js';
 import { saveActions } from './saves.js';
 import { homeActions } from './home.js';
 import { marketActions } from './market.js';
@@ -20,114 +23,164 @@ import { kitchenActions } from './kitchen.js';
 
 const platform = createWebPlatform(document.getElementById('app'));
 const debug = platform.debug();
-const onError = error => console.error(error);
 
-// 读档失败时仅开临时体验局，暂停自动保存，绝不覆盖浏览器原档。
-let game;
-let loadProblem = '';
-let saving = true;
-let saveTimer = 0;
+// 规则、画面、面板、计时，哪儿出错都交到这里；错得太密时弹小窗告诉玩家进度已经存好。
+let shell = null;
+const problems = createProblems({
+  onBurst: () => shell?.set({ modal: { kind: 'trouble' } }),
+});
+const report = (error, where) => problems.report(error, where);
+platform.onStray(report);
+
 try {
-  game = createGame({ saved: platform.storage.load(), seed: platform.seed(), debug, onError });
+  start();
 } catch (error) {
-  console.warn('存档读不了，已保护原档：', error);
-  loadProblem = '原来的进度暂时读不了，已停止自动覆盖。请先导出浏览器原档留作备份。';
-  saving = false;
-  game = createGame({ seed: platform.seed(), debug, onError });
+  // 启动时就出错：给一页说明，进度不动；能导出浏览器里的原档
+  report(error, 'start');
+  document.getElementById('boot')?.remove();
+  showFallback(document.getElementById('ui'), {
+    error,
+    rawSave: platform.storage.raw(),
+    download: platform.files.download,
+  });
 }
 
-const intents = createIntents();
-const shell = createShellState();
-const world = createWorld({
-  parent: document.getElementById('stage'),
-  game,
-  intents,
-  shell,
-  platform,
-  map: MAPS[game.ask('hero').map],
-});
+function start() {
+  const onError = (error, { command, listener }) =>
+    report(error, command ? 'rules:' + command.type : 'listener:' + listener);
 
-const here = () => world.heroAt() || undefined;
-
-/** 发命令；被拒绝就把原因说给玩家。 */
-function run(type, input) {
-  const out = game.dispatch(type, input);
-  if (!out.ok) shell.toast(out.reason);
-  return out;
-}
-
-// 面板上的按钮能做的事。按钮写 data-do="名字"，带的 data-* 会传进来。
-const deps = { game, shell, platform, run, here, world };
-const stopSaving = () => {
-  saving = false;
-  clearTimeout(saveTimer);
-};
-const actions = {
-  ...saveActions({ ...deps, loadProblem, stopSaving }),
-  ...homeActions(deps),
-  ...marketActions(deps),
-  ...fieldActions(deps),
-  ...growthActions(deps),
-  ...activityActions(deps),
-  ...kitchenActions(deps),
-};
-
-createPanels({
-  root: document.getElementById('ui'),
-  game,
-  intents,
-  shell,
-  platform,
-  actions,
-  here,
-});
-
-growthNotices(game, shell);
-if (!game.ask('growth').origin) shell.set({ modal: { kind: 'origin' } });
-if (loadProblem) actions.saves();
-
-intents.on('tool', data => {
-  const id = data.id || TOOLS[data.index]?.id;
-  if (id) shell.set({ tool: id });
-});
-intents.on('tool.step', data => shell.stepTool(data.by));
-
-// 存档：每次世界有变化之后稍等一下再存；窗口被切走时立刻存，并记下站在哪儿。
-let warnedSave = false;
-const saveNow = () => {
-  if (!saving) return;
-  if (!platform.storage.save(game.save()) && !warnedSave) {
-    warnedSave = true;
-    shell.toast('进度暂时存不进浏览器，请在行囊里打开“进度与玩法”导出备份。');
+  // 读档失败时仅开临时体验局，暂停自动保存，绝不覆盖浏览器原档。
+  let game;
+  let loadProblem = '';
+  let saving = true;
+  let saveTimer = 0;
+  try {
+    game = createGame({ saved: platform.storage.load(), seed: platform.seed(), debug, onError });
+  } catch (error) {
+    console.warn('存档读不了，已保护原档：', error);
+    loadProblem = '原来的进度暂时读不了，已停止自动覆盖。请先导出浏览器原档留作备份。';
+    saving = false;
+    game = createGame({ seed: platform.seed(), debug, onError });
   }
-};
-game.onCommit(() => {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveNow, 400);
-});
-platform.onHide(() => {
-  intents.release();
-  const at = here();
-  if (at && !shell.paused()) game.dispatch('person.place', at);
-  saveNow();
-});
 
-// 时间：现实里每过一小会儿，游戏里就过十分钟。有小窗弹着、窗口不在前台时，时间不走。
-let carried = 0;
-let last = performance.now();
-function tick(now) {
-  const seconds = Math.min(0.25, (now - last) / 1000);
-  last = now;
-  if (!shell.paused() && document.visibilityState === 'visible' && !game.ask('clock').stopped) {
-    carried += seconds / CALENDAR.realSecondsPerGameMinute;
-    if (carried >= CALENDAR.tickMinutes) {
-      carried -= CALENDAR.tickMinutes;
-      game.dispatch('clock.advance', { minutes: CALENDAR.tickMinutes });
+  const intents = createIntents({ onError: report });
+  shell = createShellState({ onError: report });
+  const world = createWorld({
+    parent: document.getElementById('stage'),
+    game,
+    intents,
+    shell,
+    platform,
+    report,
+    map: MAPS[game.ask('hero').map],
+  });
+
+  const here = () => world.heroAt() || undefined;
+
+  /** 发命令；被拒绝就把原因说给玩家（规则出错时，原因是端口给的一句人话）。 */
+  function run(type, input) {
+    const out = game.dispatch(type, input);
+    if (!out.ok) shell.toast(out.reason);
+    return out;
+  }
+
+  // 存档：每次世界有变化之后稍等一下再存；窗口被切走时立刻存，并记下站在哪儿。
+  let warnedSave = false;
+  const saveNow = () => {
+    if (!saving) return;
+    if (!platform.storage.save(game.save()) && !warnedSave) {
+      warnedSave = true;
+      shell.toast('进度暂时存不进浏览器，请在行囊里打开“进度与玩法”导出备份。');
+    }
+  };
+  const stopSaving = () => {
+    saving = false;
+    clearTimeout(saveTimer);
+  };
+
+  // 面板上的按钮能做的事。按钮写 data-do="名字"，带的 data-* 会传进来。
+  const deps = { game, shell, platform, run, here, world };
+  const actions = {
+    ...saveActions({ ...deps, loadProblem, stopSaving, problems }),
+    ...homeActions(deps),
+    ...marketActions(deps),
+    ...fieldActions(deps),
+    ...growthActions(deps),
+    ...activityActions(deps),
+    ...kitchenActions(deps),
+    reload() {
+      saveNow();
+      location.reload();
+    },
+    calm() {
+      problems.calm();
+      shell.set({ modal: null });
+    },
+  };
+
+  createPanels({
+    root: document.getElementById('ui'),
+    game,
+    intents,
+    shell,
+    platform,
+    actions,
+    here,
+    report,
+  });
+  document.getElementById('boot')?.remove();
+
+  growthNotices(game, shell);
+  if (!game.ask('growth').origin) shell.set({ modal: { kind: 'origin' } });
+  if (loadProblem) actions.saves();
+
+  intents.on('tool', data => {
+    const id = data.id || TOOLS[data.index]?.id;
+    if (id) shell.set({ tool: id });
+  });
+  intents.on('tool.step', data => shell.stepTool(data.by));
+
+  game.onCommit(facts => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 400);
+    // 刚醒来：另存一份“今天清早”，玩坏了能退回来
+    if (saving && facts.some(f => f.type === 'day.started')) platform.storage.saveDawn(game.save());
+  });
+  platform.onHide(() => {
+    intents.release();
+    const at = here();
+    if (at && !shell.paused()) game.dispatch('person.place', at);
+    saveNow();
+  });
+  // 同一份进度在另一个页面里存了档：这边不再自动存，免得两边互相覆盖
+  platform.onOtherTab(() => {
+    if (!saving) return;
+    stopSaving();
+    shell.set({ modal: { kind: 'elsewhere' } });
+  });
+
+  // 时间：现实里每过一小会儿，游戏里就过十分钟。有小窗弹着、窗口不在前台时，时间不走。
+  // 先约好下一帧再干活：这一帧出了错，时间照样往前走。
+  let carried = 0;
+  let last = performance.now();
+  function tick(now) {
+    requestAnimationFrame(tick);
+    const seconds = Math.min(0.25, (now - last) / 1000);
+    last = now;
+    try {
+      if (shell.paused() || document.visibilityState !== 'visible') return;
+      if (game.ask('clock').stopped) return;
+      carried += seconds / CALENDAR.realSecondsPerGameMinute;
+      if (carried >= CALENDAR.tickMinutes) {
+        carried -= CALENDAR.tickMinutes;
+        game.dispatch('clock.advance', { minutes: CALENDAR.tickMinutes });
+      }
+    } catch (error) {
+      report(error, 'time');
     }
   }
   requestAnimationFrame(tick);
-}
-requestAnimationFrame(tick);
 
-// 调试入口：网址带 ?debug 时，测试和控制台可以通过它直接操作。
-if (debug) window.__dao = { game, shell, intents, world, platform };
+  // 调试入口：网址带 ?debug 时，测试和控制台可以通过它直接操作。
+  if (debug) window.__dao = { game, shell, intents, world, platform, problems };
+}

@@ -24,6 +24,29 @@
       <div id="veil" class="layer veil"></div>
       <!-- 界面面板画在这里（src/panels） -->
       <div id="ui"></div>
+      <!-- 游戏起来以后 main.js 会去掉这一层。一直停在这里，多半是打开它的软件不运行网页脚本 -->
+      <div
+        id="boot"
+        style="
+          position: absolute;
+          inset: 0;
+          z-index: 50;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          text-align: center;
+          font: 16px/1.8 serif;
+          color: #2b3436;
+          background: #ece4d0;
+        "
+      >
+        <p>
+          稻 · 正在打开……<br /><small
+            >一直停在这里的话，说明打开它的软件不运行网页脚本。<br />请换用浏览器（Chrome、Edge、Safari）打开这个文件。</small
+          >
+        </p>
+      </div>
     </div>
     <script type="module" src="/src/app/main.js"></script>
   </body>

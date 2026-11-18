@@ -9,9 +9,16 @@
 //   tool.step {by} 往前或往后换一个工具（滚轮、手柄肩键）
 //   cancel        取消、关闭
 
+import { notifyAll } from './notify.js';
+
 export const INTENTS = Object.freeze(['act', 'tap', 'tool', 'tool.step', 'cancel']);
 
-export function createIntents() {
+/**
+ * @param {object} [options]
+ * @param {(error: unknown, where: string) => void} [options.onError]
+ *   某个听众出错时调用；别的听众照常收到。没给就在通知完之后抛出来。
+ */
+export function createIntents({ onError = null } = {}) {
   const sources = new Map(); // 每个设备各报一个方向，合起来取最强的
   const listeners = new Map();
 
@@ -38,7 +45,7 @@ export function createIntents() {
     /** 发出一次性的意图。 */
     emit(type, data = {}) {
       if (!INTENTS.includes(type)) throw new Error('不认识的意图：' + type);
-      for (const fn of [...(listeners.get(type) || [])]) fn(data);
+      notifyAll(listeners.get(type) || [], [data], onError, 'intent:' + type);
     },
     /** 订阅一种意图，返回取消订阅的函数。 */
     on(type, fn) {

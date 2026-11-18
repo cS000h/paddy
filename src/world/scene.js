@@ -12,6 +12,7 @@ import { weatherEffects } from './weather.js';
 import { refreshPlots } from './plots.js';
 import { bindKeyboard, bindPointer } from './input.js';
 import { ACT_HINT, touchThing } from './interactions.js';
+import { safely } from './safety.js';
 import {
   TILE,
   tileOf,
@@ -42,7 +43,17 @@ export class VillageScene extends Phaser.Scene {
     this.deps = deps; // {game, intents, shell, platform, map}
   }
 
+  // 场景没能搭起来（比如某张地图的素材坏了），世界会是一片空白：记下错，请玩家刷新或导出进度
   create() {
+    try {
+      this.build();
+    } catch (error) {
+      this.deps.report(error, 'world:start');
+      this.deps.shell.set({ modal: { kind: 'trouble' } });
+    }
+  }
+
+  build() {
     const { game, intents, shell, map } = this.deps;
     this.map = map;
     this.busy = false;
@@ -126,7 +137,16 @@ export class VillageScene extends Phaser.Scene {
     return { ...this.player.tile, dir: this.player.dir };
   }
 
+  /** 跑一段可能出错的画面代码：出错交给 report，这一帧的其余部分照常画完。 */
+  guard(fn) {
+    return safely(this.deps.report, fn);
+  }
+
   update(time, delta) {
+    this.guard(() => this.frame(time, delta));
+  }
+
+  frame(time, delta) {
     this.weatherFx.update(time, this.map.indoor ? 'sunny' : this.deps.game.ask('weather').code);
     const dt = Math.min(0.05, delta / 1000);
     const { intents, shell } = this.deps;
@@ -237,13 +257,16 @@ export class VillageScene extends Phaser.Scene {
     });
     this.time.delayedCall(150, () => {
       p.setPose('strike');
-      hit();
+      this.guard(hit);
     });
+    // 收手一定要把 busy 放下，否则这一下出了错，人就再也做不了事
     this.time.delayedCall(390, () => {
-      p.setPose(null);
-      icon.setVisible(false);
       this.busy = false;
       this.hintKey = '';
+      this.guard(() => {
+        p.setPose(null);
+        icon.setVisible(false);
+      });
     });
   }
 

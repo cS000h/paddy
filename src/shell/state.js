@@ -1,8 +1,14 @@
 // 外壳自己的状态：手里拿着哪件工具、有没有弹着对话框、提示条写什么、天色是什么颜色。
 // 这些不是游戏世界的一部分（不进存档），但世界画面和界面面板都要用，所以放在两边都够得着的地方。
 import { TOOLS } from '../content/items.js';
+import { notifyAll } from './notify.js';
 
-export function createShellState() {
+/**
+ * @param {object} [options]
+ * @param {(error: unknown, where: string) => void} [options.onError]
+ *   某个订阅者出错时调用；别的订阅者照常收到。没给就在通知完之后抛出来。
+ */
+export function createShellState({ onError = null } = {}) {
   let state = Object.freeze({
     seed: 'seed.qingcai',
     tool: TOOLS[0].id, // 当前工具
@@ -22,7 +28,7 @@ export function createShellState() {
       const next = { ...state, ...patch };
       if (Object.keys(next).every(k => next[k] === state[k])) return;
       state = Object.freeze(next);
-      for (const fn of [...listeners]) fn(state);
+      notifyAll(listeners, [state], onError, 'shell');
     },
     subscribe(fn) {
       listeners.add(fn);

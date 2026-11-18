@@ -42,6 +42,22 @@ const confirmView = modal =>
 
 const signView = modal => `${para(modal.text)}${actions(close())}`;
 
+// 程序接连出错时的提示。不问规则任何事（这时候问什么都可能再出错），只给三条路。
+const troubleView = () =>
+  `${title('出了点岔子')}${para(
+    '画面或面板接连出错，已经记下来了。进度一直在自动保存，刷新页面就能接着玩；不放心的话，先导出一份进度。',
+  )}${actions(
+    button('calm', '先接着玩'),
+    button('exportSave', '导出进度'),
+    button('reload', '刷新页面', { main: true }),
+  )}`;
+
+// 同一份进度在另一个页面里存了档：这边停止自动存档，免得两边互相覆盖。
+const elsewhereView = () =>
+  `${title('这局在别的页面里接着玩了')}${para(
+    '同一份进度刚在另一个页面里存了档。为了不互相覆盖，这个页面已经停止自动存档；刷新一下，就能接着那边的进度玩。',
+  )}${actions(close('留在这里，不再存档', false), button('reload', '刷新，接着那边', { main: true }))}`;
+
 const VIEWS = {
   saves: savesView,
   market: marketView,
@@ -65,15 +81,23 @@ const VIEWS = {
   sign: signView,
   notes: notesView,
   confirm: confirmView,
+  trouble: troubleView,
+  elsewhere: elsewhereView,
 };
 
 // 内容多的小窗用宽一点的纸。
 const WIDE = new Set(['store', 'basket', 'kitchen', 'recipes', 'market']);
 // 这几种小窗必须在里面做出选择，点纸外面不会关掉。
-const MUST_ANSWER = new Set(['origin']);
+const MUST_ANSWER = new Set(['origin', 'trouble']);
 
 /** 点小窗外面的空白处能不能关掉它。 */
 export const closesOnBackdrop = modal => !MUST_ANSWER.has(modal.kind);
+
+/** 小窗画不出来时换上的那张纸：说清楚出了什么事，能关掉。 */
+export const brokenSheet = () =>
+  `<div class="sheet">${title('这个小窗没能打开')}${para(
+    '程序出了点岔子，已经记下了。进度没有受影响，关上它接着玩就好。',
+  )}${actions(close('关上'))}</div>`;
 
 /** 一个小窗的 HTML。 */
 export function modalView(modal, game, here) {
