@@ -50,6 +50,21 @@ export function homeActions({ game, shell, run, here, world }) {
       if (notes.length) shell.set({ modal: { kind: 'notes', day, notes } });
       else shell.toast(`第 ${day} 日的清早。`);
     },
+    /** 在对话里再问一件事（近况、安排、天色）：换上他这回说的话。 */
+    talkTopic({ to, topic }) {
+      const modal = shell.get().modal;
+      const out = run('talk', { to, topic, ...at() });
+      if (!out.ok) return;
+      const said = out.facts.find(f => f.type === 'person.talked').data;
+      shell.set({
+        modal: {
+          ...modal,
+          line: said.line,
+          gain: (modal.gain || 0) + said.gain,
+          favorite: said.favorite,
+        },
+      });
+    },
     gift({ to, item, dish }) {
       const modal = shell.get().modal;
       const out = run('gift', { to, item, dish: dish ? Number(dish) : null, ...at() });

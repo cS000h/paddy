@@ -1,5 +1,6 @@
 // 和乡邻来往的两个小窗：说话送礼，和院门边托阿满买卖的收菜筐。
-import { PEOPLE } from '../content/people.js';
+import { PEOPLE, ROUTINE_DAY } from '../content/people.js';
+import { TOPICS, LOOK, tierWord } from '../content/talk.js';
 import { itemImg } from './icons.js';
 import { button, actions, close, title, para, itemRow, itemList, esc } from './html.js';
 
@@ -27,15 +28,37 @@ function giftsFor(modal, game, here) {
   return `<div class="gifts"><span class="lead">送点什么</span>${things.join('')}${dishes.join('')}</div>`;
 }
 
-/** 和乡邻说话：左边一枚名字印（人物不画脸），右边是这一句话；底下是送礼和“好”。 */
+/** 还能问的几件事（近况、安排、天色）：今天问过的灰着；天黑了不问安排。 */
+function topicsFor(modal, bond, night) {
+  const asks = ['news', 'plan', 'sky'].map(topic =>
+    button('talkTopic', TOPICS[topic], {
+      data: { to: modal.who, topic },
+      disabled: bond.asked.includes(topic) || (topic === 'plan' && night),
+    }),
+  );
+  return `<div class="topics">${asks.join('')}</div>`;
+}
+
+/**
+ * 和乡邻说话：左边一枚名字印（人物不画脸），右边是谁、在做什么、今天看上去怎样、熟到哪一层；
+ * 底下这一句话，再往下是还能问的几件事、送点什么，和“好”。
+ */
 export function talkView(modal, game, here) {
   const person = PEOPLE[modal.who];
-  const known = game.ask('bonds').find(b => b.id === modal.who).known;
+  const bond = game.ask('bonds').find(b => b.id === modal.who);
+  const { day, minute } = game.ask('clock');
+  const looks = LOOK[modal.who][bond.mood];
+  const look = looks[day % looks.length];
   const gained = modal.gain ? `<b class="gain">+${modal.gain}</b>` : '';
+  const learned = modal.favorite
+    ? para(`记下了：${person.name}最爱吃${modal.favorite}。`, 'aside learned')
+    : '';
   return `<div class="speaker"><span class="name-seal">${esc(person.seal || person.name)}</span>
-      <span class="who"><b>${esc(person.name)}</b><small>${esc(person.role)} · ${esc(modal.doing)}</small></span>
-      <span class="bond">熟悉 ${known}${gained}</span></div>
+      <span class="who"><b>${esc(person.name)}</b><small>${esc(person.role)} · ${esc(modal.doing)} · ${esc(look)}</small></span>
+      <span class="bond">${esc(tierWord(bond.known))}${gained}</span></div>
     <p class="say">${esc(modal.line)}</p>
+    ${learned}
+    ${topicsFor(modal, bond, minute >= ROUTINE_DAY.home)}
     ${giftsFor(modal, game, here)}
     ${actions(close('好'))}`;
 }

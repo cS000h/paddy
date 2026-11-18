@@ -85,3 +85,57 @@ test('手记：做到一件记一件，每件只记一次', () => {
   assert.deepEqual(done, ['till', 'sow', 'water', 'meet', 'harvest']);
   assert.ok(!must(g, 'farm.till', { x: 7, y: 19, at: FIELD.at }).includes('guide.done'));
 });
+
+test('聊天：见面聊日常聊几遍都行；近况、安排、天色每天各问一回；天黑了不问安排', () => {
+  const g = newGame();
+  must(g, 'talk', { to: 'shi' });
+  const life = g.dispatch('talk', { to: 'shi', topic: 'life' }).facts[0].data;
+  assert.equal(life.topic, 'life');
+  assert.equal(life.gain, 0, '同一天再聊不再涨熟悉');
+  for (const topic of ['news', 'plan', 'sky']) {
+    const said = g.dispatch('talk', { to: 'shi', topic }).facts[0].data;
+    assert.ok(said.line.length > 4, topic);
+    assert.equal(refused(g, 'talk', { to: 'shi', topic }), '这个话题今天已经聊过了，明天再问吧。');
+  }
+  assert.equal(refused(g, 'talk', { to: 'shi', topic: 'gossip' }), '没有这个话题');
+  assert.deepEqual(g.ask('bonds').find(b => b.id === 'shi').asked, ['news', 'plan', 'sky']);
+  must(g, 'sleep');
+  assert.deepEqual(g.ask('bonds').find(b => b.id === 'shi').asked, [], '清早又能问了');
+  const plan = g.dispatch('talk', { to: 'shi', topic: 'plan' }).facts[0].data.line;
+  assert.match(plan, /清晨在.*午前去.*午后去.*傍晚去/, '说一天四段各去哪儿');
+  must(g, 'talk', { to: 'gui' }); // 先见过面，夜里才说隔墙话
+  for (let i = 0; i < 8; i++) must(g, 'clock.advance', { minutes: 120 });
+  assert.equal(refused(g, 'talk', { to: 'gui', topic: 'plan' }), '天都黑了，明天的事明天再问吧。');
+  assert.match(
+    g.dispatch('talk', { to: 'gui' }).facts[0].data.line,
+    /还没睡|夜里凉|蛐蛐/,
+    '夜里桂嫂隔着墙说话',
+  );
+});
+
+test('乡邻有心情：说话前的动作跟着心情，每天清早随天气起落，熟了一步对方也高兴', () => {
+  const g = newGame();
+  const mood = id => g.ask('bonds').find(b => b.id === id);
+  assert.equal(mood('aman').mood, 'ok');
+  must(g, 'talk', { to: 'shi' });
+  must(g, 'sleep');
+  const said = g.dispatch('talk', { to: 'shi' }).facts[0].data.line;
+  assert.match(said, /^石伯.*“/, '引号前面先有一个动作');
+  const seen = new Set();
+  for (let day = 0; day < 20; day++) {
+    must(g, 'sleep');
+    for (const b of g.ask('bonds')) seen.add(b.mood);
+  }
+  assert.ok(seen.size >= 2, '心情会起落');
+});
+
+test('熟一点以后说起最爱吃什么，记下来；送去那道菜，对方格外高兴', () => {
+  const g = newGame();
+  let learned = null;
+  for (let day = 0; day < 6 && !learned; day++) {
+    learned = g.dispatch('talk', { to: 'shi' }).facts[0].data.favorite;
+    must(g, 'sleep');
+  }
+  assert.equal(learned, '土豆炖豆子');
+  assert.equal(g.ask('bonds').find(b => b.id === 'shi').favorite, '土豆炖豆子');
+});

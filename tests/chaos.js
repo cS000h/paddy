@@ -299,7 +299,13 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
       s => Math.abs(s.x - p.x) <= 1 && Math.abs(s.y - p.y) <= 1,
     );
     const at = spots.length ? { ...pick(spots), dir: pick(DIRS) } : here();
-    if (chance(0.6)) return send('talk', { to: p.id, at });
+    // 见面聊日常；有时再问问近况、安排、天色（问过的、天黑了问安排，规则会拒绝）
+    if (chance(0.6))
+      return send('talk', {
+        to: p.id,
+        topic: chance(0.5) ? 'life' : pick(['news', 'plan', 'sky']),
+        at,
+      });
     const dishes = game.ask('kitchen', at).carried;
     if (dishes.length && chance(0.3)) return send('gift', { to: p.id, dish: pick(dishes).id, at });
     const it = pick(goods(at).filter(x => x.gift && x.n > 0));

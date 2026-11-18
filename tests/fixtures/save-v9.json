@@ -1,0 +1,423 @@
+{
+  "format": "dao.save",
+  "version": 9,
+  "state": {
+    "revision": 5,
+    "world": {
+      "meta": {
+        "version": 9,
+        "seed": 2837527372,
+        "nextId": 2
+      },
+      "notes": {
+        "list": [
+          {
+            "id": 1,
+            "day": 2,
+            "title": "清早的天色",
+            "text": "多云，11°上下。看云色，明天可能多云（把握50%）。"
+          }
+        ]
+      },
+      "ledger": {
+        "seq": 3,
+        "list": [
+          {
+            "seq": 1,
+            "who": "hero",
+            "k": "xp:social",
+            "d": 1,
+            "why": "人情"
+          },
+          {
+            "seq": 2,
+            "who": "hero",
+            "k": "xp:social",
+            "d": 1,
+            "why": "人情"
+          },
+          {
+            "seq": 3,
+            "who": "hero",
+            "k": "xp:social",
+            "d": 1,
+            "why": "人情"
+          }
+        ]
+      },
+      "clock": {
+        "day": 2,
+        "minute": 360
+      },
+      "people": {
+        "hero": {
+          "energy": 100,
+          "map": "yard",
+          "x": 8,
+          "y": 10,
+          "dir": "down"
+        },
+        "shi": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "gui": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "aman": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "qiao": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "zhou": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "yun": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        }
+      },
+      "player": {
+        "controls": "hero"
+      },
+      "households": {
+        "home": {
+          "members": ["hero"],
+          "coins": 24,
+          "items": {
+            "rice": 3,
+            "veg.qingcai": 2,
+            "egg": 2,
+            "potato": 2,
+            "herb": 1,
+            "bean": 1,
+            "wood": 4,
+            "salt": 4
+          },
+          "can": 10
+        }
+      },
+      "vitals": {
+        "hero": {
+          "hunger": 55,
+          "thirst": 74,
+          "mood": 62,
+          "stuffed": 0,
+          "sweat": 0,
+          "buff": null
+        }
+      },
+      "packs": {
+        "hero": {
+          "cap": 6,
+          "big": false,
+          "items": {
+            "seed.qingcai": 12,
+            "cake": 2
+          },
+          "flask": 0,
+          "dishes": []
+        }
+      },
+      "weather": {
+        "now": "cloudy",
+        "today": "cloudy",
+        "history": ["sunny", "cloudy"],
+        "tomorrow": "sunny",
+        "forecast": "cloudy",
+        "acc": 50,
+        "jitter": -1,
+        "wetDays": 0,
+        "dryDays": 2,
+        "looked": 0
+      },
+      "sensations": {
+        "hero": {
+          "chill": null
+        }
+      },
+      "outings": {
+        "hero": {
+          "counts": {},
+          "fish": null
+        }
+      },
+      "homesteads": {
+        "home": {
+          "coop": false,
+          "hens": 0,
+          "fed": 0,
+          "eggs": 0
+        }
+      },
+      "kitchens": {
+        "home": {
+          "dishes": [],
+          "known": {},
+          "fires": 0
+        }
+      },
+      "land": {
+        "yard": {
+          "plots": {}
+        },
+        "cottage": {
+          "plots": {}
+        },
+        "creek": {
+          "plots": {}
+        },
+        "tea": {
+          "plots": {}
+        },
+        "market": {
+          "plots": {}
+        },
+        "river": {
+          "plots": {}
+        },
+        "hill": {
+          "plots": {}
+        }
+      },
+      "moods": {
+        "aman": 69,
+        "gui": 65,
+        "shi": 58,
+        "qiao": 64,
+        "zhou": 61,
+        "yun": 54
+      },
+      "basket": {
+        "goods": {},
+        "order": {}
+      },
+      "growth": {
+        "hero": {
+          "xp": {
+            "farm": 0,
+            "cook": 0,
+            "forage": 0,
+            "social": 3,
+            "sky": 0,
+            "craft": 0
+          },
+          "traits": [],
+          "counters": {
+            "wetOut": 0,
+            "cold": 0,
+            "hot": 0,
+            "dawn": 0,
+            "meals": 0
+          },
+          "origin": null
+        }
+      },
+      "achievements": {
+        "hero": {
+          "counts": {
+            "talk10": 3,
+            "days7": 1
+          },
+          "earned": {}
+        }
+      },
+      "bonds": {
+        "known": {
+          "shi": 2,
+          "gui": 1,
+          "aman": 0,
+          "qiao": 0,
+          "zhou": 0,
+          "yun": 0
+        },
+        "talked": {
+          "shi": 2,
+          "gui": 2
+        },
+        "gifted": {},
+        "owed": [],
+        "asked": {
+          "shi": ["news", "sky"]
+        },
+        "favs": {}
+      },
+      "shops": {
+        "day": 2,
+        "wares": {
+          "market": [
+            {
+              "item": "rice",
+              "left": 10,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "bean",
+              "left": 6,
+              "price": 12,
+              "why": []
+            },
+            {
+              "item": "egg",
+              "left": 6,
+              "price": 12,
+              "why": []
+            },
+            {
+              "item": "salt",
+              "left": 4,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "soy",
+              "left": 3,
+              "price": 12,
+              "why": []
+            },
+            {
+              "item": "vinegar",
+              "left": 2,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "sugar",
+              "left": 3,
+              "price": 12,
+              "why": []
+            },
+            {
+              "item": "chili",
+              "left": 2,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "scallion",
+              "left": 3,
+              "price": 4,
+              "why": []
+            },
+            {
+              "item": "ginger",
+              "left": 4,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "wood",
+              "left": 6,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "tofu",
+              "left": 5,
+              "price": 12,
+              "why": []
+            },
+            {
+              "item": "wine",
+              "left": 2,
+              "price": 16,
+              "why": []
+            },
+            {
+              "item": "veg.qingcai",
+              "left": 5,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "potato",
+              "left": 2,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "herb",
+              "left": 4,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "chive",
+              "left": 4,
+              "price": 9,
+              "why": [["刚上市", 1]]
+            },
+            {
+              "item": "seed.qingcai",
+              "left": 1,
+              "price": 2,
+              "why": []
+            },
+            {
+              "item": "seedPumpkin",
+              "left": 2,
+              "price": 4,
+              "why": []
+            },
+            {
+              "item": "seedChive",
+              "left": 1,
+              "price": 5,
+              "why": [["货少", 1]]
+            }
+          ],
+          "tea": [
+            {
+              "item": "cake",
+              "left": 6,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "bun",
+              "left": 3,
+              "price": 12,
+              "why": []
+            }
+          ]
+        }
+      },
+      "teaDays": {
+        "hero": {
+          "chess": 0,
+          "hawk": 0,
+          "listen": 0
+        }
+      },
+      "guide": {
+        "done": {
+          "meet": 1
+        }
+      }
+    }
+  }
+}

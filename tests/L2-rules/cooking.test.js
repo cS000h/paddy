@@ -58,9 +58,15 @@ test('端汤占两格；满了回滚；带出去可吃可送并收到回礼', ()
   must(g, 'dish.store', { id: d.id, at });
   assert.equal(g.ask('pack').used, used);
   must(g, 'dish.pack', { id: d.id, at });
-  must(g, 'gift', { to: 'shi', dish: d.id, at: { x: 20, y: 15 } });
+  // 土豆炖豆子正是石伯最爱吃的那一道：熟悉 +4，他说的是那句“炖得好”，也记下了他爱吃这个
+  const given = g
+    .dispatch('gift', { to: 'shi', dish: d.id, at: { x: 20, y: 15 } })
+    .facts.find(f => f.type === 'gift.given').data;
+  assert.equal(given.favorite, true);
+  assert.match(given.line, /炖得好/);
   assert.equal(g.ask('pack').dishes.length, 0);
-  assert.equal(g.ask('bonds').find(b => b.id === 'shi').known, 3);
+  assert.equal(g.ask('bonds').find(b => b.id === 'shi').known, 4);
+  assert.equal(g.ask('bonds').find(b => b.id === 'shi').favorite, '土豆炖豆子');
   must(g, 'sleep');
   assert.ok(g.ask('notes').some(n => n.title.includes('回礼')));
 });

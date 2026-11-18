@@ -3,6 +3,7 @@ import { is } from '../../kernel/schema.js';
 import { FEEL_BANDS } from '../../content/weather.js';
 export const comfort = {
   id: 'sim.comfort',
+  provides: ['comfort'],
   requires: ['schema', 'queries', 'compute', 'reactions', 'people', 'weather', 'body', 'core'],
   writes: ['sensations'],
   install(ctx) {
@@ -120,10 +121,12 @@ export const comfort = {
       },
       { priority: 70 },
     );
-    queries.define('comfort', w => {
-      const id = people.who(w),
-        r = feel(w, id);
-      return { ...r, ...band(r.value), chill: !!w.sensations[id].chill };
-    });
+    /** 某人此刻身上觉得怎样：{value 体感温度, id 哪一档, word, chill 着没着凉, parts}。 */
+    const sense = (w, id) => {
+      const r = feel(w, id);
+      return { ...r, ...band(r.value), chill: !!w.sensations[id]?.chill };
+    };
+    queries.define('comfort', w => sense(w, people.who(w)));
+    ctx.provide('comfort', Object.freeze({ sense }));
   },
 };

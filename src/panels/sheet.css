@@ -368,6 +368,27 @@
   opacity: 0;
 }
 
+/* 对话里还能问的几件事：一排细边的小按钮，问过的灰着 */
+.topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 6px;
+}
+
+.sheet .topics button {
+  min-height: 32px;
+  padding: 3px 12px;
+  border-color: var(--line);
+  background: transparent;
+  color: var(--qing);
+  font-size: 13.5px;
+}
+
+.sheet .learned {
+  color: var(--cinnabar);
+}
+
 .gifts {
   display: flex;
   align-items: center;

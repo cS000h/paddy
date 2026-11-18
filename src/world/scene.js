@@ -291,6 +291,7 @@ export class VillageScene extends Phaser.Scene {
         line: said.line,
         doing: person.doing,
         gain: said.gain,
+        favorite: said.favorite,
       },
     });
   }
