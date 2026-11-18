@@ -52,6 +52,26 @@ export const REST_TEXT = {
   cottage: '搬个小板凳坐下歇了歇，屋外的脚步声渐渐远了。',
   river: '在渡口的石阶上坐着，看河水一刻不停地往东流。',
 };
+// 几件事另有说法：捡枯枝看捡了多少，下雨的夜里看不见星星。
+export const STICKS_TEXT = {
+  few: '枯枝都潮着，你挑干一点的捡了一小捆。',
+  many: '你在竹林边捡了一大捆枯枝，用草绳一扎，扛在肩上，沉甸甸的。',
+};
+export const RAINY_NIGHT = '雨顺着瓦沟淌下来，在檐下滴成一排。隔壁桂嫂家的灯还亮着。';
+// 野外找到的东西收进行囊后，跟在那段话后面的一句。
+export const STOWED = '（{item} ×{n}，已收好）';
+export const FISH_TEXT = {
+  one: '浮漂一沉，你手腕一抖，一条巴掌长的鲫鱼在草地上蹦跶。',
+  more: '浮漂一沉，你手腕一抖，一下子拉上来{n}条鱼在草地上蹦跶。',
+  missed: '可钩上空空的，鱼饵也被啃光了。你重新挂上饵，看着河面发了会儿呆。',
+};
+// 出锅的一段话。{quality} 换成火候那一句（见 content/recipes.js 的 QUALITY）。
+export const COOK_TEXT = {
+  mix: '切好拌匀，撒一撮盐。{servings}份{name}摆上了桌。',
+  done: '{quality}{servings}份{name}出锅了。',
+  first: '头一回做这道菜，记进了菜谱。',
+  seasonal: '都是当季的东西，闻着就鲜。',
+};
 export const CHESS_TEXT = {
   shi: [
     '你侥幸赢了一盘。石伯盯着棋盘看了半天，说：“后生可畏。”然后又摆上一盘。',
@@ -68,3 +88,10 @@ export const TEA_GOSSIP = [
   '有人说后山的栗子今年结得多。',
   '有人在争今年谁家的鸡下蛋最勤。',
 ];
+// 茶摊上的几段话。{forecast} 换成明天的天气，{gossip} 换成一句闲话。
+export const TEA_TEXT = {
+  drink: '你要了一碗{tea}。{taste}。',
+  hawk: '你帮着称菜、找零，阿满负责跟人抬杠。一筐菜卖完，他塞给你三个钱。',
+  listen: '你端着茶碗，听邻桌东一句西一句：几个老人看着天说，明天可能{forecast}。{gossip}',
+  fairTomorrow: '明天是集日，有人说杀猪的老张要来摆摊，想吃肉的趁早。',
+};

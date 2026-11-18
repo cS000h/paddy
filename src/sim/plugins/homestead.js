@@ -1,9 +1,22 @@
+// 院里院外的家务：劈柴、编竹器、腌菜、养鸡，和坐下歇歇、看看星星。
 // 鸡窝归户，背篓归人；家务材料统一从可够到的物品扣除。
+//   homestead {id, at} → home.worked {id, label, line}；捡蛋另发 eggs.collected {n}
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { HOMEWORK, GREENS } from '../../content/activities.js';
 import { ITEMS } from '../../content/items.js';
+import { CALENDAR } from '../../content/calendar.js';
+import { ACTIVITY_TEXT, REST_TEXT, RAINY_NIGHT } from '../../content/life-text.js';
+import { fill } from '../../content/text.js';
 import { atStation } from '../stations.js';
+
+// 做完一件家务的一段话（沿用 0.12）：歇脚看在哪儿歇，下雨的夜里看不见星星。
+function choreLine(id, map, wet, eggs) {
+  if (id === 'rest') return REST_TEXT[map] || REST_TEXT.yard;
+  if (id === 'stars' && wet) return RAINY_NIGHT;
+  return fill(ACTIVITY_TEXT[id] || '', { n: eggs });
+}
+
 export const homestead = {
   id: 'sim.homestead',
   requires: [
@@ -19,6 +32,7 @@ export const homestead = {
     'compute',
     'outings',
     'clock',
+    'weather',
   ],
   writes: ['homesteads'],
   install(ctx) {
@@ -35,6 +49,7 @@ export const homestead = {
       compute,
       outings,
       clock,
+      weather,
     } = ctx.services;
     schema.slice('homesteads', {
       initial: (env, w) =>
@@ -74,7 +89,7 @@ export const homestead = {
       if (a.id === 'eggs' && !h.eggs) return '窝里还没有蛋';
       if (a.id === 'bigbasket' && pack.big(w, id)) return '已经有大背篓了';
       if (a.id === 'rest' && people.me(w).energy >= 100) return '精神正足，不用歇';
-      if (a.id === 'stars' && (w.clock.minute < 1140 || outings.count(w, 'stars') > 0))
+      if (a.id === 'stars' && (w.clock.minute < CALENDAR.dark || outings.count(w, 'stars') > 0))
         return '天黑以后再来，每夜看一回';
       if (people.me(w).energy < people.quote(w, a.id).value) return '太累了，先歇歇';
       return null;
@@ -107,11 +122,12 @@ export const homestead = {
         pack.use(w, id, pack.has(w, id, 'rice') ? 'rice' : 'bean', 1, '喂鸡');
         h.fed = w.clock.day;
       }
+      let eggs = 0;
       if (a.id === 'eggs') {
-        const n = h.eggs;
-        pack.receive(w, id, 'egg', n, '自家鸡下的');
+        eggs = h.eggs;
+        pack.receive(w, id, 'egg', eggs, '自家鸡下的');
         h.eggs = 0;
-        fact('eggs.collected', { who: id, n });
+        fact('eggs.collected', { who: id, n: eggs });
       }
       if (a.id === 'bigbasket') {
         pack.upgrade(w, id);
@@ -123,12 +139,14 @@ export const homestead = {
         body.mood(w, id, r.mood, '歇口气，心里松快');
         clock.elapse(w, 180, fact);
       }
+      // 做完的一段话按坐下那一刻算：在哪儿歇、下没下雨。
+      const line = choreLine(a.id, people.me(w).map, weather.has(w, 'wet'), eggs);
       if (a.id === 'stars') {
         outings.mark(w, 'stars');
         body.mood(w, id, 4, '看了一会儿星星');
         clock.elapse(w, 180, fact);
       }
-      fact('home.worked', { who: id, id: a.id, label: a.label });
+      fact('home.worked', { who: id, id: a.id, label: a.label, line });
     });
     reactions.on(
       'day.started',

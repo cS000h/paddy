@@ -1,5 +1,6 @@
 // 技能与特质的好处都在管道中，不把判断塞回种田、做饭等插件。
 import { LEVEL_NAMES } from '../../content/growth.js';
+import { CALENDAR } from '../../content/calendar.js';
 export const growthPerks = {
   id: 'sim.growthPerks',
   requires: ['growth', 'compute', 'people', 'body'],
@@ -36,7 +37,7 @@ export const growthPerks = {
           K.part(r, 'skill.forage', '采集在行', -1);
         if (a.kind === 'craft' && lv(w, 'craft', who) >= 2)
           K.part(r, 'skill.craft', '手艺熟手', -1);
-        if (has(w, 'earlybird', who) && w.clock.minute < 540)
+        if (has(w, 'earlybird', who) && w.clock.minute < CALENDAR.morningEnd)
           K.part(r, 'trait.earlybird', '早起的人', -1);
         if (has(w, 'rainwalker', who) && r.parts.some(p => p.id === 'weather.wet'))
           K.part(r, 'trait.rainwalker', '雨中行者', -1);

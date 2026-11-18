@@ -21,3 +21,21 @@ export const TEAS = [
   ['菊花茶', '菊花茶，清清的'],
   ['姜茶', '一碗滚烫的姜茶，辣得人冒汗'],
 ];
+
+// 茶摊上能做的事。规则按这里的数结算，面板也照着这里写说明，两边不会说法不一。
+//   coins 花钱（负）或挣钱、water 解渴、mood 心情、relation 和陪你的人熟悉多少、
+//   minutes 花掉的时辰；hawk 的 until 是阿满收摊的钟点。
+export const TEA_DEEDS = Object.freeze({
+  drink: { label: '要一碗{tea}', act: '喝茶', coins: -1, water: 40, mood: 2 },
+  chess: { label: '和老人下盘棋', act: '坐下', minutes: 180, mood: 4, relation: 1 },
+  hawk: {
+    label: '帮阿满吆喝',
+    act: '坐下',
+    minutes: 180,
+    coins: 3,
+    mood: 2,
+    relation: 1,
+    until: 12 * 60,
+  },
+  listen: { label: '听茶客闲聊', act: '坐下', note: '不花时辰，每天一回' },
+});

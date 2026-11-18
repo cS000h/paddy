@@ -88,6 +88,21 @@ export const TOOLS = Object.freeze([
 ]);
 
 export const CAN_CAPACITY = 10;
+
+// 一格地的水分和地力（游戏尺度）。规则按这些界限判断，田地面板也照着说“干了、湿润、积水”。
+export const SOIL = Object.freeze({
+  waterMax: 30, // 水分最多到 30
+  drainedMax: 24, // 开了排水沟，最多到 24
+  pour: 18, // 浇一壶水加多少
+  wet: 8, // 到这个数算湿（土色变深），也是一般作物生长的下限
+  moist: 14, // 到这个数就不必再浇；爱喝水的作物要这么湿才长
+  soggy: 26, // 超过这个数太湿，作物不长
+  flooded: 28, // 下大雨又没开沟，到这个数就淹了
+  fertMax: 10,
+  fertStart: 6, // 刚锄开的地
+  fertRich: 7, // 地力到这个数，收成多一份
+  fertPoor: 2, // 地力只剩这么多，收成少一份
+});
 export const ENERGY_MAX = 100;
 
 /** 作物长到第几天时，显示第几个外观阶段。 */

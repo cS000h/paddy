@@ -1,7 +1,7 @@
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { ITEMS } from '../../content/items.js';
-import { dateOf } from '../../content/calendar.js';
+import { dateOf, isFairDay } from '../../content/calendar.js';
 import { MAPS, actAt } from '../../content/maps/index.js';
 import { STAPLES, SOMETIMES, FRESH } from '../../content/market.js';
 import { near } from './people.js';
@@ -64,7 +64,7 @@ export const market = {
     function lay(w) {
       const si = dateOf(w.clock.day).season,
         wet = weather.has(w, 'wet'),
-        fair = w.clock.day % 5 === 0;
+        fair = isFairDay(w.clock.day);
       const wares = { market: [], tea: [] };
       const add = (shop, item, a, b, why = []) =>
         wares[shop].push(priced(w, item, rint(w, a, b), why));
@@ -184,7 +184,7 @@ export const market = {
       { priority: 35 },
     );
     queries.define('market', (w, shop = 'market', at) => ({
-      fair: w.clock.day % 5 === 0,
+      fair: isFairDay(w.clock.day),
       ready: w.shops.day === w.clock.day,
       near: nearShop(w, shop, at),
       wares: stock(w, shop),

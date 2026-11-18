@@ -1,8 +1,7 @@
 // 会走路的人：玩家操控的人和按作息走动的村民，用的是同一套走路、朝向和动画。
 import { TILE, tileOf, dirTo, findPath } from './logic.js';
 import { frameOf } from './textures.js';
-import { scheduleAt } from '../content/people.js';
-import { spot, walkable } from '../content/maps/index.js';
+import { walkable } from '../content/maps/index.js';
 
 const FOOT_Y = 13; // 人站在一格里时，脚的位置离格子顶边多少像素
 

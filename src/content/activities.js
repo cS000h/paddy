@@ -17,6 +17,8 @@ export const OUTDOOR = {
     label: '捡枯枝',
     station: 'wood',
     limit: 1,
+    item: 'wood',
+    n: 2,
   },
   logs: {
     id: 'logs',
@@ -26,6 +28,8 @@ export const OUTDOOR = {
     label: '砍两截木头',
     station: 'wood',
     limit: 1,
+    item: 'log',
+    n: 2,
   },
   shoot: {
     id: 'shoot',
@@ -158,3 +162,11 @@ export const FISH_BITE = {
   snow: 0.4,
 };
 export const FISH_TIMING = { center: 60, half: 15, great: 5 };
+// 沿溪找食材：各季能找到什么、各占几份。写成 [平常, 近来下过雨] 的，雨后机会不一样。
+// 顺序就是抽签的顺序，改了顺序，同一个种子抽到的东西也会变。
+export const FORAGE_FINDS = [
+  { herb: 5, shepherd: 4, shoot: [1, 4], potato: 2, mushroom: [0, 2] }, // 春
+  { herb: 6, potato: 3, ginger: 2, leaf: 1, mushroom: [0, 2] }, // 夏
+  { potato: 4, herb: 3, bean: 2, mushroom: [1, 3], ginger: 1 }, // 秋
+  { shoot: 2, herb: 1, ginger: 2 }, // 冬
+];

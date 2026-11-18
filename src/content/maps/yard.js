@@ -148,16 +148,7 @@ export const yard = Object.freeze({
     start: [8, 11, 'down'],
     'hero.bed': [8, 10, 'down'],
     'shi.field': [23, 22, 'right'],
-    'shi.rest': [23, 14, 'down'],
-    'shi.lane': [18, 15, 'down'],
-    'shi.home': [1, 15, 'left'],
-    'gui.door': [30, 10, 'down'],
-    'gui.rack': [33, 12, 'up'],
-    'gui.lane': [29, 14, 'down'],
-    'gui.home': [30, 10, 'up'],
   }),
   // 自家的院子（篱笆以内）：[x0, y0, x1, y1]。站在这里面，才够得着家里存的东西
   home: Object.freeze([4, 10, 13, 13]),
-  // 走到这些位置就算“回家了”，人从画面上消失
-  offstage: Object.freeze(['shi.home', 'gui.home']),
 });

@@ -9,7 +9,7 @@
 // 菜种从身上拿（人在院里时家里存的也算），收下来的菜先进行囊。
 // “为什么不行”只写在 why() 一处：命令用它拒绝，画面用同一个它来提示，两边不会说法不一。
 import { is } from '../../kernel/schema.js';
-import { CROPS, ITEMS, CAN_CAPACITY, cropStage, isRipe } from '../../content/items.js';
+import { CROPS, CAN_CAPACITY, SOIL, cropStage, isRipe } from '../../content/items.js';
 import { MAPS, farmable, waterSource, isHome } from '../../content/maps/index.js';
 import { dateOf } from '../../content/calendar.js';
 import { installLandCare } from '../land-care.js';
@@ -51,8 +51,8 @@ export const land = {
               return (
                 farmable(MAPS[id], x, y) &&
                 typeof p.wet === 'boolean' &&
-                is.int(p.water, 0, 30) &&
-                is.int(p.fert, 0, 10) &&
+                is.int(p.water, 0, SOIL.waterMax) &&
+                is.int(p.fert, 0, SOIL.fertMax) &&
                 typeof p.weeds === 'boolean' &&
                 typeof p.bugs === 'boolean' &&
                 typeof p.drained === 'boolean' &&
@@ -95,7 +95,7 @@ export const land = {
         return home ? null : '菜种在家里的橱柜里，先回去拿上';
       }
       if (action === 'can') {
-        if (plot.water >= 14) return '土还润着，不必再浇';
+        if (plot.water >= SOIL.moist) return '土还润着，不必再浇';
         return store.water(w) > 0 ? null : '水壶空了，去水缸、水井或溪边打水';
       }
       if (action === 'hand') {
@@ -127,7 +127,7 @@ export const land = {
           age: 0,
           water: 0,
           drained: false,
-          fert: 6,
+          fert: SOIL.fertStart,
           weeds: false,
           bugs: false,
           fed: 0,
@@ -154,8 +154,8 @@ export const land = {
       farm('can', (w, map, x, y, fact) => {
         store.pour(w);
         const p = plotAt(w, map, x, y);
-        p.water = Math.min(p.drained ? 24 : 30, p.water + 18);
-        p.wet = p.water >= 8;
+        p.water = Math.min(p.drained ? SOIL.drainedMax : SOIL.waterMax, p.water + SOIL.pour);
+        p.wet = p.water >= SOIL.wet;
         fact('plot.watered', { map, x, y });
       }),
     );

@@ -100,3 +100,28 @@ test('腌菜确实扣三份菜和一份盐，雨后菌子可采', () => {
   }
   assert.fail('40天内应该有能采菌子的雨后');
 });
+
+test('做完的事带着给玩家看的那段话：找到什么、劈柴、歇脚、钓没钓到、出锅', () => {
+  const g = newGame();
+  // 发一条必须成功的命令，拿它某一种事实里的那段话。
+  const said = (type, input, ...facts) => {
+    const out = g.dispatch(type, input);
+    assert.equal(out.ok, true, `${type} 应该成功：${out.reason}`);
+    return out.facts.find(f => facts.includes(f.type)).data.line;
+  };
+  assert.match(said('gather', { id: 'forage', at }, 'forage.finished'), /已收好）$/);
+  const wood = { x: 17, y: 7 };
+  assert.match(said('gather', { id: 'sticks', at: wood }, 'forage.finished'), /（柴 ×\d，已收好）/);
+  said('gather', { id: 'logs', at: wood }, 'forage.finished');
+  assert.match(said('homestead', { id: 'split', at: bench }, 'home.worked'), /咔/);
+  assert.match(said('homestead', { id: 'rest', at: { x: 5, y: 13 } }, 'home.worked'), /坐/);
+  const spot = { x: 37, y: 20 };
+  must(g, 'fish.cast', { at: spot });
+  assert.match(
+    said('fish.reel', { at: spot, value: 60 }, 'fish.caught', 'fish.missed'),
+    /浮漂|钩上/,
+  );
+  const stove = { x: 10, y: 11 };
+  const cook = { items: ['rice'], method: 'stew', at: stove };
+  assert.match(said('cook', cook, 'meal.cooked'), /份白粥出锅了。/);
+});

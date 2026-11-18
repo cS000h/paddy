@@ -5,7 +5,7 @@
 //   pack.put  {item, n | 'all', at}  从家里拿上（要在院里）    → pack.changed
 //   pack.take {item, n | 'all', at}  放回家里（要在院里）      → pack.changed
 //   eat       {item, at}             直接吃：零嘴，或能生吃的  → meal.eaten {line}
-import { validDish } from '../dish.js';
+import { validDish, dishSize } from '../dish.js';
 import { is, check } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { ITEMS } from '../../content/items.js';
@@ -53,9 +53,7 @@ export const pack = {
           ],
           [
             Object.values(all).every(
-              p =>
-                sizeOf(p.items) + p.dishes.reduce((n, d) => n + (d.method === 'stew' ? 2 : 1), 0) <=
-                p.cap,
+              p => sizeOf(p.items) + p.dishes.reduce((n, d) => n + dishSize(d), 0) <= p.cap,
             ),
             'over capacity',
           ],
@@ -64,8 +62,7 @@ export const pack = {
 
     const count = (w, id, item) => w.packs[id].items[item] || 0;
     const used = (w, id) =>
-      sizeOf(w.packs[id].items) +
-      w.packs[id].dishes.reduce((n, d) => n + (d.method === 'stew' ? 2 : 1), 0);
+      sizeOf(w.packs[id].items) + w.packs[id].dishes.reduce((n, d) => n + dishSize(d), 0);
     const room = (w, id) => w.packs[id].cap - used(w, id);
     /** 还放不放得下：已经有这样东西就能接着放，否则要有空格。 */
     const fits = (w, id, item) =>
@@ -247,7 +244,7 @@ export const pack = {
         }),
         dishes: (w, id) => w.packs[id].dishes,
         putDish: ctx.own((w, id, dish) => {
-          if (room(w, id) < (dish.method === 'stew' ? 2 : 1)) refuse(FULL);
+          if (room(w, id) < dishSize(dish)) refuse(FULL);
           w.packs[id].dishes.push(dish);
         }),
         takeDish: ctx.own((w, id, dishId) => {

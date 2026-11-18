@@ -16,10 +16,12 @@ import {
 import {
   PEOPLE,
   ON_MAP,
-  SCHEDULES,
+  ROUTINES,
+  ROUTINE_DAY,
+  DOING,
   LINES,
   RETURN_GIFT,
-  scheduleAt,
+  mapOfPlace,
 } from '../../src/content/people.js';
 import { CROPS, ITEMS, TOOLS, cropStage, isRipe } from '../../src/content/items.js';
 import { CALENDAR, dateOf, timeOf } from '../../src/content/calendar.js';
@@ -81,13 +83,22 @@ test('人物：地图上的人都有作息、台词和回礼，作息指向存�
     assert.ok(PEOPLE[id]?.look, `${id} 没有外观`);
     assert.ok(LINES[id]?.first && LINES[id].daily.length >= 2 && LINES[id].gift, `${id} 台词不全`);
     assert.ok(ITEMS[RETURN_GIFT[id].item], `${id} 的回礼不是登记过的物品`);
-    for (const entry of SCHEDULES[id])
+    const rules = ROUTINES[id];
+    assert.ok(!rules.at(-1).when, `${id} 的作息最后一条得是平常日子（不写 when）`);
+    for (const rule of rules) {
+      assert.equal(rule.go.length, ROUTINE_DAY.slots.length, `${id} 的作息要排满每一段`);
+      for (const tag of rule.when || [])
+        assert.ok(['wet', 'heavy', 'fog', 'winter', 'fair'].includes(tag), `不认识的情形 ${tag}`);
+    }
+    const places = new Set(rules.flatMap(rule => rule.go));
+    if (ROUTINE_DAY.stay[id]) places.add(ROUTINE_DAY.stay[id]);
+    for (const place of places) {
       assert.ok(
-        MAPS[entry.map || 'yard'].spots[entry.spot],
-        `${id} 的作息指向不存在的位置 ${entry.spot}`,
+        MAPS[mapOfPlace(place)]?.spots[`${id}.${place}`],
+        `${id} 的作息指向不存在的位置 ${id}.${place}`,
       );
-    assert.equal(scheduleAt(id, 0), SCHEDULES[id][0]);
-    assert.equal(scheduleAt(id, 23 * 60), SCHEDULES[id].at(-1));
+      assert.ok(DOING[id]?.[place], `${id} 在 ${place} 时没有写在做什么`);
+    }
   }
 });
 
@@ -210,4 +221,19 @@ test('每个出入口的落脚处存在且可走；小屋家具和全部地点�
     }
   }
   assert.deepEqual([...seen].sort(), Object.keys(MAPS).sort());
+});
+
+test('生活文字：每件采集和家务做完都有一段话，沿溪能找到的东西都有说法', async () => {
+  const { OUTDOOR, HOMEWORK, FORAGE_FINDS } = await import('../../src/content/activities.js');
+  const text = await import('../../src/content/life-text.js');
+  for (const a of Object.values(OUTDOOR)) {
+    if (a.id === 'fish' || a.id === 'forage' || a.id === 'sticks') continue;
+    assert.ok(text.ACTIVITY_TEXT[a.id] || text.FIND_TEXT[a.item], `${a.label} 做完没有话说`);
+    assert.ok(ITEMS[a.item], `${a.label} 找到的东西没登记`);
+  }
+  for (const season of FORAGE_FINDS)
+    for (const item of Object.keys(season)) assert.ok(text.FIND_TEXT[item] && ITEMS[item], item);
+  for (const a of Object.values(HOMEWORK))
+    if (a.id !== 'rest') assert.ok(text.ACTIVITY_TEXT[a.id], `${a.label} 做完没有话说`);
+  assert.ok(text.REST_TEXT.yard && text.STICKS_TEXT.few && text.STICKS_TEXT.many);
 });

@@ -1,11 +1,26 @@
-// 饭菜存到户里；端走交给个人行囊。菜谱也属于这一户。
+// 灶台：做饭、端走、放回、吃。饭菜存到户里；端走交给个人行囊。菜谱也属于这一户。
+//   cook {items, spices, method, cut, heat, at} → meal.cooked {…这道菜, first, ids, line}
+//   dish.pack / dish.store / dish.eat {id, at}
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
-import { MAPS, actAt } from '../../content/maps/index.js';
+import { MAPS } from '../../content/maps/index.js';
 import { RECIPES, QUALITY } from '../../content/recipes.js';
+import { COOK_TEXT } from '../../content/life-text.js';
+import { fill } from '../../content/text.js';
 import { previewMeal } from '../cuisine.js';
 import { validDish } from '../dish.js';
 import { near } from './people.js';
+
+// 出锅的一段话（沿用 0.12）：凉拌是摆上桌，其余先说火候再说出锅；头一回做、用了时令菜各添一句。
+function cookedLine(dish, first) {
+  const values = { quality: QUALITY[dish.quality].line, servings: dish.servings, name: dish.name };
+  return (
+    fill(dish.method === 'mix' ? COOK_TEXT.mix : COOK_TEXT.done, values) +
+    (first ? COOK_TEXT.first : '') +
+    (dish.seasonal ? COOK_TEXT.seasonal : '')
+  );
+}
+
 export const cooking = {
   id: 'sim.cooking',
   provides: ['kitchen'],
@@ -82,6 +97,7 @@ export const cooking = {
         ingredients: p.ingredients.length,
         first: first && p.named,
         ids,
+        line: cookedLine(p, first && p.named),
       });
     });
     commands.register('dish.pack', ({ draft, input, fact }) => {

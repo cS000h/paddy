@@ -2,6 +2,9 @@ import { is } from '../kernel/schema.js';
 import { ITEMS } from '../content/items.js';
 import { BUFFS } from '../content/body.js';
 import { METHODS, QUALITY, CUTS } from '../content/recipes.js';
+/** 一份饭菜在行囊里占几格：带汤的（煮的）要两格，免得洒了。 */
+export const dishSize = d => (d.method === 'stew' ? 2 : 1);
+
 // 家里的菜和端在身上的菜共用同一份校验。
 export const validDish = d =>
   is.obj(d) &&

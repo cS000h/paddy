@@ -1,6 +1,7 @@
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { SKILLS, TRAITS, LEVELS, LEVEL_NAMES, ORIGINS } from '../../content/growth.js';
+import { CALENDAR } from '../../content/calendar.js';
 export const level = xp => LEVELS.reduce((lv, need, i) => (xp >= need ? i : lv), 0);
 export const growth = {
   id: 'sim.growth',
@@ -107,7 +108,7 @@ export const growth = {
         if (d.kind === 'forage' && has(w, 'solitary', id))
           body.mood(w, id, 2, '独行：一个人在林子里自在');
         if (['rest', 'sky', 'social', 'chore'].includes(d.kind)) return;
-        if (w.clock.minute < 540) g.counters.dawn++;
+        if (w.clock.minute < CALENDAR.morningEnd) g.counters.dawn++;
         if (d.outdoor) {
           if (weather.has(w, 'wet')) g.counters.wetOut++;
           const feel = compute.run(

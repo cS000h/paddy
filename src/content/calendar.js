@@ -7,7 +7,13 @@ export const CALENDAR = Object.freeze({
   seasons: ['春', '夏', '秋', '冬'],
   realSecondsPerGameMinute: 0.7, // 外壳用：现实 0.7 秒 = 游戏 1 分钟
   tickMinutes: 10, // 外壳每凑满 10 分钟，给规则发一条“时间前进”
+  morningEnd: 9 * 60, // 这之前算清早：早起的好处、清早的鱼口
+  dark: 19 * 60, // 天黑：夜里才捉得到菜虫、看得见星星，鱼不钓了
+  fairEvery: 5, // 每五天一个集日（第 5、10、15……日）
 });
+
+/** 这一天是不是集日：杂货铺多进货，茶摊有肉摊，云姑去集上摆茶叶摊。 */
+export const isFairDay = day => day % CALENDAR.fairEvery === 0;
 
 const HOURS = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
 /** @type {[number, string][]} */

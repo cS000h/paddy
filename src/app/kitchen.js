@@ -1,4 +1,5 @@
-import { QUALITY } from '../content/recipes.js';
+// 灶台小窗的按钮：挑食材、调料、做法、刀工，掌火出锅，翻菜谱，吃饭端饭。
+// 挑选中的东西只放在小窗的状态里，按下“做”才发给规则。
 import { timingValue } from '../shell/timing.js';
 export function kitchenActions({ game, shell, run, here }) {
   const edit = patch => shell.set({ modal: { ...shell.get().modal, ...patch } });
@@ -15,8 +16,7 @@ export function kitchenActions({ game, shell, run, here }) {
   function cook(heat = null) {
     const out = run('cook', { ...input(), heat });
     if (out.ok) {
-      const d = out.facts.find(f => f.type === 'meal.cooked').data;
-      const line = `${d.method === 'mix' ? '切好拌匀，撒一撮盐。' : QUALITY[d.quality].line}${d.servings}份${d.name}${d.method === 'mix' ? '摆上了桌' : '出锅了'}。${d.first ? '头一回做这道菜，记进了菜谱。' : ''}${d.seasonal ? '都是当季的东西，闻着就鲜。' : ''}`;
+      const line = out.facts.find(f => f.type === 'meal.cooked').data.line;
       shell.set({ modal: { kind: 'kitchen', line } });
     }
   }

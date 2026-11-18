@@ -26,86 +26,101 @@ export const PEOPLE = Object.freeze({
 // 过节的吃食，谁收到都高兴。
 export const FESTIVE = Object.freeze(['zongzi', 'mooncake', 'niangao']);
 
-// 已经出现在地图上的人。其余四位等对应的地方做出来再登场。
+// 住在村里、会在地图上走动的人。
 export const ON_MAP = Object.freeze(['shi', 'gui', 'aman', 'qiao', 'zhou', 'yun']);
 
-// 一天里人在哪儿：从 `from` 分钟起，去地图上叫 `spot` 的位置，做 `doing` 这件事。
-export const SCHEDULES = Object.freeze({
-  aman: [{ from: 0, map: 'yard', spot: 'aman.field', doing: '蹲在田埂上看菜' }],
-  qiao: [{ from: 0, map: 'market', spot: 'qiao.counter', doing: '趴在柜台上算账' }],
-  zhou: [{ from: 0, map: 'river', spot: 'zhou.ferry', doing: '蹲在船头补网' }],
-  yun: [{ from: 0, map: 'hill', spot: 'yun.tea', doing: '在茶垄间采茶' }],
-  shi: [
-    { from: 0, spot: 'shi.field', doing: '弯腰看土' },
-    { from: 11 * 60 + 30, spot: 'shi.rest', doing: '在树荫下歇晌' },
-    { from: 14 * 60, spot: 'shi.field', doing: '顺着垄沟慢慢走' },
-    { from: 18 * 60, spot: 'shi.lane', doing: '背着手看天' },
-    { from: 20 * 60, spot: 'shi.home', doing: '回去了' },
+// 作息（沿用 0.12）。白天按开始的钟点分四段：06、09、12、15 点；到 `home` 点钟，
+// 除了 `stay` 里的人都回家，从画面上消失。
+export const ROUTINE_DAY = Object.freeze({
+  slots: Object.freeze([6 * 60, 9 * 60, 12 * 60, 15 * 60]),
+  home: 20 * 60,
+  stay: Object.freeze({ gui: 'yard' }),
+});
+
+// 每人一张作息：从上往下看，`when` 里的情形全都对得上的那一条就是今天的去处，
+// 没写 `when` 的是平常日子。`go` 是四段时间各去哪儿：
+// field 自家院外的田、yard 小院、tea 樟树茶摊、market 杂货铺、creek 溪边、river 渡口、hill 后山。
+// 情形：wet 下雨、heavy 大雨、fog 起雾、winter 冬天、fair 集日。
+// prettier-ignore
+export const ROUTINES = Object.freeze({
+  aman: [
+    { when: ['heavy'], go: ['field', 'tea', 'tea', 'tea'] },
+    { go: ['field', 'tea', 'market', 'tea'] },
   ],
   gui: [
-    { from: 0, spot: 'gui.door', doing: '在门口择菜' },
-    { from: 9 * 60, spot: 'gui.rack', doing: '晾衣裳' },
-    { from: 11 * 60, spot: 'gui.door', doing: '灶上忙着，炊烟起来了' },
-    { from: 14 * 60, spot: 'gui.lane', doing: '在路口纳鞋底' },
-    { from: 17 * 60 + 30, spot: 'gui.door', doing: '喊人回家吃饭' },
-    { from: 20 * 60 + 30, spot: 'gui.home', doing: '回屋了' },
+    { when: ['wet'], go: ['yard', 'tea', 'yard', 'tea'] },
+    { when: ['winter'], go: ['yard', 'tea', 'yard', 'tea'] },
+    { go: ['yard', 'tea', 'market', 'tea'] },
+  ],
+  shi: [
+    { when: ['winter'], go: ['yard', 'field', 'tea', 'yard'] },
+    { when: ['wet'], go: ['field', 'field', 'yard', 'yard'] },
+    { go: ['field', 'field', 'tea', 'yard'] },
+  ],
+  qiao: [
+    { when: ['wet'], go: ['market', 'market', 'market', 'tea'] },
+    { when: ['fog'], go: ['market', 'market', 'market', 'tea'] },
+    { go: ['market', 'market', 'creek', 'tea'] },
+  ],
+  zhou: [
+    { when: ['heavy'], go: ['river', 'tea', 'tea', 'tea'] },
+    { when: ['winter'], go: ['river', 'river', 'tea', 'tea'] },
+    { go: ['river', 'river', 'river', 'tea'] },
+  ],
+  yun: [
+    { when: ['fair', 'wet'], go: ['hill', 'hill', 'tea', 'hill'] }, // 集日去摆茶叶摊
+    { when: ['fair'], go: ['hill', 'hill', 'tea', 'creek'] },
+    { when: ['wet'], go: ['hill', 'hill', 'hill', 'hill'] },
+    { go: ['hill', 'hill', 'hill', 'creek'] },
   ],
 });
 
-/** 某个人此刻按作息该在哪儿。 */
-export function scheduleAt(id, minute) {
-  const plan = SCHEDULES[id];
-  if (!plan) return null;
-  let current = plan[0];
-  for (const entry of plan) if (minute >= entry.from) current = entry;
-  return current;
-}
+/** 作息里的去处在哪张地图上：田在小院那张图里，其余去处就是地图的名字。 */
+export const mapOfPlace = place => (place === 'field' ? 'yard' : place);
 
 // 说话。`first` 只在头一回见面时说；之后从 `daily` 里按天轮着说。台词取自 0.12。
 // `gift` 是收到自家种的菜时说的；`treat` 是收到合心意的东西、`thanks` 是收到别的东西时说的，
 // 里面的 {n} 换成那样东西的名字。
 export const LINES = Object.freeze({
-  ...{
-    aman: {
-      first: '“菜筐装满了，走路都得斜着走。你说，黄瓜为什么就不能长直点？”',
-      daily: [
-        '“菜筐装满了，走路都得斜着走。你说，黄瓜为什么就不能长直点？”',
-        '“你刚回来，可能还不知道：谁家的豆子先熟，问我准没错。”',
-      ],
-      gift: '“给我的？谢啦！等送完这趟菜就吃。”',
-      treat: '“{n}！你怎么知道我好这口？”',
-      thanks: '“给我的？那我揣兜里，路上吃。”',
-    },
-    qiao: {
-      first: '“店里的猫又把账本占了。要不你来劝劝它？”',
-      daily: [
-        '“店里的猫又把账本占了。要不你来劝劝它？”',
-        '“你知道吗，这只猫叫‘掌柜’。它真觉得这店是它的。”',
-      ],
-      gift: '“谢谢！我先藏柜台底下，不然掌柜要来抢。”',
-      treat: '“{n}！掌柜你看，有人疼我！”',
-      thanks: '“谢啦，我先藏柜台底下。”',
-    },
-    zhou: {
-      first: '“这条河啊，从山里来，往海里去。我在这儿撑了四十年船，它一天也没歇过。”',
-      daily: [
-        '“这条河啊，从山里来，往海里去。我在这儿撑了四十年船，它一天也没歇过。”',
-        '“想学钓鱼？先学坐得住。坐不住的人，鱼都看得出来。”',
-      ],
-      gift: '“给我的？好，好。”他把{n}小心放进船舱，“等收了网再吃。”',
-      treat: '“{n}好，老头子正缺这个。”',
-      thanks: '“给我的？好，好，放船上。”',
-    },
-    yun: {
-      first: '“你……你是新搬来的吧？我叫云姑，住在山上。”她说完就低下头，继续干活了。',
-      daily: [
-        '“我小时候跟奶奶在山上采药。她说草木都认人，你对它好，它就长给你看。”',
-        '“山歌？我……我只在没人的时候唱。”',
-      ],
-      gift: '“谢谢……”她把{n}小心收进竹篓，“我留着慢慢吃。”',
-      treat: '“{n}……”她眼睛亮了一下，“谢谢。”',
-      thanks: '“谢谢……”她小心地收进竹篓。',
-    },
+  aman: {
+    first: '“菜筐装满了，走路都得斜着走。你说，黄瓜为什么就不能长直点？”',
+    daily: [
+      '“菜筐装满了，走路都得斜着走。你说，黄瓜为什么就不能长直点？”',
+      '“你刚回来，可能还不知道：谁家的豆子先熟，问我准没错。”',
+    ],
+    gift: '“给我的？谢啦！等送完这趟菜就吃。”',
+    treat: '“{n}！你怎么知道我好这口？”',
+    thanks: '“给我的？那我揣兜里，路上吃。”',
+  },
+  qiao: {
+    first: '“店里的猫又把账本占了。要不你来劝劝它？”',
+    daily: [
+      '“店里的猫又把账本占了。要不你来劝劝它？”',
+      '“你知道吗，这只猫叫‘掌柜’。它真觉得这店是它的。”',
+    ],
+    gift: '“谢谢！我先藏柜台底下，不然掌柜要来抢。”',
+    treat: '“{n}！掌柜你看，有人疼我！”',
+    thanks: '“谢啦，我先藏柜台底下。”',
+  },
+  zhou: {
+    first: '“这条河啊，从山里来，往海里去。我在这儿撑了四十年船，它一天也没歇过。”',
+    daily: [
+      '“这条河啊，从山里来，往海里去。我在这儿撑了四十年船，它一天也没歇过。”',
+      '“想学钓鱼？先学坐得住。坐不住的人，鱼都看得出来。”',
+    ],
+    gift: '“给我的？好，好。”他把{n}小心放进船舱，“等收了网再吃。”',
+    treat: '“{n}好，老头子正缺这个。”',
+    thanks: '“给我的？好，好，放船上。”',
+  },
+  yun: {
+    first: '“你……你是新搬来的吧？我叫云姑，住在山上。”她说完就低下头，继续干活了。',
+    daily: [
+      '“我小时候跟奶奶在山上采药。她说草木都认人，你对它好，它就长给你看。”',
+      '“山歌？我……我只在没人的时候唱。”',
+    ],
+    gift: '“谢谢……”她把{n}小心收进竹篓，“我留着慢慢吃。”',
+    treat: '“{n}……”她眼睛亮了一下，“谢谢。”',
+    thanks: '“谢谢……”她小心地收进竹篓。',
   },
   shi: {
     first: '“住下了？”他直起腰看了看你那块地，“土是好土。先锄，再下种，浇透。”',
@@ -136,27 +151,25 @@ export const LINES = Object.freeze({
 
 // 回礼：收了你的菜，第二天早上会留下点东西（0.12 的“回音”）。
 export const RETURN_GIFT = Object.freeze({
-  ...{
-    aman: {
-      item: 'veg.qingcai',
-      n: 2,
-      text: '门边放着一把还带露水的青菜，叶子底下压着张纸条：“昨天的饭香！菜拿去吃，别客气——满”',
-    },
-    qiao: {
-      item: 'bean',
-      n: 1,
-      text: '门把手上挂着一小袋豆子，袋子上画了只猫爪印。',
-    },
-    zhou: {
-      item: 'fish',
-      n: 2,
-      text: '门口的竹篮里躺着两条鲫鱼，鳃还一张一合。篮柄上缠着一截渔线。',
-    },
-    yun: {
-      item: 'tea',
-      n: 1,
-      text: '窗台上放着一小包新茶，用干荷叶包着，系了根草绳。闻着清清的。',
-    },
+  aman: {
+    item: 'veg.qingcai',
+    n: 2,
+    text: '门边放着一把还带露水的青菜，叶子底下压着张纸条：“昨天的饭香！菜拿去吃，别客气——满”',
+  },
+  qiao: {
+    item: 'bean',
+    n: 1,
+    text: '门把手上挂着一小袋豆子，袋子上画了只猫爪印。',
+  },
+  zhou: {
+    item: 'fish',
+    n: 2,
+    text: '门口的竹篮里躺着两条鲫鱼，鳃还一张一合。篮柄上缠着一截渔线。',
+  },
+  yun: {
+    item: 'tea',
+    n: 1,
+    text: '窗台上放着一小包新茶，用干荷叶包着，系了根草绳。闻着清清的。',
   },
   shi: {
     item: 'seed.qingcai',

@@ -19,7 +19,6 @@ const map = (id, name, paint, objects, spots = {}) => ({
   ground: ground(28, 22, [...border, ...paint]),
   objects,
   spots: { west: [2, 15, 'right'], east: [25, 15, 'left'], ...spots },
-  offstage: [],
 });
 export const cottage = {
   id: 'cottage',
@@ -49,7 +48,6 @@ export const cottage = {
     route(9, 14, 'yard', 'hero.bed', '回小院'),
   ],
   spots: { entry: [9, 13, 'up'], 'hero.bed': [5, 8, 'down'] },
-  offstage: [],
 };
 export const creek = map(
   'creek',
@@ -102,7 +100,6 @@ export const tea = map(
     'gui.tea': [12, 13, 'up'],
     'qiao.tea': [17, 11, 'up'],
     'yun.tea': [21, 13, 'left'],
-    'aman.stall': [20, 11, 'down'],
     'zhou.tea': [10, 12, 'right'],
     'shi.tea': [12, 12, 'left'],
   },
@@ -127,7 +124,6 @@ export const market = map(
     'aman.market': [12, 12, 'right'],
     'gui.market': [16, 12, 'up'],
     'qiao.market': [15, 11, 'left'],
-    'qiao.counter': [15, 11, 'left'],
   },
 );
 export const river = map(
@@ -152,7 +148,6 @@ export const river = map(
   {
     east: [22, 15, 'left'],
     'zhou.river': [15, 14, 'right'],
-    'zhou.ferry': [15, 14, 'right'],
     north: [12, 5, 'down'],
   },
 );
@@ -182,5 +177,5 @@ export const hill = map(
     ['rock', 15, 5],
     ['flowers', 11, 17],
   ],
-  { south: [12, 19, 'up'], 'yun.hill': [8, 9, 'up'], 'yun.tea': [8, 9, 'up'] },
+  { south: [12, 19, 'up'], 'yun.hill': [8, 9, 'up'] },
 );
