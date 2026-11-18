@@ -65,6 +65,23 @@ export function homeActions({ game, shell, run, here, world }) {
         },
       });
     },
+    /** 约他明天午前茶摊坐坐：他应下了，那句话写在对话里。 */
+    invite({ to }) {
+      const modal = shell.get().modal;
+      const out = run('invite', { to, ...at() });
+      if (out.ok)
+        shell.set({
+          modal: { ...modal, line: out.facts.find(f => f.type === 'appointment.made').data.line },
+        });
+    },
+    /** 赴约：合上对话，人在茶摊坐下来喝一盏，喝完冒一句这回聊了什么。 */
+    visitMeet() {
+      const out = run('visit.meet', at());
+      if (!out.ok) return;
+      const line = out.facts.find(f => f.type === 'appointment.fulfilled').data.line;
+      shell.set({ modal: null });
+      world.perform('sip', { then: () => shell.toast(line) });
+    },
     gift({ to, item, dish }) {
       const modal = shell.get().modal;
       const out = run('gift', { to, item, dish: dish ? Number(dish) : null, ...at() });

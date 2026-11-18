@@ -191,16 +191,19 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   function kitchenWork(at) {
     const k = game.ask('kitchen', at);
     const roll = r();
+    // 身上端着饭回到灶前：多半先收回灶台
+    if (k.carried.length && chance(0.4)) return send('dish.store', { id: pick(k.carried).id, at });
     // 灶台上的饭端走或吃掉，身上的饭收回灶台或吃掉，否则做一锅
-    if (k.dishes.length && roll < 0.35) {
-      // 行囊满了就先把一样东西放回家里，腾出地方再端饭
+    if (k.dishes.length && roll < 0.5) {
+      if (chance(0.4)) return send('dish.eat', { id: pick(k.dishes).id, at });
+      // 行囊满了就先从行囊里拿一样放回家，腾出地方再端饭（汤要两格）
       const pack = game.ask('pack', at);
-      const full = pack.room < 1 && pack.items.length;
-      if (full) return send('pack.put', { item: pick(pack.items).id, n: 'all', at });
-      return send(pick(['dish.pack', 'dish.eat']), { id: pick(k.dishes).id, at });
+      if (pack.room < 2 && pack.items.length)
+        send('pack.take', { item: pick(pack.items).id, n: 'all', at });
+      return send('dish.pack', { id: pick(k.dishes).id, at });
     }
     // 身上的饭多半收回灶台（路上饿了还会吃掉，收回的机会本来就少）
-    if (k.carried.length && roll < 0.55)
+    if (k.carried.length && roll < 0.75)
       return send(chance(0.7) ? 'dish.store' : 'dish.eat', { id: pick(k.carried).id, at });
     return cook(at, k);
   }
@@ -299,6 +302,11 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
       s => Math.abs(s.x - p.x) <= 1 && Math.abs(s.y - p.y) <= 1,
     );
     const at = spots.length ? { ...pick(spots), dir: pick(DIRS) } : here();
+    // 约定：碰上约好的人就赴约；有时约人明天茶摊坐坐，偶尔托人带话作罢
+    const date = game.ask('visits');
+    if (date.active?.due && date.active.npc === p.id) return send('visit.meet', { at });
+    if (chance(0.08))
+      return send(date.active && chance(0.3) ? 'visit.cancel' : 'invite', { to: p.id, at });
     // 见面聊日常；有时再问问近况、安排、天色（问过的、天黑了问安排，规则会拒绝）
     if (chance(0.6))
       return send('talk', {
@@ -379,8 +387,17 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   const total = PLANS.reduce((sum, [w]) => sum + w, 0);
   let steps = 0;
 
+  // 有约的那天午前：多半去茶摊赴约
+  function date() {
+    const a = game.ask('visits').active;
+    if (hero().map !== 'tea') return send('travel.to', { to: 'tea', at: here() });
+    const p = game.ask('residents').find(x => x.id === a.npc);
+    return send('visit.meet', { at: { x: p.x, y: p.y + 1, dir: 'up' } });
+  }
+
   function step() {
     if (steps++ === 0 && chance(0.8)) return origin();
+    if (game.ask('visits').active?.due && chance(0.5)) return date();
     if (hostile && chance(hostile)) return rough();
     if (chance(0.002)) return origin(); // 选过以后再选，应该被拒绝
     let roll = r() * total;

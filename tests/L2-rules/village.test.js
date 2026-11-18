@@ -139,3 +139,34 @@ test('熟一点以后说起最爱吃什么，记下来；送去那道菜，对�
   assert.equal(learned, '土豆炖豆子');
   assert.equal(g.ask('bonds').find(b => b.id === 'shi').favorite, '土豆炖豆子');
 });
+
+test('约定：熟人才约，约好的那天午前他在茶摊等，去了熟悉 +2；没去就错过，对方留话', () => {
+  const g = newGame();
+  assert.equal(refused(g, 'invite', { to: 'shi' }), '还不认识，先聊两句吧。');
+  must(g, 'talk', { to: 'shi' });
+  must(g, 'invite', { to: 'shi' });
+  assert.equal(g.ask('visits').active.name, '石伯');
+  must(g, 'talk', { to: 'gui' });
+  assert.equal(refused(g, 'invite', { to: 'gui' }), '先把手头这场约定过完吧。');
+  assert.equal(refused(g, 'visit.meet', {}), '约的是明天午前。');
+  must(g, 'sleep');
+  assert.ok(g.ask('notes', g.ask('clock').day).some(n => n.title === '今天有约'));
+  must(g, 'clock.advance', { minutes: 120 });
+  must(g, 'clock.advance', { minutes: 70 }); // 九点过，午前
+  const shi = g.ask('residents').find(r => r.id === 'shi');
+  assert.equal(shi.map, 'tea', '有约的那天午前，他在茶摊');
+  must(g, 'travel.to', { to: 'tea' });
+  const before = g.ask('bonds').find(b => b.id === 'shi').known;
+  const met = g.dispatch('visit.meet', { at: { x: shi.x, y: shi.y + 1, dir: 'up' } });
+  assert.ok(met.ok, met.reason);
+  assert.equal(g.ask('bonds').find(b => b.id === 'shi').known, before + 2);
+  assert.equal(g.ask('visits').active, null);
+  // 再约一回，这回不去：过了午前就错过
+  must(g, 'sleep');
+  g.dispatch('travel.to', { to: 'yard' }); // 回小院，桂嫂在院里
+  must(g, 'invite', { to: 'gui' });
+  must(g, 'sleep');
+  for (let i = 0; i < 4; i++) must(g, 'clock.advance', { minutes: 120 });
+  assert.equal(g.ask('visits').active, null);
+  assert.ok(g.ask('visits').history.at(-1).includes('没赶上'));
+});

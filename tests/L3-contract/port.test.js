@@ -40,6 +40,9 @@ const COMMANDS = [
   'market.buy',
   'market.sell',
   'tea.do',
+  'invite',
+  'visit.meet',
+  'visit.cancel',
 ];
 const QUERIES = [
   'residents',
@@ -69,6 +72,7 @@ const QUERIES = [
   'ledger',
   'notes',
   'pack',
+  'visits',
 ];
 
 test('端口对外只有这几样', () => {

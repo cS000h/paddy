@@ -28,14 +28,22 @@ function giftsFor(modal, game, here) {
   return `<div class="gifts"><span class="lead">送点什么</span>${things.join('')}${dishes.join('')}</div>`;
 }
 
-/** 还能问的几件事（近况、安排、天色）：今天问过的灰着；天黑了不问安排。 */
-function topicsFor(modal, bond, night) {
+/**
+ * 还能问的几件事（近况、安排、天色）：今天问过的灰着；天黑了不问安排。
+ * 熟了可以约他明天午前茶摊坐坐；约好的那天午前在茶摊碰上，就能坐下来聊一会儿。
+ */
+function topicsFor(modal, bond, night, visits) {
   const asks = ['news', 'plan', 'sky'].map(topic =>
     button('talkTopic', TOPICS[topic], {
       data: { to: modal.who, topic },
       disabled: bond.asked.includes(topic) || (topic === 'plan' && night),
     }),
   );
+  const mine = visits.active?.npc === modal.who;
+  if (mine && visits.active.due)
+    asks.unshift(button('visitMeet', `坐下来陪${visits.active.name}聊一会儿`, { main: true }));
+  else if (!mine && visits.canInvite && bond.known >= 1 && !night)
+    asks.push(button('invite', '约明天午前茶摊坐坐', { data: { to: modal.who } }));
   return `<div class="topics">${asks.join('')}</div>`;
 }
 
@@ -58,7 +66,7 @@ export function talkView(modal, game, here) {
       <span class="bond">${esc(tierWord(bond.known))}${gained}</span></div>
     <p class="say">${esc(modal.line)}</p>
     ${learned}
-    ${topicsFor(modal, bond, minute >= ROUTINE_DAY.home)}
+    ${topicsFor(modal, bond, minute >= ROUTINE_DAY.home, game.ask('visits'))}
     ${giftsFor(modal, game, here)}
     ${actions(close('好'))}`;
 }

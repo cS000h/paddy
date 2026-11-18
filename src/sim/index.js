@@ -32,6 +32,7 @@ import { residents } from './plugins/residents.js';
 import { teahouse } from './plugins/teahouse.js';
 import { market } from './plugins/market.js';
 import { guide } from './plugins/guide.js';
+import { visits } from './plugins/visits.js';
 
 export { SAVE_VERSION };
 // 顺序有讲究：后面的插件建自己的数据时，可以读前面的（比如身体和行囊按“户里有谁”来建）。
@@ -60,6 +61,7 @@ export const PLUGINS = Object.freeze([
   market,
   teahouse,
   guide,
+  visits,
 ]);
 
 /**

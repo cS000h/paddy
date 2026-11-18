@@ -814,6 +814,13 @@ button:focus-visible {
   gap: 8px;
 }
 
+/* 约好了的那场茶：一行朱砂小字 */
+.journal .appointment {
+  margin: 0 0 4px;
+  color: var(--cinnabar);
+  font-size: 12.5px;
+}
+
 .journal li.done {
   color: var(--ink-3);
   text-decoration: line-through;
