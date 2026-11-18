@@ -1,5 +1,5 @@
-// 地点交互集中在这里：面前的东西该提示什么、右下那枚印上刻什么字，点了以后开哪个面板。
-// 这里只开面板，规则仍由端口决定。
+// 地点交互集中在这里：面前的东西该提示什么、右下那枚印上刻什么字，点了以后开哪个面板，
+// 或者直接动手做（采集点、院里的活，见 work）。规则仍由端口决定，这里只发命令、把结果演出来。
 import { PEOPLE } from '../content/people.js';
 import { POKES } from '../content/pokes.js';
 import { farmable } from '../content/maps/index.js';
@@ -98,10 +98,26 @@ export function touchThing(scene, thing) {
     if (!out.ok) shell.toast(out.reason);
     return;
   }
-  if (['outing', 'housework'].includes(thing.act))
+  if (['outing', 'housework'].includes(thing.act)) {
+    // 这儿只有一件活可做（采野菜、采菌子、腌菜……）：不必问，走过去就动手
+    const { game } = scene.deps;
+    const query = thing.act === 'outing' ? 'outings' : 'homestead';
+    const options = game.ask(query, thing.station, scene.at()).options;
+    if (options.length === 1 && options[0].id !== 'fish') {
+      if (options[0].reason) return scene.refuse(options[0].reason);
+      return work(scene, thing.act, options[0].id, thing);
+    }
     return shell.set({
-      modal: { kind: 'activity', station: thing.station, label: thing.label, group: thing.act },
+      modal: {
+        kind: 'activity',
+        station: thing.station,
+        label: thing.label,
+        group: thing.act,
+        x: thing.x,
+        y: thing.y,
+      },
     });
+  }
   if (thing.act === 'market') {
     const out = scene.send('market.visit', thing, { shop: thing.shop });
     if (!out.ok) return;
@@ -123,6 +139,22 @@ export function touchThing(scene, thing) {
   return shell.set({
     modal: { kind: 'sign', text: thing.text || '门虚掩着，屋里飘出饭菜的香味。桂嫂大概在灶上忙。' },
   });
+}
+
+/**
+ * 做一件采集或院里的活：发命令，成了就在 target 那儿把活演出来（world/scripts.js），演完冒一句话。
+ * group 是 'outing'（野外）或 'housework'（院里）；被拒绝就把原因说出来。
+ */
+export function work(scene, group, id, target) {
+  const { game, shell } = scene.deps;
+  const out = game.dispatch(group === 'outing' ? 'gather' : 'homestead', { id, at: scene.at() });
+  if (!out.ok) return scene.refuse(out.reason);
+  const line = out.facts.find(f => ['forage.finished', 'home.worked'].includes(f.type))?.data.line;
+  scene.performer.play(id, {
+    target: target ? { x: target.x, y: target.y } : null,
+    then: () => line && shell.toast(line),
+  });
+  return out;
 }
 
 /** 这一格上有没有能随手碰一碰的东西（树、竹、花、草垛……，见 content/pokes.js）。 */

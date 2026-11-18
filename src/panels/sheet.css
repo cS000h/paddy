@@ -242,6 +242,33 @@
   background: var(--moon);
 }
 
+/* 挑一件活：一排方块，名字下面一行小字（花多少力气、还剩几次、为什么做不了） */
+.picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 2px 0 6px;
+}
+
+.sheet .picks button {
+  display: grid;
+  justify-items: start;
+  gap: 1px;
+  min-width: 118px;
+  padding: 7px 12px;
+  text-align: left;
+}
+
+.picks b {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.picks small {
+  color: var(--ink-3);
+  font-size: 11.5px;
+}
+
 /* 对话：最后那排按钮（“好”）挪到前一行（送礼、一句旁白）的右边，框不必多高出一截 */
 .sheet.dialogue {
   display: grid;

@@ -43,7 +43,7 @@ const VIEWS = {
 };
 
 // 小窗摆在哪儿：
-//   dialogue  贴着下沿的一长条：说话、旁白、水边、歇息、钓鱼。世界在上面照样看得见，像戏里的一场；
+//   dialogue  贴着下沿的一长条：说话、旁白、水边、歇息、钓鱼、挑一件活。世界在上面照样看得见，像戏里的一场；
 //   center    正中一张：开局的选择、确认、出错、全村地图；
 //   menu      右上角“更多”底下的一小列；
 //   side      其余的从右边展开成一整幅，高到顶，左边还看得见世界。
@@ -54,6 +54,7 @@ const PLACE = {
   water: 'dialogue',
   sleep: 'dialogue',
   fish: 'dialogue',
+  activity: 'dialogue',
   origin: 'center',
   confirm: 'center',
   trouble: 'center',

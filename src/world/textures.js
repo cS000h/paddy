@@ -109,7 +109,39 @@ export function buildTextures(scene, map) {
   add('fx:steam', puff(7, P.l0));
   add('fx:lantern', art.lanternGlobe());
   for (const [name, grid] of Object.entries(art.critters())) add('fx:' + name, grid);
+  // 做活时的小东西：灶膛里的火苗、火星、木屑、铜钱
+  add('fx:flame', flame());
+  add('fx:ember', speck(1, 1, P.c0));
+  add('fx:chip', speck(2, 1, P.h1));
+  add('fx:coin', speck(2, 2, P.y1).set(1, 1, P.y2));
+  add('fx:hen', art.hen());
   return { anchors };
+}
+
+// 一簇火苗：外红、里黄、芯白，下宽上尖
+function flame() {
+  const g = new art.Grid(7, 9);
+  g.poly(
+    [
+      [0, 8],
+      [1, 4],
+      [3, 0],
+      [5, 4],
+      [6, 8],
+    ],
+    P.c1,
+  );
+  g.poly(
+    [
+      [1, 8],
+      [2, 5],
+      [3, 2],
+      [4, 5],
+      [5, 8],
+    ],
+    P.y1,
+  );
+  return g.vline(3, 5, 8, P.y0).set(3, 7, P.l0);
 }
 
 /** 人物贴图里某个朝向、某个姿势是第几帧。 */

@@ -2,7 +2,7 @@
 // 过夜要拉一层纸盖住世界再揭开，所以睡觉也放在这里，而不是只发一条命令。
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-export function homeActions({ game, shell, run, here }) {
+export function homeActions({ game, shell, run, here, world }) {
   const at = () => ({ at: here() });
   /** 小窗里记着的那一格（水边、田地）。 */
   const spot = () => {
@@ -25,11 +25,18 @@ export function homeActions({ game, shell, run, here }) {
     packTake({ item, n }) {
       run('pack.take', { item, n, ...at() });
     },
+    // 喝水、打水：成了就合上小窗，人在水边弯腰舀一瓢
     drink() {
-      run('drink', { ...spot(), ...at() });
+      const where = spot();
+      if (!run('drink', { ...where, ...at() }).ok) return;
+      shell.set({ modal: null });
+      world.perform('drink', { target: where });
     },
     refill() {
-      run('farm.refill', { ...spot(), ...at() });
+      const where = spot();
+      if (!run('farm.refill', { ...where, ...at() }).ok) return;
+      shell.set({ modal: null });
+      world.perform('drink', { target: where });
     },
     async sleep() {
       shell.set({ modal: null, veil: 1 });

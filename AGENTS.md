@@ -49,22 +49,23 @@ npm run art:sheet # 不开浏览器，把整张场景和素材导出到 .cache/ 
 
 ## 改动放在哪儿
 
-| 想做的事                             | 改哪里                                                                             |
-| ------------------------------------ | ---------------------------------------------------------------------------------- |
-| 加一种作物、物品、台词，调数值       | `src/content/`                                                                     |
-| 改乡邻去哪儿、几点回家               | `src/content/people.js` 的 `ROUTINES`、`ROUTINE_DAY`                               |
-| 改做完一件事后的那段话               | `src/content/life-text.js`；规则把它写进事实的 `line`，画面照着显示                |
-| 加一条玩法规则                       | `src/sim/plugins/` 里加一个插件，列进 `src/sim/index.js` 的 `PLUGINS`              |
-| 让画面知道一件新的事                 | 规则里 `fact(...)` 发事实，或 `queries.define(...)` 定义查询；再更新 L3 的端口清单 |
-| 加一张地图、一种物件                 | `src/content/maps/`（数据）+ `src/art/`（画法，登记进 `art/index.js`）             |
-| 换一张图的画法，或换成手绘图         | `src/art/index.js` 里换它的来源，别处不动                                          |
-| 支持一种新的输入设备（比如手柄）     | `src/world/input.js` 里加一个适配器，发的还是那几种意图                            |
-| 上一个新的运行环境（桌面壳、小游戏） | 照 `src/platform/web.js` 的形状再写一个平台                                        |
-| 加一种小窗                           | 在 `src/panels/` 写视图函数、登记进 `modals.js` 的 `VIEWS`，用 `panels/html.js` 拼 |
-| 小窗按钮要做的事                     | `src/app/` 里按主题分的 `*Actions`（行囊吃喝在 `home.js`），`main.js` 只负责组装   |
-| 世界提示条和面板都要说的话           | `src/shell/words.js`（例如体力价钱的写法）                                         |
-| 程序出错时怎么记、怎么告诉玩家       | `src/app/problems.js`；画面一侧的保护在 `src/world/safety.js`                      |
-| 换引擎或换镜头                       | 只动 `src/world/`                                                                  |
+| 想做的事                               | 改哪里                                                                                          |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 加一种作物、物品、台词，调数值         | `src/content/`                                                                                  |
+| 改乡邻去哪儿、几点回家                 | `src/content/people.js` 的 `ROUTINES`、`ROUTINE_DAY`                                            |
+| 改做完一件事后的那段话                 | `src/content/life-text.js`；规则把它写进事实的 `line`，画面照着显示                             |
+| 加一条玩法规则                         | `src/sim/plugins/` 里加一个插件，列进 `src/sim/index.js` 的 `PLUGINS`                           |
+| 让画面知道一件新的事                   | 规则里 `fact(...)` 发事实，或 `queries.define(...)` 定义查询；再更新 L3 的端口清单              |
+| 加一张地图、一种物件                   | `src/content/maps/`（数据）+ `src/art/`（画法，登记进 `art/index.js`）                          |
+| 换一张图的画法，或换成手绘图           | `src/art/index.js` 里换它的来源，别处不动                                                       |
+| 让一件活在世界里演出来（采、劈、做饭） | 动作帧画在 `src/art/acts-*.js`（共用的小人在 `worker.js`）；演哪几步写在 `src/world/scripts.js` |
+| 支持一种新的输入设备（比如手柄）       | `src/world/input.js` 里加一个适配器，发的还是那几种意图                                         |
+| 上一个新的运行环境（桌面壳、小游戏）   | 照 `src/platform/web.js` 的形状再写一个平台                                                     |
+| 加一种小窗                             | 在 `src/panels/` 写视图函数、登记进 `modals.js` 的 `VIEWS`，用 `panels/html.js` 拼              |
+| 小窗按钮要做的事                       | `src/app/` 里按主题分的 `*Actions`（行囊吃喝在 `home.js`），`main.js` 只负责组装                |
+| 世界提示条和面板都要说的话             | `src/shell/words.js`（例如体力价钱的写法）                                                      |
+| 程序出错时怎么记、怎么告诉玩家         | `src/app/problems.js`；画面一侧的保护在 `src/world/safety.js`                                   |
+| 换引擎或换镜头                         | 只动 `src/world/`                                                                               |
 
 ## 写一个规则插件
 

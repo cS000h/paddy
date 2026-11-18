@@ -36,6 +36,12 @@ export function createEffects(scene, map) {
     gravityY: 200,
     lifespan: 260,
   });
+  const chips = burst('fx:chip', {
+    speed: { min: 30, max: 80 },
+    angle: { min: 200, max: 340 },
+    gravityY: 280,
+    lifespan: 420,
+  });
   const leaves = burst('fx:leaf', {
     speed: { min: 20, max: 60 },
     angle: { min: 220, max: 320 },
@@ -134,6 +140,16 @@ export function createEffects(scene, map) {
     /** 拍了拍草垛、稻草人、芦苇：扑起一阵草屑。 */
     straw(px, py) {
       seeds.explode(9, px, py);
+    },
+    /** 劈柴、敲钉子：那一格上木屑飞起来。 */
+    chips(x, y) {
+      const [px, py] = centre(x, y);
+      scene.time.delayedCall(680, () => chips.explode(8, px, py - 4));
+    },
+    /** 舀水、下竿：那一格溅起水花。 */
+    splashAt(x, y) {
+      const [px, py] = centre(x, y);
+      splash.explode(8, px, py - 2);
     },
     /** 一格新长出来的东西轻轻弹一下。 */
     pop(target) {

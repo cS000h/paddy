@@ -77,6 +77,24 @@ export function standBeside(walk, from, target) {
   return best;
 }
 
+/**
+ * 侧着身对着 target 做活，站哪一格：它左边或右边能走的那格，离人近的优先。
+ * 返回 {x, y, face, path}；两边都站不了就原地，朝着它那一侧。
+ */
+export function sideSpot(walk, from, target) {
+  let best = null;
+  for (const [dx, face] of [
+    [-1, 'right'],
+    [1, 'left'],
+  ]) {
+    const spot = { x: target.x + dx, y: target.y };
+    if (!walk(spot.x, spot.y)) continue;
+    const path = findPath(walk, from, spot);
+    if (path && (!best || path.length < best.path.length)) best = { ...spot, face, path };
+  }
+  return best || { ...from, face: target.x < from.x ? 'left' : 'right', path: [] };
+}
+
 const ORDER = ['hand', 'seed', 'can', 'hoe'];
 
 /**

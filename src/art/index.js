@@ -139,6 +139,8 @@ export function personShadow() {
   return new Grid(14, 6).ellipse(7, 3, 6, 2, SHADOW);
 }
 
+export { ACTS, actFrame, actSheet } from './acts.js';
+export { hen } from './acts-yard.js';
 export { seasonGrid } from './seasons.js';
 export { plotMark, PLOT_MARKS } from './plot-marks.js';
 export { cropSet } from './crops.js';

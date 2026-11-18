@@ -14,6 +14,7 @@ import { hintFor, touchThing, decorAt, poke } from './interactions.js';
 import { tapAt } from './tap.js';
 import { leaveByRoad } from './travel.js';
 import { createAmbient } from './ambient.js';
+import { createPerformer } from './perform.js';
 import { safely } from './safety.js';
 import { TILE, facing, dirTo, COMMAND_OF, skyTint } from './logic.js';
 
@@ -75,6 +76,7 @@ export class VillageScene extends Phaser.Scene {
     this.effects = createEffects(this, map);
     this.weatherFx = weatherEffects(this);
     this.ambient = createAmbient(this, map);
+    this.performer = createPerformer(this);
 
     const camera = this.cameras.main;
     camera.setBounds(0, 0, map.width * TILE, map.height * TILE);
@@ -92,6 +94,7 @@ export class VillageScene extends Phaser.Scene {
       intents.on('act', () => this.act()),
       intents.on('tap', p => this.tap(p.x, p.y)),
       game.onCommit(facts => this.onFacts(facts)),
+      () => this.performer.stop(),
     ];
     this.events.once('shutdown', () => this.cleanups.forEach(off => off()));
     this.refreshPlots();
@@ -148,11 +151,14 @@ export class VillageScene extends Phaser.Scene {
     const dt = Math.min(0.05, delta / 1000);
     const { intents, shell } = this.deps;
     for (const v of this.villagers) v.follow(dt);
+    this.performer.update(dt);
+    const move = intents.move();
+    // 演着一件活时推摇杆、按方向键：戏就此收场，人照着走
+    if ((move.x || move.y) && this.performer.active && !shell.paused()) this.performer.stop();
     if (shell.paused() || this.busy) {
       this.player.animate(false);
       return;
     }
-    const move = intents.move();
     if (move.x || move.y) {
       this.player.path = [];
       this.player.onArrive = null;
@@ -205,6 +211,8 @@ export class VillageScene extends Phaser.Scene {
   /** 对面前的东西做该做的事。 */
   act() {
     const { game, shell, platform } = this.deps;
+    // 正在演一件活：按一下就快进（开着小窗时这一下是给小窗的，比如钓鱼时提竿）
+    if (this.performer.active) return shell.paused() ? undefined : this.performer.skip();
     if (this.busy || shell.paused()) return;
     platform.audio.unlock();
     const t = this.target();

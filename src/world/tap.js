@@ -6,6 +6,8 @@ import { decorAt, poke } from './interactions.js';
 
 export function tapAt(scene, wx, wy) {
   const { game, shell, platform } = scene.deps;
+  // 正在演一件活时点了别处：活早已做完，戏就此收场，接着照这一下去做
+  if (scene.performer?.active && !shell.paused()) scene.performer.stop();
   if (scene.busy || shell.paused()) return;
   platform.audio.unlock();
   const walk = (x, y) => walkable(scene.map, x, y);

@@ -2,6 +2,7 @@
 import Phaser from 'phaser';
 import { VillageScene } from './scene.js';
 import { guardFrames } from './safety.js';
+import { work } from './interactions.js';
 
 /**
  * @param {object} deps
@@ -53,6 +54,24 @@ export function createWorld(deps) {
     heroAt: () => (scene()?.player ? scene().at() : null),
     /** 操控的人头顶在画面上的位置（画面坐标）；面板把冒出来的字摆在这儿。场景没起来时是 null。 */
     headOnScreen: () => (scene()?.player ? scene().headOnScreen() : null),
+    /**
+     * 把一件已经结算好的活演出来（见 perform.js）：steps 一步步放，target 是对着的那一格，
+     * then 演完以后调用。场景还没起来时直接调用 then。
+     */
+    perform(steps, { target = null, then = null } = {}) {
+      const s = scene();
+      if (s?.performer) s.performer.play(steps, { target, then });
+      else then?.();
+    },
+    /** 正在演的那一场马上收场（比如钓鱼时没收竿就把小窗关了）。 */
+    stopPerforming() {
+      scene()?.performer?.stop();
+    },
+    /** 做一件采集或院里的活并演出来（见 interactions.js 的 work）；场景还没起来时什么也不做。 */
+    work(group, id, target = null) {
+      const s = scene();
+      return s?.player ? work(s, group, id, target) : null;
+    },
     scene,
     destroy() {
       offResize();

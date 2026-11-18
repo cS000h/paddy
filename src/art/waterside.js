@@ -78,8 +78,7 @@ export function boat({ stowedOar = true } = {}) {
   ];
   for (let i = 1; i < rim.length; i++) g.line(...rim[i - 1], ...rim[i], P.h2);
   g.line(20, 19, 28, 17, P.t2).line(33, 18, 49, 15, P.h3);
-  if (stowedOar)
-    g.line(4, 13, 17, 26, P.t3).line(1, 10, 5, 14, P.t1).line(1, 11, 4, 14, P.t2);
+  if (stowedOar) g.line(4, 13, 17, 26, P.t3).line(1, 10, 5, 14, P.t1).line(1, 11, 4, 14, P.t2);
   g.rect(50, 15, 2, 2, P.c2).set(52, 17, P.c1);
   return { grid: g, ax: 29, ay: 35 };
 }

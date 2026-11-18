@@ -84,4 +84,10 @@ export async function open(browser, port, options) {
   return { page, errors };
 }
 
+/** 等世界里正在演的那件活演完（最多 15 秒）。 */
+export const performed = page =>
+  page.waitForFunction(() => !window.__dao.world.scene()?.performer?.active, null, {
+    timeout: 15000,
+  });
+
 export const shot = (page, name) => page.screenshot({ path: path.join(root, '.cache', name) });

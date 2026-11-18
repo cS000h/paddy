@@ -192,10 +192,16 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     const k = game.ask('kitchen', at);
     const roll = r();
     // 灶台上的饭端走或吃掉，身上的饭收回灶台或吃掉，否则做一锅
-    if (k.dishes.length && roll < 0.35)
+    if (k.dishes.length && roll < 0.35) {
+      // 行囊满了就先把一样东西放回家里，腾出地方再端饭
+      const pack = game.ask('pack', at);
+      const full = pack.room < 1 && pack.items.length;
+      if (full) return send('pack.put', { item: pick(pack.items).id, n: 'all', at });
       return send(pick(['dish.pack', 'dish.eat']), { id: pick(k.dishes).id, at });
+    }
+    // 身上的饭多半收回灶台（路上饿了还会吃掉，收回的机会本来就少）
     if (k.carried.length && roll < 0.55)
-      return send(pick(['dish.store', 'dish.eat']), { id: pick(k.carried).id, at });
+      return send(chance(0.7) ? 'dish.store' : 'dish.eat', { id: pick(k.carried).id, at });
     return cook(at, k);
   }
 

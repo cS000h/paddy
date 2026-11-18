@@ -7,7 +7,18 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
-import { root, launch, serve, frames, tap, plot, onScreen, open, shot } from './browser.js';
+import {
+  root,
+  launch,
+  serve,
+  frames,
+  tap,
+  plot,
+  onScreen,
+  open,
+  shot,
+  performed,
+} from './browser.js';
 
 test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏、手指点得准；全程没有报错', async t => {
   const built = spawnSync(process.execPath, ['node_modules/vite/bin/vite.js', 'build'], {
@@ -155,9 +166,11 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.locator('button[data-do="close"]').click();
       await tap(p, 12, 10);
       await frames(p, 300);
+      // 喝上了：小窗合上，人在水缸边舀一瓢（演完才能接着做别的）
       await p.locator('button[data-do="drink"]').click();
       assert.equal(await p.evaluate(() => window.__dao.game.ask('body').thirst), 100);
-      await p.locator('button[data-do="close"]').click();
+      assert.equal(await p.evaluate(() => window.__dao.shell.get().modal), null);
+      await performed(p);
       await p.locator('button[data-do="bag"]').click();
       assert.match(await p.locator('.sheet h2').textContent(), /行囊/);
       await p.locator('button[data-do="close"]').click();
@@ -197,7 +210,9 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       assert.ok(
         await p.evaluate(() => window.__dao.game.ask('pack').items.some(i => i.id === 'strip')),
       );
-      await p.locator('[data-do="close"]').click();
+      // 挑了活，小窗合上，人在竹林边抡起柴刀；演到一半点一下能快进
+      assert.ok(await p.evaluate(() => window.__dao.world.scene().performer.active));
+      await performed(p);
       await tap(p, 4, 12);
       await frames(p, 1200);
       await p.locator('[data-do="activity"][data-id="weave"]').click();
@@ -206,7 +221,9 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
           window.__dao.game.ask('goods', window.__dao.world.heroAt()).some(i => i.id === 'basket'),
         ),
       );
-      await p.locator('[data-do="close"]').click();
+      await shot(p, session === desk ? 'm3-weave-desktop.png' : 'm3-weave-phone.png');
+      await p.evaluate(() => window.__dao.intents.emit('act'));
+      await performed(p);
       await tap(p, 38, 20);
       await frames(p, 1600);
       await p.locator('[data-do="activity"][data-id="fish"]').click();
@@ -214,13 +231,12 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await shot(p, session === desk ? 'm3-fish-desktop.png' : 'm3-fish-phone.png');
       if (session === desk) await p.keyboard.press('Space');
       else await p.locator('[data-do="fishReel"]').tap();
-      await p.waitForSelector('[data-do="activity"][data-id="fish"]');
+      await performed(p);
       assert.equal(await p.evaluate(() => window.__dao.game.ask('outings', 'fish').pending), false);
       assert.equal(
         await p.evaluate(() => window.__dao.game.ask('outings', 'fish').options[0].left),
         2,
       );
-      await p.locator('[data-do="close"]').click();
       assert.deepEqual(session.errors, []);
     }
     // M4：开局选择已在open里点击；册子的三个分页能翻，成就随行动落印。

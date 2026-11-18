@@ -263,3 +263,6 @@ export function personSheet(look) {
 }
 
 export const LOOK_NAMES = Object.keys(LOOKS);
+
+/** 一个外观的几样颜色（衣、衣影、腰带、裤、鞋……）；做活的人（worker.js）按它给身子上色。 */
+export const lookColors = look => LOOKS[look] || LOOKS.hero;

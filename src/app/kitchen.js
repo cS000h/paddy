@@ -1,7 +1,7 @@
 // 灶台小窗的按钮：挑食材、调料、做法、刀工，掌火出锅，翻菜谱，吃饭端饭。
 // 挑选中的东西只放在小窗的状态里，按下“做”才发给规则。
 import { timingValue } from '../shell/timing.js';
-export function kitchenActions({ game, shell, run, here }) {
+export function kitchenActions({ game, shell, run, here, world }) {
   const edit = patch => shell.set({ modal: { ...shell.get().modal, ...patch } });
   const input = () => {
     const m = shell.get().modal;
@@ -14,10 +14,18 @@ export function kitchenActions({ game, shell, run, here }) {
     };
   };
   function cook(heat = null) {
+    const m = shell.get().modal;
     const out = run('cook', { ...input(), heat });
     if (out.ok) {
       const { line, ids } = out.facts.find(f => f.type === 'meal.cooked').data;
-      shell.set({ modal: { kind: 'kitchen', line, servedId: ids[0] } });
+      // 合上小窗，在灶前把这顿饭做一遍给人看：切菜、添柴生火、翻炒、盛出来；做完再回到灶台
+      const stove = m.x !== undefined ? { x: m.x, y: m.y } : null;
+      const back = { kind: 'kitchen', line, servedId: ids[0], x: m.x, y: m.y };
+      shell.set({ modal: null });
+      world.perform('cook:' + (m.method || 'stew'), {
+        target: stove,
+        then: () => shell.set({ modal: back }),
+      });
     }
   }
   return {
