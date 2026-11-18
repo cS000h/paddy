@@ -1,3 +1,4 @@
+// 开局两选、小册子的翻页，以及成就、升级、新特质的提示。
 export function growthActions({ game, shell, run }) {
   const edit = patch => shell.set({ modal: { ...shell.get().modal, ...patch } });
   return {

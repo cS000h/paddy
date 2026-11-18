@@ -1,3 +1,4 @@
+// 看天、挑菜种、查看和照料面前那一格地。
 export function fieldActions({ game, shell, run, here, world }) {
   return {
     weather() {

@@ -2,7 +2,7 @@
 //   bag   随时能开：身上带着什么，哪些能直接吃，水壶里还有几口
 //   store 站在橱柜跟前才开：左边是家里存的，右边是身上带的，来回倒腾
 import { dishRows } from './kitchen.js';
-import { itemImg } from './icons.js';
+import { button, actions, close, title, para, itemRow, itemList, esc } from './html.js';
 
 // 直接吃下去是什么效果，写成一行小字。
 function eatNote(eat) {
@@ -14,79 +14,89 @@ function eatNote(eat) {
   return parts.join(' · ');
 }
 
-const row = (item, esc, buttons, note = '') =>
-  `<li>${itemImg(item.id)}<span class="what">${esc(item.name)}<b>×${item.n}</b>
-      ${note ? `<small>${esc(note)}</small>` : ''}</span><span class="acts">${buttons}</span></li>`;
-
 const eatButton = item =>
-  item.eat
-    ? `<button data-do="eat" data-item="${item.id}" title="${eatNote(item.eat)}">吃</button>`
-    : '';
+  item.eat ? button('eat', '吃', { data: { item: item.id }, title: eatNote(item.eat) }) : '';
 
-const empty = text => `<li class="none">${text}</li>`;
-
-function bodyLine(game, esc) {
+/** 饿不饿、渴不渴、心情怎样，吃过的饭菜还管着什么好处。 */
+function bodyLine(game) {
   const b = game.ask('body');
   const words = [b.hungerWord, b.thirstWord, '心情' + b.moodWord];
   if (b.stuffedWord) words.push(b.stuffedWord);
   const buff = b.buff
     ? `<p class="buff-note"><b>${esc(b.buff.name)}</b>　${esc(b.buff.text)}</p>`
     : '';
-  return `<p class="body-line">${esc(words.join(' · '))}</p>${buff}`;
+  return `${para(words.join(' · '), 'body-line')}${buff}`;
 }
 
 function flaskRow(pack) {
   if (!pack.flask) return '';
   const { left, max } = pack.flask;
-  return `<li>${itemImg('flask')}<span class="what">水壶里的水<b>${left}/${max} 口</b>
-      <small>在井边、溪边喝水时会顺手灌满</small></span>
-      <span class="acts"><button data-do="sip" ${left ? '' : 'disabled'}>喝一口</button></span></li>`;
+  return itemRow({
+    icon: 'flask',
+    name: '水壶里的水',
+    count: `${left}/${max} 口`,
+    notes: ['在井边、溪边喝水时会顺手灌满'],
+    acts: button('sip', '喝一口', { disabled: !left }),
+  });
 }
 
-export function bagView(modal, game, esc, here) {
+const progress = () => button('saves', '进度与玩法');
+
+export function bagView(modal, game, here) {
   const pack = game.ask('pack', here);
-  const items = pack.items
-    .map(item => row(item, esc, eatButton(item), item.eat ? eatNote(item.eat) : item.text))
-    .join('');
+  const items = pack.items.map(item =>
+    itemRow({
+      icon: item.id,
+      name: item.name,
+      count: item.n,
+      notes: [item.eat ? eatNote(item.eat) : item.text],
+      acts: eatButton(item),
+    }),
+  );
   const where = pack.atHome
     ? '家里存的东西在檐下的橱柜里。'
     : '家里存的东西在院里的橱柜里，出了院子就够不着了。';
-  return `<h2>行囊<small>${pack.used}/${pack.cap} 格 · 一格放一样东西</small></h2>
-    ${bodyLine(game, esc)}
-    <ul class="items">${items || empty('空的')}${dishRows(pack.dishes, esc, true)}${flaskRow(pack)}</ul>
-    <p class="aside">${where}</p>
-    <div class="row"><button data-do="saves">进度与玩法</button><button class="main" data-do="close">好</button></div>`;
+  const rows = [...items, dishRows(pack.dishes, true), flaskRow(pack)].filter(Boolean);
+  return `${title('行囊', `${pack.used}/${pack.cap} 格 · 一格放一样东西`)}
+    ${bodyLine(game)}
+    ${itemList(rows, '空的')}
+    ${para(where, 'aside')}
+    ${actions(progress(), close())}`;
 }
 
-export function storeView(modal, game, esc, here) {
+export function storeView(modal, game, here) {
   const pack = game.ask('pack', here);
-  const home = game.ask('home');
   const full = pack.room < 1;
-  const stored = home.items
-    .map(item => {
-      const stuck = !item.carry || (full && !pack.items.some(i => i.id === item.id));
-      const hint = !item.carry ? '不好随身带' : stuck ? '行囊满了' : '';
-      const take = n =>
-        `<button data-do="packPut" data-item="${item.id}" data-n="${n}" ${stuck ? 'disabled' : ''}
-          title="${hint}">${n === 'all' ? '全拿' : '拿一份'}</button>`;
-      return row(item, esc, eatButton(item) + take(1) + (item.n > 1 ? take('all') : ''), hint);
-    })
-    .join('');
-  const carried = pack.items
-    .map(item =>
-      row(
-        item,
-        esc,
-        eatButton(item) +
-          `<button data-do="packTake" data-item="${item.id}" data-n="all">放下</button>`,
-      ),
-    )
-    .join('');
-  return `<h2>橱柜<small>家里存的东西都在这儿</small></h2>
+  const stored = game.ask('home').items.map(item => {
+    const stuck = !item.carry || (full && !pack.items.some(i => i.id === item.id));
+    const hint = !item.carry ? '不好随身带' : stuck ? '行囊满了' : '';
+    const take = n =>
+      button('packPut', n === 'all' ? '全拿' : '拿一份', {
+        data: { item: item.id, n },
+        disabled: stuck,
+        title: hint,
+      });
+    return itemRow({
+      icon: item.id,
+      name: item.name,
+      count: item.n,
+      notes: [hint],
+      acts: eatButton(item) + take(1) + (item.n > 1 ? take('all') : ''),
+    });
+  });
+  const carried = pack.items.map(item =>
+    itemRow({
+      icon: item.id,
+      name: item.name,
+      count: item.n,
+      acts: eatButton(item) + button('packTake', '放下', { data: { item: item.id, n: 'all' } }),
+    }),
+  );
+  return `${title('橱柜', '家里存的东西都在这儿')}
     <div class="two">
-      <section><h3>家里存的</h3><ul class="items">${stored || empty('空的')}</ul></section>
-      <section><h3>身上带的<small>${pack.used}/${pack.cap} 格</small></h3>
-        <ul class="items">${carried || empty('空的')}${flaskRow(pack)}</ul></section>
+      <section><h3>家里存的</h3>${itemList(stored, '空的')}</section>
+      <section><h3>身上带的 <small>${pack.used}/${pack.cap} 格</small></h3>
+        ${itemList([...carried, flaskRow(pack)].filter(Boolean), '空的')}</section>
     </div>
-    <div class="row"><button data-do="saves">进度与玩法</button><button class="main" data-do="close">好</button></div>`;
+    ${actions(progress(), close())}`;
 }

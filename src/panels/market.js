@@ -1,21 +1,73 @@
-import { itemImg } from './icons.js';
-export function marketView(m, game, esc, here) {
-  const shop = m.shop || 'market',
-    market = game.ask('market', shop, here),
-    coins = game.ask('home').coins;
-  const goods = game.ask('goods', here).filter(i => i.sell > 0);
-  return `<h2>${shop === 'tea' ? '茶点摊' : '杂货铺'}<small>${market.fair ? '今日赶集 · ' : ''}手头 ${coins} 文</small></h2><div class="two">
-  <section><h3>今日的货</h3><ul class="items">${market.wares.map(i => `<li>${itemImg(i.item)}<span class="what">${esc(i.name)}<small>${i.price}文 · ${i.qty}份 · 余${i.left}${i.why.length ? '<br>' + esc(i.why.map(([t, n]) => t + (n > 0 ? '+' : '') + n).join('，')) : ''}</small></span><button data-do="marketBuy" data-item="${i.item}" ${coins < i.price || !i.left ? 'disabled' : ''}>买一回</button></li>`).join('')}</ul></section>
-  <section><h3>卖点随身带的</h3><ul class="items">${goods.map(i => `<li>${itemImg(i.id)}<span class="what">${esc(i.name)} ×${i.n}<small>每份${i.sell}文起</small></span><button data-do="marketSell" data-item="${i.id}">卖一份</button></li>`).join('') || '<li>行囊里还没有可卖的东西。</li>'}</ul><p class="aside">鲜货也会卖给别的乡邻。傍晚剩下的便宜些，卖完明天再来。</p></section></div>
-  <div class="row"><button data-do="close">收好东西，继续走</button></div>`;
+// 柜台（杂货铺、茶点摊）和樟树下的茶桌。
+import { TEA_DEEDS } from '../content/market.js';
+import { signed } from '../content/text.js';
+import { button, actions, close, title, para, itemRow, itemList, esc } from './html.js';
+
+/** 价钱为什么涨落：“刚上市+1，傍晚处理−1”。 */
+const priceWhy = why => why.map(([text, n]) => text + signed(n)).join('，');
+
+export function marketView(m, game, here) {
+  const shop = m.shop || 'market';
+  const market = game.ask('market', shop, here);
+  const coins = game.ask('home').coins;
+  const wares = market.wares.map(ware =>
+    itemRow({
+      icon: ware.item,
+      name: ware.name,
+      notes: [`${ware.price}文 · ${ware.qty}份 · 余${ware.left}`, priceWhy(ware.why)],
+      acts: button('marketBuy', '买一回', {
+        data: { item: ware.item },
+        disabled: coins < ware.price || !ware.left,
+      }),
+    }),
+  );
+  const sellable = game
+    .ask('goods', here)
+    .filter(item => item.sell > 0)
+    .map(item =>
+      itemRow({
+        icon: item.id,
+        name: item.name,
+        count: item.n,
+        notes: [`每份${item.sell}文起`],
+        acts: button('marketSell', '卖一份', { data: { item: item.id } }),
+      }),
+    );
+  return `${title(shop === 'tea' ? '茶点摊' : '杂货铺', `${market.fair ? '今日赶集 · ' : ''}手头 ${coins} 文`)}
+    <div class="two">
+      <section><h3>今日的货</h3>${itemList(wares, '今天的货卖完了，明早再来。')}</section>
+      <section><h3>卖点随身带的</h3>${itemList(sellable, '行囊里还没有可卖的东西。')}
+        ${para('鲜货也会卖给别的乡邻。傍晚剩下的便宜些，卖完明天再来。', 'aside')}</section>
+    </div>
+    ${actions(close('收好东西，继续走', false))}`;
 }
-export function teaView(m, game, esc) {
-  const t = game.ask('tea'),
-    labels = {
-      drink: `要一碗${t.tea[0]}`,
-      chess: '和老人下盘棋',
-      hawk: '帮阿满吆喝',
-      listen: '听茶客闲聊',
-    };
-  return `<h2>樟树下坐坐<small>${esc(t.tea[1])}</small></h2><p>${esc(m.line || '树荫落在桌上。坐一会儿，听听村里的事。')}</p><ul class="items">${t.options.map(o => `<li><span class="what">${labels[o.kind]}<small>${esc(o.reason || { drink: '1文 · 水分+40，心情+2', chess: '一段时辰 · 心情+4，人情+1', hawk: '一段时辰 · 钱+3，人情+1', listen: '不花时辰，每天一回' }[o.kind])}</small></span><button data-do="teaDo" data-kind="${o.kind}" ${o.reason ? 'disabled' : ''}>${o.kind === 'drink' ? '喝茶' : '坐下'}</button></li>`).join('')}</ul><div class="row"><button data-do="close">起身</button></div>`;
+
+/** 茶摊上一件事的说明：花多少时辰、钱和身上会怎样。数从 TEA_DEEDS 来，和规则结算的是同一份。 */
+function deedNote(deed) {
+  if (deed.note) return deed.note;
+  const effects = [
+    deed.coins > 0 && `钱${signed(deed.coins)}`,
+    deed.water && `水分${signed(deed.water)}`,
+    deed.mood && `心情${signed(deed.mood)}`,
+    deed.relation && `人情${signed(deed.relation)}`,
+  ].filter(Boolean);
+  const head = deed.coins < 0 ? `${-deed.coins}文` : deed.minutes ? '一段时辰' : '';
+  return [head, effects.join('，')].filter(Boolean).join(' · ');
+}
+
+export function teaView(m, game) {
+  const t = game.ask('tea');
+  const [tea, taste] = t.tea;
+  const rows = t.options.map(({ kind, reason }) => {
+    const deed = TEA_DEEDS[kind];
+    return itemRow({
+      name: deed.label.replace('{tea}', tea),
+      notes: [reason || deedNote(deed)],
+      acts: button('teaDo', deed.act, { data: { kind }, disabled: !!reason }),
+    });
+  });
+  return `${title('樟树下坐坐', taste)}
+    <p>${esc(m.line || '树荫落在桌上。坐一会儿，听听村里的事。')}</p>
+    ${itemList(rows, '')}
+    ${actions(close('起身', false))}`;
 }

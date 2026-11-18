@@ -1,12 +1,6 @@
-import { saveActions } from './saves.js';
-import { marketActions } from './market.js';
 // 启动入口：把平台、规则（经由端口）、输入意图、世界画面、界面面板接到一起。
-// 这里也放“跨着几块的流程”：过夜、送礼、收菜筐、存档、时间流逝。
+// 这里只管组装和跨着几块的流程：读档、自动存档、时间流逝。面板按钮能做的事分在同目录的几个文件里。
 import '../panels/style.css';
-import { fieldActions } from './field.js';
-import { growthActions, growthNotices } from './growth.js';
-import { activityActions } from './activities.js';
-import { kitchenActions } from './kitchen.js';
 import { createGame } from '../port/game.js';
 import { createWebPlatform } from '../platform/web.js';
 import { createIntents } from '../shell/intents.js';
@@ -16,6 +10,13 @@ import { createPanels } from '../panels/index.js';
 import { CALENDAR } from '../content/calendar.js';
 import { TOOLS } from '../content/items.js';
 import { MAPS } from '../content/maps/index.js';
+import { saveActions } from './saves.js';
+import { homeActions } from './home.js';
+import { marketActions } from './market.js';
+import { fieldActions } from './field.js';
+import { growthActions, growthNotices } from './growth.js';
+import { activityActions } from './activities.js';
+import { kitchenActions } from './kitchen.js';
 
 const platform = createWebPlatform(document.getElementById('app'));
 const debug = platform.debug();
@@ -46,7 +47,6 @@ const world = createWorld({
   map: MAPS[game.ask('hero').map],
 });
 
-const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const here = () => world.heroAt() || undefined;
 
 /** 发命令；被拒绝就把原因说给玩家。 */
@@ -57,89 +57,19 @@ function run(type, input) {
 }
 
 // 面板上的按钮能做的事。按钮写 data-do="名字"，带的 data-* 会传进来。
+const deps = { game, shell, platform, run, here, world };
+const stopSaving = () => {
+  saving = false;
+  clearTimeout(saveTimer);
+};
 const actions = {
-  ...saveActions({
-    game,
-    shell,
-    platform,
-    here,
-    loadProblem,
-    stopSaving: () => {
-      saving = false;
-      clearTimeout(saveTimer);
-    },
-  }),
-  ...marketActions({ game, shell, run, here }),
-  ...fieldActions({ game, shell, run, here, world }),
-  ...growthActions({ game, shell, run }),
-  ...activityActions({ game, shell, run, here }),
-  ...kitchenActions({ game, shell, run, here }),
-  bag() {
-    shell.set({ modal: { kind: 'bag' } });
-  },
-  eat({ item }) {
-    run('eat', { item, at: here() });
-  },
-  sip() {
-    run('sip', { at: here() });
-  },
-  packPut({ item, n }) {
-    run('pack.put', { item, n: n === 'all' ? n : Number(n), at: here() });
-  },
-  packTake({ item, n }) {
-    run('pack.take', { item, n, at: here() });
-  },
-  drink() {
-    const m = shell.get().modal;
-    run('drink', { x: m.x, y: m.y, at: here() });
-  },
-  refill() {
-    const m = shell.get().modal;
-    run('farm.refill', { x: m.x, y: m.y, at: here() });
-  },
-  async sleep() {
-    shell.set({ modal: null, veil: 1 });
-    await wait(650);
-    const out = run('sleep', { at: here() });
-    await wait(350);
-    shell.set({ veil: 0 });
-    if (!out.ok) return;
-    const day = game.ask('clock').day;
-    const notes = game.ask('notes', day);
-    if (notes.length) shell.set({ modal: { kind: 'notes', day, notes } });
-    else shell.toast(`第 ${day} 日的清早。`);
-  },
-  gift({ to, item, dish }) {
-    const modal = shell.get().modal;
-    const out = run('gift', { to, item, dish: dish ? Number(dish) : null, at: here() });
-    if (!out.ok) return;
-    const line = out.facts.find(f => f.type === 'gift.given').data.line;
-    shell.set({ modal: { ...modal, line, gifted: true } });
-  },
-  basketPut({ item, n }) {
-    if (run('basket.put', { item, n: Number(n), at: here() }).ok)
-      shell.set({ modal: { kind: 'basket' } });
-  },
-  basketOrder({ item, n }) {
-    if (run('basket.order', { item, n: Number(n), at: here() }).ok)
-      shell.set({ modal: { kind: 'basket' } });
-  },
-  reset() {
-    shell.set({
-      modal: {
-        kind: 'confirm',
-        title: '重新开始',
-        text: '要从春天的第一日重新来过吗？现在的进度会被清掉。',
-        yes: 'resetNow',
-        label: '重新开始',
-      },
-    });
-  },
-  resetNow() {
-    saving = false;
-    platform.storage.clear();
-    location.reload();
-  },
+  ...saveActions({ ...deps, loadProblem, stopSaving }),
+  ...homeActions(deps),
+  ...marketActions(deps),
+  ...fieldActions(deps),
+  ...growthActions(deps),
+  ...activityActions(deps),
+  ...kitchenActions(deps),
 };
 
 createPanels({

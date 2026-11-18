@@ -1,13 +1,17 @@
-import { MAPS } from '../content/maps/index.js';
-import { weatherEffects } from './weather.js';
-import { refreshPlots } from './plots.js';
 // 村庄场景：把地面、物件、人摆出来，镜头跟着操控的人，把“意图”变成走路和命令。
 // 这里只通过端口（deps.game）碰规则：发命令用 dispatch，问情况用 ask，听结果用 onCommit。
 import Phaser from 'phaser';
+import { MAPS, walkable, farmable, waterSource, actAt } from '../content/maps/index.js';
+import { PEOPLE, ON_MAP } from '../content/people.js';
+import { variantAt } from '../art/index.js';
+import { costText } from '../shell/words.js';
 import { buildTextures } from './textures.js';
 import { Walker, Villager } from './actors.js';
 import { createEffects } from './effects.js';
+import { weatherEffects } from './weather.js';
+import { refreshPlots } from './plots.js';
 import { bindKeyboard, bindPointer } from './input.js';
+import { ACT_HINT, touchThing } from './interactions.js';
 import {
   TILE,
   tileOf,
@@ -20,10 +24,14 @@ import {
   toolVerb,
   skyTint,
 } from './logic.js';
-import { walkable, farmable, waterSource, actAt, spot } from '../content/maps/index.js';
-import { PEOPLE, ON_MAP } from '../content/people.js';
 
-import { ACT_HINT, touchThing } from './interactions.js';
+// 规则里的事落到画面上：哪种事实，在那一格放哪个动效、出哪个声。
+const FEEDBACK = {
+  'plot.tilled': ['tilled', 'hoe'],
+  'plot.sown': ['sown', 'seed'],
+  'plot.watered': ['watered', 'water'],
+  'crop.harvested': ['harvested', 'harvest'],
+};
 
 export class VillageScene extends Phaser.Scene {
   constructor() {
@@ -44,7 +52,7 @@ export class VillageScene extends Phaser.Scene {
     this.groundImage = this.add.image(0, 0, 'ground').setOrigin(0).setDepth(-1000);
     this.scenery = [];
     for (const [kind, x, y] of map.objects) {
-      const key = `obj:${kind}:${(x * 7 + y * 13) % 4}`;
+      const key = `obj:${kind}:${variantAt(x, y)}`;
       const a = anchors[key];
       const sprite = this.add
         .image(x * TILE + 8, (y + 1) * TILE, key)
@@ -165,13 +173,8 @@ export class VillageScene extends Phaser.Scene {
       hint = { text: reason || '打水', ok: !reason };
     } else if (farmable(this.map, t.x, t.y)) {
       const reason = game.ask('farm.why', tool, t.x, t.y, this.at(), shell.get().seed);
-      const cost = game.ask('action.cost', tool);
-      const detail = cost.parts.map(p => p.label + (p.delta > 0 ? '+' : '') + p.delta).join('、');
-      hint = {
-        text:
-          reason || `${toolVerb(tool)} · 体力${cost.value}${detail ? '（' + detail + '）' : ''}`,
-        ok: !reason,
-      };
+      const cost = costText(game.ask('action.cost', tool));
+      hint = { text: reason || `${toolVerb(tool)} · ${cost}`, ok: !reason };
     }
     const old = shell.get().hint;
     if (old?.text !== hint?.text || old?.ok !== hint?.ok) shell.set({ hint });
@@ -307,17 +310,15 @@ export class VillageScene extends Phaser.Scene {
         this.scene.restart({ ...this.deps, map: MAPS[d.to] });
         return;
       }
-      if (f.type === 'plot.tilled')
-        (this.effects.tilled(d.x, d.y), platform.audio.play('hoe'), (plots = true));
-      else if (f.type === 'plot.sown')
-        (this.effects.sown(d.x, d.y), platform.audio.play('seed'), (plots = true));
-      else if (f.type === 'plot.watered')
-        (this.effects.watered(d.x, d.y), platform.audio.play('water'), (plots = true));
-      else if (f.type === 'crop.harvested')
-        (this.effects.harvested(d.x, d.y), platform.audio.play('harvest'), (plots = true));
-      else if (f.type === 'can.refilled')
-        (this.effects.refilled(d.x * TILE + 8, d.y * TILE + 8), platform.audio.play('refill'));
-      else if (f.type === 'home.worked') {
+      if (FEEDBACK[f.type]) {
+        const [effect, sound] = FEEDBACK[f.type];
+        this.effects[effect](d.x, d.y);
+        platform.audio.play(sound);
+        plots = true;
+      } else if (f.type === 'can.refilled') {
+        this.effects.refilled(d.x * TILE + 8, d.y * TILE + 8);
+        platform.audio.play('refill');
+      } else if (f.type === 'home.worked') {
         this.relook();
         this.retime(false);
       } else if (f.type === 'plot.cared' || f.type === 'weather.changed') {

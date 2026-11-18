@@ -1,3 +1,4 @@
+// 进度：导出、导入（先读一遍确认是能玩的存档再替换）、坏档时取回原档、重新开始。
 import { createGame } from '../port/game.js';
 export function saveActions({ game, shell, platform, here, stopSaving, loadProblem }) {
   let pending = null;
@@ -9,6 +10,22 @@ export function saveActions({ game, shell, platform, here, stopSaving, loadProbl
   return {
     saves() {
       show('');
+    },
+    reset() {
+      shell.set({
+        modal: {
+          kind: 'confirm',
+          title: '重新开始',
+          text: '要从春天的第一日重新来过吗？现在的进度会被清掉。',
+          yes: 'resetNow',
+          label: '重新开始',
+        },
+      });
+    },
+    resetNow() {
+      stopSaving();
+      platform.storage.clear();
+      location.reload();
     },
     exportSave() {
       if (here()) game.dispatch('person.place', here());

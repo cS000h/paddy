@@ -4,12 +4,7 @@ import { animateTiming } from './timing.js';
 import { TOOLS } from '../content/items.js';
 import { modalView } from './modals.js';
 import { toolIconUrl } from './icons.js';
-
-const esc = text =>
-  String(text).replace(
-    /[&<>"]/g,
-    ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch],
-  );
+import { esc } from './html.js';
 
 // 流水里不用特意告诉玩家的：干活花的体力（提示条上已经写了）、在行囊和橱柜之间挪东西。
 const MOVES = new Set(['装进行囊', '从行囊里拿出来']);
@@ -152,7 +147,7 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
 
   function renderModal(state) {
     el.modal.hidden = !state.modal;
-    el.modal.innerHTML = state.modal ? modalView(state.modal, game, esc, here()) : '';
+    el.modal.innerHTML = state.modal ? modalView(state.modal, game, here()) : '';
   }
 
   function renderShell(state) {
