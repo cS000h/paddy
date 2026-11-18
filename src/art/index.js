@@ -81,11 +81,29 @@ const OBJECT_LOOKS = { ...wildLooks };
 /** 某种物件除了平常的样子，还有哪几副样子。 */
 export const objectLooks = kind => Object.keys(OBJECT_LOOKS[kind] || {});
 
+// 照「场景与物件参考」里的样子，物件外沿描一道深色的边，放在地上才立得住。
+// 细碎的花草、浮在水面贴着地的、网眼镂空的不描，描了反而发闷。
+const NO_OUTLINE = new Set([
+  'flowers',
+  'reeds',
+  'lotus',
+  'stones',
+  'netRack',
+  'tree.willow',
+  'bamboo',
+]);
+
+function outlined({ grid, ax, ay }) {
+  const g = new Grid(grid.w + 2, grid.h + 2).blit(grid, 1, 1).outline(P.o0);
+  return { grid: g, ax: ax + 1, ay: ay + 1 };
+}
+
 /** 某种物件的第 n 个样子：{grid, ax, ay}。look 给了，就是它在那种情形下的样子。 */
 export function objectSprite(kind, variant = 0, look = null) {
   const make = look ? OBJECT_LOOKS[kind]?.[look] : OBJECT_MAKERS[kind];
   if (!make) throw new Error('没有这种物件的画法：' + kind + (look ? '@' + look : ''));
-  return make(101 + (variant % VARIANTS) * 37 + kind.length);
+  const sprite = make(101 + (variant % VARIANTS) * 37 + kind.length);
+  return NO_OUTLINE.has(kind) ? sprite : outlined(sprite);
 }
 
 /** 一个物件在地图上用第几个样子（由位置决定，所以每次都一样）。 */
