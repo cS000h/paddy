@@ -232,7 +232,12 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
         ),
         true,
       );
-      await p.locator('[data-do="book"]').click();
+      // 宽屏上“册子”就在右上；手机上收在“更多”里
+      if (session === desk) await p.locator('.vitals [data-do="book"]').click();
+      else {
+        await p.locator('[data-do="menu"]').click();
+        await p.locator('.modal [data-do="book"]').click();
+      }
       await p.locator('[data-do="bookTab"][data-tab="traits"]').click();
       assert.match(await p.locator('.sheet').textContent(), /慢热/);
       await p.locator('[data-do="bookTab"][data-tab="achievements"]').click();

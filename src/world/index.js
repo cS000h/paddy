@@ -51,6 +51,8 @@ export function createWorld(deps) {
   return {
     /** 操控的人此刻站在哪一格、面朝哪边；场景还没起来时是 null。 */
     heroAt: () => (scene()?.player ? scene().at() : null),
+    /** 操控的人头顶在画面上的位置（画面坐标）；面板把冒出来的字摆在这儿。场景没起来时是 null。 */
+    headOnScreen: () => (scene()?.player ? scene().headOnScreen() : null),
     scene,
     destroy() {
       offResize();

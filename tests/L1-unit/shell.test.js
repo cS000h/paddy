@@ -158,3 +158,20 @@ test('外壳共用的话：体力价钱、地里要不要照料、按设备说�
   assert.equal(careNote({ weeds: true, bugs: true }), '长了草，也生了虫');
   assert.notEqual(doWord(true), doWord(false));
 });
+
+test('摇杆手感：死区里不动；一推就走、推到六成是全速；方向不跳；拖出圈外圈跟着走', async () => {
+  const { stickState, STICK } = await import('../../src/shell/stick.js');
+  const o = { x: 100, y: 100 };
+  const speed = s => Math.hypot(s.move.x, s.move.y);
+  assert.equal(speed(stickState(o, { x: 105, y: 100 })), 0, '离按下的地方很近：当作没推');
+  const slight = stickState(o, { x: 100 + STICK.radius * 0.2, y: 100 });
+  assert.ok(speed(slight) >= 0.35 && speed(slight) < 0.5, '推一点就开始走');
+  assert.ok(Math.abs(speed(stickState(o, { x: 100, y: 100 + STICK.radius * 0.7 })) - 1) < 1e-9);
+  // 斜着推一点点：两个方向都还在（原来按 x、y 各去一段，斜推时一个方向会突然归零）
+  const diag = stickState(o, { x: 100 + 14, y: 100 + 9 });
+  assert.ok(diag.move.x > 0 && diag.move.y > 0);
+  // 拖出圈外：圈心挪过去，手指正好在圈边上；往回一拉立刻转向
+  const far = stickState(o, { x: 100 + STICK.radius * 3, y: 100 });
+  assert.equal(far.origin.x, 100 + STICK.radius * 2);
+  assert.ok(stickState(far.origin, { x: far.origin.x - 30, y: 100 }).move.x < 0);
+});

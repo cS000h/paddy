@@ -17,7 +17,8 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "art:sheet": "node tools/art-sheet.mjs",
-    "build:offline": "node tools/build-offline.mjs"
+    "build:offline": "node tools/build-offline.mjs",
+    "font:subset": "node tools/font-subset.mjs"
   },
   "dependencies": {
     "phaser": "^4.2.1"

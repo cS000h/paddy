@@ -1,20 +1,39 @@
-@import './inventory.css';
-/* 界面面板的样子：宣纸底、墨色字、朱砂点缀。世界在画布里，这里只管盖在上面的东西。 */
+@import './sheet.css';
+/* 界面的样子：月白的纸、天青的边、墨色的字，朱砂只用在印上。纸是半透明的，世界能透出来，
+   清一些、薄一些，不压着画面。常驻的几块在这里；各种小窗在 sheet.css。
+   不用媒体查询：手机竖着拿时画面是转过来的，布局变化看平台层设在 #app 上的
+   narrow（窄）、compact（矮，横着的手机）、tight（很矮，地址栏还占着一截）。 */
+
+/* 霞鹜文楷 GB 屏幕版，只裁了游戏用到的字（tools/font-subset.mjs），许可证见 fonts/OFL.txt */
+@font-face {
+  font-family: 'WenKai';
+  src: url('./fonts/wenkai.woff2') format('woff2');
+  font-display: swap;
+}
+
 :root {
-  --paper: #f6f1e3;
-  --paper-2: #ece4d0;
-  --paper-3: #ddd3ba;
-  --ink: #2b3436;
-  --ink-2: #55635d;
-  --ink-3: #8a958b;
-  --green: #6d935b;
-  --cinnabar: #b5462f;
-  --shadow: 0 2px 10px rgba(43, 52, 54, 0.18);
-  --serif: 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+  --moon: #f5f8f3; /* 月白：纸 */
+  --moon-a: rgba(245, 248, 243, 0.9); /* 半透明的纸：常驻的几块 */
+  --mist: #e2ebe5; /* 雾：凹下去的槽、空着的圈 */
+  --mist-2: #cfdcd4;
+  --line: rgba(94, 143, 128, 0.4); /* 天青的细边 */
+  --qing: #5e8f80; /* 青瓷：选中、主色 */
+  --ink: #22302c; /* 墨：字、主按钮 */
+  --ink-2: #4c5b56;
+  --ink-3: #8a9792;
+  --cinnabar: #b83f2b; /* 朱砂：印、快见底的数 */
+  --sprout: #6e9b5a; /* 力 */
+  --straw: #cf9f45; /* 饱 */
+  --water: #5a93ad; /* 水 */
+  --peach: #cf7b88; /* 心 */
+  --shadow: 0 6px 18px rgba(34, 48, 44, 0.16);
+  --font: 'WenKai', 'Kaiti SC', 'STKaiti', 'KaiTi', 'Noto Serif SC', serif;
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-l: env(safe-area-inset-left, 0px);
   --safe-r: env(safe-area-inset-right, 0px);
+  /* 印泥没吃匀的样子：当遮罩盖在印上，边上留几处斑驳 */
+  --stamp: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.6' numOctaves='3' seed='9'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -10 0 0 0 8.4'/%3E%3C/filter%3E%3Crect width='48' height='48' filter='url(%23s)'/%3E%3C/svg%3E");
 }
 
 * {
@@ -28,7 +47,8 @@ body {
   overflow: hidden;
   background: #cfdcb8;
   color: var(--ink);
-  font-family: var(--serif);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -66,22 +86,21 @@ body {
   transition: background-color 3s linear;
 }
 
+/* 画的四角淡淡地洇开一点，像画在纸上；上沿再浅一些，日期、身体那两块落在上面不显得生硬 */
 .paper {
   background:
-    radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(236, 228, 208, 0.5) 100%),
-    linear-gradient(to bottom, rgba(246, 241, 227, 0.55), transparent 16%);
+    radial-gradient(ellipse at 50% 46%, transparent 62%, rgba(226, 235, 229, 0.42) 100%),
+    linear-gradient(to bottom, rgba(245, 248, 243, 0.42), transparent 15%);
 }
 
 .veil {
-  background: var(--paper);
+  background: var(--moon);
   opacity: 0;
   transition: opacity 0.6s ease;
 }
 
 #ui {
   pointer-events: none;
-  padding: calc(10px + var(--safe-t)) calc(10px + var(--safe-r)) calc(10px + var(--safe-b))
-    calc(10px + var(--safe-l));
 }
 
 #ui > * {
@@ -92,22 +111,58 @@ button {
   font: inherit;
   color: inherit;
   cursor: pointer;
-  border: 1px solid rgba(43, 52, 54, 0.22);
-  background: var(--paper);
-  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 9px;
+  transition:
+    transform 0.12s,
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--qing);
+  outline-offset: 2px;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 .card {
-  background: rgba(246, 241, 227, 0.92);
-  border: 1px solid rgba(43, 52, 54, 0.16);
-  border-radius: 8px;
+  background: var(--moon-a);
+  border: 1px solid var(--line);
+  border-radius: 12px;
   box-shadow: var(--shadow);
 }
 
-/* 左上一列：日期和钟点、下一步、流水，从上往下排，谁高都不会叠在一起 */
+.pixel {
+  image-rendering: pixelated;
+  vertical-align: middle;
+}
+
+/* 一枚朱砂印：底是印泥，里面一圈细白边，边上斑驳 */
+.seal,
+.name-seal {
+  display: grid;
+  place-items: center;
+  background: var(--cinnabar);
+  color: #fff6ec;
+  box-shadow:
+    inset 0 0 0 2px var(--cinnabar),
+    inset 0 0 0 3.5px rgba(255, 246, 236, 0.85);
+  -webkit-mask: var(--stamp) center / 140% 140%;
+  mask: var(--stamp) center / 140% 140%;
+}
+
+/* —— 左上：日期、钟点、天气；底下一条“下一步” —— */
 #ui > .left {
   position: absolute;
-  top: calc(10px + var(--safe-t));
+  top: calc(8px + var(--safe-t));
   left: calc(10px + var(--safe-l));
   display: flex;
   flex-direction: column;
@@ -116,208 +171,632 @@ button {
   pointer-events: none;
 }
 
-.left > .date,
-.left > .next {
+.left > * {
   pointer-events: auto;
 }
 
 .date {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px 8px 8px;
+  gap: 9px;
+  padding: 5px 7px 5px 6px;
 }
 
-.seal {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 2px solid var(--cinnabar);
-  border-radius: 4px;
-  color: var(--cinnabar);
-  font-size: 20px;
-  font-weight: 700;
-  transform: rotate(-4deg);
+.date .seal {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  font-size: 19px;
+  transform: rotate(-5deg);
 }
 
-.date b {
+.when b {
   display: block;
   font-size: 15px;
-  letter-spacing: 0.08em;
+  font-weight: 400;
+  letter-spacing: 0.06em;
 }
 
-.date small {
+.when small {
+  display: block;
+  margin-top: 1px;
   color: var(--ink-2);
   font-size: 12px;
 }
 
-/* 右上：体力、铜钱、按钮 */
+.date .weather {
+  margin-left: 4px;
+  padding: 4px 11px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+
+.next {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  align-items: baseline;
+  max-width: 300px;
+  padding: 5px 13px;
+  text-align: left;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.next b {
+  color: var(--cinnabar);
+  font-size: 11.5px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+}
+
+.next small {
+  grid-column: 1 / -1;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  color: var(--ink-2);
+  font-size: 12px;
+  transition:
+    max-height 0.35s ease,
+    opacity 0.35s ease;
+}
+
+.next.open small {
+  max-height: 4.5em;
+  margin-top: 2px;
+  opacity: 1;
+}
+
+/* —— 右上：身体四样、铜钱、几个按钮 —— */
 .vitals {
   position: absolute;
-  top: calc(10px + var(--safe-t));
+  top: calc(8px + var(--safe-t));
   right: calc(10px + var(--safe-r));
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
+  gap: 6px;
+  padding: 5px 6px 5px 9px;
   font-size: 13px;
 }
 
-.bar {
-  width: 86px;
-  height: 8px;
-  border-radius: 4px;
-  background: var(--paper-3);
-  overflow: hidden;
+/* 一个圈一样：圈里一个字，圈的颜色走到哪儿就是还剩多少；快见底时变成朱砂色，慢慢呼吸 */
+.gauge {
+  --v: 50;
+  --c: var(--sprout);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, var(--moon) 74%, transparent 76% 100%),
+    conic-gradient(var(--c) calc(var(--v) * 1%), var(--mist-2) 0);
+  color: var(--ink-2);
+  font-size: 12.5px;
 }
 
-.bar i {
-  display: block;
-  height: 100%;
-  background: var(--green);
-  transition: width 0.25s ease;
+.gauge i {
+  font-style: normal;
 }
 
-.bar.low i {
-  background: var(--cinnabar);
+.gauge.hunger {
+  --c: var(--straw);
 }
 
-.pixel {
-  image-rendering: pixelated;
+.gauge.thirst {
+  --c: var(--water);
+}
+
+.gauge.mood {
+  --c: var(--peach);
+}
+
+.gauge.low {
+  --c: var(--cinnabar);
+  color: var(--cinnabar);
+  animation: breathe 1.8s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.vigor {
+  min-width: 2.2ch;
+  margin: 0 4px 0 -2px;
+  font-size: 14px;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.buff {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--qing);
+  font-size: 11.5px;
+}
+
+.coins {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.menu-btn {
+  min-height: 30px;
+  padding: 3px 9px;
+  border-color: transparent;
+  background: transparent;
+  font-size: 13.5px;
+}
+
+.menu-btn:hover,
+.menu-btn:active {
+  background: var(--mist);
+}
+
+/* “更多”：三道墨线 */
+.menu-btn.more span {
+  display: inline-block;
+  width: 15px;
+  height: 2px;
+  margin: 0 2px;
+  border-radius: 1px;
+  background: var(--ink-2);
+  box-shadow:
+    0 -5px 0 var(--ink-2),
+    0 5px 0 var(--ink-2);
   vertical-align: middle;
 }
 
-.vitals button {
-  padding: 4px 9px;
-  font-size: 13px;
-}
-
-/* 下方正中：工具栏和它上面的提示条 */
+/* —— 下方正中：工具栏 —— */
 .toolbar {
   position: absolute;
   left: 50%;
-  bottom: calc(12px + var(--safe-b));
+  bottom: calc(10px + var(--safe-b));
   transform: translateX(-50%);
   display: flex;
+  align-items: center;
   gap: 6px;
-  padding: 6px;
+  padding: 5px 8px;
+  background: var(--moon-a);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
 }
 
-.toolbar button {
+.toolbar [data-tool] {
   position: relative;
-  width: 58px;
-  height: 62px;
-  padding: 4px 0 0;
-  background: var(--paper-2);
-  font-size: 12px;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.6);
 }
 
-.toolbar button.on {
-  background: var(--paper);
-  border-color: var(--cinnabar);
-  box-shadow: 0 0 0 2px rgba(181, 70, 47, 0.22);
-  transform: translateY(-3px);
+.toolbar [data-tool] img {
+  width: 28px;
+  height: 28px;
 }
 
-.toolbar img {
-  display: block;
-  width: 32px;
-  height: 32px;
-  margin: 0 auto 2px;
+.toolbar .name {
+  font-size: 11.5px;
+  line-height: 1.2;
+  color: var(--ink-2);
 }
 
-.toolbar em {
+.toolbar [data-tool].on {
+  background: var(--moon);
+  border: 2px solid var(--qing);
+  box-shadow: 0 6px 12px rgba(94, 143, 128, 0.28);
+  transform: translateY(-4px);
+}
+
+.toolbar .key {
   position: absolute;
   top: 2px;
-  left: 5px;
+  left: 6px;
   color: var(--ink-3);
   font-size: 10px;
   font-style: normal;
 }
 
-.toolbar i {
+.toolbar .badge {
   position: absolute;
-  top: 2px;
-  right: 5px;
-  color: var(--ink-2);
+  top: -5px;
+  right: -5px;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--moon);
   font-size: 11px;
   font-style: normal;
+  line-height: 18px;
+  text-align: center;
 }
 
+.toolbar .badge:empty {
+  display: none;
+}
+
+.toolbar .sep {
+  width: 1px;
+  height: 30px;
+  margin: 0 2px;
+  background: var(--line);
+}
+
+.toolbar .chip {
+  position: relative;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 13.5px;
+}
+
+/* 面前那格地长了草、生了虫：“看地”点上一点朱砂 */
+.toolbar .chip.alert {
+  border-color: var(--cinnabar);
+  color: var(--cinnabar);
+}
+
+.toolbar .chip.alert::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--cinnabar);
+}
+
+/* 键鼠时：工具栏上方一句提示，后面是“空格” */
 .hint {
   position: absolute;
   left: 50%;
-  bottom: calc(96px + var(--safe-b));
+  bottom: calc(92px + var(--safe-b));
   transform: translateX(-50%);
-  padding: 4px 12px;
+  padding: 5px 14px;
   border-radius: 999px;
-  background: rgba(43, 52, 54, 0.78);
-  color: var(--paper);
-  font-size: 13px;
-  white-space: nowrap;
-  transition: opacity 0.15s;
-}
-
-.hint.no {
-  background: rgba(127, 139, 130, 0.82);
-}
-
-.hint kbd {
-  margin-left: 6px;
-  padding: 0 5px;
-  border: 1px solid rgba(246, 241, 227, 0.5);
-  border-radius: 3px;
-  font: inherit;
-  font-size: 11px;
-}
-
-.toast {
-  position: absolute;
-  left: 50%;
-  top: 22%;
-  transform: translateX(-50%);
-  max-width: 80vw;
-  padding: 8px 16px;
-  background: rgba(246, 241, 227, 0.96);
-  border: 1px solid rgba(43, 52, 54, 0.2);
-  border-radius: 6px;
-  box-shadow: var(--shadow);
+  background: rgba(34, 48, 44, 0.8);
+  color: var(--moon);
   font-size: 14px;
-  opacity: 0;
-  transition: opacity 0.2s;
+  white-space: nowrap;
   pointer-events: none !important;
 }
 
-.toast.show {
-  opacity: 1;
+.hint.no {
+  background: rgba(122, 134, 128, 0.85);
 }
 
-/* 手记：宽屏靠右，窄屏从底下升起 */
+.hint kbd {
+  margin-left: 8px;
+  padding: 0 6px;
+  border: 1px solid rgba(245, 248, 243, 0.5);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 11.5px;
+}
+
+/* —— 触屏：浮动的摇杆圈（只画，不接手指），右下一枚“做”的印 —— */
+.stick {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 116px;
+  height: 116px;
+  margin: -58px 0 0 -58px;
+  border: 2px solid rgba(245, 248, 243, 0.85);
+  border-radius: 50%;
+  background: rgba(34, 48, 44, 0.14);
+  pointer-events: none !important;
+}
+
+/* 没在用：在拇指顺手的地方留一个淡淡的虚线圈 */
+.stick:not(.live) {
+  left: max(78px, 15%);
+  top: 64%;
+  border-style: dashed;
+  background: rgba(245, 248, 243, 0.1);
+  opacity: 0.5;
+  transform: none !important;
+  transition: opacity 0.3s;
+}
+
+.stick i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  margin: -24px;
+  border-radius: 50%;
+  background: rgba(245, 248, 243, 0.94);
+  box-shadow:
+    inset 0 0 0 2px var(--qing),
+    0 2px 8px rgba(34, 48, 44, 0.3);
+}
+
+.stick:not(.live) i {
+  transform: none !important;
+  opacity: 0.7;
+}
+
+/* 那枚印：刻着按下去会做的事（两个字竖着排），按下去像盖章 */
+.do {
+  position: absolute;
+  right: calc(20px + var(--safe-r));
+  bottom: calc(20px + var(--safe-b));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 74px;
+  height: 74px;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: var(--cinnabar);
+  color: #fff6ec;
+  box-shadow:
+    inset 0 0 0 3px var(--cinnabar),
+    inset 0 0 0 5px rgba(255, 246, 236, 0.9),
+    0 6px 16px rgba(120, 38, 22, 0.32);
+  transform: rotate(-4deg);
+  -webkit-mask: var(--stamp) center / 150% 150%;
+  mask: var(--stamp) center / 150% 150%;
+  transition:
+    transform 0.1s,
+    filter 0.2s,
+    opacity 0.2s;
+}
+
+.do .pair {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1.06;
+}
+
+.do i {
+  font-style: normal;
+}
+
+.do .single {
+  font-size: 32px;
+}
+
+.do:active {
+  transform: rotate(-4deg) scale(0.88);
+}
+
+.do.no {
+  filter: grayscale(0.8) brightness(1.15);
+  opacity: 0.78;
+}
+
+.do.idle {
+  opacity: 0.7;
+}
+
+/* —— 冒出来的字（captions.js）—— */
+.captions {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none !important;
+}
+
+.caption.head {
+  position: absolute;
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--moon);
+  box-shadow: 0 3px 10px rgba(34, 48, 44, 0.18);
+  color: var(--ink);
+  font-size: 14.5px;
+  white-space: nowrap;
+  transform: translate(-50%, -100%);
+  animation: say 2.6s ease both;
+}
+
+.caption.head::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--moon);
+  transform: rotate(45deg);
+}
+
+@keyframes say {
+  0% {
+    opacity: 0;
+    translate: 0 6px;
+  }
+  10%,
+  80% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+}
+
+/* 长的旁白：横在画面下方，两头淡进纸里，像题在画上的一行字 */
+.caption.band {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100px + var(--safe-b));
+  max-width: min(680px, 80%);
+  padding: 9px 56px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(245, 248, 243, 0.95) 15%,
+    rgba(245, 248, 243, 0.95) 85%,
+    transparent
+  );
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.65;
+  text-align: center;
+  transform: translateX(-50%);
+  animation: band 3.8s ease both;
+}
+
+@keyframes band {
+  0% {
+    opacity: 0;
+    letter-spacing: 0.12em;
+  }
+  12%,
+  85% {
+    opacity: 1;
+    letter-spacing: 0.02em;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 数的变化从人身边飘起来 */
+.float {
+  position: absolute;
+  color: #3e7a44;
+  font-size: 13.5px;
+  white-space: nowrap;
+  text-shadow:
+    0 0 2px #fff,
+    0 0 3px #fff,
+    0 0 5px #fff;
+  transform: translateX(-50%);
+  animation: float-up 1.8s ease-out both;
+}
+
+.float.down {
+  color: #8a4c43;
+}
+
+@keyframes float-up {
+  0% {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -28px;
+  }
+}
+
+/* 达成一项成就：正中盖一个印 */
+.award-stamp {
+  position: absolute;
+  top: 28%;
+  left: 50%;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px 10px 10px;
+  border: 2px solid var(--cinnabar);
+  border-radius: 10px;
+  background: var(--moon);
+  box-shadow: var(--shadow);
+  color: var(--cinnabar);
+  transform: translateX(-50%) rotate(-5deg);
+  animation: stamp-in 3.2s both;
+  pointer-events: none !important;
+}
+
+.award-stamp span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+  background: var(--cinnabar);
+  color: #fff6ec;
+  font-size: 21px;
+}
+
+.award-stamp b {
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+}
+
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    scale: 1.5;
+  }
+  12%,
+  80% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* —— 手记：宽屏靠右，窄屏从底下升起 —— */
 .journal {
   position: absolute;
-  top: calc(64px + var(--safe-t));
+  top: calc(60px + var(--safe-t));
   right: calc(10px + var(--safe-r));
-  width: 250px;
-  max-height: calc(100% - 180px);
+  width: 252px;
+  max-height: calc(100% - 170px);
   overflow: auto;
-  padding: 14px 16px;
-  font-size: 13px;
-  line-height: 1.7;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  line-height: 1.75;
 }
 
 .journal h2 {
   margin: 0 0 6px;
-  font-size: 16px;
-  letter-spacing: 0.2em;
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: 0.3em;
 }
 
 .journal h3 {
   margin: 12px 0 4px;
   padding-top: 8px;
-  border-top: 1px dashed rgba(43, 52, 54, 0.2);
+  border-top: 1px dashed var(--mist-2);
+  color: var(--qing);
   font-size: 13px;
-  color: var(--ink-2);
+  font-weight: 400;
 }
 
 .journal ul {
@@ -340,208 +819,212 @@ button {
 .journal li small {
   display: block;
   color: var(--ink-3);
-  font-size: 11px;
+  font-size: 11.5px;
+}
+
+.journal button {
+  margin: 12px 6px 0 0;
+  padding: 4px 11px;
+  font-size: 12.5px;
 }
 
 .journal .danger {
-  margin-top: 12px;
-  padding: 3px 10px;
-  color: var(--ink-2);
-  font-size: 12px;
-}
-
-/* 对话和各种小窗：一张从底下展开的宣纸 */
-.modal {
-  z-index: 20;
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 16px 16px calc(24px + var(--safe-b));
-  background: rgba(43, 52, 54, 0.12);
-}
-
-.sheet {
-  width: min(560px, 100%);
-  padding: 18px 20px 16px;
-  background: var(--paper);
-  border: 1px solid rgba(43, 52, 54, 0.2);
-  border-top: 3px solid var(--ink-2);
-  border-radius: 4px 4px 8px 8px;
-  box-shadow: 0 8px 30px rgba(43, 52, 54, 0.25);
-  animation: unroll 0.22s ease-out;
-}
-
-@keyframes unroll {
-  from {
-    transform: translateY(18px);
-    opacity: 0;
-  }
-}
-
-.sheet h2 {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin: 0 0 8px;
-  font-size: 17px;
-}
-
-.sheet h2 small {
   color: var(--ink-3);
-  font-size: 12px;
-  font-weight: 400;
 }
 
-.sheet p {
-  margin: 0 0 10px;
-  font-size: 15px;
-  line-height: 1.9;
+/* 有小窗的时候，常驻的几块让开：整幅的小窗盖住右边，对话盖住下边 */
+#ui.modal-open .toolbar,
+#ui.modal-open .next,
+#ui.modal-open .hint {
+  opacity: 0;
+  pointer-events: none !important;
 }
 
-.sheet .row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
+#ui[data-place='side'] .vitals,
+#ui[data-place='center'] .vitals,
+#ui[data-place='center'] .left {
+  opacity: 0;
+  pointer-events: none !important;
 }
 
-.sheet button {
-  padding: 7px 16px;
-  font-size: 14px;
+.toolbar,
+.next,
+.vitals,
+.left {
+  transition: opacity 0.2s;
 }
 
-.sheet button.main {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--paper);
-}
-
-.sheet button:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-/* 触屏：左下摇杆，右下一个“做”的按钮 */
-.stick {
-  position: absolute;
-  left: calc(18px + var(--safe-l));
-  bottom: calc(22px + var(--safe-b));
-  width: 104px;
-  height: 104px;
-  border-radius: 50%;
-  background: rgba(246, 241, 227, 0.4);
-  border: 1px solid rgba(43, 52, 54, 0.25);
-}
-
-.stick i {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 44px;
-  height: 44px;
-  margin: -22px;
-  border-radius: 50%;
-  background: rgba(43, 52, 54, 0.55);
-}
-
-.do {
-  position: absolute;
-  right: calc(20px + var(--safe-r));
-  bottom: calc(30px + var(--safe-b));
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  background: rgba(181, 70, 47, 0.86);
-  border-color: rgba(127, 48, 37, 0.9);
-  color: var(--paper);
-  font-size: 17px;
-}
-
-[hidden] {
-  display: none !important;
-}
-
-/* 窄窗口（宽不到 720）：只会出现在电脑上把窗口拉窄的时候，手机一律是横屏。
-   这里不用媒体查询：画面可能是转过来的，要以平台层量出来的大小为准。 */
+/* —— 窄窗口（宽不到 720）：只会出现在电脑上把窗口拉窄的时候，手机一律是横屏 —— */
 .narrow .vitals {
-  top: calc(64px + var(--safe-t));
+  top: calc(58px + var(--safe-t));
   right: auto;
   left: calc(10px + var(--safe-l));
-  gap: 8px;
-  padding: 6px 8px;
 }
 
-.narrow .bar {
-  width: 56px;
+.narrow .roomy {
+  display: none;
 }
 
 .narrow .journal {
   top: auto;
   right: 10px;
   left: 10px;
-  bottom: calc(86px + var(--safe-b));
+  bottom: calc(84px + var(--safe-b));
   width: auto;
   max-height: 55%;
-  background: rgba(246, 241, 227, 0.98);
+  background: var(--moon);
 }
 
-/* 矮屏幕（高不到 520）：横着的手机。面板收紧，手记默认收起。 */
+/* —— 矮屏幕（高不到 520）：横着的手机，面板收紧 —— */
 .compact .date {
-  padding: 5px 10px 5px 6px;
+  padding: 4px 6px 4px 5px;
 }
 
-.compact .seal {
-  width: 28px;
-  height: 28px;
+.compact .date .seal {
+  width: 27px;
+  height: 27px;
   font-size: 16px;
 }
 
-.compact .date b {
-  font-size: 13px;
+.compact .when b {
+  font-size: 13.5px;
+}
+
+.compact .when small {
+  font-size: 11px;
+}
+
+.compact .date .weather {
+  padding: 3px 9px;
+  font-size: 11.5px;
+}
+
+.compact .next {
+  max-width: 250px;
+  padding: 3px 11px;
+  font-size: 12.5px;
 }
 
 .compact .vitals {
-  padding: 5px 8px;
+  gap: 4px;
+  padding: 4px 4px 4px 7px;
+  font-size: 12.5px;
+}
+
+.compact .gauge {
+  width: 27px;
+  height: 27px;
+  font-size: 11.5px;
+}
+
+.compact .roomy,
+.compact .buff {
+  display: none;
+}
+
+.compact .menu-btn {
+  min-height: 28px;
+  padding: 2px 7px;
+  font-size: 12.5px;
 }
 
 .compact .toolbar {
   bottom: calc(8px + var(--safe-b));
-  padding: 4px;
+  gap: 5px;
+  padding: 4px 6px;
+  border-radius: 999px;
 }
 
-.compact .toolbar button {
-  width: 50px;
-  height: 52px;
+.compact .toolbar [data-tool] {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
 }
 
-.compact .toolbar img {
-  width: 28px;
-  height: 28px;
+.compact .toolbar [data-tool] img {
+  width: 26px;
+  height: 26px;
+}
+
+.compact .toolbar .name,
+.compact .toolbar .key {
+  display: none;
+}
+
+.compact .toolbar .chip {
+  height: 32px;
+  padding: 0 9px;
+  font-size: 12.5px;
 }
 
 .compact .hint {
-  bottom: calc(72px + var(--safe-b));
+  bottom: calc(70px + var(--safe-b));
 }
 
-.compact .journal {
-  top: calc(52px + var(--safe-t));
-  width: 232px;
-  max-height: calc(100% - 132px);
-  background: rgba(246, 241, 227, 0.98);
+.compact .do {
+  right: calc(16px + var(--safe-r));
+  bottom: calc(16px + var(--safe-b));
+  width: 66px;
+  height: 66px;
+}
+
+.compact .do .pair {
+  font-size: 20px;
 }
 
 .compact .stick {
-  width: 96px;
-  height: 96px;
+  width: 108px;
+  height: 108px;
+  margin: -54px 0 0 -54px;
 }
 
-.compact .modal {
-  padding-bottom: calc(10px + var(--safe-b));
+.compact .caption.band {
+  bottom: calc(70px + var(--safe-b));
+  font-size: 15px;
 }
 
-.compact .sheet {
-  padding: 12px 16px 10px;
+.compact .journal {
+  top: calc(48px + var(--safe-t));
+  width: 236px;
+  max-height: calc(100% - 120px);
+  background: var(--moon);
+}
+
+/* 很矮（不到 360）：只剩三百来像素高，“下一步”只留一行，工具栏再小一号 */
+.tight #ui > .left {
+  top: calc(6px + var(--safe-t));
+  gap: 4px;
+}
+
+.tight .vitals {
+  top: calc(6px + var(--safe-t));
+}
+
+.tight .next.open small {
+  max-height: 0;
+  opacity: 0;
+}
+
+.tight .toolbar [data-tool] {
+  width: 42px;
+  height: 42px;
+}
+
+.tight .toolbar [data-tool] img {
+  width: 24px;
+  height: 24px;
+}
+
+.tight .do {
+  width: 60px;
+  height: 60px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

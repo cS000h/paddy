@@ -1,14 +1,16 @@
-// 界面面板：日期、身体（体力、饱、水、心情）、工具栏、提示条、流水、手记、各种小窗、触屏的摇杆和按钮。
+// 界面面板：日期、身体、工具栏、提示、手记、各种小窗、触屏的摇杆圈和那枚“做”的印、冒出来的字。
 // 面板不改世界：要做事就发意图或调用 actions（由 app 提供），要显示就问端口。
-// 这个文件只管接线；常驻的几块在 hud.js，手记在 journal.js，小窗在 modals.js，摇杆在 stick.js。
+// 这个文件只管接线；常驻的几块在 hud.js，手记在 journal.js，小窗在 modals.js，
+// 摇杆圈在 stick.js，冒出来的字在 captions.js。
 import { animateTiming } from './timing.js';
-import { modalView, brokenSheet, closesOnBackdrop } from './modals.js';
-import { HUD_HTML, renderHud, syncToolbar } from './hud.js';
+import { modalView, brokenSheet, closesOnBackdrop, placementOf } from './modals.js';
+import { HUD_HTML, renderHud, syncToolbar, syncStamp } from './hud.js';
 import { journalView, nextStepView } from './journal.js';
 import { bindStick } from './stick.js';
+import { createCaptions, typeOut } from './captions.js';
 import { esc } from './html.js';
 
-// 流水里不用特意告诉玩家的：干活花的体力（提示条上已经写了）、在行囊和橱柜之间挪东西。
+// 不必飘出来的流水：干活花的体力（印上和提示条上已经写了）、在行囊和橱柜之间挪东西。
 const MOVES = new Set(['装进行囊', '从行囊里拿出来']);
 const worthSaying = e => {
   if (e.k === 'energy') return e.d > 0;
@@ -26,6 +28,7 @@ const worthSaying = e => {
  * @param {object} deps.platform 平台
  * @param {object} deps.actions 按钮名字 → 做什么（app 提供）
  * @param {() => object|undefined} deps.here 操控的人此刻站在哪一格
+ * @param {() => ({x: number, y: number}|null)} [deps.spot] 操控的人头顶在画面上的位置
  * @param {(error: unknown, where: string) => void} [deps.report] 面板里出错交给谁（默认抛出）
  */
 export function createPanels({
@@ -36,6 +39,7 @@ export function createPanels({
   platform,
   actions,
   here,
+  spot = () => null,
   report = error => {
     throw error;
   },
@@ -44,57 +48,82 @@ export function createPanels({
     <aside class="card journal" data-id="journal" hidden></aside>
     <div class="hint" data-id="hint" hidden></div>
     <div class="stick" data-id="stick" hidden><i></i></div>
-    <button class="do" data-id="do" hidden>做</button>
-    <div class="toast" data-id="toast"></div>
+    <button class="do" data-id="do" hidden></button>
     <div class="modal" data-id="modal" hidden></div>`;
   const el = Object.fromEntries(
     [...root.querySelectorAll('[data-id]')].map(node => [node.dataset.id, node]),
   );
   const sky = document.getElementById('sky');
   const veil = document.getElementById('veil');
+  const captions = createCaptions(root, spot);
   const small = profile => profile.narrow || profile.compact;
   const touch = () => platform.device.profile().touch;
   let journalOpen = !small(platform.device.profile());
-  let toastTimer = 0;
   let seenLedger = game.ask('ledger').at(-1)?.seq || 0;
   let seed = shell.get().seed;
+  let shownModal = null; // 画在纸上的是哪一个小窗（同一个就不重画，免得滚动位置跳回顶上）
+  let finishTyping = () => {};
+  let nextTimer = 0;
+
+  /** 字变了才换，不变就不碰 DOM。 */
+  const fill = (node, html) => {
+    if (node.innerHTML !== html) node.innerHTML = html;
+  };
 
   // 常驻的几块，加上手记（开着时）或左上角的“下一步”（合着时）。
   function renderAll() {
-    renderHud(el, { game, shell, platform });
-    if (journalOpen) el.journal.innerHTML = journalView(game, touch());
+    renderHud(el, { game, shell });
+    if (journalOpen) fill(el.journal, journalView(game, touch()));
     el.journal.hidden = !journalOpen;
     const next = journalOpen ? '' : nextStepView(game, touch());
     el.next.hidden = !next;
-    el.next.innerHTML = next;
+    fill(el.next, next);
   }
 
-  // 流水：上一条命令之后新记的几笔，在日期下面一行行冒出来，过一会儿自己淡掉。
+  // “下一步”：刚换了目标时连怎么做一起说，过一会儿收成一行；点一下再展开。
+  function openNext() {
+    el.next.classList.add('open');
+    clearTimeout(nextTimer);
+    nextTimer = setTimeout(() => el.next.classList.remove('open'), 9000);
+  }
+
+  // 流水：上一条命令之后新记的几笔，从人头顶飘起来，一两秒就散。
   function renderFeed() {
     const fresh = game.ask('ledger', seenLedger);
     if (!fresh.length) return;
     seenLedger = fresh.at(-1).seq;
-    for (const entry of fresh.filter(worthSaying).slice(-4)) {
-      const line = document.createElement('p');
-      line.className = entry.d > 0 || entry.k.startsWith('buff:') ? 'up' : 'down';
-      line.innerHTML = `<b>${esc(entry.text)}</b>${entry.why ? esc(entry.why) : ''}`;
-      el.feed.append(line);
-      setTimeout(() => line.classList.add('gone'), 2600);
-      setTimeout(() => line.remove(), 3200);
-    }
-    while (el.feed.children.length > 5) el.feed.firstElementChild.remove();
+    const said = fresh.filter(worthSaying).slice(-3);
+    captions.float(said.map(e => ({ text: e.text, up: e.d > 0 || e.k.startsWith('buff:') })));
   }
 
-  // 小窗画不出来时，换一张说明的纸，玩家能关掉它接着玩；错交给 report
-  function renderModal(state) {
-    el.modal.hidden = !state.modal;
-    if (!state.modal) return void (el.modal.innerHTML = '');
+  function renderModal(state, force = false) {
+    const modal = state.modal;
+    root.classList.toggle('modal-open', !!modal);
+    root.dataset.place = modal ? placementOf(modal) : '';
+    el.modal.hidden = !modal;
+    if (!modal) {
+      shownModal = null;
+      finishTyping();
+      return void (el.modal.innerHTML = '');
+    }
+    if (modal === shownModal && !force) return;
+    const sameLine = shownModal?.kind === modal.kind && shownModal?.line === modal.line;
+    shownModal = modal;
+    const scroller = el.modal.querySelector('.sheet');
+    const keep = force && scroller ? scroller.scrollTop : 0;
     try {
-      el.modal.innerHTML = modalView(state.modal, game, here());
+      el.modal.className = 'modal ' + placementOf(modal);
+      el.modal.innerHTML = modalView(modal, game, here());
     } catch (error) {
       el.modal.innerHTML = brokenSheet();
-      report(error, 'panels:' + state.modal.kind);
+      report(error, 'panels:' + modal.kind);
+      return;
     }
+    if (keep) el.modal.querySelector('.sheet').scrollTop = keep;
+    // 说话的那一句一个字一个字地出来；同一句重画时不再重来
+    const say = el.modal.querySelector('.say');
+    finishTyping();
+    finishTyping = say && !sameLine ? typeOut(say) : () => {};
   }
 
   function renderShell(state) {
@@ -102,12 +131,13 @@ export function createPanels({
     veil.style.opacity = state.veil;
     const drawer = journalOpen && platform.device.profile().narrow;
     el.stick.hidden = el.do.hidden = !touch() || !!state.modal || drawer;
-    el.hint.hidden = !state.hint || !!state.modal;
+    el.hint.hidden = !state.hint || !!state.modal || touch();
     if (state.hint) {
       el.hint.className = 'hint' + (state.hint.ok ? '' : ' no');
-      el.hint.innerHTML =
-        esc(state.hint.text) + (state.hint.ok && !touch() ? '<kbd>空格</kbd>' : '');
+      const html = esc(state.hint.text) + (state.hint.ok ? '<kbd>空格</kbd>' : '');
+      fill(el.hint, html);
     }
+    syncStamp(el.do, state.hint);
     syncToolbar(el, state);
     renderModal(state);
   }
@@ -116,35 +146,9 @@ export function createPanels({
   function renderToast(state) {
     if (!state.toast || state.toast === lastToast) return;
     lastToast = state.toast;
-    el.toast.textContent = state.toast.text;
-    el.toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(
-      () => el.toast.classList.remove('show'),
-      Math.max(1800, state.toast.text.length * 110),
-    );
+    captions.say(state.toast.text);
   }
 
-  // 点击：按钮上写着 data-do（做什么）或 data-tool（选哪件工具）
-  root.addEventListener('click', event => {
-    const button = event.target.closest('button');
-    if (!button || button.disabled) return;
-    platform.audio.unlock();
-    if (button.dataset.tool) return intents.emit('tool', { id: button.dataset.tool });
-    const what = button.dataset.do;
-    if (what === 'journal') {
-      journalOpen = !journalOpen;
-      renderAll();
-      return renderShell(shell.get());
-    }
-    if (what === 'mute') {
-      platform.audio.setMuted(!platform.audio.muted());
-      return renderAll();
-    }
-    if (what === 'close') return shell.set({ modal: null });
-    if (what && actions[what]) return run(() => actions[what](button.dataset), what);
-    return undefined;
-  });
   // 按钮要做的事出错（包括 async 的），交给 report，不让它变成页面上没人接的错
   function run(fn, what) {
     try {
@@ -155,13 +159,63 @@ export function createPanels({
       report(error, 'action:' + what);
     }
   }
+
+  // 只和这块屏幕有关的几件事，面板自己办：开合手记、声音、全屏、菜单、看身上的数
+  const LOCAL = {
+    journal() {
+      journalOpen = !journalOpen;
+      if (shell.get().modal?.kind === 'menu') shell.set({ modal: null });
+      renderAll();
+      renderShell(shell.get());
+    },
+    mute() {
+      platform.audio.setMuted(!platform.audio.muted());
+      LOCAL.menu();
+    },
+    async fullscreen() {
+      shell.set({ modal: null });
+      await platform.fullscreen.toggle();
+    },
+    menu() {
+      const fs = platform.fullscreen;
+      shell.set({
+        modal: {
+          kind: 'menu',
+          muted: platform.audio.muted(),
+          fullscreen: fs.available() ? fs.active() : null,
+        },
+      });
+    },
+    dismiss: () => shell.set({ modal: null }),
+    close: () => shell.set({ modal: null }),
+    next: openNext,
+    vital({ vital }) {
+      const node = el[vital];
+      if (node) shell.toast(node.getAttribute('title'));
+    },
+  };
+
+  // 点击：按钮上写着 data-do（做什么）或 data-tool（选哪件工具）
+  root.addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (!button || button.disabled) {
+      // 点在对话框里（不是按钮）：那句话还在一个字一个字地出，就让它一下子出完
+      if (event.target.closest('.sheet.dialogue')) finishTyping();
+      return;
+    }
+    platform.audio.unlock();
+    if (button.dataset.tool) return intents.emit('tool', { id: button.dataset.tool });
+    const what = button.dataset.do;
+    if (LOCAL[what]) return run(() => LOCAL[what](button.dataset), what);
+    if (what && actions[what]) return run(() => actions[what](button.dataset), what);
+    return undefined;
+  });
   // 点小窗外面的空白处也能关掉（手机上长的小窗不用滚到底找按钮）；开局的选择除外。
   el.modal.addEventListener('click', event => {
     const modal = shell.get().modal;
     if (event.target === el.modal && modal && closesOnBackdrop(modal)) shell.set({ modal: null });
   });
   el.do.addEventListener('click', () => intents.emit('act'));
-  bindStick(el.stick, intents, platform);
 
   // 有小窗的时候：确认键按主按钮，取消键关掉
   const offAct = intents.on('act', () => {
@@ -169,23 +223,28 @@ export function createPanels({
       (el.modal.querySelector('button.main') || el.modal.querySelector('button'))?.click();
   });
   const offCancel = intents.on('cancel', () => shell.get().modal && shell.set({ modal: null }));
+  let lastNext = '';
 
   const offs = [
     animateTiming(root, shell),
     offAct,
     offCancel,
-    // 世界变了：重画常驻的面板、冒出新的流水；开着的小窗也跟着重画（里面的数可能变了）
+    bindStick(el.stick, intents),
+    // 世界变了：重画常驻的面板、飘出新的流水；开着的小窗也跟着重画（里面的数可能变了）
     game.onCommit(facts => {
       for (const f of facts.filter(f => f.type === 'achievement.earned')) {
         const stamp = document.createElement('div');
         stamp.className = 'award-stamp';
-        stamp.textContent = '印 · ' + f.data.name;
+        stamp.innerHTML = `<span>印</span><b>${esc(f.data.name)}</b>`;
         root.append(stamp);
         setTimeout(() => stamp.remove(), 3200);
       }
       renderAll();
       renderFeed();
-      if (shell.get().modal) renderModal(shell.get());
+      const goal = el.next.textContent;
+      if (goal && goal !== lastNext) openNext();
+      lastNext = goal;
+      if (shell.get().modal) renderModal(shell.get(), true);
     }),
     shell.subscribe(state => {
       // 换了菜种，工具栏上那一格的图和数也要换
@@ -205,10 +264,13 @@ export function createPanels({
   ];
   renderAll();
   renderShell(shell.get());
+  lastNext = el.next.textContent;
+  if (lastNext) openNext();
   return {
     refresh: renderAll,
     destroy() {
       offs.forEach(off => off());
+      captions.destroy();
       root.innerHTML = '';
     },
   };

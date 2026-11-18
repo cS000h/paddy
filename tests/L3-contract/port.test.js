@@ -35,6 +35,7 @@ const COMMANDS = [
   'sleep',
   'talk',
   'travel',
+  'travel.to',
   'market.visit',
   'market.buy',
   'market.sell',

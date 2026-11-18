@@ -135,6 +135,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   };
 
   function travel() {
+    if (chance(0.3)) return send('travel.to', { to: pick(Object.keys(MAPS)), at: here() });
     const doors = layout(hero().map).things.filter(t => t.to);
     if (doors.length) {
       const d = pick(doors);

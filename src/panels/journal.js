@@ -34,5 +34,5 @@ export function journalView(game, touch) {
 export function nextStepView(game, touch) {
   const next = game.ask('guide').find(g => !g.done);
   if (!next) return '';
-  return `<b>下一步</b>${esc(next.text)}<small>${esc(hintOf(next, touch))}</small>`;
+  return `<b>下一步</b><span>${esc(next.text)}</span><small>${esc(hintOf(next, touch))}</small>`;
 }

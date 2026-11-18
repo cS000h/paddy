@@ -2,6 +2,8 @@
 // 这样将来换下一代接班时，只要把 controls 指向另一个人，规则一行都不用改。
 //   person.place {x, y, dir}  记下操控的人走到了哪（走路本身不经过规则）
 //   sleep {at}                回屋歇息 → 第二天早上，体力恢复
+//   travel {x, y, at}         站在路牌旁上路，到下一张地图
+//   travel.to {to}            照着全村地图走到某处：一段路花 CALENDAR.legMinutes 分钟
 // 花体力统一走 people.spend()：做的是 content/actions.js 里登记的哪一件事，价钱经过
 // 'action.cost' 计算管道（饿了、渴了、有本事、吃了什么，都在那里加减），并发出 action.performed。
 // 一觉能歇回多少，经过 'sleep.restore' 计算管道（睡得晚、空着肚子，都在那里扣）。
@@ -10,7 +12,16 @@ import { refuse } from '../../kernel/dispatch.js';
 import { PEOPLE, HERO, ON_MAP } from '../../content/people.js';
 import { ENERGY_MAX } from '../../content/items.js';
 import { ACTIONS } from '../../content/actions.js';
-import { MAPS, START_MAP, spot, walkable, isHome, actAt } from '../../content/maps/index.js';
+import {
+  MAPS,
+  START_MAP,
+  spot,
+  walkable,
+  isHome,
+  actAt,
+  routeTo,
+} from '../../content/maps/index.js';
+import { CALENDAR } from '../../content/calendar.js';
 
 const DIRS = ['up', 'down', 'left', 'right'];
 const sign = n => (n > 0 ? '+' + n : '−' + -n);
@@ -141,6 +152,25 @@ export const people = {
       if (!walkable(dest, at.x, at.y)) refuse('那边暂时过不去');
       p.map = dest.id;
       Object.assign(p, at);
+      fact('person.travelled', { who: who(w), from, to: p.map, ...at, name: dest.name });
+    });
+
+    // 照着全村地图走过去：沿路一段段走，每段花上一会儿时辰；到了，站在最后那块路牌指的地方。
+    // 和亲自走过去是同一条路（routeTo 按路牌算），只是不用一张张地图去找路口。
+    commands.register('travel.to', ({ draft, input, fact }) => {
+      const w = draft.world,
+        p = place(w, input.at),
+        from = p.map;
+      if (!Object.hasOwn(MAPS, input.to)) refuse('没有这个地方');
+      if (input.to === from) refuse('你就在这儿');
+      const legs = routeTo(from, input.to);
+      if (!legs) refuse('从这儿走不过去');
+      const dest = MAPS[input.to],
+        at = spot(dest, legs.at(-1).door.arrival);
+      if (!walkable(dest, at.x, at.y)) refuse('那边暂时过不去');
+      p.map = dest.id;
+      Object.assign(p, at);
+      clock.elapse(w, legs.length * CALENDAR.legMinutes, fact);
       fact('person.travelled', { who: who(w), from, to: p.map, ...at, name: dest.name });
     });
 

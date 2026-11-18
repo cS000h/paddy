@@ -76,3 +76,41 @@ export function spot(map, name) {
   if (!found) throw new Error(`地图 ${map.id} 没有叫 ${name} 的位置`);
   return { x: found[0], y: found[1], dir: found[2] };
 }
+
+/**
+ * 从一张地图走到另一张，一路经过哪些路牌：[{map, door}]，map 是这一段出发的那张图；
+ * 走不到是 null。路就是各张图上的路牌（物件的 to），和亲自走过去是同一份。
+ */
+export function routeTo(from, to) {
+  if (!Object.hasOwn(MAPS, from) || !Object.hasOwn(MAPS, to)) return null;
+  const came = new Map([[from, null]]);
+  const queue = [from];
+  while (queue.length && !came.has(to)) {
+    const id = queue.shift();
+    for (const [, x, y] of MAPS[id].objects) {
+      const door = actAt(MAPS[id], x, y);
+      if (!door?.to || came.has(door.to)) continue;
+      came.set(door.to, { map: id, door });
+      queue.push(door.to);
+    }
+  }
+  if (!came.has(to)) return null;
+  const legs = [];
+  for (let at = to; came.get(at); at = came.get(at).map) legs.unshift(came.get(at));
+  return legs;
+}
+
+/** 有路直接相连的两地，每对只列一次：[[a, b], …]。全村地图照这个画路。 */
+export function roads() {
+  const seen = new Set();
+  const out = [];
+  for (const [id, map] of Object.entries(MAPS))
+    for (const [, x, y] of map.objects) {
+      const to = actAt(map, x, y)?.to;
+      const key = [id, to].sort().join('|');
+      if (!to || seen.has(key)) continue;
+      seen.add(key);
+      out.push([id, to]);
+    }
+  return out;
+}

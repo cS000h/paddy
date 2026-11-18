@@ -20,6 +20,7 @@ import { fieldActions } from './field.js';
 import { growthActions, growthNotices } from './growth.js';
 import { activityActions } from './activities.js';
 import { kitchenActions } from './kitchen.js';
+import { travelActions } from './travel.js';
 
 const platform = createWebPlatform(document.getElementById('app'));
 const debug = platform.debug();
@@ -108,6 +109,7 @@ function start() {
     ...growthActions(deps),
     ...activityActions(deps),
     ...kitchenActions(deps),
+    ...travelActions(deps),
     reload() {
       saveNow();
       location.reload();
@@ -127,6 +129,7 @@ function start() {
     actions,
     here,
     report,
+    spot: () => world.headOnScreen(),
   });
   document.getElementById('boot')?.remove();
 

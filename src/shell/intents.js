@@ -8,10 +8,12 @@
 //   tool {id}     换工具
 //   tool.step {by} 往前或往后换一个工具（滚轮、手柄肩键）
 //   cancel        取消、关闭
+//   stick {phase, origin, knob}  触屏摇杆此刻在哪儿（start | move | end），只给面板画圈用，
+//                 走路的方向照样走 setMove('stick', …)
 
 import { notifyAll } from './notify.js';
 
-export const INTENTS = Object.freeze(['act', 'tap', 'tool', 'tool.step', 'cancel']);
+export const INTENTS = Object.freeze(['act', 'tap', 'tool', 'tool.step', 'cancel', 'stick']);
 
 /**
  * @param {object} [options]

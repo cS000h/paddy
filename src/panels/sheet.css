@@ -1,0 +1,783 @@
+/* 各种小窗。摆在哪儿见 modals.js 的 placementOf：
+     dialogue  贴着下沿的一长条（说话、旁白、水边、歇息、钓鱼），世界在上面照样看得见；
+     side      从右边展开成整幅，高到顶，左边还看得见世界；
+     center    正中一张（开局、确认、出错、全村地图）；
+     menu      右上角“更多”底下的一小列。
+   外面的 .frame 定大小、挂着“×”，里面的 .sheet 自己滚动；最底下那排按钮贴在纸的下沿。 */
+
+.modal {
+  z-index: 20;
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+.modal.side {
+  justify-content: flex-end;
+  align-items: stretch;
+  padding: calc(8px + var(--safe-t)) calc(8px + var(--safe-r)) calc(8px + var(--safe-b)) 8px;
+  background: linear-gradient(90deg, rgba(34, 48, 44, 0.04) 30%, rgba(34, 48, 44, 0.24));
+}
+
+.modal.dialogue {
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0 calc(12px + var(--safe-r)) calc(10px + var(--safe-b)) calc(12px + var(--safe-l));
+  background: linear-gradient(to top, rgba(34, 48, 44, 0.24), transparent 60%);
+}
+
+.modal.center {
+  justify-content: center;
+  align-items: center;
+  padding: calc(10px + var(--safe-t)) 12px calc(10px + var(--safe-b));
+  background: rgba(34, 48, 44, 0.3);
+}
+
+.modal.menu {
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: calc(50px + var(--safe-t)) calc(10px + var(--safe-r)) 0 0;
+  background: rgba(34, 48, 44, 0.08);
+}
+
+.frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+}
+
+.frame.side {
+  width: min(470px, 62%);
+  animation: slide-in 0.22s ease-out;
+}
+
+.frame.side.wide {
+  width: min(800px, 88%);
+}
+
+.frame.center {
+  width: min(560px, 100%);
+  animation: rise 0.2s ease-out;
+}
+
+.frame.center.wide {
+  width: min(880px, 100%);
+}
+
+.frame.dialogue {
+  width: min(860px, 100%);
+  max-height: 60%;
+  animation: rise 0.2s ease-out;
+}
+
+.frame.menu {
+  width: 196px;
+  animation: drop 0.16s ease-out;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(28px);
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+}
+
+@keyframes drop {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+}
+
+.sheet {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 0 18px;
+  background: var(--moon);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(34, 48, 44, 0.25);
+}
+
+.frame.side > .sheet {
+  flex: 1 1 auto;
+}
+
+.sheet.dialogue {
+  padding-top: 14px;
+  border-radius: 16px;
+}
+
+.sheet.menu {
+  padding: 6px;
+}
+
+/* 右上角的“×” */
+.frame > .x {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--mist);
+}
+
+.frame > .x::before,
+.frame > .x::after {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 16px;
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ink-2);
+  transform: rotate(45deg);
+}
+
+.frame > .x::after {
+  transform: rotate(-45deg);
+}
+
+/* 标题：贴在纸的上沿，滚动时还在 */
+.sheet > h2 {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 10px;
+  margin: 0 -18px 10px;
+  padding: 14px 52px 10px 18px;
+  border-bottom: 1px solid var(--mist-2);
+  background: var(--moon);
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.sheet > h2 small {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  letter-spacing: 0;
+}
+
+.sheet.dialogue > h2 {
+  position: static;
+  margin: 0 0 6px;
+  padding: 0;
+  border: 0;
+}
+
+.sheet h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 6px;
+  color: var(--qing);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+}
+
+.sheet h3::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--mist-2);
+}
+
+.sheet p {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.85;
+}
+
+.sheet .aside {
+  color: var(--ink-2);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+/* 做完一件事的那段话：像夹在纸里的一张小笺 */
+.sheet .activity-story {
+  padding: 8px 12px;
+  border-left: 3px solid var(--line);
+  border-radius: 0 8px 8px 0;
+  background: linear-gradient(90deg, var(--mist), transparent);
+}
+
+/* 最底下那排按钮：贴在纸的下沿，不用滚到底才找得到“好”“回去” */
+.sheet .row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.sheet > .row:last-child {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin: 12px -18px 0;
+  padding: 10px 18px 14px;
+  border-top: 1px solid var(--mist-2);
+  background: var(--moon);
+}
+
+/* 对话：最后那排按钮（“好”）挪到前一行（送礼、一句旁白）的右边，框不必多高出一截 */
+.sheet.dialogue {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
+  column-gap: 12px;
+}
+
+.sheet.dialogue > * {
+  grid-column: 1 / -1;
+}
+
+.sheet.dialogue > :nth-last-child(2) {
+  grid-column: 1;
+  align-self: center;
+}
+
+.sheet.dialogue > .row:last-child {
+  position: static;
+  grid-column: 2;
+  align-self: end;
+  margin: 0 0 12px;
+  padding: 0;
+  border-top: 0;
+  background: none;
+}
+
+.sheet button {
+  min-height: 38px;
+  padding: 6px 16px;
+  font-size: 14.5px;
+}
+
+.sheet button.main {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--moon);
+}
+
+.sheet button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+/* —— 说话：左边一枚名字印，右边是谁、在做什么、熟到什么程度 —— */
+.speaker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.name-seal {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 9px;
+  font-size: 25px;
+  transform: rotate(-5deg);
+}
+
+.speaker .who b {
+  display: block;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+
+.speaker .who small {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.speaker .bond {
+  margin-left: auto;
+  padding: 3px 11px;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.speaker .gain {
+  margin-left: 5px;
+  color: var(--qing);
+  font-weight: 400;
+}
+
+.sheet .say {
+  margin: 6px 0 8px;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.say .unsaid {
+  opacity: 0;
+}
+
+.gifts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 6px;
+  touch-action: pan-x;
+}
+
+.gifts .lead {
+  flex: none;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.sheet .gifts button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 3px 12px 3px 5px;
+  border-radius: 999px;
+  font-size: 13.5px;
+}
+
+.gifts img {
+  width: 28px;
+  height: 28px;
+  image-rendering: pixelated;
+}
+
+.sheet .note b {
+  display: block;
+  color: var(--qing);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* —— 物品单：左边图标，中间名字和小字，右边按钮 —— */
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.items li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--mist-2);
+}
+
+.items li:last-child {
+  border-bottom: 0;
+}
+
+.items .what {
+  flex: 1;
+  min-width: 0;
+}
+
+.items .what b {
+  margin-left: 6px;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.items small {
+  display: block;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.items .acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.sheet .items button {
+  min-height: 34px;
+  padding: 4px 12px;
+  font-size: 13.5px;
+}
+
+.items img {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--mist);
+  image-rendering: pixelated;
+}
+
+.items .none {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.choices,
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tabs {
+  margin-bottom: 8px;
+}
+
+.sheet .choices button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13.5px;
+}
+
+.choices img {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.choices small {
+  color: var(--ink-3);
+}
+
+.sheet .choices .chosen {
+  border: 2px solid var(--qing);
+  background: var(--mist);
+}
+
+.timing {
+  position: relative;
+  height: 40px;
+  margin: 18px 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--mist-2);
+}
+
+.timing .zone {
+  position: absolute;
+  height: 100%;
+  background: var(--qing);
+  opacity: 0.75;
+}
+
+.timing i {
+  position: absolute;
+  width: 4px;
+  height: 100%;
+  margin-left: -2px;
+  background: var(--cinnabar);
+  box-shadow: 0 0 6px rgba(184, 63, 43, 0.6);
+}
+
+.origin-choices {
+  display: grid;
+  gap: 10px;
+}
+
+.sheet .origin-choices button {
+  padding: 12px 14px;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.origin-choices small {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+
+.active-perk {
+  color: var(--qing) !important;
+}
+
+.achievement-seal {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px dashed var(--mist-2);
+  border-radius: 6px;
+  color: var(--ink-3);
+}
+
+.achievement-seal.earned {
+  border: 0;
+  background: var(--cinnabar);
+  color: #fff6ec;
+  transform: rotate(-8deg);
+}
+
+.body-line {
+  color: var(--ink-2);
+}
+
+.buff-note b {
+  margin-right: 8px;
+  color: var(--qing);
+  font-weight: 400;
+}
+
+/* —— 菜单 —— */
+.menu-list {
+  display: grid;
+  gap: 2px;
+}
+
+.sheet .menu-list button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font-size: 15px;
+  text-align: left;
+}
+
+.sheet .menu-list button:active,
+.sheet .menu-list button:hover {
+  background: var(--mist);
+}
+
+/* —— 全村地图 —— */
+.atlas-wrap {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 16px;
+  align-items: start;
+  padding-bottom: 16px;
+}
+
+.atlas {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(196, 214, 192, 0.7), transparent 60%),
+    radial-gradient(ellipse at 60% 70%, rgba(217, 228, 196, 0.8), transparent 55%), #e8efe4;
+}
+
+.atlas svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.atlas .river {
+  fill: none;
+  stroke: #a9cbd4;
+  stroke-width: 8;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+.atlas .hill {
+  fill: #bdd2b9;
+}
+
+.atlas .field {
+  fill: #d4e0bd;
+}
+
+.atlas .roads path {
+  fill: none;
+  stroke: #b4996a;
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.sheet .place {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: var(--moon);
+  box-shadow: 0 2px 6px rgba(34, 48, 44, 0.16);
+  font-size: 13.5px;
+  line-height: 1.35;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+.place em {
+  color: var(--cinnabar);
+  font-size: 10.5px;
+  font-style: normal;
+}
+
+.place small {
+  color: var(--qing);
+  font-size: 11px;
+}
+
+.sheet .place.here {
+  border: 2px solid var(--cinnabar);
+}
+
+.sheet .place.picked {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--moon);
+}
+
+.place.picked small,
+.place.picked em {
+  color: var(--mist);
+}
+
+.atlas-info h3 {
+  margin-top: 4px;
+}
+
+/* —— 矮屏（横着的手机）—— */
+.compact .modal.side {
+  padding: calc(6px + var(--safe-t)) calc(6px + var(--safe-r)) calc(6px + var(--safe-b)) 6px;
+}
+
+.compact .frame.side {
+  width: min(500px, 64%);
+}
+
+.compact .frame.side.wide {
+  width: min(780px, 90%);
+}
+
+.compact .frame.dialogue {
+  max-height: 64%;
+}
+
+.compact .sheet {
+  padding: 0 14px;
+}
+
+.compact .sheet > h2 {
+  margin: 0 -14px 8px;
+  padding: 10px 48px 8px 14px;
+  font-size: 17px;
+}
+
+.compact .sheet.dialogue {
+  padding-top: 10px;
+}
+
+.compact .sheet.dialogue > h2 {
+  margin: 0 0 4px;
+  padding: 0;
+}
+
+.compact .sheet > .row:last-child {
+  margin: 8px -14px 0;
+  padding: 8px 14px 10px;
+}
+
+.compact .sheet.dialogue > .row:last-child {
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.compact .sheet p {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.compact .sheet .say {
+  font-size: 16.5px;
+  line-height: 1.7;
+}
+
+.compact .name-seal {
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+}
+
+.compact .speaker .who b {
+  font-size: 18px;
+}
+
+.compact .sheet button {
+  min-height: 36px;
+  padding: 5px 13px;
+  font-size: 14px;
+}
+
+.compact .frame > .x {
+  top: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+}
+
+.compact .frame > .x::before,
+.compact .frame > .x::after {
+  left: 8px;
+  top: 15px;
+}
+
+.compact .atlas-wrap {
+  grid-template-columns: 1.55fr 1fr;
+  gap: 12px;
+}
+
+.compact .sheet .place {
+  padding: 3px 8px;
+  font-size: 12.5px;
+}
+
+.narrow .two,
+.narrow .atlas-wrap {
+  grid-template-columns: 1fr;
+}

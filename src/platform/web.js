@@ -23,6 +23,8 @@ function viewport(root) {
     root.classList.toggle('rotated', rotated);
     root.classList.toggle('narrow', state.width < 720);
     root.classList.toggle('compact', state.height < 520);
+    // 很矮：横着的手机上浏览器地址栏还占着一截（只剩三百来像素高），面板再收一收
+    root.classList.toggle('tight', state.height < 360);
     listeners.forEach(fn => fn(state));
   };
   addEventListener('resize', measure);
@@ -143,6 +145,30 @@ function audio() {
   };
 }
 
+// 全屏：手机浏览器横着时地址栏占去一大截高度，全屏后世界和面板都宽裕得多。
+// 不是每个浏览器都支持（iPhone 上的 Safari 不支持），不支持就不显示这个选项。
+function fullscreen(view) {
+  const el = document.documentElement;
+  const enter = el.requestFullscreen || el.webkitRequestFullscreen;
+  const leave = document.exitFullscreen || document.webkitExitFullscreen;
+  const active = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  return {
+    available: () => !!enter,
+    active,
+    async toggle() {
+      try {
+        if (active()) await leave.call(document);
+        else {
+          await enter.call(el, { navigationUI: 'hide' });
+          view.lockLandscape();
+        }
+      } catch {
+        /* 浏览器不让，就照旧 */
+      }
+    },
+  };
+}
+
 /** @param {HTMLElement} root 整个游戏画面的最外层元素（横屏时转的就是它） */
 export function createWebPlatform(root) {
   const view = viewport(root);
@@ -153,6 +179,7 @@ export function createWebPlatform(root) {
     viewport: view,
     device: device(view),
     audio: audio(),
+    fullscreen: fullscreen(view),
     /** 窗口被切走或要关掉时调用 fn（用来存档、松开按键）。 */
     onHide(fn) {
       const handler = () => document.visibilityState === 'hidden' && fn();

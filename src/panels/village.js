@@ -24,16 +24,20 @@ function giftsFor(modal, game, here) {
     button('gift', `端一份${d.name}`, { data: { to, dish: d.id } }),
   );
   if (!things.length && !dishes.length) return para('身上没带拿得出手的东西。', 'aside');
-  return `<div class="gifts"><span>送点什么</span>${things.join('')}${dishes.join('')}</div>`;
+  return `<div class="gifts"><span class="lead">送点什么</span>${things.join('')}${dishes.join('')}</div>`;
 }
 
+/** 和乡邻说话：左边一枚名字印（人物不画脸），右边是这一句话；底下是送礼和“好”。 */
 export function talkView(modal, game, here) {
   const person = PEOPLE[modal.who];
   const known = game.ask('bonds').find(b => b.id === modal.who).known;
-  const gained = modal.gain ? `（+${modal.gain}）` : '';
-  return `${title(person.name, `${person.role} · ${modal.doing}`)}
-    ${para(modal.line)}${para(`熟悉 ${known}${gained}`, 'aside')}${giftsFor(modal, game, here)}
-    ${actions(close())}`;
+  const gained = modal.gain ? `<b class="gain">+${modal.gain}</b>` : '';
+  return `<div class="speaker"><span class="name-seal">${esc(person.seal || person.name)}</span>
+      <span class="who"><b>${esc(person.name)}</b><small>${esc(person.role)} · ${esc(modal.doing)}</small></span>
+      <span class="bond">熟悉 ${known}${gained}</span></div>
+    <p class="say">${esc(modal.line)}</p>
+    ${giftsFor(modal, game, here)}
+    ${actions(close('好'))}`;
 }
 
 export function basketView(modal, game, here) {

@@ -92,3 +92,29 @@ test('茶摊喝茶补水，听闲话每天一次；集日有肉摊，下棋长�
   assert.ok(g.ask('market', 'tea').fair);
   assert.ok(g.ask('market', 'tea').wares.some(i => i.item === 'wholeChicken'));
 });
+
+test('照着全村地图走过去：沿路一段段走，每段花十分钟；走不到、没这地方、就在这儿都拒绝', async () => {
+  const { routeTo, roads } = await import('../../src/content/maps/index.js');
+  const { ATLAS } = await import('../../src/content/maps/atlas.js');
+  const g = newGame();
+  const start = g.ask('clock').minute;
+  // 小院到渡口：要经过竹径或茶摊，两段路
+  assert.equal(routeTo('yard', 'river').length, 2);
+  must(g, 'travel.to', { to: 'river' });
+  const hero = g.ask('hero');
+  assert.equal(hero.map, 'river');
+  assert.ok(walkable(MAPS.river, hero.x, hero.y), '到了站在能站的地方');
+  assert.equal(g.ask('clock').minute, start + 20);
+  assert.match(refused(g, 'travel.to', { to: 'river' }), /就在这儿/);
+  assert.match(refused(g, 'travel.to', { to: 'moon' }), /没有这个地方/);
+  // 每张地图都在全村地图上，彼此都走得到；路是对称的
+  for (const a of Object.keys(MAPS)) {
+    assert.ok(ATLAS[a], `${a} 没画在全村地图上`);
+    for (const b of Object.keys(MAPS)) if (a !== b) assert.ok(routeTo(a, b), `${a} 走不到 ${b}`);
+  }
+  assert.ok(roads().length >= 7);
+  // 存档读回来还在渡口，接着走回小院
+  const back = createGame({ saved: JSON.parse(JSON.stringify(g.save())), debug: true });
+  must(back, 'travel.to', { to: 'yard' });
+  assert.equal(back.ask('hero').map, 'yard');
+});

@@ -4,27 +4,17 @@ import Phaser from 'phaser';
 import { MAPS, walkable, farmable, waterSource, actAt } from '../content/maps/index.js';
 import { PEOPLE, ON_MAP } from '../content/people.js';
 import { variantAt } from '../art/index.js';
-import { costText, careNote } from '../shell/words.js';
 import { buildTextures } from './textures.js';
 import { Walker, Villager } from './actors.js';
 import { createEffects } from './effects.js';
 import { weatherEffects } from './weather.js';
 import { refreshPlots } from './plots.js';
 import { bindKeyboard, bindPointer } from './input.js';
-import { ACT_HINT, touchThing } from './interactions.js';
+import { hintFor, touchThing } from './interactions.js';
+import { tapAt } from './tap.js';
+import { leaveByRoad } from './travel.js';
 import { safely } from './safety.js';
-import {
-  TILE,
-  tileOf,
-  facing,
-  dirTo,
-  findPath,
-  standBeside,
-  bestTool,
-  COMMAND_OF,
-  toolVerb,
-  skyTint,
-} from './logic.js';
+import { TILE, facing, dirTo, COMMAND_OF, skyTint } from './logic.js';
 
 // 规则里的事落到画面上：哪种事实，在那一格放哪个动效、出哪个声。
 const FEEDBACK = {
@@ -58,6 +48,8 @@ export class VillageScene extends Phaser.Scene {
     this.map = map;
     this.busy = false;
     this.hintKey = '';
+    this.season = null; // 换地图时场景对象是同一个，季节要重新记
+    this.roadArmed = false; // 刚到时可能站在路口边，先离开路口再算
     const { anchors } = buildTextures(this, map);
     this.anchors = anchors;
     this.groundImage = this.add.image(0, 0, 'ground').setOrigin(0).setDepth(-1000);
@@ -84,7 +76,8 @@ export class VillageScene extends Phaser.Scene {
 
     const camera = this.cameras.main;
     camera.setBounds(0, 0, map.width * TILE, map.height * TILE);
-    camera.startFollow(this.player.sprite, true, 0.14, 0.14, 0, 10);
+    // 稳稳跟着人走：带缓动的跟随再按整像素取整，走路时整个世界会一抖一抖
+    camera.startFollow(this.player.sprite, true, 1, 1, 0, 10);
     camera.setRoundPixels(true);
     const fit = () => this.fit();
     this.scale.on('resize', fit);
@@ -114,6 +107,7 @@ export class VillageScene extends Phaser.Scene {
       s.look = look;
       const a = this.anchors[look ? s.key + '@' + look : s.key];
       s.sprite.setOrigin(a.ox, a.oy);
+      if (this.season !== null) this.dress(s);
     }
   }
 
@@ -160,6 +154,7 @@ export class VillageScene extends Phaser.Scene {
       this.player.path = [];
       this.player.onArrive = null;
       this.player.step(move.x, move.y, dt, (x, y) => this.blocked(x, y));
+      leaveByRoad(this, true);
     } else if (!this.player.follow(dt)) this.player.animate(false);
     this.updateHint();
   }
@@ -181,28 +176,25 @@ export class VillageScene extends Phaser.Scene {
   updateHint() {
     const { game, shell } = this.deps;
     const t = this.target();
-    const tool = shell.get().tool;
-    const key = `${t.kind}:${t.x},${t.y}:${tool}:${game.revision()}`;
+    const key = `${t.kind}:${t.x},${t.y}:${shell.get().tool}:${game.revision()}`;
     if (key === this.hintKey) return;
     this.hintKey = key;
-    let hint = null;
-    if (t.kind === 'person') hint = { text: `和${PEOPLE[t.person.id].name}说话`, ok: true };
-    else if (t.kind === 'thing') hint = { text: t.thing.label || ACT_HINT[t.thing.act], ok: true };
-    else if (t.kind === 'water') {
-      const reason = game.ask('farm.why', 'refill', t.x, t.y, this.at());
-      hint = { text: reason || '打水', ok: !reason };
-    } else if (farmable(this.map, t.x, t.y)) {
-      const reason = game.ask('farm.why', tool, t.x, t.y, this.at(), shell.get().seed);
-      const cost = costText(game.ask('action.cost', tool));
-      // 地里长了草、生了虫，提示条顺带说一声；工具栏的“田地”也会亮起来
-      const care = careNote(game.ask('farm.detail', t.x, t.y));
-      const text = (reason || `${toolVerb(tool)} · ${cost}`) + (care ? ` · ${care}` : '');
-      hint = { text, ok: !reason, care: !!care };
-    }
+    const hint = hintFor(this, t);
     const old = shell.get().hint;
-    if (old?.text !== hint?.text || old?.ok !== hint?.ok) shell.set({ hint });
+    if (old?.text !== hint?.text || old?.ok !== hint?.ok || old?.verb !== hint?.verb)
+      shell.set({ hint });
     this.cursor.setVisible(!!hint).setPosition(t.x * TILE, t.y * TILE);
     if (hint) this.cursor.setTexture(hint.ok ? 'cursor:ok' : 'cursor:no');
+  }
+
+  /** 操控的人头顶在画面上的哪一点（画面坐标，像素）：面板把冒出来的字摆在那儿。 */
+  headOnScreen() {
+    const camera = this.cameras.main;
+    const view = camera.worldView;
+    return {
+      x: (this.player.px - view.x) * camera.zoom,
+      y: (this.player.py - 30 - view.y) * camera.zoom,
+    };
   }
 
   /** 对面前的东西做该做的事。 */
@@ -294,42 +286,9 @@ export class VillageScene extends Phaser.Scene {
   }
 
   /** 点了世界里的一个位置：走过去；那儿有事可做就做。 */
+  /** 点了世界里的一个位置：走过去；那儿有事可做就做（见 tap.js）。 */
   tap(wx, wy) {
-    const { game, shell, platform } = this.deps;
-    if (this.busy || shell.paused()) return;
-    platform.audio.unlock();
-    const walk = (x, y) => walkable(this.map, x, y);
-    const from = this.player.tile;
-    const person = this.villagers.find(
-      v => v.sprite.visible && Math.abs(v.px - wx) < 9 && wy < v.py + 3 && wy > v.py - 28,
-    );
-    const tile = person ? person.tile : tileOf(wx, wy);
-    const thing = !person && actAt(this.map, tile.x, tile.y);
-    const farm = !person && !thing && farmable(this.map, tile.x, tile.y);
-    const water = !person && !thing && waterSource(this.map, tile.x, tile.y);
-    if (!person && !thing && !farm && !water) {
-      const path = findPath(walk, from, tile);
-      if (path) this.player.walk(path);
-      return;
-    }
-    const stand = standBeside(walk, from, tile);
-    if (!stand) return;
-    this.player.walk(stand.path, () => {
-      this.player.face(stand.dir);
-      if (farm) {
-        // 手指点地：当前工具不合适就自动换成合适的那一件；哪件都用不上而地里有草有虫，就打开田地照料
-        const at = this.at();
-        const why = (tool, x, y) => game.ask('farm.why', tool, x, y, at, shell.get().seed);
-        if (why(shell.get().tool, tile.x, tile.y)) {
-          const better = bestTool(why, tile.x, tile.y);
-          if (better) shell.set({ tool: better });
-          else if (careNote(game.ask('farm.detail', tile.x, tile.y)))
-            return shell.set({ modal: { kind: 'field', x: tile.x, y: tile.y } });
-        }
-      } else if (water && shell.get().tool !== 'can') shell.set({ tool: 'can' });
-      this.hintKey = '';
-      this.act();
-    });
+    tapAt(this, wx, wy);
   }
 
   /** 规则里发生了事：给反馈、重画变了的东西。 */
@@ -380,12 +339,20 @@ export class VillageScene extends Phaser.Scene {
   /** 时间变了：天色、村民的去向、炊烟。 */
   retime(jump) {
     const { minute, season } = this.deps.game.ask('clock');
-    this.groundImage.setTexture('ground:' + season);
-    for (const { sprite, key, look } of this.scenery)
-      sprite.setTexture((look ? key + '@' + look : key) + ':' + season);
+    // 换季才换贴图：每十分钟一次的走时也把上百个物件的贴图重设一遍，手机上会顿一下
+    if (season !== this.season) {
+      this.season = season;
+      this.groundImage.setTexture('ground:' + season);
+      for (const s of this.scenery) this.dress(s);
+    }
     this.deps.shell.set({ tint: this.map.indoor ? '#ffffff' : skyTint(minute) });
     for (const v of this.villagers) v.retime(minute, jump);
     this.effects.setCooking((minute >= 660 && minute < 780) || (minute >= 1020 && minute < 1140));
+  }
+
+  /** 按季节和样子给一个物件换上贴图。 */
+  dress(s) {
+    s.sprite.setTexture((s.look ? s.key + '@' + s.look : s.key) + ':' + this.season);
   }
 
   refreshPlots() {
