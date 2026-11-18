@@ -1,9 +1,25 @@
-// 手记里头几天的小目标。on 是听到哪件事算做到；hint 是还没做到时，手记里那一行底下的小字。
+// 手记里头几天的小目标。on 是听到哪件事算做到；hint 是还没做到时，手记里那一行底下的小字，
+// 手记合上时也显示在左上角的“下一步”里。{do} 由画面换成这台设备的说法（按空格，或点「做」）。
 export const GOALS = Object.freeze([
-  { id: 'till', on: 'plot.tilled', text: '锄松一格地', hint: '拿锄头，对着菜地按空格' },
-  { id: 'sow', on: 'plot.sown', text: '种下第一粒菜种', hint: '换成菜种，对着锄过的地' },
-  { id: 'water', on: 'plot.watered', text: '给它浇上水', hint: '水壶空了就去水缸、水井或溪边' },
-  { id: 'meet', on: 'person.talked', text: '和乡邻打个招呼', hint: '走到石伯或桂嫂身边按 E' },
+  {
+    id: 'till',
+    on: 'plot.tilled',
+    text: '锄松一格地',
+    hint: '拿锄头，出院门往南过石板路就是菜地，对着地{do}',
+  },
+  { id: 'sow', on: 'plot.sown', text: '种下第一粒菜种', hint: '换成菜种，对着锄过的地{do}' },
+  {
+    id: 'water',
+    on: 'plot.watered',
+    text: '给它浇上水',
+    hint: '换成水壶浇一浇；水壶空了去水缸、水井或溪边打水',
+  },
+  {
+    id: 'meet',
+    on: 'person.talked',
+    text: '和乡邻打个招呼',
+    hint: '石伯常在田边，桂嫂在东边自家门口，走到跟前{do}',
+  },
   { id: 'drink', on: 'water.drunk', text: '渴了喝口水', hint: '水井、水缸、溪边都能喝' },
   { id: 'eat', on: 'meal.eaten', text: '饿了吃点东西', hint: '打开行囊，米糕拿起来就能吃' },
   {

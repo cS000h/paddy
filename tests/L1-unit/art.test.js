@@ -85,16 +85,22 @@ test('物品图标：每样物品都有一张，16×16，只用调色板的颜�
   assert.throws(() => art.itemIcon('nothing'), /没有这样物品的图标/);
 });
 
-test('地块和图标：32 张土、4 个作物阶段、5 个图标，都是 16×16', () => {
+test('地块和图标：32 张土、4 个作物阶段、5 个图标、草和虫两种记号，都是 16×16', () => {
   const soil = art.soilSet();
   assert.equal(Object.keys(soil).length, 32);
   const small = [...Object.values(soil), ...art.cropFrames(), art.cursor(true), art.cursor(false)];
   for (const name of ['hoe', 'seed', 'can', 'hand', 'coin']) small.push(art.icon(name));
+  for (const name of art.PLOT_MARKS) small.push(art.plotMark(name));
   for (const g of small) {
     assert.deepEqual([g.w, g.h], [16, 16]);
     assert.deepEqual(offPalette(g), []);
   }
   assert.notDeepEqual(soil['dry.15'].data, soil['wet.15'].data, '干土和湿土要看得出区别');
+  assert.deepEqual(art.PLOT_MARKS, ['weeds', 'bugs']);
+  // 记号留出正中给作物：中间 6×6 一个像素都不画
+  for (const name of art.PLOT_MARKS)
+    for (let y = 5; y < 11; y++)
+      for (let x = 5; x < 11; x++) assert.equal(art.plotMark(name).get(x, y), 0, name);
 });
 
 test('四季换色与七种作物都只用调色板，四阶段彼此可分', () => {

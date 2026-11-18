@@ -194,6 +194,7 @@ export const land = {
 
     installLandCare(ctx, plotAt);
 
+    // 画地用的：每格的干湿、作物和阶段，以及要不要照料（长草、生虫画在地上，一眼看得出）。
     queries.define('farm.plots', (w, map) =>
       Object.entries(w.land[map].plots).map(([k, p]) => {
         const [x, y] = k.split(',').map(Number);
@@ -204,6 +205,8 @@ export const land = {
           crop: p.crop,
           stage: p.crop ? cropStage(p.crop, p.age) : -1,
           ripe: p.crop ? isRipe(p.crop, p.age) : false,
+          weeds: p.weeds,
+          bugs: p.bugs,
         };
       }),
     );

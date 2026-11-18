@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
 import { MAPS, walkable } from '../../src/content/maps/index.js';
-import { newGame, must, refused, HOME, wait } from '../helpers.js';
+import { newGame, must, refused, wait } from '../helpers.js';
 function travel(g, to) {
   const map = MAPS[g.ask('hero').map],
     row = map.objects.find(o => o[3]?.to === to);

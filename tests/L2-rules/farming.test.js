@@ -23,6 +23,8 @@ test('锄地、播种、浇水，各扣各的体力和物料', () => {
     crop: 'qingcai',
     stage: 0,
     ripe: false,
+    weeds: false,
+    bugs: false,
   });
 });
 
@@ -75,6 +77,8 @@ test('采收：菜进了行囊，这一格还是锄过的地', () => {
     crop: null,
     stage: -1,
     ripe: false,
+    weeds: false,
+    bugs: false,
   });
 });
 
@@ -114,4 +118,21 @@ test('体力用完就干不动了，睡一觉恢复；睡得太晚回不满', ()
   assert.equal(g.ask('clock').late, true);
   must(g, 'sleep');
   assert.equal(g.ask('hero').energy, 80);
+});
+
+test('收过第一茬以后地里会长草：画地的答案里看得见，拔掉就没了', () => {
+  const g = newGame(3);
+  growOne(g);
+  must(g, 'farm.harvest', FIELD);
+  must(g, 'farm.sow', FIELD);
+  let plot = plotAt(g, FIELD.x, FIELD.y);
+  for (let day = 0; day < 30 && !plot.weeds; day++) {
+    if (g.ask('farm.detail', FIELD.x, FIELD.y).water < 14) must(g, 'farm.water', FIELD);
+    must(g, 'sleep');
+    plot = plotAt(g, FIELD.x, FIELD.y);
+  }
+  assert.equal(plot.weeds, true, '一个月里总该长一回草');
+  assert.equal(plot.weeds, g.ask('farm.detail', FIELD.x, FIELD.y).weeds);
+  must(g, 'farm.care', { ...FIELD, kind: 'weed' });
+  assert.equal(plotAt(g, FIELD.x, FIELD.y).weeds, false);
 });

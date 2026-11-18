@@ -21,9 +21,11 @@ test('头一回见面说见面的话；同一天再说话不再涨熟悉', () =>
   const g = newGame();
   const first = g.dispatch('talk', { to: 'shi' }).facts.find(f => f.type === 'person.talked');
   assert.equal(first.data.first, true);
+  assert.equal(first.data.gain, 1, '画面要说熟悉了多少');
   assert.match(first.data.line, /住下了/);
   const again = g.dispatch('talk', { to: 'shi' }).facts.find(f => f.type === 'person.talked');
   assert.equal(again.data.first, false);
+  assert.equal(again.data.gain, 0);
   assert.equal(g.ask('bonds').find(b => b.id === 'shi').known, 1);
   must(g, 'sleep');
   must(g, 'talk', { to: 'shi' });
@@ -44,6 +46,7 @@ test('送一把菜：对方记着，第二天早上留下回礼和便条', () =>
   );
   const said = g.dispatch('gift', { to: 'gui', item: 'veg.qingcai' }).facts;
   assert.match(said.find(f => f.type === 'gift.given').data.line, /自己种的/);
+  assert.equal(said.find(f => f.type === 'gift.given').data.gain, 2);
   assert.equal(g.ask('bonds').find(b => b.id === 'gui').known, 2);
   const seedsBefore = carried(g, 'seed.qingcai');
   assert.ok(must(g, 'sleep').includes('gift.returned'));

@@ -4,7 +4,7 @@ import Phaser from 'phaser';
 import { MAPS, walkable, farmable, waterSource, actAt } from '../content/maps/index.js';
 import { PEOPLE, ON_MAP } from '../content/people.js';
 import { variantAt } from '../art/index.js';
-import { costText } from '../shell/words.js';
+import { costText, careNote } from '../shell/words.js';
 import { buildTextures } from './textures.js';
 import { Walker, Villager } from './actors.js';
 import { createEffects } from './effects.js';
@@ -174,7 +174,10 @@ export class VillageScene extends Phaser.Scene {
     } else if (farmable(this.map, t.x, t.y)) {
       const reason = game.ask('farm.why', tool, t.x, t.y, this.at(), shell.get().seed);
       const cost = costText(game.ask('action.cost', tool));
-      hint = { text: reason || `${toolVerb(tool)} · ${cost}`, ok: !reason };
+      // 地里长了草、生了虫，提示条顺带说一声；工具栏的“田地”也会亮起来
+      const care = careNote(game.ask('farm.detail', t.x, t.y));
+      const text = (reason || `${toolVerb(tool)} · ${cost}`) + (care ? ` · ${care}` : '');
+      hint = { text, ok: !reason, care: !!care };
     }
     const old = shell.get().hint;
     if (old?.text !== hint?.text || old?.ok !== hint?.ok) shell.set({ hint });
@@ -253,7 +256,13 @@ export class VillageScene extends Phaser.Scene {
     platform.audio.play('talk');
     const said = out.facts.find(f => f.type === 'person.talked').data;
     return shell.set({
-      modal: { kind: 'talk', who: person.id, line: said.line, doing: person.doing },
+      modal: {
+        kind: 'talk',
+        who: person.id,
+        line: said.line,
+        doing: person.doing,
+        gain: said.gain,
+      },
     });
   }
 
@@ -285,12 +294,14 @@ export class VillageScene extends Phaser.Scene {
     this.player.walk(stand.path, () => {
       this.player.face(stand.dir);
       if (farm) {
-        // 手指点地：当前工具不合适就自动换成合适的那一件
+        // 手指点地：当前工具不合适就自动换成合适的那一件；哪件都用不上而地里有草有虫，就打开田地照料
         const at = this.at();
         const why = (tool, x, y) => game.ask('farm.why', tool, x, y, at, shell.get().seed);
         if (why(shell.get().tool, tile.x, tile.y)) {
           const better = bestTool(why, tile.x, tile.y);
           if (better) shell.set({ tool: better });
+          else if (careNote(game.ask('farm.detail', tile.x, tile.y)))
+            return shell.set({ modal: { kind: 'field', x: tile.x, y: tile.y } });
         }
       } else if (water && shell.get().tool !== 'can') shell.set({ tool: 'can' });
       this.hintKey = '';

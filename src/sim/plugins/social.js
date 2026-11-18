@@ -1,8 +1,8 @@
 // 乡邻。现在只有最小的一圈：打招呼、送一把菜、第二天收到回礼。
-//   talk {to, at}        → person.talked {to, first, line}      每人每天头一回说话，熟悉 +1
-//   gift {to, item, at}  → gift.given {to, item, liked, line}   每人每天收一回，熟悉 +2；
-//                                                                送到心坎上（合他口味的东西）+3
-//   day.started          → gift.returned {from, item, n}        昨天收了菜的人留下回礼和便条
+//   talk {to, at}       → person.talked {to, first, gain, line}    每人每天头一回说话，熟悉 +1
+//   gift {to, item, at} → gift.given {to, item, liked, gain, line} 每人每天收一回，熟悉 +2；
+//                                                                  送到心坎上（合他口味的东西）+3
+//   day.started         → gift.returned {from, item, n}            昨天收了菜的人留下回礼和便条
 // 说哪句话由规则决定并写进事实里，画面只管显示。
 import { is, check } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
@@ -69,17 +69,19 @@ export const social = {
         ? lines.first
         : lines.daily[Math.floor(core.random(w) * lines.daily.length)];
       const gained = b.talked[input.to] !== w.clock.day;
+      const before = b.known[input.to];
       if (gained) {
-        const gain = compute.run(
+        const q = compute.run(
           'relation.gain',
           { w, who: people.who(w), source: 'talk.life' },
           { value: 1, parts: [] },
         );
-        b.known[input.to] = Math.min(999, b.known[input.to] + gain.value);
-        if (gain.parts.some(p => p.id === 'buff.guest')) body.useBuff(w, people.who(w), 'guest');
+        b.known[input.to] = Math.min(999, b.known[input.to] + q.value);
+        if (q.parts.some(p => p.id === 'buff.guest')) body.useBuff(w, people.who(w), 'guest');
       }
       b.talked[input.to] = w.clock.day;
-      fact('person.talked', { who: people.who(w), to: input.to, first, gained, line });
+      const gain = b.known[input.to] - before; // 熟悉了多少，给画面说一声
+      fact('person.talked', { who: people.who(w), to: input.to, first, gained, gain, line });
     });
 
     commands.register('gift', ({ draft, input, fact }) => {
@@ -98,6 +100,7 @@ export const social = {
       const lines = LINES[input.to];
       const line = liked ? lines.treat : homeGrown(input.item) ? lines.gift : lines.thanks;
       b.gifted[input.to] = w.clock.day;
+      const before = b.known[input.to];
       const gain = compute.run(
         'relation.gain',
         { w, who: people.who(w), source: 'gift' },
@@ -112,6 +115,7 @@ export const social = {
         dish: dish?.base || null,
         who: people.who(w),
         liked,
+        gain: b.known[input.to] - before,
         line: line.replace('{n}', dish?.name || ITEMS[input.item].name),
       });
       return undefined;

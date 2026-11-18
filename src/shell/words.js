@@ -12,3 +12,11 @@ export function costText(cost) {
 
 /** 按这台设备的说法讲“怎么做”：键鼠是按空格，触屏是点“做”。 */
 export const doWord = touch => (touch ? '点「做」' : '按空格');
+
+/** 一格地要不要照料，一句话；不用照料（或还没锄）是空字符串。detail 来自 farm.detail 查询。 */
+export function careNote(detail) {
+  if (!detail) return '';
+  if (detail.weeds && detail.bugs) return '长了草，也生了虫';
+  if (detail.weeds) return '长了草';
+  return detail.bugs ? '叶上有虫' : '';
+}

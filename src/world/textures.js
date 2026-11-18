@@ -1,6 +1,6 @@
 // 把 art 层画好的像素格子交给 Phaser 当贴图，并登记人物的动画。
 // 贴图的名字：ground、obj:<种类>:<样子>、soil:<dry|wet>.<拼接>、crop:<阶段>、cursor:<ok|no>、
-// icon:<名字>、person:<外观>（每帧一个编号）、shadow、fx:<名字>。
+// mark:<weeds|bugs>（地里的毛病）、icon:<名字>、person:<外观>（每帧一个编号）、shadow、fx:<名字>。
 import * as art from '../art/index.js';
 import { GROUND } from '../content/maps/index.js';
 import { CROPS } from '../content/items.js';
@@ -65,6 +65,7 @@ export function buildTextures(scene, map) {
   for (const id of Object.keys(CROPS))
     art.cropSet(id).forEach((g, stage) => add(`crop:${id}:${stage}`, g));
   art.cropFrames().forEach((grid, stage) => add('crop:' + stage, grid));
+  for (const name of art.PLOT_MARKS) add('mark:' + name, art.plotMark(name));
   add('cursor:ok', art.cursor(true));
   add('cursor:no', art.cursor(false));
   for (const name of ['hoe', 'seed', 'can', 'hand']) add('icon:' + name, art.icon(name));

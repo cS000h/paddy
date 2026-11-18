@@ -104,11 +104,24 @@ button {
   box-shadow: var(--shadow);
 }
 
-/* 左上：日期和钟点 */
-.date {
+/* 左上一列：日期和钟点、下一步、流水，从上往下排，谁高都不会叠在一起 */
+#ui > .left {
   position: absolute;
   top: calc(10px + var(--safe-t));
   left: calc(10px + var(--safe-l));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.left > .date,
+.left > .next {
+  pointer-events: auto;
+}
+
+.date {
   display: flex;
   align-items: center;
   gap: 10px;

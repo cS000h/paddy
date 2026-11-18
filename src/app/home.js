@@ -47,8 +47,8 @@ export function homeActions({ game, shell, run, here }) {
       const modal = shell.get().modal;
       const out = run('gift', { to, item, dish: dish ? Number(dish) : null, ...at() });
       if (!out.ok) return;
-      const line = out.facts.find(f => f.type === 'gift.given').data.line;
-      shell.set({ modal: { ...modal, line, gifted: true } });
+      const { line, gain } = out.facts.find(f => f.type === 'gift.given').data;
+      shell.set({ modal: { ...modal, line, gain, gifted: true } });
     },
     basketPut({ item, n }) {
       if (run('basket.put', { item, n: Number(n), ...at() }).ok)

@@ -1,9 +1,11 @@
 // 界面面板：日期、身体（体力、饱、水、心情）、工具栏、提示条、流水、手记、各种小窗、触屏的摇杆和按钮。
 // 面板不改世界：要做事就发意图或调用 actions（由 app 提供），要显示就问端口。
+// 这个文件只管接线；常驻的几块在 hud.js，手记在 journal.js，小窗在 modals.js，摇杆在 stick.js。
 import { animateTiming } from './timing.js';
-import { TOOLS } from '../content/items.js';
-import { modalView } from './modals.js';
-import { toolIconUrl } from './icons.js';
+import { modalView, closesOnBackdrop } from './modals.js';
+import { HUD_HTML, renderHud, syncToolbar } from './hud.js';
+import { journalView, nextStepView } from './journal.js';
+import { bindStick } from './stick.js';
 import { esc } from './html.js';
 
 // 流水里不用特意告诉玩家的：干活花的体力（提示条上已经写了）、在行囊和橱柜之间挪东西。
@@ -26,21 +28,9 @@ const worthSaying = e => {
  * @param {() => object|undefined} deps.here 操控的人此刻站在哪一格
  */
 export function createPanels({ root, game, intents, shell, platform, actions, here }) {
-  const meter = (id, label) =>
-    `<span class="meter ${id}" data-id="${id}"><b>${label}</b><span class="bar"><i></i></span></span>`;
-  root.innerHTML = `
-    <div class="card date"><span class="seal">稻</span><div><b data-id="date"></b><small data-id="time"></small><button data-do="weather" data-id="weather"></button></div></div>
-    <div class="card vitals">
-      <span class="meter energy"><b>体力</b><span class="bar" data-id="bar"><i></i></span><em data-id="energy"></em></span>
-      ${meter('hunger', '饱')}${meter('thirst', '水')}${meter('mood', '心')}
-      <span class="buff" data-id="buff" hidden></span>
-      <span class="coins"><img class="pixel" width="16" height="16" src="${toolIconUrl('coin')}" alt="铜钱" /><span data-id="coins"></span></span>
-      <button data-do="book">册子</button><button data-do="bag">行囊</button><button data-do="journal">手记</button><button data-do="mute" data-id="mute"></button>
-    </div>
-    <div class="feed" data-id="feed"></div>
+  root.innerHTML = `${HUD_HTML}
     <aside class="card journal" data-id="journal" hidden></aside>
     <div class="hint" data-id="hint" hidden></div>
-    <nav class="card toolbar" data-id="toolbar"></nav>
     <div class="stick" data-id="stick" hidden><i></i></div>
     <button class="do" data-id="do" hidden>做</button>
     <div class="toast" data-id="toast"></div>
@@ -51,82 +41,20 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
   const sky = document.getElementById('sky');
   const veil = document.getElementById('veil');
   const small = profile => profile.narrow || profile.compact;
+  const touch = () => platform.device.profile().touch;
   let journalOpen = !small(platform.device.profile());
   let toastTimer = 0;
   let seenLedger = game.ask('ledger').at(-1)?.seq || 0;
+  let seed = shell.get().seed;
 
-  function setMeter(node, value, word, low) {
-    node.querySelector('i').style.width = `${value}%`;
-    node.classList.toggle('low', low);
-    node.title = word;
-  }
-
-  function renderHud() {
-    const clock = game.ask('clock');
-    const hero = game.ask('hero');
-    const home = game.ask('home');
-    const body = game.ask('body');
-    const pack = game.ask('pack');
-    const weather = game.ask('weather');
-    el.weather.textContent = `${weather.name} ${weather.temperature}° · ${game.ask('comfort').word}`;
-    el.date.textContent = `${clock.seasonName} · 第 ${clock.dayOfSeason} 日`;
-    el.time.textContent = `${clock.period} ${clock.clock} · ${clock.hour}`;
-    el.bar.firstElementChild.style.width = `${(hero.energy / hero.energyMax) * 100}%`;
-    el.bar.classList.toggle('low', hero.energy < 20);
-    el.energy.textContent = hero.energy;
-    setMeter(el.hunger, body.hunger, `饱腹 ${body.hunger}：${body.hungerWord}`, body.hunger < 20);
-    setMeter(el.thirst, body.thirst, `水分 ${body.thirst}：${body.thirstWord}`, body.thirst < 30);
-    setMeter(el.mood, body.mood, `心情 ${body.mood}：${body.moodWord}`, body.mood <= 25);
-    el.buff.hidden = !body.buff;
-    if (body.buff) {
-      el.buff.textContent = `${body.buff.name} ${body.buff.left}`;
-      el.buff.title = body.buff.text;
-    }
-    el.coins.textContent = home.coins;
-    el.mute.textContent = platform.audio.muted() ? '声·关' : '声·开';
-    const carried = id => pack.items.find(i => i.id === id)?.n || 0;
-    const badge = {
-      seed: carried('seed.qingcai'),
-      can: `${home.can}/${home.canMax}`,
-      hand: carried('veg.qingcai') || '',
-    };
-    const current = shell.get().tool;
-    el.toolbar.innerHTML =
-      TOOLS.map(
-        (
-          tool,
-          i,
-        ) => `<button data-tool="${tool.id}" class="${tool.id === current ? 'on' : ''}" title="${tool.verb}">
-        <em>${i + 1}</em><i>${badge[tool.id] ?? ''}</i>
-        <img class="pixel" src="${toolIconUrl(tool.id)}" alt="" />${tool.name}</button>`,
-      ).join('') + '<button data-do="seeds">选种</button><button data-do="field">田地</button>';
-    if (journalOpen) renderJournal(pack);
+  // 常驻的几块，加上手记（开着时）或左上角的“下一步”（合着时）。
+  function renderAll() {
+    renderHud(el, { game, shell, platform });
+    if (journalOpen) el.journal.innerHTML = journalView(game, touch());
     el.journal.hidden = !journalOpen;
-  }
-
-  function renderJournal(pack) {
-    const goals = game.ask('guide');
-    const next = goals.find(g => !g.done);
-    el.journal.innerHTML = `
-      <h2>手记</h2>
-      <ul>${goals
-        .map(
-          g =>
-            `<li class="${g.done ? 'done' : ''}"><span>${esc(g.text)}${g === next ? `<small>${esc(g.hint)}</small>` : ''}</span></li>`,
-        )
-        .join('')}</ul>
-      <h3>行囊里（${pack.used}/${pack.cap} 格）</h3>
-      <ul>${pack.items.map(i => `<li><span>${esc(i.name)}</span><span>${i.n}</span></li>`).join('') || '<li>空的</li>'}</ul>
-      <h3>乡邻</h3>
-      <ul>${game
-        .ask('bonds')
-        .map(
-          b =>
-            `<li><span>${esc(b.name)}<small>${esc(b.role)}</small></span><span>${b.known ? '熟悉 ' + b.known : '还没说过话'}</span></li>`,
-        )
-        .join('')}</ul>
-      <button data-do="saves">进度与玩法</button>
-      <button class="danger" data-do="reset">重新开始</button>`;
+    const next = journalOpen ? '' : nextStepView(game, touch());
+    el.next.hidden = !next;
+    el.next.innerHTML = next;
   }
 
   // 流水：上一条命令之后新记的几笔，在日期下面一行行冒出来，过一会儿自己淡掉。
@@ -153,16 +81,15 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
   function renderShell(state) {
     sky.style.backgroundColor = state.tint;
     veil.style.opacity = state.veil;
-    const touch = platform.device.profile().touch;
     const drawer = journalOpen && platform.device.profile().narrow;
-    el.stick.hidden = el.do.hidden = !touch || !!state.modal || drawer;
+    el.stick.hidden = el.do.hidden = !touch() || !!state.modal || drawer;
     el.hint.hidden = !state.hint || !!state.modal;
     if (state.hint) {
       el.hint.className = 'hint' + (state.hint.ok ? '' : ' no');
-      el.hint.innerHTML = esc(state.hint.text) + (state.hint.ok && !touch ? '<kbd>空格</kbd>' : '');
+      el.hint.innerHTML =
+        esc(state.hint.text) + (state.hint.ok && !touch() ? '<kbd>空格</kbd>' : '');
     }
-    for (const button of el.toolbar.children)
-      button.classList.toggle('on', button.dataset.tool === state.tool);
+    syncToolbar(el, state);
     renderModal(state);
   }
 
@@ -188,18 +115,24 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
     const what = button.dataset.do;
     if (what === 'journal') {
       journalOpen = !journalOpen;
-      renderHud();
+      renderAll();
       return renderShell(shell.get());
     }
     if (what === 'mute') {
       platform.audio.setMuted(!platform.audio.muted());
-      return renderHud();
+      return renderAll();
     }
     if (what === 'close') return shell.set({ modal: null });
     if (what && actions[what]) return actions[what](button.dataset);
     return undefined;
   });
+  // 点小窗外面的空白处也能关掉（手机上长的小窗不用滚到底找按钮）；开局的选择除外。
+  el.modal.addEventListener('click', event => {
+    const modal = shell.get().modal;
+    if (event.target === el.modal && modal && closesOnBackdrop(modal)) shell.set({ modal: null });
+  });
   el.do.addEventListener('click', () => intents.emit('act'));
+  bindStick(el.stick, intents, platform);
 
   // 有小窗的时候：确认键按主按钮，取消键关掉
   const offAct = intents.on('act', () => {
@@ -207,39 +140,6 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
       (el.modal.querySelector('button.main') || el.modal.querySelector('button'))?.click();
   });
   const offCancel = intents.on('cancel', () => shell.get().modal && shell.set({ modal: null }));
-
-  // 摇杆：手指离圆心多远就是多大的方向
-  const knob = el.stick.firstElementChild;
-  const stickMove = event => {
-    const box = el.stick.getBoundingClientRect();
-    const radius = box.width / 2;
-    // 手指离圆心的位移；画面转过来的时候，方向也要跟着转
-    const offset = platform.viewport.toLocalDelta(
-      event.clientX - box.left - radius,
-      event.clientY - box.top - radius,
-    );
-    let x = offset.x / radius;
-    let y = offset.y / radius;
-    const length = Math.hypot(x, y);
-    if (length > 1) {
-      x /= length;
-      y /= length;
-    }
-    knob.style.transform = `translate(${x * radius * 0.6}px, ${y * radius * 0.6}px)`;
-    intents.setMove('stick', Math.abs(x) < 0.25 ? 0 : x, Math.abs(y) < 0.25 ? 0 : y);
-  };
-  const stickEnd = () => {
-    knob.style.transform = '';
-    intents.setMove('stick', 0, 0);
-  };
-  el.stick.addEventListener('pointerdown', event => {
-    platform.viewport.lockLandscape();
-    el.stick.setPointerCapture(event.pointerId);
-    stickMove(event);
-  });
-  el.stick.addEventListener('pointermove', event => event.buttons && stickMove(event));
-  el.stick.addEventListener('pointerup', stickEnd);
-  el.stick.addEventListener('pointercancel', stickEnd);
 
   const offs = [
     animateTiming(root, shell),
@@ -254,23 +154,30 @@ export function createPanels({ root, game, intents, shell, platform, actions, he
         root.append(stamp);
         setTimeout(() => stamp.remove(), 3200);
       }
-      renderHud();
+      renderAll();
       renderFeed();
       if (shell.get().modal) renderModal(shell.get());
     }),
-    shell.subscribe(state => (renderShell(state), renderToast(state))),
-    platform.device.onChange(profile => {
-      if (small(profile) && journalOpen) {
-        journalOpen = false;
-        renderHud();
+    shell.subscribe(state => {
+      // 换了菜种，工具栏上那一格的图和数也要换
+      if (state.seed !== seed) {
+        seed = state.seed;
+        renderAll();
       }
+      renderShell(state);
+      renderToast(state);
+    }),
+    platform.device.onChange(profile => {
+      if (small(profile) && journalOpen) journalOpen = false;
+      // 键鼠和触屏说“怎么做”的话不一样，手记和“下一步”跟着重写
+      renderAll();
       renderShell(shell.get());
     }),
   ];
-  renderHud();
+  renderAll();
   renderShell(shell.get());
   return {
-    refresh: renderHud,
+    refresh: renderAll,
     destroy() {
       offs.forEach(off => off());
       root.innerHTML = '';

@@ -4,92 +4,10 @@
 // 本机没有 Chrome 时自动跳过。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
-import { readFile, mkdir } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const dist = path.join(root, 'dist');
-const TYPES = {
-  '.html': 'text/html',
-  '.js': 'text/javascript',
-  '.css': 'text/css',
-  '.webmanifest': 'application/manifest+json',
-};
-
-async function launch() {
-  try {
-    const { chromium } = await import('playwright-core');
-    return await chromium.launch({ channel: 'chrome', headless: true });
-  } catch {
-    return null;
-  }
-}
-
-function serve() {
-  const server = createServer(async (req, res) => {
-    const name = decodeURIComponent(new URL(req.url, 'http://x').pathname);
-    const file = path.join(dist, name === '/' ? 'index.html' : name);
-    try {
-      const body = await readFile(file);
-      const type = TYPES[path.extname(file)] || 'application/octet-stream';
-      res.writeHead(200, { 'content-type': type });
-      res.end(body);
-    } catch {
-      res.writeHead(404).end();
-    }
-  });
-  return new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(server)));
-}
-
-// 不等真实时间：直接让引擎走 n 帧（每帧 1/60 秒）。
-const frames = (page, n) =>
-  page.evaluate(count => {
-    const game = window.__dao.world.scene().game;
-    let t = performance.now();
-    for (let i = 0; i < count; i++) game.step((t += 16.67), 16.67);
-  }, n);
-// 用意图“点”一格（不经过真实的鼠标或手指）。
-const tap = (page, x, y) =>
-  page.evaluate(
-    ([tx, ty]) => window.__dao.intents.emit('tap', { x: tx * 16 + 8, y: ty * 16 + 8 }),
-    [x, y],
-  );
-const plot = (page, x, y) =>
-  page.evaluate(
-    ([px, py]) => window.__dao.game.ask('farm.plots', 'yard').find(p => p.x === px && p.y === py),
-    [x, y],
-  );
-// 世界里的一格，此刻在屏幕上的哪个位置（画面转过来的时候也算对）。
-const onScreen = (page, x, y) =>
-  page.evaluate(
-    ([tx, ty]) => {
-      const camera = window.__dao.world.scene().cameras.main;
-      const lx = (tx * 16 + 8 - camera.worldView.x) * camera.zoom;
-      const ly = (ty * 16 + 8 - camera.worldView.y) * camera.zoom;
-      return window.__dao.platform.viewport.size().rotated
-        ? { x: window.innerWidth - ly, y: lx }
-        : { x: lx, y: ly };
-    },
-    [x, y],
-  );
-
-async function open(browser, port, options) {
-  const context = await browser.newContext(options);
-  const page = await context.newPage();
-  const errors = [];
-  page.on('pageerror', error => errors.push(String(error)));
-  page.on('console', message => message.type() === 'error' && errors.push(message.text()));
-  await page.goto(`http://127.0.0.1:${port}/?debug`);
-  await page.waitForFunction(() => window.__dao?.world.scene()?.player, null, { timeout: 15000 });
-  await page.locator('[data-do="originPick"][data-id="later"]').click();
-  await page.locator('[data-do="originPick"][data-id="quiet"]').click();
-  return { page, errors };
-}
-
-const shot = (page, name) => page.screenshot({ path: path.join(root, '.cache', name) });
+import { root, launch, serve, frames, tap, plot, onScreen, open, shot } from './browser.js';
 
 test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏、手指点得准；全程没有报错', async t => {
   const built = spawnSync(process.execPath, ['node_modules/vite/bin/vite.js', 'build'], {
@@ -121,6 +39,8 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       crop: null,
       stage: -1,
       ripe: false,
+      weeds: false,
+      bugs: false,
     });
     await tap(page, 8, 20); // 再点：自动换成菜种
     await frames(page, 40);
@@ -202,6 +122,20 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     assert.equal(await wide.page.locator('#app.compact .stick').isVisible(), true);
     await frames(wide.page, 30);
     await shot(wide.page, 'smoke-phone-landscape.png');
+    // 新来的人：手记收着时左上角有“下一步”，用这台设备的说法讲怎么做
+    assert.match(await wide.page.locator('.next').textContent(), /锄松一格地.*菜地.*点「做」/);
+    assert.equal(await desk.page.locator('.next').isVisible(), false, '手记开着就不重复');
+    await desk.page.evaluate(() => window.__dao.shell.set({ modal: null })); // 收起清早的便条
+    await desk.page.locator('.vitals [data-do="journal"]').click();
+    assert.match(await desk.page.locator('.next').textContent(), /下一步.*按空格/);
+    await desk.page.locator('.vitals [data-do="journal"]').click();
+    // 矮屏上长的小窗：最底下那排按钮不用滚动就够得着；点纸外面的空白处也能关掉
+    await wide.page.locator('[data-do="bag"]').tap();
+    await wide.page.locator('[data-do="saves"]').tap();
+    const closeBox = await wide.page.locator('[data-do="close"]').boundingBox();
+    assert.ok(closeBox.y + closeBox.height <= 390, '“回去”要在屏幕里');
+    await wide.page.touchscreen.tap(12, 200);
+    assert.equal(await wide.page.evaluate(() => window.__dao.shell.get().modal), null);
     // M1：从世界走到橱柜，真的点按钮存取、吃米糕，再去水缸喝水。
     for (const session of [desk, wide]) {
       const p = session.page;

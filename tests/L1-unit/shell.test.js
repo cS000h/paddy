@@ -111,3 +111,18 @@ test('小工具：格子换算、朝向、天色', () => {
   assert.notEqual(skyTint(6 * 60), '#ffffff');
   assert.match(skyTint(23 * 60), /^#[0-9a-f]{6}$/);
 });
+
+test('外壳共用的话：体力价钱、地里要不要照料、按设备说怎么做', async () => {
+  const { costText, careNote, doWord } = await import('../../src/shell/words.js');
+  assert.equal(costText({ value: 4, parts: [] }), '体力 4');
+  const parts = [
+    { label: '饿着', delta: 1 },
+    { label: '清早', delta: -1 },
+  ];
+  assert.equal(costText({ value: 4, parts }), '体力 4（饿着+1、清早−1）');
+  assert.equal(careNote(null), '');
+  assert.equal(careNote({ weeds: false, bugs: false }), '');
+  assert.equal(careNote({ weeds: true, bugs: false }), '长了草');
+  assert.equal(careNote({ weeds: true, bugs: true }), '长了草，也生了虫');
+  assert.notEqual(doWord(true), doWord(false));
+});

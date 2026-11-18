@@ -81,9 +81,7 @@
   color: var(--ink-2);
 }
 .feed {
-  position: absolute;
-  top: 76px;
-  left: 16px;
+  margin-left: 6px;
   pointer-events: none !important;
   font-size: 12px;
 }
@@ -232,4 +230,57 @@
     opacity: 0;
     scale: 1;
   }
+}
+
+/* 日期底下的“下一步”：手记合着时提醒新来的人接着做什么，点它打开手记。 */
+.next {
+  max-width: 320px;
+  padding: 6px 12px;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.next b {
+  margin-right: 8px;
+  color: var(--cinnabar);
+  font-size: 12px;
+}
+.next small {
+  display: block;
+  color: var(--ink-2);
+  font-size: 11px;
+}
+.compact .next {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.narrow .next {
+  max-width: 250px;
+}
+
+/* 长的小窗：最底下那排按钮贴在纸的下沿，不用滚到底才找得到“好”“回去”。 */
+.sheet > .row:last-child {
+  position: sticky;
+  bottom: -16px;
+  margin-bottom: -16px;
+  padding: 10px 0 16px;
+  background: var(--paper);
+  box-shadow: 0 -10px 10px -10px rgba(43, 52, 54, 0.35);
+}
+.compact .sheet > .row:last-child {
+  bottom: -10px;
+  margin-bottom: -10px;
+  padding-bottom: 10px;
+}
+
+/* 面前那格地长了草、生了虫：工具栏的“田地”点上一点朱砂。 */
+.toolbar button.alert::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cinnabar);
 }

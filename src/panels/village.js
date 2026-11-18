@@ -29,8 +29,10 @@ function giftsFor(modal, game, here) {
 
 export function talkView(modal, game, here) {
   const person = PEOPLE[modal.who];
+  const known = game.ask('bonds').find(b => b.id === modal.who).known;
+  const gained = modal.gain ? `（+${modal.gain}）` : '';
   return `${title(person.name, `${person.role} · ${modal.doing}`)}
-    ${para(modal.line)}${giftsFor(modal, game, here)}
+    ${para(modal.line)}${para(`熟悉 ${known}${gained}`, 'aside')}${giftsFor(modal, game, here)}
     ${actions(close())}`;
 }
 
