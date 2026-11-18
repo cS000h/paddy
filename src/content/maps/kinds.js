@@ -12,6 +12,8 @@ export const GROUND = Object.freeze({
   w: { id: 'water', walk: false, water: true, drink: 'creek' },
   r: { id: 'paddy', walk: false, water: true },
   '#': { id: 'thicket', walk: false },
+  a: { id: 'sand', walk: true }, // 河滩、溪边的沙地
+  m: { id: 'moss', walk: true }, // 竹林、松林底下的苔地
 });
 
 // 物件种类。foot = 相对锚点格 [dx0, dy0, dx1, dy1] 的占地（挡路）范围；没有 foot 的不挡路。
@@ -62,4 +64,13 @@ export const OBJECTS = Object.freeze({
   rock: { foot: [0, 0, 0, 0] },
   flowers: {},
   reeds: {},
+  // 各地的标志物（art/landmarks.js）
+  lantern: { foot: [0, 0, 0, 0] },
+  stall: { foot: [-1, 0, 1, 0] },
+  pavilion: { foot: [-1, -1, 1, 0], act: 'housework' },
+  lotus: {},
+  shrine: { foot: [0, 0, 0, 0], act: 'sign' },
+  cart: { foot: [0, 0, 1, 0] },
+  stones: {},
+  netRack: { foot: [0, 0, 1, 0] },
 });

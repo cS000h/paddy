@@ -131,6 +131,10 @@ export function createEffects(scene, map) {
     refilled(px, py) {
       splash.explode(8, px, py - 4);
     },
+    /** 拍了拍草垛、稻草人、芦苇：扑起一阵草屑。 */
+    straw(px, py) {
+      seeds.explode(9, px, py);
+    },
     /** 一格新长出来的东西轻轻弹一下。 */
     pop(target) {
       scene.tweens.add({

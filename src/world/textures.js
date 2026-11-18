@@ -106,6 +106,9 @@ export function buildTextures(scene, map) {
   add('fx:petal', speck(2, 1, P.p2));
   add('fx:glint', speck(3, 1, P.w0));
   add('fx:smoke', puff(9, P.l1));
+  add('fx:steam', puff(7, P.l0));
+  add('fx:lantern', art.lanternGlobe());
+  for (const [name, grid] of Object.entries(art.critters())) add('fx:' + name, grid);
   return { anchors };
 }
 

@@ -16,28 +16,28 @@
   justify-content: flex-end;
   align-items: stretch;
   padding: calc(8px + var(--safe-t)) calc(8px + var(--safe-r)) calc(8px + var(--safe-b)) 8px;
-  background: linear-gradient(90deg, rgba(34, 48, 44, 0.04) 30%, rgba(34, 48, 44, 0.24));
+  background: linear-gradient(90deg, rgba(36, 40, 42, 0.04) 30%, rgba(36, 40, 42, 0.24));
 }
 
 .modal.dialogue {
   justify-content: center;
   align-items: flex-end;
   padding: 0 calc(12px + var(--safe-r)) calc(10px + var(--safe-b)) calc(12px + var(--safe-l));
-  background: linear-gradient(to top, rgba(34, 48, 44, 0.24), transparent 60%);
+  background: linear-gradient(to top, rgba(36, 40, 42, 0.24), transparent 60%);
 }
 
 .modal.center {
   justify-content: center;
   align-items: center;
   padding: calc(10px + var(--safe-t)) 12px calc(10px + var(--safe-b));
-  background: rgba(34, 48, 44, 0.3);
+  background: rgba(36, 40, 42, 0.3);
 }
 
 .modal.menu {
   justify-content: flex-end;
   align-items: flex-start;
   padding: calc(50px + var(--safe-t)) calc(10px + var(--safe-r)) 0 0;
-  background: rgba(34, 48, 44, 0.08);
+  background: rgba(36, 40, 42, 0.08);
 }
 
 .frame {
@@ -106,8 +106,8 @@
   padding: 0 18px;
   background: var(--moon);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(34, 48, 44, 0.25);
+  border-radius: var(--r-card);
+  box-shadow: 0 10px 30px rgba(36, 40, 42, 0.25);
 }
 
 .frame.side > .sheet {
@@ -116,7 +116,7 @@
 
 .sheet.dialogue {
   padding-top: 14px;
-  border-radius: 16px;
+  border-radius: var(--r-card);
 }
 
 .sheet.menu {
@@ -133,7 +133,7 @@
   height: 34px;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--r);
   background: var(--mist);
 }
 
@@ -168,8 +168,8 @@
   border-bottom: 1px solid var(--mist-2);
   background: var(--moon);
   font-size: 19px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
 }
 
 .sheet > h2 small {
@@ -192,7 +192,7 @@
   margin: 14px 0 6px;
   color: var(--qing);
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: 0.12em;
 }
 
@@ -218,8 +218,8 @@
 /* 做完一件事的那段话：像夹在纸里的一张小笺 */
 .sheet .activity-story {
   padding: 8px 12px;
-  border-left: 3px solid var(--line);
-  border-radius: 0 8px 8px 0;
+  border-left: 3px solid var(--sprout);
+  border-radius: 0;
   background: linear-gradient(90deg, var(--mist), transparent);
 }
 
@@ -298,7 +298,7 @@
   flex: none;
   width: 46px;
   height: 46px;
-  border-radius: 9px;
+  border-radius: 3px;
   font-size: 25px;
   transform: rotate(-5deg);
 }
@@ -306,7 +306,7 @@
 .speaker .who b {
   display: block;
   font-size: 20px;
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: 0.1em;
 }
 
@@ -318,7 +318,7 @@
 .speaker .bond {
   margin-left: auto;
   padding: 3px 11px;
-  border-radius: 999px;
+  border-radius: 2px;
   background: var(--mist);
   color: var(--ink-2);
   font-size: 12.5px;
@@ -363,7 +363,7 @@
   gap: 6px;
   min-height: 36px;
   padding: 3px 12px 3px 5px;
-  border-radius: 999px;
+  border-radius: var(--r);
   font-size: 13.5px;
 }
 
@@ -408,7 +408,7 @@
   margin-left: 6px;
   color: var(--ink-3);
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 600;
 }
 
 .items small {
@@ -469,7 +469,7 @@
   gap: 5px;
   min-height: 36px;
   padding: 4px 12px;
-  border-radius: 999px;
+  border-radius: var(--r);
   font-size: 13.5px;
 }
 
@@ -497,6 +497,63 @@
   background: var(--mist-2);
 }
 
+.stove-picture {
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+}
+
+.stove-strip {
+  display: block;
+  width: min(232px, 100%);
+  aspect-ratio: 116 / 50;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  image-rendering: pixelated;
+}
+
+.stove-strip.heat {
+  width: 128px;
+  aspect-ratio: 64 / 50;
+  background-position-x: calc(var(--pose, 0) * 100% / 7);
+}
+
+.stove-strip.moving {
+  background-size: 800% 100%;
+}
+
+.stove-strip.prep.moving {
+  animation: cook-poses 1.4s steps(8, jump-none) infinite;
+}
+
+@keyframes cook-poses {
+  from {
+    background-position-x: 0%;
+  }
+  to {
+    background-position-x: 100%;
+  }
+}
+
+.items img.served-dish {
+  width: 48px;
+  height: auto;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.cooked-story {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cooked-story img {
+  flex: none;
+  image-rendering: pixelated;
+}
+
 .timing .zone {
   position: absolute;
   height: 100%;
@@ -510,7 +567,7 @@
   height: 100%;
   margin-left: -2px;
   background: var(--cinnabar);
-  box-shadow: 0 0 6px rgba(184, 63, 43, 0.6);
+  box-shadow: 0 0 6px rgba(163, 55, 42, 0.6);
 }
 
 .origin-choices {
@@ -542,14 +599,14 @@
   width: 32px;
   height: 32px;
   border: 1px dashed var(--mist-2);
-  border-radius: 6px;
+  border-radius: 3px;
   color: var(--ink-3);
 }
 
 .achievement-seal.earned {
   border: 0;
   background: var(--cinnabar);
-  color: #fff6ec;
+  color: #f4ead6;
   transform: rotate(-8deg);
 }
 
@@ -573,7 +630,7 @@
   min-height: 40px;
   padding: 8px 14px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--r);
   background: transparent;
   font-size: 15px;
   text-align: left;
@@ -598,10 +655,10 @@
   aspect-ratio: 16 / 10;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-card);
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(196, 214, 192, 0.7), transparent 60%),
-    radial-gradient(ellipse at 60% 70%, rgba(217, 228, 196, 0.8), transparent 55%), #e8efe4;
+    radial-gradient(ellipse at 30% 20%, rgba(190, 198, 160, 0.55), transparent 60%),
+    radial-gradient(ellipse at 60% 70%, rgba(222, 214, 182, 0.65), transparent 55%), #ece5d2;
 }
 
 .atlas svg {
@@ -620,11 +677,11 @@
 }
 
 .atlas .hill {
-  fill: #bdd2b9;
+  fill: #b7c39e;
 }
 
 .atlas .field {
-  fill: #d4e0bd;
+  fill: #d9d4a8;
 }
 
 .atlas .roads path {
@@ -643,9 +700,9 @@
   align-items: center;
   min-height: 0;
   padding: 4px 10px;
-  border-radius: 10px;
+  border-radius: var(--r);
   background: var(--moon);
-  box-shadow: 0 2px 6px rgba(34, 48, 44, 0.16);
+  box-shadow: 0 2px 6px rgba(36, 40, 42, 0.16);
   font-size: 13.5px;
   line-height: 1.35;
   white-space: nowrap;

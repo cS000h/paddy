@@ -1,33 +1,36 @@
 @import './sheet.css';
-/* 界面的样子：月白的纸、天青的边、墨色的字，朱砂只用在印上。纸是半透明的，世界能透出来，
-   清一些、薄一些，不压着画面。常驻的几块在这里；各种小窗在 sheet.css。
+/* 界面的样子跟着稻间走：宣纸、墨、朱砂，正文是宋体。纸是半透明的，世界能透出来，
+   清一些、薄一些，不压着画面；角都方一些，像裱起来的画和册页。常驻的几块在这里；各种小窗在 sheet.css。
    不用媒体查询：手机竖着拿时画面是转过来的，布局变化看平台层设在 #app 上的
    narrow（窄）、compact（矮，横着的手机）、tight（很矮，地址栏还占着一截）。 */
 
-/* 霞鹜文楷 GB 屏幕版，只裁了游戏用到的字（tools/font-subset.mjs），许可证见 fonts/OFL.txt */
+/* 思源宋体（Noto Serif SC），字重 400–700，只裁了游戏用到的字（tools/font-subset.mjs），许可证见 fonts/OFL.txt */
 @font-face {
-  font-family: 'WenKai';
-  src: url('./fonts/wenkai.woff2') format('woff2');
+  font-family: 'Dao Serif';
+  src: url('./fonts/noto-serif-sc.woff2') format('woff2');
+  font-weight: 400 700;
   font-display: swap;
 }
 
 :root {
-  --moon: #f5f8f3; /* 月白：纸 */
-  --moon-a: rgba(245, 248, 243, 0.9); /* 半透明的纸：常驻的几块 */
-  --mist: #e2ebe5; /* 雾：凹下去的槽、空着的圈 */
-  --mist-2: #cfdcd4;
-  --line: rgba(94, 143, 128, 0.4); /* 天青的细边 */
-  --qing: #5e8f80; /* 青瓷：选中、主色 */
-  --ink: #22302c; /* 墨：字、主按钮 */
-  --ink-2: #4c5b56;
-  --ink-3: #8a9792;
-  --cinnabar: #b83f2b; /* 朱砂：印、快见底的数 */
-  --sprout: #6e9b5a; /* 力 */
-  --straw: #cf9f45; /* 饱 */
-  --water: #5a93ad; /* 水 */
-  --peach: #cf7b88; /* 心 */
-  --shadow: 0 6px 18px rgba(34, 48, 44, 0.16);
-  --font: 'WenKai', 'Kaiti SC', 'STKaiti', 'KaiTi', 'Noto Serif SC', serif;
+  --moon: #f3eee1; /* 宣纸 */
+  --moon-a: rgba(243, 238, 225, 0.93); /* 半透明的纸：常驻的几块 */
+  --mist: #e7e1cf; /* 旧一些的纸：凹下去的槽、空着的圈 */
+  --mist-2: #d8cfb6;
+  --line: rgba(148, 128, 92, 0.45); /* 浅褐的细边，像裱画的绫边 */
+  --qing: #33536a; /* 黛蓝：选中、主色 */
+  --ink: #24282a; /* 墨：字、主按钮 */
+  --ink-2: #4b4f49;
+  --ink-3: #7c7d72;
+  --cinnabar: #a3372a; /* 朱砂：印、快见底的数 */
+  --sprout: #6b874b; /* 力：秧绿 */
+  --straw: #c09538; /* 饱：稻黄 */
+  --water: #5f8fa0; /* 水 */
+  --peach: #a85d63; /* 心 */
+  --shadow: 0 6px 18px rgba(36, 40, 42, 0.16);
+  --font: 'Dao Serif', 'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+  --r: 3px; /* 按钮、小块的角 */
+  --r-card: 4px; /* 纸面的角 */
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-l: env(safe-area-inset-left, 0px);
@@ -45,7 +48,7 @@ body {
   height: 100%;
   margin: 0;
   overflow: hidden;
-  background: #cfdcb8;
+  background: #d9d3bf;
   color: var(--ink);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
@@ -86,11 +89,9 @@ body {
   transition: background-color 3s linear;
 }
 
-/* 画的四角淡淡地洇开一点，像画在纸上；上沿再浅一些，日期、身体那两块落在上面不显得生硬 */
+/* 画的四角压暗一点点，像装在框里；不再往画上罩白雾，颜色是多少就是多少 */
 .paper {
-  background:
-    radial-gradient(ellipse at 50% 46%, transparent 62%, rgba(226, 235, 229, 0.42) 100%),
-    linear-gradient(to bottom, rgba(245, 248, 243, 0.42), transparent 15%);
+  background: radial-gradient(ellipse at 50% 46%, transparent 64%, rgba(36, 40, 42, 0.12) 100%);
 }
 
 .veil {
@@ -112,8 +113,8 @@ button {
   color: inherit;
   cursor: pointer;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.55);
-  border-radius: 9px;
+  background: rgba(250, 247, 238, 0.6);
+  border-radius: var(--r);
   transition:
     transform 0.12s,
     background-color 0.15s,
@@ -136,7 +137,7 @@ button:focus-visible {
 .card {
   background: var(--moon-a);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-card);
   box-shadow: var(--shadow);
 }
 
@@ -151,12 +152,13 @@ button:focus-visible {
   display: grid;
   place-items: center;
   background: var(--cinnabar);
-  color: #fff6ec;
+  color: #f4ead6;
   box-shadow:
     inset 0 0 0 2px var(--cinnabar),
-    inset 0 0 0 3.5px rgba(255, 246, 236, 0.85);
+    inset 0 0 0 3.5px rgba(244, 234, 214, 0.85);
   -webkit-mask: var(--stamp) center / 140% 140%;
   mask: var(--stamp) center / 140% 140%;
+  font-weight: 600;
 }
 
 /* —— 左上：日期、钟点、天气；底下一条“下一步” —— */
@@ -185,7 +187,7 @@ button:focus-visible {
 .date .seal {
   width: 32px;
   height: 32px;
-  border-radius: 7px;
+  border-radius: 3px;
   font-size: 19px;
   transform: rotate(-5deg);
 }
@@ -193,7 +195,7 @@ button:focus-visible {
 .when b {
   display: block;
   font-size: 15px;
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: 0.06em;
 }
 
@@ -208,7 +210,7 @@ button:focus-visible {
   margin-left: 4px;
   padding: 4px 11px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--r);
   background: var(--mist);
   color: var(--ink-2);
   font-size: 12.5px;
@@ -319,7 +321,7 @@ button:focus-visible {
 
 .buff {
   padding: 2px 9px;
-  border-radius: 999px;
+  border-radius: 2px;
   background: var(--mist);
   color: var(--qing);
   font-size: 11.5px;
@@ -372,7 +374,7 @@ button:focus-visible {
   padding: 5px 8px;
   background: var(--moon-a);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 6px;
   box-shadow: var(--shadow);
 }
 
@@ -384,8 +386,8 @@ button:focus-visible {
   width: 56px;
   height: 56px;
   padding: 0;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--r-card);
+  background: rgba(250, 247, 238, 0.66);
 }
 
 .toolbar [data-tool] img {
@@ -402,7 +404,7 @@ button:focus-visible {
 .toolbar [data-tool].on {
   background: var(--moon);
   border: 2px solid var(--qing);
-  box-shadow: 0 6px 12px rgba(94, 143, 128, 0.28);
+  box-shadow: 0 6px 12px rgba(51, 83, 106, 0.28);
   transform: translateY(-4px);
 }
 
@@ -446,7 +448,7 @@ button:focus-visible {
   position: relative;
   height: 36px;
   padding: 0 11px;
-  border-radius: 999px;
+  border-radius: var(--r);
   font-size: 13.5px;
 }
 
@@ -474,8 +476,8 @@ button:focus-visible {
   bottom: calc(92px + var(--safe-b));
   transform: translateX(-50%);
   padding: 5px 14px;
-  border-radius: 999px;
-  background: rgba(34, 48, 44, 0.8);
+  border-radius: var(--r);
+  background: rgba(36, 40, 42, 0.8);
   color: var(--moon);
   font-size: 14px;
   white-space: nowrap;
@@ -483,14 +485,14 @@ button:focus-visible {
 }
 
 .hint.no {
-  background: rgba(122, 134, 128, 0.85);
+  background: rgba(124, 125, 114, 0.85);
 }
 
 .hint kbd {
   margin-left: 8px;
   padding: 0 6px;
-  border: 1px solid rgba(245, 248, 243, 0.5);
-  border-radius: 4px;
+  border: 1px solid rgba(243, 238, 225, 0.5);
+  border-radius: 2px;
   font: inherit;
   font-size: 11.5px;
 }
@@ -503,9 +505,9 @@ button:focus-visible {
   width: 116px;
   height: 116px;
   margin: -58px 0 0 -58px;
-  border: 2px solid rgba(245, 248, 243, 0.85);
+  border: 2px solid rgba(243, 238, 225, 0.85);
   border-radius: 50%;
-  background: rgba(34, 48, 44, 0.14);
+  background: rgba(36, 40, 42, 0.14);
   pointer-events: none !important;
 }
 
@@ -514,7 +516,7 @@ button:focus-visible {
   left: max(78px, 15%);
   top: 64%;
   border-style: dashed;
-  background: rgba(245, 248, 243, 0.1);
+  background: rgba(243, 238, 225, 0.1);
   opacity: 0.5;
   transform: none !important;
   transition: opacity 0.3s;
@@ -528,10 +530,10 @@ button:focus-visible {
   height: 48px;
   margin: -24px;
   border-radius: 50%;
-  background: rgba(245, 248, 243, 0.94);
+  background: rgba(243, 238, 225, 0.94);
   box-shadow:
     inset 0 0 0 2px var(--qing),
-    0 2px 8px rgba(34, 48, 44, 0.3);
+    0 2px 8px rgba(36, 40, 42, 0.3);
 }
 
 .stick:not(.live) i {
@@ -551,12 +553,12 @@ button:focus-visible {
   height: 74px;
   padding: 0;
   border: 0;
-  border-radius: 14px;
+  border-radius: 6px;
   background: var(--cinnabar);
-  color: #fff6ec;
+  color: #f4ead6;
   box-shadow:
     inset 0 0 0 3px var(--cinnabar),
-    inset 0 0 0 5px rgba(255, 246, 236, 0.9),
+    inset 0 0 0 5px rgba(244, 234, 214, 0.9),
     0 6px 16px rgba(120, 38, 22, 0.32);
   transform: rotate(-4deg);
   -webkit-mask: var(--stamp) center / 150% 150%;
@@ -565,6 +567,7 @@ button:focus-visible {
     transform 0.1s,
     filter 0.2s,
     opacity 0.2s;
+  font-weight: 700;
 }
 
 .do .pair {
@@ -609,9 +612,9 @@ button:focus-visible {
   position: absolute;
   padding: 4px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--r-card);
   background: var(--moon);
-  box-shadow: 0 3px 10px rgba(34, 48, 44, 0.18);
+  box-shadow: 0 3px 10px rgba(36, 40, 42, 0.18);
   color: var(--ink);
   font-size: 14.5px;
   white-space: nowrap;
@@ -659,8 +662,8 @@ button:focus-visible {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(245, 248, 243, 0.95) 15%,
-    rgba(245, 248, 243, 0.95) 85%,
+    rgba(243, 238, 225, 0.95) 15%,
+    rgba(243, 238, 225, 0.95) 85%,
     transparent
   );
   color: var(--ink);
@@ -689,7 +692,7 @@ button:focus-visible {
 /* 数的变化从人身边飘起来 */
 .float {
   position: absolute;
-  color: #3e7a44;
+  color: #3f5d2b;
   font-size: 13.5px;
   white-space: nowrap;
   text-shadow:
@@ -701,7 +704,7 @@ button:focus-visible {
 }
 
 .float.down {
-  color: #8a4c43;
+  color: #8b2e22;
 }
 
 @keyframes float-up {
@@ -729,7 +732,7 @@ button:focus-visible {
   gap: 12px;
   padding: 10px 20px 10px 10px;
   border: 2px solid var(--cinnabar);
-  border-radius: 10px;
+  border-radius: var(--r-card);
   background: var(--moon);
   box-shadow: var(--shadow);
   color: var(--cinnabar);
@@ -743,15 +746,15 @@ button:focus-visible {
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 7px;
+  border-radius: 3px;
   background: var(--cinnabar);
-  color: #fff6ec;
+  color: #f4ead6;
   font-size: 21px;
 }
 
 .award-stamp b {
   font-size: 18px;
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: 0.12em;
 }
 
@@ -786,7 +789,7 @@ button:focus-visible {
 .journal h2 {
   margin: 0 0 6px;
   font-size: 17px;
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: 0.3em;
 }
 
@@ -932,13 +935,13 @@ button:focus-visible {
   bottom: calc(8px + var(--safe-b));
   gap: 5px;
   padding: 4px 6px;
-  border-radius: 999px;
+  border-radius: 6px;
 }
 
 .compact .toolbar [data-tool] {
   width: 46px;
   height: 46px;
-  border-radius: 50%;
+  border-radius: var(--r-card);
 }
 
 .compact .toolbar [data-tool] img {

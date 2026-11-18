@@ -16,6 +16,9 @@ import {
 import { wildProps, wildLooks } from './wild.js';
 import { stove, bookshelf } from './kitchen.js';
 import * as props from './props.js';
+import * as landmarks from './landmarks.js';
+import * as waterside from './waterside.js';
+import { critters } from './critters.js';
 import { soilTile, cropFrames, cursor, icon } from './tiles.js';
 import { personSheet, LOOK_NAMES, FRAME_W, FRAME_H, POSES, DIRS } from './people.js';
 import { plants } from './items-plants.js';
@@ -58,6 +61,15 @@ const OBJECT_MAKERS = {
   'tree.pine': seed => pineTree(seed),
   bamboo: seed => bambooGrove(seed),
   bush: seed => bush(seed),
+  lantern: () => landmarks.lanternPost(),
+  stall: seed => landmarks.stall(seed),
+  pavilion: () => landmarks.pavilion(),
+  boat: waterside.boat,
+  lotus: waterside.lotus,
+  shrine: () => landmarks.shrine(),
+  cart: () => landmarks.cart(),
+  stones: waterside.stones,
+  netRack: waterside.netRack,
 };
 const VARIANTS = 4;
 
@@ -89,7 +101,8 @@ export function soilSet() {
   return out;
 }
 
-export { cropFrames, cursor, icon, personSheet };
+export { cropFrames, cursor, icon, personSheet, critters };
+export const lanternGlobe = landmarks.lanternGlobe;
 
 // 物品的图标：键和 content/pantry.js 里的物品一一对应（测试会检查）。
 const ITEM_MAKERS = { ...plants, ...pantry, ...things };

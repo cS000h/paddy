@@ -1,6 +1,7 @@
 // 地点交互集中在这里：面前的东西该提示什么、右下那枚印上刻什么字，点了以后开哪个面板。
 // 这里只开面板，规则仍由端口决定。
 import { PEOPLE } from '../content/people.js';
+import { POKES } from '../content/pokes.js';
 import { farmable } from '../content/maps/index.js';
 import { costText, careNote } from '../shell/words.js';
 import { dirTo, toolVerb } from './logic.js';
@@ -59,6 +60,10 @@ const TOOL_STAMP = { hoe: '锄地', seed: '播种', can: '浇水', hand: '采收
  */
 export function hintFor(scene, t) {
   const { game, shell } = scene.deps;
+  if (t.kind === 'decor') {
+    const p = POKES[t.decor.kind];
+    return { text: p.hint, verb: p.verb, ok: true };
+  }
   if (t.kind === 'person')
     return { text: `和${PEOPLE[t.person.id].name}说话`, verb: '说话', ok: true };
   if (t.kind === 'thing') {
@@ -118,4 +123,40 @@ export function touchThing(scene, thing) {
   return shell.set({
     modal: { kind: 'sign', text: thing.text || '门虚掩着，屋里飘出饭菜的香味。桂嫂大概在灶上忙。' },
   });
+}
+
+/** 这一格上有没有能随手碰一碰的东西（树、竹、花、草垛……，见 content/pokes.js）。 */
+export function decorAt(scene, x, y) {
+  return scene.scenery.find(s => s.x === x && s.y === y && POKES[s.kind]) || null;
+}
+
+const SHED = { leaf: ['fx:leaf', null], petal: ['fx:petal', null], needle: ['fx:leaf', 0x547a4a] };
+
+/** 碰一碰：那样东西晃一晃，飘下几片叶子或花瓣，有时惊起几只鸟，冒一句话。不改世界。 */
+export function poke(scene, decor) {
+  const { shell, platform } = scene.deps;
+  const p = POKES[decor.kind];
+  const { sprite } = decor;
+  scene.player.face(dirTo(scene.player.tile, decor));
+  platform.audio.play('talk');
+  if (!decor.shaking) {
+    decor.shaking = true;
+    const x = sprite.x;
+    scene.tweens.add({
+      targets: sprite,
+      x: x + 1.5,
+      duration: 55,
+      yoyo: true,
+      repeat: 3,
+      onComplete: () => {
+        sprite.x = x;
+        decor.shaking = false;
+      },
+    });
+  }
+  const top = sprite.y - sprite.displayHeight * 0.6;
+  if (p.fx === 'straw') scene.effects.straw(sprite.x, sprite.y - 6);
+  else if (SHED[p.fx]) scene.ambient.shed(sprite.x, top, 5, ...SHED[p.fx]);
+  if (p.birds && Math.random() < 0.6) scene.ambient.scare(sprite.x, top);
+  if (p.lines.length) shell.toast(p.lines[Math.floor(Math.random() * p.lines.length)]);
 }

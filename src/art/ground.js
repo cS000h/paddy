@@ -7,13 +7,14 @@ import { P } from './palette.js';
 export const TILE = 16;
 
 // 这些地面之间的边界画成自然的曲线；菜地、水田、桥是人修的，边界保持平直。
-const SOFT = new Set(['grass', 'earth', 'stone', 'water', 'thicket']);
+const SOFT = new Set(['grass', 'earth', 'stone', 'water', 'thicket', 'sand', 'moss']);
 const WET = new Set(['water', 'paddy']);
-const GREEN = new Set(['grass', 'thicket']);
-const BARE = new Set(['earth', 'stone', 'field']);
+const GREEN = new Set(['grass', 'thicket', 'moss']);
+const BARE = new Set(['earth', 'stone', 'field', 'sand']);
 
 /**
- * @param {string[][]} tiles 每一格的地面种类：grass、earth、stone、field、bridge、water、paddy、thicket
+ * @param {string[][]} tiles 每一格的地面种类：grass、earth、stone、field、bridge、water、paddy、thicket、
+ *   sand（河滩）、moss（林下苔地）
  * @param {number} seed
  * @returns {Grid} 宽高是格子数乘以 16 的一幅地面
  */
@@ -63,6 +64,20 @@ export function paintGround(tiles, seed = 1) {
         else if (fleck > 0.997) c = P.g0;
         if (around(x, y, 1, k => WET.has(k))) c = P.g5;
         else if ((BARE.has(K(x, y + 1)) || BARE.has(K(x + 1, y))) && fleck < 0.7) c = P.g4;
+      } else if (kind === 'moss') {
+        // 林下：比草地深一层，青里带一点褐，日影斑驳
+        c = patch < 0.35 ? P.g3 : patch < 0.78 ? P.g4 : P.n0;
+        if (band > 0.88) c = P.g3;
+        if (fleck < 0.01) c = P.g5;
+        else if (fleck > 0.995) c = P.e2;
+        if (around(x, y, 1, k => WET.has(k))) c = P.g5;
+      } else if (kind === 'sand') {
+        // 河滩：浅浅的沙色，近水处湿成深一号，零星有石子
+        c = patch < 0.5 ? P.e0 : P.y0;
+        if (band > 0.82) c = P.e1;
+        if (fleck < 0.006) c = P.s2;
+        if (around(x, y, 1, k => WET.has(k))) c = P.e2;
+        else if (around(x, y, 2, k => WET.has(k))) c = P.e1;
       } else if (kind === 'thicket') {
         c = patch < 0.45 ? P.g4 : P.g5;
         if (fleck < 0.04) c = P.g6;
@@ -205,6 +220,31 @@ function details(g, K, kind, tx, ty, seed) {
       put(x + 1, y, 'g6', 'thicket');
       put(x, y + 1, 'g6', 'thicket');
     }
+  } else if (kind === 'moss') {
+    // 蕨叶和落下的松针
+    if (r(1) < 0.4) {
+      const x = ox + 2 + Math.floor(r(2) * 11);
+      const y = oy + 3 + Math.floor(r(3) * 10);
+      for (const [dx, dy, color] of [
+        [0, 0, 'g6'],
+        [-1, -1, 'g5'],
+        [1, -1, 'g5'],
+        [-2, -2, 'g5'],
+        [2, -2, 'g5'],
+        [0, -2, 'g6'],
+      ])
+        put(x + dx, y + dy, color, 'moss');
+    }
+    if (r(4) < 0.25) put(ox + Math.floor(r(5) * 14), oy + Math.floor(r(6) * 14), 'e3', 'moss');
+  } else if (kind === 'sand') {
+    // 石子、贝壳
+    for (let i = 0; i < 2; i++)
+      if (r(7 + i) < 0.3) {
+        const x = ox + 2 + Math.floor(r(9 + i) * 12);
+        const y = oy + 2 + Math.floor(r(11 + i) * 12);
+        put(x, y, i ? 's2' : 's3', 'sand');
+        put(x + 1, y, 's1', 'sand');
+      }
   } else if (kind === 'earth') {
     if (r(1) < 0.16) {
       const x = ox + 2 + Math.floor(r(2) * 11);

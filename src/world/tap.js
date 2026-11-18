@@ -2,6 +2,7 @@
 import { walkable, farmable, waterSource, actAt } from '../content/maps/index.js';
 import { careNote } from '../shell/words.js';
 import { tileOf, findPath, standBeside, bestTool } from './logic.js';
+import { decorAt, poke } from './interactions.js';
 
 export function tapAt(scene, wx, wy) {
   const { game, shell, platform } = scene.deps;
@@ -16,7 +17,8 @@ export function tapAt(scene, wx, wy) {
   const thing = !person && actAt(scene.map, tile.x, tile.y);
   const farm = !person && !thing && farmable(scene.map, tile.x, tile.y);
   const water = !person && !thing && waterSource(scene.map, tile.x, tile.y);
-  if (!person && !thing && !farm && !water) {
+  const decor = !person && !thing && !farm && !water && decorAt(scene, tile.x, tile.y);
+  if (!person && !thing && !farm && !water && !decor) {
     const path = findPath(walk, from, tile);
     if (path) scene.player.walk(path);
     return;
@@ -25,6 +27,7 @@ export function tapAt(scene, wx, wy) {
   if (!stand) return;
   scene.player.walk(stand.path, () => {
     scene.player.face(stand.dir);
+    if (decor) return poke(scene, decor);
     if (farm) {
       // 手指点地：当前工具不合适就自动换成合适的那一件；哪件都用不上而地里有草有虫，就打开田地照料
       const at = scene.at();

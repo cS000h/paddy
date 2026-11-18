@@ -10,9 +10,10 @@ import { createEffects } from './effects.js';
 import { weatherEffects } from './weather.js';
 import { refreshPlots } from './plots.js';
 import { bindKeyboard, bindPointer } from './input.js';
-import { hintFor, touchThing } from './interactions.js';
+import { hintFor, touchThing, decorAt, poke } from './interactions.js';
 import { tapAt } from './tap.js';
 import { leaveByRoad } from './travel.js';
+import { createAmbient } from './ambient.js';
 import { safely } from './safety.js';
 import { TILE, facing, dirTo, COMMAND_OF, skyTint } from './logic.js';
 
@@ -61,7 +62,7 @@ export class VillageScene extends Phaser.Scene {
         .image(x * TILE + 8, (y + 1) * TILE, key)
         .setOrigin(a.ox, a.oy)
         .setDepth((y + 1) * TILE);
-      this.scenery.push({ sprite, key, kind, look: null });
+      this.scenery.push({ sprite, key, kind, look: null, x, y });
     }
     this.plots = new Map();
     this.cursor = this.add.image(0, 0, 'cursor:ok').setOrigin(0).setDepth(-800).setVisible(false);
@@ -73,6 +74,7 @@ export class VillageScene extends Phaser.Scene {
     this.villagers = ON_MAP.map(id => new Villager(this, map, id, PEOPLE[id].look, minute));
     this.effects = createEffects(this, map);
     this.weatherFx = weatherEffects(this);
+    this.ambient = createAmbient(this, map);
 
     const camera = this.cameras.main;
     camera.setBounds(0, 0, map.width * TILE, map.height * TILE);
@@ -141,6 +143,7 @@ export class VillageScene extends Phaser.Scene {
   }
 
   frame(time, delta) {
+    this.ambient.update(time, delta);
     this.weatherFx.update(time, this.map.indoor ? 'sunny' : this.deps.game.ask('weather').code);
     const dt = Math.min(0.05, delta / 1000);
     const { intents, shell } = this.deps;
@@ -170,6 +173,8 @@ export class VillageScene extends Phaser.Scene {
     const thing = actAt(this.map, t.x, t.y);
     if (thing) return { kind: 'thing', thing, ...t };
     if (waterSource(this.map, t.x, t.y)) return { kind: 'water', ...t };
+    const decor = decorAt(this, t.x, t.y);
+    if (decor) return { kind: 'decor', decor, ...t };
     return { kind: 'plot', ...t };
   }
 
@@ -206,6 +211,7 @@ export class VillageScene extends Phaser.Scene {
     if (t.kind === 'person') return this.talk(t.person);
     if (t.kind === 'thing') return this.touch(t.thing);
     if (t.kind === 'water') return shell.set({ modal: { kind: 'water', x: t.x, y: t.y } });
+    if (t.kind === 'decor') return poke(this, t.decor);
     if (!farmable(this.map, t.x, t.y)) return undefined;
     const tool = shell.get().tool;
     const reason = game.ask('farm.why', tool, t.x, t.y, this.at(), shell.get().seed);
@@ -339,6 +345,7 @@ export class VillageScene extends Phaser.Scene {
   /** 时间变了：天色、村民的去向、炊烟。 */
   retime(jump) {
     const { minute, season } = this.deps.game.ask('clock');
+    this.ambient.setTime(minute, season, this.deps.game.ask('weather').tags);
     // 换季才换贴图：每十分钟一次的走时也把上百个物件的贴图重设一遍，手机上会顿一下
     if (season !== this.season) {
       this.season = season;
