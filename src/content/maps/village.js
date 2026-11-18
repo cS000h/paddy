@@ -1,45 +1,8 @@
 // 小屋与村路。出入口显式指向另一张地图的落脚处，便于测试整张路网。
 // 每张村路地图各有各的样子：溪边是竹林和弯溪，茶摊是老樟树下的广场和荷塘，村口是青石集场，
-// 渡口是一大片河湾，后山是一层层茶垄。地面用 paint.js 的几支笔画；路口、柜台和乡邻的站位
+// 渡口和后山在 village-far.js。地面用 paint.js 的几支笔画；路口、柜台和乡邻的站位
 // 是规则和作息认的地方，挪动之前先看 tests 和 people.js 的 ROUTINES。
-import { canvas } from './paint.js';
-
-function ground(w, h, paint) {
-  const a = Array.from({ length: h }, () => Array(w).fill('.'));
-  for (const [ch, x0, y0, x1, y1] of paint)
-    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) a[y][x] = ch;
-  return a.map(r => r.join(''));
-}
-const route = (x, y, to, arrival, label) => ['route', x, y, { to, arrival, label }];
-
-/** 一张 28×22 的村路地图：四周是树丛，东西两头留出路口。 */
-function frame() {
-  return hedge(canvas(28, 22));
-}
-
-/** 四周的树丛：上下两边，左右两边只在大路口（第 13–16 行）留开。画完地面最后再补一遍。 */
-function hedge(c) {
-  return c
-    .rect('#', 0, 0, 27, 1)
-    .rect('#', 0, 21, 27, 21)
-    .rect('#', 0, 2, 0, 12)
-    .rect('#', 27, 2, 27, 12)
-    .rect('#', 0, 17, 0, 20)
-    .rect('#', 27, 17, 27, 20);
-}
-
-// 地面画完，四边的树丛再补一遍（林子、苔地会画到边上）；大路口那几行和水流出去的地方留着。
-const edged = c => hedge(c);
-
-const village = (id, name, paint, objects, spots = {}) => ({
-  id,
-  name,
-  width: 28,
-  height: 22,
-  ground: paint.rows(),
-  objects,
-  spots: { west: [2, 15, 'right'], east: [25, 15, 'left'], ...spots },
-});
+import { ground, route, frame, edged, village } from './village-kit.js';
 
 export const cottage = {
   id: 'cottage',
@@ -142,6 +105,15 @@ export const creek = village(
     ['flowers', 25, 10],
     ['forage', 18, 17, { station: 'forage', label: '水边野菜' }],
     ['fishing', 19, 18, { station: 'fish', label: '竹影钓点' }],
+    ['fern', 13, 5],
+    ['fern', 14, 11],
+    ['fern', 8, 17],
+    ['fern', 9, 19],
+    ['rockPile', 16, 12],
+    ['rockPile', 25, 19],
+    ['firewood', 13, 8],
+    ['trays', 15, 17],
+    ['bench', 24, 12],
   ],
   { south: [12, 4, 'down'], 'qiao.creek': [18, 15, 'up'], 'yun.creek': [18, 18, 'right'] },
 );
@@ -203,6 +175,17 @@ export const tea = village(
     ['bush', 12, 4],
     ['rock', 6, 5],
     ['shrine', 20, 4, { text: '樟树后头一座小小的土地庙，香炉里还插着半截没烧完的香。' }],
+    ['stool', 8, 11],
+    ['stool', 14, 12],
+    ['barrels', 23, 9],
+    ['crates', 23, 11],
+    ['sacks', 24, 12],
+    ['trays', 15, 3],
+    ['firewood', 21, 6],
+    ['fern', 2, 3],
+    ['fern', 2, 9],
+    ['fern', 25, 18],
+    ['rockPile', 25, 3],
   ],
   {
     south: [14, 19, 'up'],
@@ -248,134 +231,22 @@ export const market = village(
     ['flowers', 20, 6],
     ['bush', 26, 4],
     ['sign', 8, 12, { text: '每天开门，五日一集。傍晚时鲜便宜些，卖完便等明天。' }],
+    ['barrels', 18, 9],
+    ['sacks', 10, 9],
+    ['crates', 11, 18],
+    ['sacks', 17, 18],
+    ['stool', 6, 19],
+    ['trays', 4, 7],
+    ['trays', 22, 6],
+    ['firewood', 3, 9],
+    ['bench', 24, 10],
+    ['fern', 2, 3],
+    ['fern', 25, 2],
+    ['rockPile', 2, 17],
   ],
   {
     'aman.market': [12, 12, 'right'],
     'gui.market': [16, 12, 'up'],
     'qiao.market': [15, 11, 'left'],
   },
-);
-
-// 河湾渡口：东边一大片河湾，岸边是沙滩，一道石砌的码头伸进水里，系着渡船；
-// 岸上晾着渔网，柳树底下有个歇脚的石桌，小路往北沿溪进竹径。
-const RIVER_BANK = [
-  [24, 0],
-  [19, 5],
-  [17, 10],
-  [17.5, 16],
-  [21, 21],
-];
-export const river = village(
-  'river',
-  '河湾渡口',
-  frame()
-    .rect('#', 27, 2, 27, 20)
-    .stroke('a', RIVER_BANK, 5.5)
-    .blob('w', 26, 11, 7.5, 13)
-    .stroke(
-      'w',
-      RIVER_BANK.map(([x, y]) => [x + 3, y]),
-      3,
-    )
-    .rect('s', 0, 14, 14, 15)
-    .stroke(
-      'p',
-      [
-        [12, 4],
-        [11.5, 8],
-        [13, 13],
-      ],
-      1.8,
-    )
-    .rect('b', 15, 13, 23, 15),
-  [
-    route(1, 14, 'tea', 'east', '去樟树茶摊'),
-    route(12, 4, 'creek', 'east', '沿溪进竹径'),
-    ['boat', 23, 17],
-    ['fishing', 16, 18, { station: 'fish', label: '渡口钓点' }],
-    ['tree.willow', 15, 9],
-    ['tree.willow', 6, 18],
-    ['tree.broad', 4, 5],
-    ['netRack', 8, 10],
-    ['table', 12, 10, { station: 'rest', label: '渡口歇脚处' }],
-    ['reeds', 16, 6],
-    ['reeds', 17, 20],
-    ['reeds', 14, 18],
-    ['reeds', 19, 3],
-    ['lotus', 24, 6],
-    ['lotus', 25, 19],
-    ['rock', 10, 18],
-    ['rock', 3, 12],
-    ['jars', 14, 12],
-    ['bush', 7, 4],
-    ['flowers', 5, 15],
-  ],
-  {
-    east: [22, 15, 'left'],
-    'zhou.river': [15, 14, 'right'],
-    north: [12, 5, 'down'],
-  },
-);
-
-// 后山茶园：一层层的茶垄，石阶从山下曲曲折折爬上来，半山腰一座凉亭；
-// 两边是松林（林下苔地），林边捡柴、采菌子、拾栗子；路边一座土地庙。
-export const hill = village(
-  'hill',
-  '后山茶园',
-  edged(
-    frame()
-      .rect('#', 0, 13, 0, 16)
-      .rect('#', 27, 13, 27, 16)
-      .blob('m', 4, 12, 4.5, 9)
-      .blob('m', 23.5, 12, 4.5, 9)
-      .rect('p', 6, 9, 21, 10)
-      .rect('p', 6, 12, 21, 12)
-      .rect('p', 6, 15, 21, 15)
-      .stroke(
-        's',
-        [
-          [12, 20],
-          [12, 17],
-          [14, 15],
-          [12, 12],
-          [14, 9],
-          [13, 6],
-        ],
-        1.4,
-      ),
-  ),
-  [
-    route(12, 20, 'creek', 'south', '下山回竹径'),
-    ['pavilion', 13, 5, { station: 'rest', label: '半山凉亭' }],
-    ['teaBush', 7, 8, { station: 'tea', label: '云姑的茶垄' }],
-    ['teaBush', 9, 8, { station: 'tea', label: '后山茶垄' }],
-    ['teaBush', 17, 8, { station: 'tea', label: '后山茶垄' }],
-    ['teaBush', 19, 8, { station: 'tea', label: '后山茶垄' }],
-    ['teaBush', 7, 11, { station: 'tea', label: '后山茶垄' }],
-    ['teaBush', 9, 11, { station: 'tea', label: '后山茶垄' }],
-    ['teaBush', 17, 11, { station: 'tea', label: '后山茶垄' }],
-    ['teaBush', 19, 11, { station: 'tea', label: '后山茶垄' }],
-    ['teaBush', 7, 14, { station: 'tea', label: '后山茶垄' }],
-    ['teaBush', 9, 14, { station: 'tea', label: '后山茶垄' }],
-    ['teaBush', 17, 14, { station: 'tea', label: '后山茶垄' }],
-    ['teaBush', 19, 14, { station: 'tea', label: '后山茶垄' }],
-    ['mushroomPatch', 5, 16, { station: 'mushroom', label: '松林菌子' }],
-    ['nutPatch', 21, 17, { station: 'chestnut', label: '山坡栗树' }],
-    ['woodpile', 6, 5, { station: 'wood', label: '林中枯枝' }],
-    ['tree.pine', 2, 7],
-    ['tree.pine', 4, 13],
-    ['tree.pine', 3, 19],
-    ['tree.pine', 23, 9],
-    ['tree.pine', 25, 14],
-    ['tree.pine', 24, 19],
-    ['tree.broad', 22, 4],
-    ['rock', 16, 4],
-    ['rock', 9, 18],
-    ['rock', 25, 5],
-    ['flowers', 11, 17],
-    ['flowers', 16, 18],
-    ['bush', 20, 20],
-    ['shrine', 15, 19, { text: '石阶边一座土地庙，供着几颗山里摘的野果。' }],
-  ],
-  { south: [12, 19, 'up'], 'yun.hill': [8, 9, 'up'] },
 );

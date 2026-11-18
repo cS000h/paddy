@@ -18,6 +18,7 @@ import { stove, bookshelf } from './kitchen.js';
 import * as props from './props.js';
 import * as landmarks from './landmarks.js';
 import * as waterside from './waterside.js';
+import * as village from './props-village.js';
 import { critters } from './critters.js';
 import { soilTile, cropFrames, cursor, icon } from './tiles.js';
 import { personSheet, LOOK_NAMES, FRAME_W, FRAME_H, POSES, DIRS } from './people.js';
@@ -70,6 +71,15 @@ const OBJECT_MAKERS = {
   cart: () => landmarks.cart(),
   stones: waterside.stones,
   netRack: waterside.netRack,
+  barrels: seed => village.barrels(seed),
+  firewood: seed => village.firewood(seed),
+  sacks: seed => village.sacks(seed),
+  trays: seed => village.trays(seed),
+  fern: seed => village.fern(seed),
+  stool: () => village.stool(),
+  bench: () => village.bench(),
+  rockPile: seed => village.rockPile(seed),
+  crates: seed => village.crates(seed),
 };
 const VARIANTS = 4;
 
@@ -91,6 +101,7 @@ const NO_OUTLINE = new Set([
   'netRack',
   'tree.willow',
   'bamboo',
+  'fern',
 ]);
 
 function outlined({ grid, ax, ay }) {

@@ -1,6 +1,7 @@
 // 地图查询。规则和画面都从这里问“这一格是什么”，所以两边不会各有一套说法。
 import { GROUND, OBJECTS } from './kinds.js';
-import { cottage, creek, tea, market, river, hill } from './village.js';
+import { cottage, creek, tea, market } from './village.js';
+import { river, hill } from './village-far.js';
 import { yard } from './yard.js';
 
 export { GROUND, OBJECTS };

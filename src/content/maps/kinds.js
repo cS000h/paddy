@@ -73,4 +73,14 @@ export const OBJECTS = Object.freeze({
   cart: { foot: [0, 0, 1, 0] },
   stones: {},
   netRack: { foot: [0, 0, 1, 0] },
+  // 人家门口、摊子旁边的零碎（art/props-village.js）
+  barrels: { foot: [0, 0, 0, 0] },
+  firewood: { foot: [0, 0, 0, 0] },
+  sacks: { foot: [0, 0, 0, 0] },
+  trays: {},
+  fern: {},
+  stool: {},
+  bench: { foot: [0, 0, 1, 0] },
+  rockPile: { foot: [0, 0, 0, 0] },
+  crates: { foot: [0, 0, 0, 0] },
 });
