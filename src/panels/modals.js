@@ -99,5 +99,6 @@ export function modalView(modal, game, here) {
   const place = placementOf(modal);
   const cross = ['side', 'center'].includes(place) && closesOnBackdrop(modal) ? CROSS : '';
   const cls = place + (WIDE.has(modal.kind) ? ' wide' : '');
-  return `<div class="frame ${cls}" ${modal.kind === 'notes' ? 'role="dialog" aria-modal="true" aria-label="清早"' : ''}>${cross}<div class="sheet ${cls}">${view(modal, game, here)}</div></div>`;
+  // data-kind 给样式认是哪一种小窗（册子的书签挂在纸外面，纸按内容收高）
+  return `<div class="frame ${cls}" data-kind="${modal.kind}" ${modal.kind === 'notes' ? 'role="dialog" aria-modal="true" aria-label="清早"' : ''}>${cross}<div class="sheet ${cls}">${view(modal, game, here)}</div></div>`;
 }

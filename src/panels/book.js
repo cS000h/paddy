@@ -94,10 +94,10 @@ function personaBody(m, game) {
     (_, i) => `<i class="mood-seg ${i < filled ? 'on' : ''}"></i>`,
   ).join('');
   const header = `<div class="hero-head">
-    <div class="hero-pic"><img class="pixel" width="48" height="66" src="${heroPortraitUrl(hero.look)}" alt="" /></div>
+    <div class="hero-pic"><img class="pixel" width="64" height="72" src="${heroPortraitUrl(hero.look)}" alt="" /></div>
     <div class="hero-meta">
       <div class="hero-name"><b>${esc(hero.name)}</b><span class="hero-tag">${esc(clock.seasonName)} · 第${clock.day}日</span></div>
-      <div class="mood-row"><span>心境</span><span class="mood-bar" title="${esc(body.moodWord)} ${body.mood}">${segs}</span>${uiIconImg('trait_tea', 18)}</div>
+      <div class="mood-row"><span>心境</span><span class="mood-bar" title="${esc(body.moodWord)} ${body.mood}">${segs}</span>${uiIconImg('trait_tea', 24)}</div>
     </div>
   </div>`;
 
@@ -105,7 +105,7 @@ function personaBody(m, game) {
   const stats = `<div class="stat-strip">${modsData.stats
     .map(
       s =>
-        `<div class="stat-item" title="${esc(s.desc)}">${uiIconImg(STAT_ICON[s.id] || 'stat_farm', 22)}` +
+        `<div class="stat-item" title="${esc(s.desc)}">${uiIconImg(STAT_ICON[s.id] || 'stat_farm', 32)}` +
         `<span>${esc(s.name)}</span><b>${s.value}</b></div>`,
     )
     .join('')}</div>`;
@@ -117,7 +117,7 @@ function personaBody(m, game) {
         .map(t => {
           const ico = TRAIT_ICON[t.id] || 'trait_spark';
           const cls = ico === 'trait_spark' ? 'trait-card spark' : 'trait-card';
-          return `<div class="${cls}" title="${esc(t.effect)}">${uiIconImg(ico, 24)}<span>${esc(t.name)}</span></div>`;
+          return `<div class="${cls}" title="${esc(t.effect)}">${uiIconImg(ico, 32)}<span>${esc(t.name)}</span></div>`;
         })
         .join('')
     : '<p class="aside">还没有立下性情印记，过几天自然会显出来。</p>';
@@ -130,10 +130,10 @@ function personaBody(m, game) {
         .map(
           x =>
             `<button class="mod-tile ${activeMod?.id === x.id ? 'on' : ''} ${x.kind}" data-do="bookMod" data-mod="${esc(x.id)}">` +
-            `${uiIconImg(modIcon(x), 24)}<span>${x.left}天</span></button>`,
+            `${uiIconImg(modIcon(x), 32)}<span>${x.left}天</span></button>`,
         )
         .join('')
-    : `<div class="mod-empty">${uiIconImg('mod_clover', 22)}<span>暂无风物</span></div>`;
+    : `<div class="mod-empty">${uiIconImg('mod_clover', 32)}<span>暂无风物</span></div>`;
   const detail = activeMod
     ? `<div class="mod-detail ${activeMod.kind}">
         <b>${esc(activeMod.name)}</b>
@@ -193,7 +193,7 @@ export function bookView(m, game) {
   const tab = m.tab || 'persona';
   const tabs = TABS.map(
     ([id, name, ico]) =>
-      `<button class="book-tab ${tab === id ? 'on' : ''}" data-do="bookTab" data-tab="${id}" title="${name}" aria-label="${name}">${uiIconImg(ico, 22)}</button>`,
+      `<button class="book-tab ${tab === id ? 'on' : ''}" data-do="bookTab" data-tab="${id}" title="${name}" aria-label="${name}">${uiIconImg(ico, 32)}</button>`,
   ).join('');
   const origin = game.ask('growth').origin ? '' : button('origin', '补记初来时的两件小事');
   let body;

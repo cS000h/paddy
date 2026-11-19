@@ -4,11 +4,11 @@ import { uiIconUrl } from './icons.js';
 
 const SHORT = 18; // 不超过这么多字，冒在头顶
 
-/** 摆在头顶的位置不出画面：左右留出半个气泡的宽度，上面留出一行。 */
+/** 摆在头顶的位置不出画面：左右留出半个气泡的宽度（气泡放大后要按实际宽度算），上面留出一行。 */
 function clampTo(root, at, margin = 64) {
   return {
     x: Math.max(margin, Math.min(root.clientWidth - margin, at.x)),
-    y: Math.max(54, Math.min(root.clientHeight - 40, at.y)),
+    y: Math.max(64, Math.min(root.clientHeight - 40, at.y)),
   };
 }
 
@@ -39,17 +39,18 @@ export function createCaptions(root, spot) {
         node.className = 'caption head';
         const img = document.createElement('img');
         img.className = 'pixel bubble-ico';
-        img.width = 16;
-        img.height = 16;
+        img.width = 24;
+        img.height = 24;
         img.alt = '';
         img.src = uiIconUrl('scroll_exclaim');
         const span = document.createElement('span');
         span.textContent = text;
         node.append(img, span);
-        const at = clampTo(root, head);
+        layer.append(node);
+        // 先放进去量出多宽，再按半个宽度往里收，长一点的话也不出画面
+        const at = clampTo(root, head, Math.ceil(node.offsetWidth / 2) + 8);
         node.style.left = at.x + 'px';
         node.style.top = at.y + 'px';
-        layer.append(node);
         later(node, 2600);
         return;
       }

@@ -1,105 +1,134 @@
-/* 平涂像素小册子（左侧实体书签打通底板、分格心境、五维条、性情卡、身边风物左格右文）
-   与头顶紧凑像素方角气泡样式。 */
+/* 稻乡小册和头顶气泡，照定稿图的样子：暖米色的纸、两像素深褐框（style.css 的 --moon、--frame），
+   书签是挂在纸左沿外面的小耳朵，图标和字都放大一档。近白的纸配细灰线显得单薄，字小了看不清。 */
 
-/* — 头顶紧凑像素气泡（替代半透明大灰条） — */
+/* — 头顶的短提醒：像素方角气泡，带小尾巴和左边的小卷 — */
 #ui .caption.head {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px 4px 7px;
-  background: #f4efe0;
-  color: #36322b;
-  border: 2px solid #524a3e;
-  border-radius: 2px;
-  box-shadow: 0 2px 0 #36322b33;
-  font-size: 13px;
-  line-height: 1.25;
+  gap: 8px;
+  padding: 6px 14px 6px 8px;
+  background: var(--moon);
+  color: var(--ink);
+  border: 2px solid var(--frame);
+  border-radius: 3px;
+  box-shadow: 0 2px 0 rgba(54, 50, 43, 0.18);
+  font-size: 15.5px;
+  line-height: 1.3;
   white-space: nowrap;
-  transform: translate(-50%, calc(-100% - 10px));
+  transform: translate(-50%, calc(-100% - 12px));
 }
 #ui .caption.head::before {
   content: '';
   position: absolute;
   left: 50%;
-  bottom: -7px;
+  bottom: -9px;
   transform: translateX(-50%);
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid #524a3e;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 7px solid var(--frame);
 }
 #ui .caption.head::after {
   content: '';
   position: absolute;
   left: 50%;
-  bottom: -4px;
+  bottom: -5px;
   transform: translateX(-50%);
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 5px solid #f4efe0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--moon);
 }
 #ui .caption.head .bubble-ico {
   flex: none;
   image-rendering: pixelated;
 }
+.compact #ui .caption.head {
+  padding: 5px 12px 5px 7px;
+  font-size: 14.5px;
+}
 
-/* — 实体书签式小册子外壳 — */
+/* — 册子：纸只铺在右边那一页，书签挂在纸外面，书签底下透出世界（收高见 sheet.css 的 .frame.side） — */
+.frame[data-kind='book'] > .sheet {
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
 .book-shell {
   display: flex;
-  align-items: stretch;
-  margin: 0 -18px;
-  min-height: 100%;
+  align-items: flex-start;
 }
 .book-tabs {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 16px 0 12px 6px;
-  background: #e5e0ce;
-  border-right: 2px solid #a9a08d;
-  flex: none;
-}
-.book-tab {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  background: #ddd7c3;
-  border: 2px solid #a9a08d;
-  border-right: 0;
-  border-radius: 4px 0 0 4px;
-  cursor: pointer;
-}
-.book-tab.on {
   position: relative;
   z-index: 2;
-  margin-right: -2px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 50px;
+  margin-right: -2px; /* 选中的那枚盖住纸边，和纸连成一片 */
+  padding-top: 22px;
+}
+.sheet .book-tab {
+  display: grid;
+  place-items: center;
+  width: 48px; /* 没选中的刚好挨着纸边，压不住它 */
+  height: 46px;
+  padding: 0;
+  background: var(--mist);
+  border: 2px solid var(--frame);
+  border-right: 0;
+  border-radius: 7px 0 0 7px;
+  box-shadow: -2px 3px 6px rgba(36, 40, 42, 0.12);
+}
+.sheet .book-tab.on {
+  width: 50px;
   background: var(--moon);
-  border-color: #7c7566;
+  box-shadow: none;
 }
 .book-page {
   flex: 1 1 auto;
   min-width: 0;
-  padding: 14px 16px 12px;
+  padding: 16px 18px 14px;
+  background: var(--moon);
+  border: 2px solid var(--frame);
+  border-radius: 6px;
+  box-shadow: 0 8px 22px rgba(36, 40, 42, 0.22);
+}
+.book-page > h2 {
+  margin: 0 40px 10px 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+.book-page > h2 small {
+  margin-left: 10px;
+  color: var(--ink-3);
+  font-size: 13.5px;
+  letter-spacing: 0;
+}
+.book-page > .row button {
+  flex: 1 1 0;
 }
 
-/* — 顶部人物像与像素分格心境条 — */
+/* — 顶上：人物小像、名字、心境分格 — */
 .hero-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
+  gap: 16px;
+  margin: 2px 40px 12px 0;
 }
 .hero-pic {
-  width: 58px;
-  height: 68px;
+  flex: none;
   display: grid;
   place-items: end center;
+  width: 84px;
+  height: 84px;
   overflow: hidden;
-  background: #d8e1d4;
-  border: 2px solid #9ea695;
-  border-radius: 3px;
-  flex: none;
+  background: #dfe7d8;
+  border: 2px solid var(--frame);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px #f4f7ef;
 }
 .hero-meta {
   flex: 1 1 auto;
@@ -107,26 +136,29 @@
 }
 .hero-name {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 .hero-name b {
-  font-size: 16px;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 }
 .hero-tag {
-  padding: 2px 7px;
-  font-size: 11px;
-  background: #9aa78d;
+  padding: 3px 10px;
+  background: #8fa283;
   color: #f8f6ee;
-  border-radius: 3px;
+  border-radius: 4px;
+  font-size: 13.5px;
 }
 .mood-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 8px;
   color: var(--ink-2);
+  font-size: 15px;
 }
 .mood-bar {
   display: inline-flex;
@@ -134,101 +166,105 @@
 }
 .mood-seg {
   display: inline-block;
-  width: 9px;
-  height: 13px;
-  background: #d7d2c2;
-  border: 1px solid #b5af9d;
+  width: 13px;
+  height: 18px;
+  background: #ddd4bd;
+  border: 2px solid #b9ae94;
 }
 .mood-seg.on {
-  background: #7c9980;
-  border-color: #5c7660;
+  background: #8aa38a;
+  border-color: #66806a;
 }
 
-/* — 五维平涂像素条 — */
+/* — 五维：一条带图标的格子 — */
 .stat-strip {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 4px;
-  padding: 7px 6px;
-  margin-bottom: 10px;
-  background: #efe6cf;
-  border: 1px solid #c9be9e;
-  border-radius: 4px;
+  margin-bottom: 12px;
+  padding: 10px 6px 8px;
+  background: #efe4c9;
+  border: 2px solid var(--frame-2);
+  border-radius: 6px;
   text-align: center;
 }
 .stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
+  gap: 3px;
 }
 .stat-item span {
-  font-size: 11px;
   color: var(--ink-2);
+  font-size: 14px;
 }
 .stat-item b {
-  font-size: 13px;
+  font-size: 17px;
+  line-height: 1.1;
 }
 
-/* — 性情物象卡片 — */
-.sec-hd {
-  margin: 8px 0 6px;
-  font-size: 13px;
-  color: var(--ink-2);
+/* — 性情：一排物象卡 — */
+.book-page .sec-hd {
+  margin: 10px 0 8px;
+  color: var(--ink);
+  font-size: 16px;
+  letter-spacing: 0.1em;
 }
 .trait-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 .trait-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 6px 4px;
-  background: #dde3d5;
-  border: 1px solid #aeb7a4;
-  border-radius: 4px;
-  font-size: 11px;
+  gap: 4px;
+  padding: 10px 4px 8px;
+  background: var(--sage);
+  border: 2px solid var(--sage-line);
+  border-radius: 6px;
+  font-size: 15px;
 }
 .trait-card.spark {
-  background: #dff3ea;
-  border-color: #82b59f;
+  background: #e3f2e8;
+  border-color: #8cbca6;
 }
 
-/* — 身边风物：左格右文并排 — */
+/* — 身边风物：左边几格，右边是选中那格的说明 — */
 .mod-split {
   display: grid;
-  grid-template-columns: minmax(96px, 44%) 1fr;
-  gap: 8px;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
   align-items: start;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .mod-tiles {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  max-width: 186px; /* 一行三格 */
 }
-.mod-tile {
+.sheet .mod-tile {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  width: 46px;
-  padding: 5px 2px 4px;
-  background: #ece7d6;
-  border: 2px solid #b5ae9a;
-  border-radius: 4px;
-  font-size: 11px;
+  gap: 3px;
+  width: 58px;
+  padding: 6px 2px 5px;
+  background: var(--mist);
+  border: 2px solid var(--frame-2);
+  border-radius: 6px;
+  font-size: 13.5px;
+  white-space: nowrap; /* “5天”别被窄格挤成竖排 */
   cursor: pointer;
 }
-.mod-tile.on {
-  border-color: #4c7c66;
-  background: #dfe9de;
+.sheet .mod-tile.on {
+  border-color: #5f8a72;
+  background: #e1ebdf;
 }
-.mod-tile.bad.on {
+.sheet .mod-tile.bad.on {
   border-color: #a85c38;
   background: #f0e2d8;
 }
@@ -237,20 +273,20 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  width: 100%;
+  width: 120px;
   padding: 10px 6px;
-  background: #ece7d6;
-  border: 1px dashed #b5ae9a;
-  border-radius: 4px;
-  font-size: 11px;
+  background: var(--mist);
+  border: 2px dashed var(--frame-2);
+  border-radius: 6px;
   color: var(--ink-2);
+  font-size: 13.5px;
 }
 .mod-detail {
-  padding: 8px 10px;
-  background: #dfe7dc;
-  border: 1px solid #a5b3a0;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 10px 12px;
+  background: var(--sage);
+  border: 2px solid var(--sage-line);
+  border-radius: 6px;
+  font-size: 14px;
 }
 .mod-detail.bad {
   background: #efe2d9;
@@ -258,27 +294,62 @@
 }
 .mod-detail b {
   display: block;
-  margin-bottom: 3px;
-  font-size: 13px;
+  margin-bottom: 4px;
+  font-size: 16px;
 }
-.mod-detail p {
-  margin: 0 0 6px;
-  line-height: 1.4;
+.sheet .mod-detail p {
+  margin: 0 0 8px;
   color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.5;
 }
 .mod-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 5px;
 }
 .mod-pills span {
-  padding: 1px 6px;
+  padding: 2px 8px;
   background: #8ea08c;
   color: #f9f7ef;
-  border-radius: 2px;
-  font-size: 11px;
+  border-radius: 3px;
+  font-size: 12.5px;
 }
 .ui-ico {
-  image-rendering: pixelated;
   display: block;
+  image-rendering: pixelated;
+}
+
+/* — 矮屏（横着的手机）：书签和纸边都收一点，字还是比原先大 — */
+.compact .book-tabs {
+  width: 44px;
+  gap: 6px;
+  padding-top: 16px;
+}
+.compact .sheet .book-tab {
+  width: 42px;
+  height: 40px;
+}
+.compact .sheet .book-tab.on {
+  width: 44px;
+}
+.compact .book-page {
+  padding: 12px 14px 10px;
+}
+.compact .hero-pic {
+  width: 70px;
+  height: 70px;
+}
+.compact .hero-name b {
+  font-size: 18px;
+}
+.compact .stat-item span {
+  font-size: 13px;
+}
+.compact .stat-item b {
+  font-size: 15.5px;
+}
+.compact .trait-card {
+  padding: 8px 4px 6px;
+  font-size: 14px;
 }

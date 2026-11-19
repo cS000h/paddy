@@ -31,11 +31,11 @@ export const uiIconUrl = id => cached('ui:' + id, () => uiIcon(id));
 export const uiIconImg = (id, size = 20) =>
   `<img class="pixel ui-ico" width="${size}" height="${size}" src="${uiIconUrl(id)}" alt="" />`;
 
-/** 人物上半身像素小像（截取站立正面，不画近脸特写）。 */
+/** 人物上半身像素小像：截站立正面的头和肩（16×18），册子里按 4 倍整数放大，像素不糊。 */
 export const heroPortraitUrl = look =>
   cached('bust:' + look, () => {
     const full = personFrame(look, 'down', 'stand');
-    const bust = new Grid(16, 22);
-    for (let y = 0; y < 22; y++) for (let x = 0; x < 16; x++) bust.set(x, y, full.get(x, y + 3));
+    const bust = new Grid(16, 18);
+    for (let y = 0; y < 18; y++) for (let x = 0; x < 16; x++) bust.set(x, y, full.get(x, y + 2));
     return bust;
   });
