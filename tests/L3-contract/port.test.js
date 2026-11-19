@@ -44,6 +44,9 @@ const COMMANDS = [
   'invite',
   'visit.meet',
   'visit.cancel',
+  'event.choose',
+  'visitor.talk',
+  'visitor.fulfill',
 ];
 const QUERIES = [
   'residents',
@@ -74,6 +77,9 @@ const QUERIES = [
   'notes',
   'pack',
   'visits',
+  'modifiers',
+  'events',
+  'visitors',
 ];
 
 test('端口对外只有这几样', () => {

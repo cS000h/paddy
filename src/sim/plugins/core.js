@@ -3,8 +3,9 @@ import { is, check } from '../../kernel/schema.js';
 import { SKILLS } from '../../content/growth.js';
 import { ITEMS } from '../../content/items.js';
 import { BUFFS, LEDGER_LABELS } from '../../content/body.js';
+import { MODIFIERS } from '../../content/modifiers.js';
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 const LEDGER_MAX = 60;
 
@@ -13,6 +14,7 @@ function ledgerText(k, d) {
   const [kind, id] = k.split(':');
   if (kind === 'xp') return `${SKILLS[id]?.name || '本事'}经验 ${d > 0 ? '+' : '−'}${Math.abs(d)}`;
   if (kind === 'buff') return `${BUFFS[id]?.name || id} ×${d}`;
+  if (kind === 'mod') return `${MODIFIERS[id]?.name || id} ${d}天`;
   const label =
     kind === 'item' || kind === 'pack' ? ITEMS[id]?.name || id : LEDGER_LABELS[kind] || kind;
   return `${label} ${d > 0 ? '+' : '−'}${Math.abs(d)}`;

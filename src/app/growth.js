@@ -3,7 +3,7 @@ export function growthActions({ game, shell, run }) {
   const edit = patch => shell.set({ modal: { ...shell.get().modal, ...patch } });
   return {
     book() {
-      shell.set({ modal: { kind: 'book', tab: 'skills', page: 0 } });
+      shell.set({ modal: { kind: 'book', tab: 'persona', page: 0 } });
     },
     bookTab({ tab }) {
       edit({ tab, page: 0 });

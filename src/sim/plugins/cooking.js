@@ -135,7 +135,7 @@ export const cooking = {
       if (d.water >= 0) body.drink(w, id, d.water, '喝汤');
       else body.dry(w, id, -d.water, '饭菜有点干');
       body.setBuff(w, id, d.buff, d.uses, d.why);
-      fact('meal.eaten', { who: id, dish: d.name, buff: d.buff, snack: false });
+      fact('meal.eaten', { who: id, dish: d.name, buff: d.buff, quality: d.quality, snack: false });
     });
     queries.define('kitchen', (w, at) => ({
       dishes: people.atHome(w, people.who(w), at) ? home(w).dishes : [],

@@ -19,6 +19,7 @@ import { homeActions } from './home.js';
 import { marketActions } from './market.js';
 import { fieldActions } from './field.js';
 import { growthActions, growthNotices } from './growth.js';
+import { pulseActions, pulseNotices } from './pulse.js';
 import { activityActions } from './activities.js';
 import { kitchenActions } from './kitchen.js';
 import { travelActions } from './travel.js';
@@ -108,6 +109,7 @@ function start() {
     ...marketActions(deps),
     ...fieldActions(deps),
     ...growthActions(deps),
+    ...pulseActions(deps),
     ...activityActions(deps),
     ...kitchenActions(deps),
     ...travelActions(deps),
@@ -135,6 +137,7 @@ function start() {
   document.getElementById('boot')?.remove();
 
   growthNotices(game, shell);
+  pulseNotices(game, shell);
   if (!game.ask('growth').origin) shell.set({ modal: { kind: 'origin' } });
   if (loadProblem) actions.saves();
 

@@ -8,6 +8,30 @@ export const SAVE_FORMAT = 'dao.save';
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
 const MIGRATIONS = {
+  11(state) {
+    // M9：时限修正里、随机随机事件与流动过客
+    const w = state.world;
+    w.meta.version = 12;
+    w.modifiers = Object.fromEntries(Object.keys(w.packs).map(id => [id, []]));
+    w.pulse = { active: null, delayed: [], done: {}, lastDay: 0 };
+    w.visitors = {
+      day: w.clock.day,
+      active: [
+        {
+          id: 'v_1',
+          name: '林先生',
+          role: 'scholar',
+          traits: ['爱茶', '爱吃'],
+          until: w.clock.day + 2,
+          rel: 0,
+          talkedDay: 0,
+          done: false,
+        },
+      ],
+      book: [],
+    };
+    return state;
+  },
   10(state) {
     state.world.meta.version = 11;
     for (const p of Object.values(state.world.people))

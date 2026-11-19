@@ -65,7 +65,7 @@ export const elsewhereView = () =>
 // 右上角“更多”展开的一小列。声音、全屏这些是这台设备的事，打开菜单时由面板带进来。
 export const menuView = m =>
   `<div class="menu-list">
-    ${button('seeds', '挑菜种')}${button('field', '看地照料')}${button('map', '全村地图')}${button('book', '册子')}${button('journal', '手记')}
+    ${button('seeds', '挑菜种')}${button('field', '看地照料')}${button('map', '全村地图')}${button('book', '册子')}${button('visitors', '村中过客')}${button('journal', '手记')}
     ${button('saves', '进度与玩法')}${button('mute', m.muted ? '声音：关着' : '声音：开着')}
     ${m.fullscreen === null ? '' : button('fullscreen', m.fullscreen ? '退出全屏' : '全屏玩')}
   </div>`;

@@ -378,6 +378,29 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     send(pick(game.commands()), input, true);
   }
 
+  function pulseAndVisitors() {
+    const ev = game.ask('events').active;
+    if (ev) {
+      const ok = ev.choices.filter(c => !c.disabled);
+      const pickChoice = ok.length ? pick(ok) : pick(ev.choices);
+      return send('event.choose', { choice: pickChoice.index });
+    }
+    const vs = game.ask('visitors').active;
+    if (!vs.length) return;
+    const v = pick(vs);
+    if (!v.talkedToday && chance(0.6)) return send('visitor.talk', { id: v.id });
+    if (!v.done) {
+      if (v.need.kind === 'dish') {
+        const k = game.ask('kitchen', here());
+        const d = k.carried[0] || k.dishes[0];
+        if (d) return send('visitor.fulfill', { id: v.id, dish: d.id, at: here() });
+      } else {
+        return send('visitor.fulfill', { id: v.id, at: here() });
+      }
+    }
+    return send('visitor.talk', { id: v.id });
+  }
+
   const PLANS = [
     [4, travel],
     [14, useThing],
@@ -386,6 +409,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     [3, body],
     [4, time],
     [1, wander],
+    [3, pulseAndVisitors],
   ];
   const total = PLANS.reduce((sum, [w]) => sum + w, 0);
   let steps = 0;

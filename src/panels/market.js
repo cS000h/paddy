@@ -69,5 +69,8 @@ export function teaView(m, game) {
   return `${title('樟树下坐坐', taste)}
     <p>${esc(m.line || '树荫落在桌上。坐一会儿，听听村里的事。')}</p>
     ${itemList(rows, '')}
-    ${actions(close('起身', false))}`;
+    ${actions(
+      game.ask('visitors').active.length ? button('visitors', '看看村中过客') : '',
+      close('起身', false),
+    )}`;
 }

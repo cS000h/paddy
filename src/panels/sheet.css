@@ -886,3 +886,54 @@
 .narrow .atlas-wrap {
   grid-template-columns: 1fr;
 }
+
+/* 人物三层面板与随机事件样式 */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+.stat-cell {
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--mist);
+}
+.stat-cell b {
+  display: block;
+  font-size: 14px;
+}
+.stat-cell small {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.trait-seals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 12px;
+}
+.trait-seal {
+  padding: 2px 8px;
+  border: 1px solid var(--seal, #a83c2b);
+  border-radius: 3px;
+  color: var(--seal, #a83c2b);
+  font-size: 12px;
+}
+.mod-row.good {
+  border-left: 3px solid #4c7c66;
+  padding-left: 8px;
+}
+.mod-row.bad {
+  border-left: 3px solid #a85c38;
+  padding-left: 8px;
+}
+.trait-choice {
+  border-color: var(--seal, #a83c2b);
+}
+.event-key {
+  color: var(--seal, #a83c2b);
+  border-color: var(--seal, #a83c2b);
+}
