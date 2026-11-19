@@ -6,7 +6,7 @@ import { createShellState } from '../../src/shell/state.js';
 import {
   findPath,
   standBeside,
-  bestTool,
+  fieldTool,
   facing,
   dirTo,
   tileOf,
@@ -116,23 +116,18 @@ test('站位：要对一格做事，站到它旁边最近的能走的格子，�
   assert.deepEqual(facing(well.x, well.y, well.dir), { x: 18, y: 18 });
 });
 
-test('点一下菜地该用哪件工具：空地锄、锄过的下种、种上的浇水、熟了的收', () => {
+test('自动农具：先锄、润土、下种、看地，成熟时优先采收', () => {
   const g = newGame();
-  const at = { x: 6, y: 18, dir: 'down' };
-  const why = (tool, x, y) => g.ask('farm.why', tool, x, y, at);
-  const spot = { x: 6, y: 19, at };
-  assert.equal(bestTool(why, 6, 19), 'hoe');
+  const spot = { x: 6, y: 19, at: { x: 6, y: 18, dir: 'down' } };
+  const tool = () => fieldTool(g.ask('farm.detail', spot.x, spot.y));
+  assert.equal(tool(), 'hoe');
   must(g, 'farm.till', spot);
-  assert.equal(bestTool(why, 6, 19), 'seed');
-  must(g, 'farm.sow', spot);
-  assert.equal(bestTool(why, 6, 19), 'can');
+  assert.equal(tool(), 'can');
   must(g, 'farm.water', spot);
-  assert.equal(bestTool(why, 6, 19), null, '今天没事可做了');
-  for (let day = 0; day < 3; day++) {
-    must(g, 'sleep');
-    if (day < 2 && !g.ask('farm.why', 'can', spot.x, spot.y, spot.at)) must(g, 'farm.water', spot);
-  }
-  assert.equal(bestTool(why, 6, 19), 'hand');
+  assert.equal(tool(), 'seed');
+  must(g, 'farm.sow', spot);
+  assert.equal(tool(), null);
+  assert.equal(fieldTool({ crop: 'qingcai', water: 0, age: 3 }), 'hand');
 });
 
 test('小工具：格子换算、朝向、天色', () => {

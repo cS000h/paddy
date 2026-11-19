@@ -1,5 +1,6 @@
 // 会走路的人：玩家操控的人和按作息走动的村民，用的是同一套走路、朝向和动画。
 import { TILE, tileOf, dirTo, findPath } from './logic.js';
+import { ResidentWork } from './resident-work.js';
 import { frameOf } from './textures.js';
 import { walkable } from '../content/maps/index.js';
 
@@ -139,10 +140,10 @@ export class Walker {
 
 /** 村民：按作息表去该去的位置，到了就面朝规定的方向；“回家了”就从画面上消失。 */
 export class Villager extends Walker {
-  constructor(scene, map, id, look, minute) {
-    const first = scene.deps.game.ask('residents').find(p => p.id === id);
+  constructor(scene, map, id, look, first) {
     super(scene, look, first.x, first.y, first.dir);
     this.id = id;
+    this.work = new ResidentWork(this);
     this.map = map;
     this.speed = 30;
     this.plan = first;
@@ -151,9 +152,16 @@ export class Villager extends Walker {
   }
 
   /** 时间变了：看看是不是该换地方了。 */
-  retime(minute, jump = false) {
-    const plan = this.scene.deps.game.ask('residents').find(p => p.id === this.id);
-    if (!jump && JSON.stringify(plan) === JSON.stringify(this.plan)) return;
+  retime(plan, wet, jump = false) {
+    const old = this.plan;
+    if (
+      !jump &&
+      this.wet === wet &&
+      ['map', 'place', 'x', 'y', 'dir', 'doing', 'visible'].every(k => plan[k] === old[k])
+    )
+      return;
+    this.wet = wet;
+    this.work.reset(plan, wet);
     this.plan = plan;
     this.doing = plan.doing;
     const goal = plan;
@@ -167,11 +175,14 @@ export class Villager extends Walker {
       this.face(goal.dir);
       this.setVisible(!offstage);
     };
-    const path = jump ? null : findPath((x, y) => walkable(this.map, x, y), this.tile, goal);
+    const path =
+      jump || !this.sprite.visible
+        ? null
+        : findPath((x, y) => walkable(this.map, x, y), this.tile, goal);
     if (!path) {
       this.px = goal.x * TILE + 8;
       this.py = goal.y * TILE + FOOT_Y;
-      this.path = [];
+      this.stop();
       this.sync();
       settle();
       return;
@@ -180,8 +191,22 @@ export class Villager extends Walker {
     this.walk(path, settle);
   }
 
+  tick(dt, waiting) {
+    if (!this.sprite.visible) return;
+    const next = this.path[0];
+    const hero = this.scene.player.tile;
+    if (waiting || (next && next.x === hero.x && next.y === hero.y)) {
+      this.work.hide();
+      this.animate(false);
+      return;
+    }
+    if (!this.follow(dt)) this.work.update(dt);
+  }
+
   /** 转过身来对着某个人（说话的时候）。 */
   turnTo(other) {
-    if (!this.path.length) this.face(dirTo(this.tile, other.tile));
+    this.work.hide();
+    this.animate(false);
+    this.face(dirTo(this.tile, other.tile));
   }
 }

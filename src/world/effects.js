@@ -121,10 +121,10 @@ export function createEffects(scene, map) {
       drops.explode(9, px, py - 10);
       scene.time.delayedCall(180, () => splash.explode(6, px, py));
     },
-    harvested(x, y) {
+    harvested(x, y, crop) {
       const [px, py] = centre(x, y);
       leaves.explode(6, px, py - 2);
-      const veg = scene.add.image(px, py - 4, 'crop:3').setDepth(9100);
+      const veg = scene.add.image(px, py - 4, 'crop:' + crop + ':3').setDepth(9100);
       scene.tweens.add({
         targets: veg,
         y: py - 26,

@@ -49,7 +49,7 @@ const VIEWS = {
 //   side      其余的从右边展开成一整幅，高到顶，左边还看得见世界。
 const PLACE = {
   talk: 'dialogue',
-  notes: 'dialogue',
+  notes: 'center',
   sign: 'dialogue',
   water: 'dialogue',
   sleep: 'dialogue',
@@ -68,7 +68,7 @@ export const placementOf = modal => PLACE[modal.kind] || 'side';
 // 内容多的小窗用宽一点的纸。
 const WIDE = new Set(['store', 'basket', 'kitchen', 'recipes', 'market', 'map']);
 // 这几种小窗必须在里面做出选择，点纸外面不会关掉。
-const MUST_ANSWER = new Set(['origin', 'trouble']);
+const MUST_ANSWER = new Set(['origin', 'trouble', 'notes']);
 
 /** 点小窗外面的空白处能不能关掉它。 */
 export const closesOnBackdrop = modal => !MUST_ANSWER.has(modal.kind);
@@ -92,5 +92,5 @@ export function modalView(modal, game, here) {
   const place = placementOf(modal);
   const cross = ['side', 'center'].includes(place) && closesOnBackdrop(modal) ? CROSS : '';
   const cls = place + (WIDE.has(modal.kind) ? ' wide' : '');
-  return `<div class="frame ${cls}">${cross}<div class="sheet ${cls}">${view(modal, game, here)}</div></div>`;
+  return `<div class="frame ${cls}" ${modal.kind === 'notes' ? 'role="dialog" aria-modal="true" aria-label="清早"' : ''}>${cross}<div class="sheet ${cls}">${view(modal, game, here)}</div></div>`;
 }

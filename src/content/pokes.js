@@ -56,6 +56,12 @@ export const POKES = Object.freeze({
     fx: 'petal',
     lines: ['凑近了闻，是野菊淡淡的苦香。', '一只小蜂嗡地飞走了。', '这一丛开得正好。'],
   },
+  trellis: {
+    verb: '拨藤',
+    hint: '拨一拨棚边的瓜藤',
+    fx: 'leaf',
+    lines: [],
+  },
   reeds: {
     verb: '拨苇',
     hint: '拨开芦苇看看',

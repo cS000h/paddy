@@ -1,0 +1,330 @@
+/* 右上三组按钮分开接指针，纸片之间透出的地图仍可点。 */
+#ui .vitals {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 0;
+  top: calc(8px + var(--safe-t));
+  left: auto;
+  right: calc(10px + var(--safe-r));
+  pointer-events: none;
+}
+.vitals > * {
+  pointer-events: auto;
+}
+.body-strip,
+.vitals .coins,
+.system-keys button,
+.touch .toolbar [data-tool] {
+  background: var(--moon-a);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 4px #40371d27;
+}
+.body-strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+  border-radius: 24px;
+}
+.vitals .coins {
+  border-radius: 18px;
+  min-height: 37px;
+  padding: 0 9px;
+}
+.system-keys {
+  display: flex;
+  gap: 3px;
+}
+.system-keys button {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 3px 6px;
+  font-size: 11px;
+  line-height: 1;
+  border-radius: 5px;
+}
+.system-keys svg {
+  width: 16px;
+  height: 16px;
+  fill: var(--ink-2);
+}
+.system-keys button:hover {
+  background: var(--moon);
+}
+.system-keys .book-key {
+  font-size: 13px;
+}
+.touch .system-keys {
+  display: grid;
+  grid-template-columns: repeat(2, 42px);
+  gap: 4px;
+}
+.touch .system-keys .book-key,
+.touch .buff {
+  display: none;
+}
+.touch .system-keys button {
+  width: 42px;
+  height: 42px;
+}
+.touch .vitals .coins {
+  min-height: 30px;
+  margin-top: 3px;
+}
+.touch .gauge {
+  height: 30px;
+  width: 30px;
+}
+.gauge.low {
+  outline: 2px solid var(--cinnabar);
+  outline-offset: 1px;
+}
+.touch .body-strip {
+  gap: 3px;
+  padding: 4px 6px;
+}
+.touch .vigor {
+  font-size: 12px;
+  margin: 0 2px 0 -1px;
+}
+.touch .date {
+  border-radius: 3px;
+  padding-inline: 9px;
+  background: var(--moon-a);
+  border: 0;
+  border-inline: 4px double #917953;
+  box-shadow: 0 2px 4px #43391b28;
+}
+.touch .left .next {
+  border: 0;
+  border-inline-start: 2px solid #ab693e;
+  border-radius: 0;
+  background: #f5edddda;
+  box-shadow: none;
+}
+.touch .award-stamp {
+  right: calc(108px + var(--safe-r));
+  top: calc(57px + var(--safe-t));
+}
+.touch .stick:not(.live) {
+  top: auto;
+  left: calc(15px + var(--safe-l));
+  bottom: calc(12px + var(--safe-b));
+  margin: 0;
+  width: 78px;
+  height: 78px;
+  opacity: 0.24;
+}
+.touch .stick:not(.live) i {
+  width: 34px;
+  height: 34px;
+  margin: -17px;
+}
+.touch .stick.live {
+  opacity: 0.85;
+}
+#ui.touch .toolbar {
+  right: calc(9px + var(--safe-r));
+  bottom: calc(9px + var(--safe-b));
+  left: auto;
+  width: 159px;
+  height: 159px;
+  display: block;
+  transform: none;
+  border: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+.touch .toolbar [data-tool] {
+  position: absolute;
+  pointer-events: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  padding: 0;
+  transform: none;
+  place-items: center;
+}
+.touch .toolbar .badge {
+  top: -3px;
+  right: -2px;
+  min-width: 15px;
+  height: 15px;
+  line-height: 15px;
+  font-size: 10px;
+}
+.touch .toolbar [data-tool] img {
+  width: 26px;
+  height: 26px;
+}
+.touch .toolbar [data-tool='hoe'] {
+  right: 114px;
+  bottom: 0;
+}
+.touch .toolbar [data-tool='seed'] {
+  right: 101px;
+  bottom: 51px;
+}
+.touch .toolbar [data-tool='can'] {
+  right: 61px;
+  bottom: 92px;
+}
+.touch .toolbar [data-tool='hand'] {
+  right: 6px;
+  bottom: 106px;
+}
+.touch .toolbar [data-tool].on {
+  border: 2px solid #846a37;
+  background: #fff4d5;
+  box-shadow: 0 0 0 1px #e0bc64;
+}
+.touch .toolbar [data-tool].locked {
+  border: 2px solid var(--cinnabar);
+  box-shadow: 0 0 0 1px #dfaa89;
+}
+.touch .toolbar .sep,
+.touch .toolbar .chip,
+.touch .toolbar .name,
+.touch .toolbar .key {
+  display: none;
+}
+.tool-mode {
+  font-size: 11px;
+  color: var(--cinnabar);
+}
+.touch .tool-mode {
+  position: absolute;
+  right: 2px;
+  bottom: 155px;
+  white-space: nowrap;
+  border-radius: 3px;
+  padding: 2px 6px;
+  background: var(--moon-a);
+}
+.touch .do {
+  right: calc(16px + var(--safe-r));
+  bottom: calc(16px + var(--safe-b));
+  width: 62px;
+  height: 62px;
+}
+#ui.drawer-open .toolbar,
+#ui.modal-open .toolbar {
+  visibility: hidden;
+}
+#ui.modal-open .vitals,
+#ui.modal-open .journal {
+  visibility: hidden;
+}
+#ui .journal {
+  display: flex;
+  flex-direction: column;
+  top: calc(58px + var(--safe-t));
+  bottom: auto;
+  max-height: calc(100% - 86px - var(--safe-t) - var(--safe-b));
+  width: min(285px, 90%);
+  left: auto;
+  right: calc(10px + var(--safe-r));
+  background: var(--moon);
+  overflow: hidden;
+  padding: 10px 12px;
+  color: var(--ink);
+}
+#ui.touch .journal {
+  top: calc(8px + var(--safe-t));
+  z-index: 12;
+}
+.journal header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.journal h2 {
+  margin: 0;
+  color: var(--ink);
+}
+.journal header button {
+  margin: 0;
+  font-size: 21px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+.journal nav {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+}
+.journal nav button {
+  margin: 0;
+  border: none;
+  flex: 1;
+  background: transparent;
+  border-radius: 0;
+  min-height: 40px;
+}
+.journal nav button[aria-pressed='true'] {
+  color: var(--cinnabar);
+  box-shadow: inset 0 -2px var(--cinnabar);
+}
+.journal section {
+  min-height: 0;
+  overflow: auto;
+  padding-top: 5px;
+  font-size: 14px;
+}
+.journal section li {
+  padding-block: 3px;
+}
+.journal section li small,
+.journal section li.done {
+  color: #57594b;
+  font-size: 13px;
+}
+#ui[data-morning='true'] .modal {
+  background: rgba(69, 48, 28, 0.3);
+}
+#ui[data-morning='true'] .left,
+#ui[data-morning='true'] .captions,
+#ui[data-morning='true'] .award-stamp {
+  visibility: hidden;
+}
+.morning-list {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 14px;
+}
+.sheet .morning-note {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 9px 10px;
+  color: var(--ink);
+}
+.sheet .morning-note.gift {
+  background: #ede7d2;
+  border-left: 3px solid #8c985e;
+}
+.sheet .morning-note h3,
+.sheet .morning-note p {
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.sheet .morning-note strong {
+  font-size: 14px;
+  margin-right: 8px;
+}
+.sheet .morning-note small {
+  color: #4e604b;
+}
+.sheet .morning-note p {
+  font-size: 14px;
+  line-height: 1.55;
+}

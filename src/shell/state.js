@@ -12,6 +12,7 @@ export function createShellState({ onError = null } = {}) {
   let state = Object.freeze({
     seed: 'seed.qingcai',
     tool: TOOLS[0].id, // 当前工具
+    manualTool: false,
     modal: null, // 弹着的东西：null，或 {kind: 'talk' | 'sleep' | 'basket' | 'sign' | 'notes', …}
     hint: null, // 面前这一格能做什么：{text, ok}
     toast: null, // 一句短提示：{text, id}
@@ -42,7 +43,7 @@ export function createShellState({ onError = null } = {}) {
     /** 换到工具栏上的前一件或后一件。 */
     stepTool(by) {
       const index = TOOLS.findIndex(t => t.id === state.tool);
-      api.set({ tool: TOOLS[(index + by + TOOLS.length) % TOOLS.length].id });
+      api.set({ tool: TOOLS[(index + by + TOOLS.length) % TOOLS.length].id, manualTool: true });
     },
   };
   return Object.freeze(api);

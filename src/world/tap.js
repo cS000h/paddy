@@ -1,15 +1,15 @@
 // 点了世界里的一个位置（鼠标、手指轻点）：走过去；那儿有人、有物件、有地、有水，就做该做的事。
 import { walkable, farmable, waterSource, actAt } from '../content/maps/index.js';
-import { careNote } from '../shell/words.js';
-import { tileOf, findPath, standBeside, bestTool } from './logic.js';
+import { tileOf, findPath, standBeside } from './logic.js';
 import { decorAt, poke } from './interactions.js';
 
 export function tapAt(scene, wx, wy) {
-  const { game, shell, platform } = scene.deps;
+  const { shell, platform } = scene.deps;
   // 正在演一件活时点了别处：活早已做完，戏就此收场，接着照这一下去做
   if (scene.performer?.active && !shell.paused()) scene.performer.stop();
   if (scene.busy || shell.paused()) return;
   platform.audio.unlock();
+  scene.approaching = null;
   const walk = (x, y) => walkable(scene.map, x, y);
   const from = scene.player.tile;
   const person = scene.villagers.find(
@@ -27,20 +27,17 @@ export function tapAt(scene, wx, wy) {
   }
   const stand = standBeside(walk, from, tile);
   if (!stand) return;
+  scene.approaching = person || null;
   scene.player.walk(stand.path, () => {
+    scene.approaching = null;
     scene.player.face(stand.dir);
+    // 赴约、换班可能在路上发生。只跟点中的人说话，不能误碰他原来站着的地。
+    if (person) {
+      if (person.sprite.visible && person.tile.x === tile.x && person.tile.y === tile.y)
+        return scene.talk(person);
+      return;
+    }
     if (decor) return poke(scene, decor);
-    if (farm) {
-      // 手指点地：当前工具不合适就自动换成合适的那一件；哪件都用不上而地里有草有虫，就打开田地照料
-      const at = scene.at();
-      const why = (tool, x, y) => game.ask('farm.why', tool, x, y, at, shell.get().seed);
-      if (why(shell.get().tool, tile.x, tile.y)) {
-        const better = bestTool(why, tile.x, tile.y);
-        if (better) shell.set({ tool: better });
-        else if (careNote(game.ask('farm.detail', tile.x, tile.y)))
-          return shell.set({ modal: { kind: 'field', x: tile.x, y: tile.y } });
-      }
-    } else if (water && shell.get().tool !== 'can') shell.set({ tool: 'can' });
     scene.hintKey = '';
     scene.act();
   });

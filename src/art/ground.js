@@ -98,7 +98,9 @@ export function paintGround(tiles, seed = 1) {
       } else if (kind === 'field') {
         // 没翻的田：比路深一层的土色，隐约几道垄沟
         c = patch < 0.3 ? P.j1 : P.j2;
-        if (y % 6 === 0 && fleck < 0.85) c = P.j3;
+        const furrow = (y + (patch > 0.7 ? 1 : 0)) % 9;
+        if (furrow === 0 && band < 0.68) c = P.j3;
+        else if (furrow === 1 && band < 0.5) c = P.j1;
         if (fleck < 0.006) c = P.j3;
         if (around(x, y, 1, k => k !== 'field')) c = P.j4;
         else if (around(x, y, 2, k => k !== 'field'))
@@ -106,9 +108,11 @@ export function paintGround(tiles, seed = 1) {
       } else if (kind === 'paddy') {
         c = patch < 0.85 ? P.x1 : P.x2;
         if (band > 0.9 && patch < 0.4) c = P.x0;
-        if (around(x, y, 1, k => k !== 'paddy')) c = P.j4;
-        else if (around(x, y, 2, k => k !== 'paddy')) c = P.j3;
-        else if (around(x, y, 3, k => k !== 'paddy')) c = P.x3;
+        // 迎光侧是长草的堤顶，背光侧露出泥壁，水线留一圈青亮反光。
+        const grassLip = around(x, y, 2, k => k !== 'paddy');
+        if (grassLip) c = band < 0.65 ? P.m3 : P.m2;
+        else if (K(x, y - 4) !== 'paddy' || K(x - 3, y) !== 'paddy') c = P.j4;
+        else if (around(x, y, 4, k => k !== 'paddy')) c = P.x0;
       } else if (kind === 'water') {
         // 越往中间越深；北岸压在水上一道暗影，别的岸边是一圈浅水
         const deep = !around(x, y, 9, k => k !== 'water');

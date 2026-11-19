@@ -53,9 +53,9 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       weeds: false,
       bugs: false,
     });
-    await tap(page, 8, 20); // 再点：自动换成菜种
+    await tap(page, 8, 20); // 先润土
     await frames(page, 40);
-    await tap(page, 8, 20); // 再点：自动换成水壶
+    await tap(page, 8, 20); // 湿润的空地上播种
     await frames(page, 40);
     const planted = await plot(page, 8, 20);
     assert.deepEqual([planted.crop, planted.wet], ['qingcai', true]);
@@ -115,9 +115,54 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     await mobile.touchscreen.tap(finger.x, finger.y); // 真的用手指点一下：位置要换算得对
     await frames(mobile, 120);
     assert.ok(await plot(mobile, 8, 20), '转过来的画面上，手指点哪一格就锄哪一格');
-    await mobile.locator('.do').tap(); // “做”按钮：面前这格已经锄过，只会提示，不报错
+    assert.equal(await mobile.locator('.do').textContent(), '浇水');
+    await mobile.locator('.toolbar [data-tool="hoe"]').tap();
+    await frames(mobile, 3);
+    assert.equal(await mobile.locator('.do').textContent(), '锄地');
+    await mobile.locator('.do').tap();
+    assert.equal((await plot(mobile, 8, 20)).wet, false, '手选工具时不能自动浇水');
+    await mobile.locator('.toolbar [data-tool="hoe"]').tap();
+    await frames(mobile, 3);
+    await mobile.locator('.do').tap();
     await frames(mobile, 30);
     await shot(mobile, 'smoke-phone-portrait.png');
+    assert.deepEqual(phone.errors, []);
+
+    assert.equal((await plot(mobile, 8, 20)).wet, true);
+    assert.equal(await mobile.locator('.do').textContent(), '播种');
+    await tap(mobile, 8, 20);
+    await frames(mobile, 90);
+    // 石伯从自己的田走过来，在刚播种的格旁弯腰；走路时点他也仍与本人说话。
+    const tending = await mobile.evaluate(() => {
+      const scene = window.__dao.world.scene();
+      const shi = scene.villagers.find(v => v.id === 'shi');
+      for (let i = 0; i < 900; i++) {
+        scene.game.step(performance.now() + i * 16.67, 16.67);
+        if (shi.work.image?.visible && shi.tile.y === 20 && Math.abs(shi.tile.x - 8) === 1)
+          return true;
+      }
+      return false;
+    });
+    assert.equal(tending, true);
+    const visit = await mobile.evaluate(() => {
+      const s = window.__dao.world.scene();
+      const shi = s.villagers.find(v => v.id === 'shi');
+      const tiles = new Set();
+      let working = false;
+      for (let i = 0; i < 480; i++) {
+        s.game.step(performance.now() + i * 16.67, 16.67);
+        tiles.add(shi.tile.y);
+        working ||= Boolean(shi.work.image?.visible);
+      }
+      s.tap(shi.px, shi.py - 12);
+      return { worked: working, walked: tiles.size > 1 };
+    });
+    assert.deepEqual(visit, { worked: true, walked: true });
+    await frames(mobile, 230);
+    const talk = await mobile.evaluate(() => window.__dao.shell.get().modal);
+    assert.equal(talk?.who, 'shi');
+    assert.match(talk.line, /水吃进土/);
+    await mobile.locator('.sheet button[data-do="close"]').last().click();
     assert.deepEqual(phone.errors, []);
 
     // —— 手机横着拿：不用转，布局收紧 ——
@@ -135,11 +180,15 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     await shot(wide.page, 'smoke-phone-landscape.png');
     // 新来的人：手记收着时左上角有“下一步”，用这台设备的说法讲怎么做
     assert.match(await wide.page.locator('.next').textContent(), /锄松一格地.*菜地.*点「做」/);
-    assert.equal(await desk.page.locator('.next').isVisible(), false, '手记开着就不重复');
-    await desk.page.evaluate(() => window.__dao.shell.set({ modal: null })); // 收起清早的便条
-    await desk.page.locator('.vitals [data-do="journal"]').click();
+    assert.equal(await desk.page.locator('.journal').isVisible(), false);
+    await desk.page.evaluate(() => window.__dao.shell.set({ modal: null }));
     assert.match(await desk.page.locator('.next').textContent(), /下一步.*按空格/);
     await desk.page.locator('.vitals [data-do="journal"]').click();
+    await desk.page.locator('[data-do="journalTab"][data-tab="people"]').click();
+    assert.match(await desk.page.locator('.journal section').textContent(), /石伯/);
+    await desk.page.locator('[data-do="journalTab"][data-tab="pack"]').click();
+    assert.match(await desk.page.locator('.journal section').textContent(), /格/);
+    await desk.page.locator('.journal header button').click();
     // 矮屏上长的小窗：最底下那排按钮不用滚动就够得着；点纸外面的空白处也能关掉
     await wide.page.locator('[data-do="bag"]').tap();
     await wide.page.locator('[data-do="saves"]').tap();
@@ -273,13 +322,15 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.waitForTimeout(250);
       await shot(p, session === desk ? 'm5-weather-desktop.png' : 'm5-weather-phone.png');
       await p.locator('[data-do="close"]').click();
-      await p.locator('[data-do="seeds"]').click();
+      if (session === wide) await p.locator('[data-do="menu"]').click();
+      await p.locator('[data-do="seeds"]:visible').click();
       assert.equal(await p.locator('[data-do="seedChoose"]').count(), 7);
       await p.locator('[data-do="seedChoose"][data-seed="seed.qingcai"]').click();
       // 沿用已种好的田；点击种植完的地会走近，朝向该格。
       await tap(p, 8, 20);
       await frames(p, 1600);
-      await p.locator('[data-do="field"]').click();
+      if (session === wide) await p.locator('[data-do="menu"]').click();
+      await p.locator('[data-do="field"]:visible').click();
       await p.locator('[data-do="fieldCare"][data-kind="drain"]').click();
       assert.equal(
         await p.evaluate(() => window.__dao.game.ask('farm.detail', 8, 20).drained),

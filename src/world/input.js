@@ -35,7 +35,7 @@ export function bindKeyboard(scene, intents) {
 }
 
 // 手指在画面左边这一片按下拖动，就是摇杆；拖不到 SLOP 像素就松手，算轻点一下。
-const ZONE = 0.45;
+const ZONE = 0.5;
 const SLOP = 10;
 
 /**
@@ -94,6 +94,11 @@ export function bindPointer(scene, intents, platform) {
   canvas.addEventListener('pointerup', up);
   canvas.addEventListener('pointercancel', up);
   canvas.addEventListener('wheel', wheel, { passive: true });
+  canvas.addEventListener('lostpointercapture', up);
+  const offHide = platform.onHide(release);
+  const offModal = scene.deps.shell.subscribe(state => {
+    if (state.modal) release();
+  });
   return () => {
     release();
     canvas.removeEventListener('pointerdown', down);
@@ -101,5 +106,8 @@ export function bindPointer(scene, intents, platform) {
     canvas.removeEventListener('pointerup', up);
     canvas.removeEventListener('pointercancel', up);
     canvas.removeEventListener('wheel', wheel);
+    canvas.removeEventListener('lostpointercapture', up);
+    offHide();
+    offModal();
   };
 }

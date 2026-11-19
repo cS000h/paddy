@@ -1,4 +1,7 @@
 // 几种小而简单的小窗：水边、回屋歇息、清早的便条、路牌和门口的话、确认、出错、别的页面在玩、菜单。
+import { ITEMS } from '../content/items.js';
+import { PEOPLE } from '../content/people.js';
+import { itemImg } from './icons.js';
 import { button, actions, close, title, para, esc } from './html.js';
 
 export function waterView(modal, game, here) {
@@ -21,11 +24,21 @@ export function sleepView(modal, game) {
     ${actions(close('再待一会儿', false), button('sleep', '歇下', { main: true }))}`;
 }
 
-// 清早的便条：夜里发生的事，一条一段
-export const notesView = modal =>
-  `${title('清早', `第 ${modal.day} 日`)}
-    ${modal.notes.map(n => `<p class="note"><b>${esc(n.title)}</b>${esc(n.text)}</p>`).join('')}
+// 回礼在过夜事务里已经送到。这里显示实际去处，关窗和重画都只读。
+export function notesView(modal) {
+  const gifts = new Map((modal.gifts || []).map(g => [PEOPLE[g.from].name + '的回礼', g]));
+  const notes = modal.notes.map(n => {
+    const gift = gifts.get(n.title);
+    const receipt = gift
+      ? `<strong>${esc(ITEMS[gift.item].name)} ×${gift.n}</strong>
+      <small>已收进${gift.where === 'store' ? '橱柜' : '行囊'}</small>`
+      : '';
+    return `<article class="morning-note ${gift ? 'gift' : ''}">
+      ${gift ? itemImg(gift.item) : ''}<div><h3>${esc(n.title)}</h3>${receipt}<p>${esc(n.text)}</p></div></article>`;
+  });
+  return `${title('清早', `第 ${modal.day} 日`)}<div class="morning-list">${notes.join('')}</div>
     ${actions(close('起身'))}`;
+}
 
 export const confirmView = modal =>
   `${title(modal.title)}${para(modal.text)}
@@ -52,7 +65,7 @@ export const elsewhereView = () =>
 // 右上角“更多”展开的一小列。声音、全屏这些是这台设备的事，打开菜单时由面板带进来。
 export const menuView = m =>
   `<div class="menu-list">
-    ${button('map', '全村地图')}${button('book', '册子')}${button('journal', '手记')}
+    ${button('seeds', '挑菜种')}${button('field', '看地照料')}${button('map', '全村地图')}${button('book', '册子')}${button('journal', '手记')}
     ${button('saves', '进度与玩法')}${button('mute', m.muted ? '声音：关着' : '声音：开着')}
     ${m.fullscreen === null ? '' : button('fullscreen', m.fullscreen ? '退出全屏' : '全屏玩')}
   </div>`;

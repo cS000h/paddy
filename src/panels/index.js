@@ -58,7 +58,8 @@ export function createPanels({
   const captions = createCaptions(root, spot);
   const small = profile => profile.narrow || profile.compact;
   const touch = () => platform.device.profile().touch;
-  let journalOpen = !small(platform.device.profile());
+  let journalOpen = false;
+  let journalTab = 'goals';
   let seenLedger = game.ask('ledger').at(-1)?.seq || 0;
   let seed = shell.get().seed;
   let shownModal = null; // 画在纸上的是哪一个小窗（同一个就不重画，免得滚动位置跳回顶上）
@@ -72,8 +73,9 @@ export function createPanels({
 
   // 常驻的几块，加上手记（开着时）或左上角的“下一步”（合着时）。
   function renderAll() {
+    root.classList.toggle('touch', touch());
     renderHud(el, { game, shell });
-    if (journalOpen) fill(el.journal, journalView(game, touch()));
+    if (journalOpen) fill(el.journal, journalView(game, touch(), journalTab));
     el.journal.hidden = !journalOpen;
     const next = journalOpen ? '' : nextStepView(game, touch());
     el.next.hidden = !next;
@@ -100,6 +102,11 @@ export function createPanels({
     const modal = state.modal;
     root.classList.toggle('modal-open', !!modal);
     root.dataset.place = modal ? placementOf(modal) : '';
+    const morning = modal?.kind === 'notes';
+    if (root.dataset.morning !== String(morning)) {
+      root.dataset.morning = String(morning);
+      for (const node of root.children) if (node !== el.modal) node.inert = morning;
+    }
     el.modal.hidden = !modal;
     if (!modal) {
       shownModal = null;
@@ -129,7 +136,13 @@ export function createPanels({
   function renderShell(state) {
     sky.style.backgroundColor = state.tint;
     veil.style.opacity = state.veil;
-    const drawer = journalOpen && platform.device.profile().narrow;
+    if (state.modal && journalOpen) {
+      journalOpen = false;
+      renderAll();
+    }
+    const drawer = journalOpen && (touch() || small(platform.device.profile()));
+    root.classList.toggle('drawer-open', drawer);
+    el.toolbar.inert = !!state.modal || drawer;
     el.stick.hidden = el.do.hidden = !touch() || !!state.modal || drawer;
     el.hint.hidden = !state.hint || !!state.modal || touch();
     if (state.hint) {
@@ -140,6 +153,8 @@ export function createPanels({
     syncStamp(el.do, state.hint);
     syncToolbar(el, state);
     renderModal(state);
+    if (state.modal?.kind === 'notes' && !el.modal.contains(document.activeElement))
+      el.modal.querySelector('.main')?.focus();
   }
 
   let lastToast = null;
@@ -162,9 +177,15 @@ export function createPanels({
 
   // 只和这块屏幕有关的几件事，面板自己办：开合手记、声音、全屏、菜单、看身上的数
   const LOCAL = {
+    journalTab({ tab }) {
+      journalTab = tab;
+      renderAll();
+      el.journal.querySelector('section').scrollTop = 0;
+      el.journal.querySelector(`[data-tab="${tab}"]`)?.focus();
+    },
     journal() {
-      journalOpen = !journalOpen;
       if (shell.get().modal?.kind === 'menu') shell.set({ modal: null });
+      journalOpen = !journalOpen;
       renderAll();
       renderShell(shell.get());
     },
@@ -222,7 +243,11 @@ export function createPanels({
     if (shell.get().modal)
       (el.modal.querySelector('button.main') || el.modal.querySelector('button'))?.click();
   });
-  const offCancel = intents.on('cancel', () => shell.get().modal && shell.set({ modal: null }));
+  const offCancel = intents.on('cancel', () => {
+    const modal = shell.get().modal;
+    if (modal && closesOnBackdrop(modal)) shell.set({ modal: null });
+    else if (!modal && journalOpen) LOCAL.journal();
+  });
   let lastNext = '';
 
   const offs = [
@@ -234,6 +259,7 @@ export function createPanels({
     game.onCommit(facts => {
       for (const f of facts.filter(f => f.type === 'achievement.earned')) {
         const stamp = document.createElement('div');
+        root.querySelector('.award-stamp')?.remove();
         stamp.className = 'award-stamp';
         stamp.innerHTML = `<span>印</span><b>${esc(f.data.name)}</b>`;
         root.append(stamp);

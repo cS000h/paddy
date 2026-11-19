@@ -4,7 +4,7 @@ import { PEOPLE } from '../content/people.js';
 import { POKES } from '../content/pokes.js';
 import { farmable } from '../content/maps/index.js';
 import { costText, careNote } from '../shell/words.js';
-import { dirTo, toolVerb } from './logic.js';
+import { dirTo, toolVerb, fieldTool } from './logic.js';
 
 // 提示条上的话（键鼠时显示在工具栏上方）
 export const ACT_HINT = {
@@ -80,13 +80,16 @@ export function hintFor(scene, t) {
     return { text: reason || '打水', verb: '打水', ok: !reason };
   }
   if (!farmable(scene.map, t.x, t.y)) return null;
-  const tool = shell.get().tool;
-  const reason = game.ask('farm.why', tool, t.x, t.y, scene.at(), shell.get().seed);
+  const plot = game.ask('farm.detail', t.x, t.y);
+  const state = shell.get();
+  const tool = state.manualTool ? state.tool : fieldTool(plot);
+  const care = careNote(plot);
+  if (!tool)
+    return { text: care || '看看这格地', verb: '看地', tool: null, ok: true, care: !!care };
+  const reason = game.ask('farm.why', tool, t.x, t.y, scene.at(), state.seed);
   const cost = costText(game.ask('action.cost', tool));
-  // 地里长了草、生了虫，提示条顺带说一声；工具栏的“看地”也会亮起来
-  const care = careNote(game.ask('farm.detail', t.x, t.y));
   const text = (reason || `${toolVerb(tool)} · ${cost}`) + (care ? ` · ${care}` : '');
-  return { text, verb: TOOL_STAMP[tool] || toolVerb(tool), ok: !reason, care: !!care };
+  return { tool, text, verb: TOOL_STAMP[tool], ok: !reason, care: !!care };
 }
 
 export function touchThing(scene, thing) {

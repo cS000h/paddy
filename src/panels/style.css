@@ -721,11 +721,11 @@ button:focus-visible {
   }
 }
 
-/* 达成一项成就：正中盖一个印 */
+/* 成就印靠屏幕边缘，留出人物和工具的落点。 */
 .award-stamp {
   position: absolute;
-  top: 28%;
-  left: 50%;
+  top: calc(52px + var(--safe-t));
+  right: calc(12px + var(--safe-r));
   z-index: 35;
   display: flex;
   align-items: center;
@@ -736,7 +736,7 @@ button:focus-visible {
   background: var(--moon);
   box-shadow: var(--shadow);
   color: var(--cinnabar);
-  transform: translateX(-50%) rotate(-5deg);
+  transform: rotate(-3deg);
   animation: stamp-in 3.2s both;
   pointer-events: none !important;
 }

@@ -65,6 +65,7 @@ const objects = [
   ['flowers', 13, 13],
   ['well', 18, 18],
   ['scarecrow', 5, 21],
+  ['trellis', 4, 24],
   ['tree.camphor', 22, 13],
   ['rack', 33, 11],
   ['jars', 28, 10],

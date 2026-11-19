@@ -26,11 +26,9 @@ export function growthActions({ game, shell, run }) {
 }
 export function growthNotices(game, shell) {
   game.onCommit(facts => {
-    const achieved = facts.filter(f => f.type === 'achievement.earned');
     const leveled = facts.filter(f => f.type === 'skill.leveled');
     const traits = facts.filter(f => f.type === 'trait.gained');
     const messages = [
-      ...achieved.map(f => '成就落印：' + f.data.name),
       ...leveled.map(f => f.data.name + '到了「' + f.data.title + '」'),
       ...traits.map(f => '新特质：' + f.data.name),
     ];

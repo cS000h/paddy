@@ -2,34 +2,12 @@
 // 东西本身也跟着动（灶膛起火冒烟、锅上冒热气、木屑飞、水花），放完换回走路的样子。
 // 规则早在开演之前就结算好了，这里只是把已经发生的事演给玩家看：演的时候人不能走动，
 // 点一下或按互动键就快进到结尾；出了岔子最多十几秒也一定收场，人不会被卡在那儿。
-import { actSheet } from '../art/index.js';
+import { actionTexture, placeAction } from './action-texture.js';
 import { walkable, groundAt } from '../content/maps/index.js';
-import { gridToCanvas } from './textures.js';
 import { TILE, sideSpot } from './logic.js';
 import { SCRIPTS } from './scripts.js';
 
 const SPARE = 3000; // 算好的时长再多等一会儿，还没演完就强行收场
-
-/** 一个动作的贴图和动画（第一次用到时才画）；返回 {key, w, h, ax, ay, frames, fps, loop}。 */
-function prepare(scene, name, look) {
-  const key = `act:${name}:${look}`;
-  const known = scene.registry.get(key);
-  if (known && scene.textures.exists(key)) return known;
-  const s = actSheet(name, look);
-  if (scene.textures.exists(key)) scene.textures.remove(key);
-  const texture = scene.textures.addCanvas(key, gridToCanvas(s.grid));
-  for (let f = 0; f < s.frames; f++) texture.add(f, 0, f * s.w, 0, s.w, s.h);
-  if (scene.anims.exists(key)) scene.anims.remove(key);
-  scene.anims.create({
-    key,
-    frames: Array.from({ length: s.frames }, (_, frame) => ({ key, frame })),
-    frameRate: s.fps,
-    repeat: s.loop ? -1 : 0,
-  });
-  const info = { key, w: s.w, h: s.h, ax: s.ax, ay: s.ay, frames: s.frames, fps: s.fps };
-  scene.registry.set(key, info);
-  return info;
-}
 
 /** 站在 spot 时，左右哪一边四格之内有水（钓鱼甩竿朝那边）；两边都没有返回 null。 */
 function towardWater(map, spot) {
@@ -118,11 +96,8 @@ export function createPerformer(scene) {
     if (!s) return;
     const next = s.steps[s.i++];
     if (!next) return finish();
-    const info = prepare(scene, next.act, s.look);
-    s.sprite
-      .setTexture(info.key, 0)
-      .setOrigin(info.ax / info.w, info.ay / info.h)
-      .setFlipX(s.face === 'left');
+    const info = actionTexture(scene, next.act, s.look);
+    placeAction(s.sprite, info, s.face);
     const times = next.times || 1;
     s.sprite.play(times > 1 ? { key: info.key, repeat: times - 1 } : info.key);
     const period = (info.frames * 1000) / info.fps;
@@ -186,7 +161,7 @@ export function createPerformer(scene) {
       show = { steps, i: 0, target: target || p.tile, then, look: p.look, lasting: [] };
       show.face = water ? towardWater(scene.map, spot) || spot.face : spot.face;
       const total = steps.reduce(
-        (sum, next) => sum + lasting(next, prepare(scene, next.act, p.look)),
+        (sum, next) => sum + lasting(next, actionTexture(scene, next.act, p.look)),
         0,
       );
       show.watchdog = scene.time.delayedCall(total + spot.path.length * 300 + SPARE, () =>

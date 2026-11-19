@@ -8,7 +8,7 @@ import { esc } from './html.js';
 /** 目标底下那行小字：按这台设备的说法讲怎么做（按空格，或点“做”）。 */
 const hintOf = (goal, touch) => fill(goal.hint, { do: doWord(touch) });
 
-export function journalView(game, touch) {
+export function journalView(game, touch, tab) {
   const goals = game.ask('guide');
   const next = goals.find(g => !g.done);
   const pack = game.ask('pack');
@@ -27,15 +27,27 @@ export function journalView(game, touch) {
   const dateRow = date
     ? `<p class="appointment">${date.day === day ? '今天' : '明天'}午前 · 樟树茶摊 · ${esc(date.name)}</p>`
     : '';
-  return `<h2>手记</h2>
-    <ul>${goalRows.join('')}</ul>
-    <h3>行囊里（${pack.used}/${pack.cap} 格）</h3>
-    <ul>${packRows.join('') || '<li>空的</li>'}</ul>
-    <h3>乡邻</h3>
-    ${dateRow}
-    <ul>${bondRows.join('')}</ul>
-    <button data-do="saves">进度与玩法</button>
-    <button class="danger" data-do="reset">重新开始</button>`;
+  const tabs = [
+    ['goals', '记事'],
+    ['pack', '行囊'],
+    ['people', '乡邻'],
+  ]
+    .map(
+      ([id, label]) =>
+        `<button data-do="journalTab" data-tab="${id}" aria-pressed="${tab === id}">${label}</button>`,
+    )
+    .join('');
+  const dishes = pack.dishes.map(d => `<li>${esc(d.name)}</li>`).join('');
+  const buff = game.ask('body').buff;
+  const pages = {
+    goals: `<ul>${goalRows.join('')}</ul>
+      <button data-do="saves">进度与玩法</button><button class="danger" data-do="reset">重新开始</button>`,
+    pack: `<h3>已用 ${pack.used}/${pack.cap} 格</h3><ul>${packRows.join('') + dishes || '<li>空的</li>'}</ul>
+      ${buff ? `<p><b>${esc(buff.name)}</b> · ${esc(buff.text)}</p>` : ''}`,
+    people: `${dateRow}<ul>${bondRows.join('')}</ul>`,
+  };
+  return `<header><h2>手记</h2><button data-do="journal" aria-label="收起手记">×</button></header>
+    <nav aria-label="手记分页">${tabs}</nav><section>${pages[tab]}</section>`;
 }
 
 /** 下一个还没做到的目标那一行；目标都做完了是空字符串。 */

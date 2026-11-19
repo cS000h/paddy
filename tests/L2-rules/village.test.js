@@ -33,6 +33,17 @@ test('头一回见面说见面的话；同一天再说话不再涨熟悉', () =>
   assert.match(refused(g, 'talk', { to: 'zhou' }), /不在附近/);
 });
 
+test('在田边初见石伯，他认得刚种下的地有没有浇过', () => {
+  for (const wet of [false, true]) {
+    const g = newGame();
+    must(g, 'farm.till', FIELD);
+    must(g, 'farm.sow', FIELD);
+    if (wet) must(g, 'farm.water', FIELD);
+    const greeting = g.dispatch('talk', { to: 'shi' }).facts.find(f => f.type === 'person.talked');
+    assert.match(greeting.data.line, wet ? /水吃进土/ : /籽旁边还是干的/);
+  }
+});
+
 test('送一把菜：对方记着，第二天早上留下回礼和便条', () => {
   const g = newGame();
   assert.match(refused(g, 'gift', { to: 'gui', item: 'tofu' }), /豆腐不够了/);
@@ -52,6 +63,10 @@ test('送一把菜：对方记着，第二天早上留下回礼和便条', () =>
   assert.ok(must(g, 'sleep').includes('gift.returned'));
   assert.equal(carried(g, 'seed.qingcai'), seedsBefore + 2);
   assert.ok(g.ask('notes', g.ask('clock').day).some(n => n.title === '桂嫂的回礼'));
+  const greet = () =>
+    g.dispatch('talk', { to: 'gui' }).facts.find(f => f.type === 'person.talked').data.line;
+  assert.match(greet(), /碗你留着/);
+  assert.doesNotMatch(greet(), /碗你留着/);
   assert.ok(!must(g, 'sleep').includes('gift.returned'), '回礼只给一次');
 });
 

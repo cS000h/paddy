@@ -8,7 +8,7 @@ import { P } from './palette.js';
  */
 export function soilTile(mask, wet) {
   const g = new Grid(16, 16);
-  const [hi, mid, lo] = wet ? [P.m0, P.m1, P.m2] : [P.d0, P.d1, P.d2];
+  const [hi, mid, lo] = wet ? [P.wet0, P.wet1, P.wet2] : [P.d0, P.d1, P.d2];
   const n = mask & 1;
   const e = mask & 2;
   const s = mask & 4;
@@ -31,6 +31,7 @@ export function soilTile(mask, wet) {
       if (hash2(x, y, mask + (wet ? 97 : 0)) < 0.05) c = lo;
       if ((!n && y === y0) || (!w && x === x0)) c = hi;
       if ((!s && y === y1) || (!e && x === x1)) c = lo;
+      if (wet && y % 5 === 2 && (x + y) % 11 < 3) c = P.w3;
       g.set(x, y, c);
     }
   return g;
@@ -122,13 +123,15 @@ function padTo16(src) {
 /** 对准目标格用的四角框。ok = 能做（朱砂色），否则是淡墨色。 */
 export function cursor(ok) {
   const g = new Grid(16, 16);
-  const c = ok ? P.c1 : P.ink3;
+  const c = ok ? P.y1 : P.ink3;
   for (const [x, y, dx, dy] of [
     [0, 0, 1, 1],
     [15, 0, -1, 1],
     [0, 15, 1, -1],
     [15, 15, -1, -1],
   ]) {
+    if (ok)
+      g.hline(x + dx, x + dx * 4, y + dy * 2, P.h3).vline(x + dx * 2, y + dy, y + dy * 4, P.h3);
     g.hline(x, x + dx * 4, y, c).vline(x, y, y + dy * 4, c);
     g.hline(x + dx, x + dx * 3, y + dy, P.paper0).vline(x + dx, y + dy, y + dy * 3, P.paper0);
   }

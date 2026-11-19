@@ -52,6 +52,7 @@ export const OBJECTS = Object.freeze({
   haystack: { foot: [0, 0, 1, 0] },
   rack: { foot: [0, 0, 1, 0] },
   jars: { foot: [0, 0, 0, 0] },
+  trellis: {}, // 棚下可以穿行，旧存档的站位也依然能走。
   scarecrow: { foot: [0, 0, 0, 0] },
   sign: { foot: [0, 0, 0, 0], act: 'sign' },
   'tree.broad': { foot: [0, 0, 0, 0] },

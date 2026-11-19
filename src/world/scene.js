@@ -2,7 +2,7 @@
 // 这里只通过端口（deps.game）碰规则：发命令用 dispatch，问情况用 ask，听结果用 onCommit。
 import Phaser from 'phaser';
 import { MAPS, walkable, farmable, waterSource, actAt } from '../content/maps/index.js';
-import { PEOPLE, ON_MAP } from '../content/people.js';
+import { PEOPLE } from '../content/people.js';
 import { variantAt } from '../art/index.js';
 import { buildTextures } from './textures.js';
 import { Walker, Villager } from './actors.js';
@@ -11,6 +11,7 @@ import { weatherEffects } from './weather.js';
 import { refreshPlots } from './plots.js';
 import { bindKeyboard, bindPointer } from './input.js';
 import { hintFor, touchThing, decorAt, poke } from './interactions.js';
+import { swing } from './farm-motion.js';
 import { tapAt } from './tap.js';
 import { leaveByRoad } from './travel.js';
 import { createAmbient } from './ambient.js';
@@ -67,12 +68,13 @@ export class VillageScene extends Phaser.Scene {
     }
     this.plots = new Map();
     this.cursor = this.add.image(0, 0, 'cursor:ok').setOrigin(0).setDepth(-800).setVisible(false);
-    this.toolIcon = this.add.image(0, 0, 'icon:hoe').setDepth(9200).setVisible(false);
 
     const hero = game.ask('hero');
     this.player = new Walker(this, hero.look, hero.x, hero.y, hero.dir);
-    const minute = game.ask('clock').minute;
-    this.villagers = ON_MAP.map(id => new Villager(this, map, id, PEOPLE[id].look, minute));
+    this.approaching = null;
+    this.villagers = game
+      .ask('residents')
+      .map(p => new Villager(this, map, p.id, PEOPLE[p.id].look, p));
     this.effects = createEffects(this, map);
     this.weatherFx = weatherEffects(this);
     this.ambient = createAmbient(this, map);
@@ -147,10 +149,12 @@ export class VillageScene extends Phaser.Scene {
 
   frame(time, delta) {
     this.ambient.update(time, delta);
-    this.weatherFx.update(time, this.map.indoor ? 'sunny' : this.deps.game.ask('weather').code);
+    this.weatherFx.update(time, this.map.indoor ? 'sunny' : this.weather.code);
     const dt = Math.min(0.05, delta / 1000);
     const { intents, shell } = this.deps;
-    for (const v of this.villagers) v.follow(dt);
+    if (!shell.paused()) {
+      for (const v of this.villagers) v.tick(dt, this.approaching === v);
+    }
     this.performer.update(dt);
     const move = intents.move();
     // 演着一件活时推摇杆、按方向键：戏就此收场，人照着走
@@ -160,6 +164,7 @@ export class VillageScene extends Phaser.Scene {
       return;
     }
     if (move.x || move.y) {
+      this.approaching = null;
       this.player.path = [];
       this.player.onArrive = null;
       this.player.step(move.x, move.y, dt, (x, y) => this.blocked(x, y));
@@ -187,12 +192,19 @@ export class VillageScene extends Phaser.Scene {
   updateHint() {
     const { game, shell } = this.deps;
     const t = this.target();
-    const key = `${t.kind}:${t.x},${t.y}:${shell.get().tool}:${game.revision()}`;
+    const { tool, seed, manualTool } = shell.get();
+    const key = [t.kind, t.person?.id, t.x, t.y, tool, seed, manualTool, game.revision()].join(':');
     if (key === this.hintKey) return;
     this.hintKey = key;
     const hint = hintFor(this, t);
     const old = shell.get().hint;
-    if (old?.text !== hint?.text || old?.ok !== hint?.ok || old?.verb !== hint?.verb)
+    if (
+      old?.text !== hint?.text ||
+      old?.ok !== hint?.ok ||
+      old?.verb !== hint?.verb ||
+      old?.tool !== hint?.tool ||
+      old?.care !== hint?.care
+    )
       shell.set({ hint });
     this.cursor.setVisible(!!hint).setPosition(t.x * TILE, t.y * TILE);
     if (hint) this.cursor.setTexture(hint.ok ? 'cursor:ok' : 'cursor:no');
@@ -221,10 +233,12 @@ export class VillageScene extends Phaser.Scene {
     if (t.kind === 'water') return shell.set({ modal: { kind: 'water', x: t.x, y: t.y } });
     if (t.kind === 'decor') return poke(this, t.decor);
     if (!farmable(this.map, t.x, t.y)) return undefined;
-    const tool = shell.get().tool;
-    const reason = game.ask('farm.why', tool, t.x, t.y, this.at(), shell.get().seed);
-    if (reason) return this.refuse(reason);
-    return this.swing(tool, t, () => this.send(COMMAND_OF[tool], t, { seed: shell.get().seed }));
+    const action = hintFor(this, t);
+    if (!action.ok) return this.refuse(action.text);
+    const tool = action.tool;
+    if (!tool) return shell.set({ modal: { kind: 'field', x: t.x, y: t.y } });
+    const seed = shell.get().seed;
+    return swing(this, tool, () => this.send(COMMAND_OF[tool], t, { seed }));
   }
 
   send(type, t, extra = {}) {
@@ -237,43 +251,6 @@ export class VillageScene extends Phaser.Scene {
     this.deps.shell.toast(reason);
     this.deps.platform.audio.play('no');
     this.tweens.add({ targets: this.cursor, alpha: { from: 0.2, to: 1 }, duration: 90, repeat: 2 });
-  }
-
-  /** 挥一下工具：抬手、落手，落手的那一刻真正生效。 */
-  swing(tool, t, hit) {
-    this.busy = true;
-    const p = this.player;
-    p.face(dirTo(p.tile, t));
-    p.setPose('raise');
-    const tx = t.x * TILE + 8;
-    const ty = t.y * TILE + 8;
-    const icon = this.toolIcon.setTexture('icon:' + tool).setVisible(true);
-    icon
-      .setPosition(p.px, p.py - 34)
-      .setAngle(-50)
-      .setFlipX(p.dir === 'left');
-    this.tweens.add({
-      targets: icon,
-      x: (p.px + tx) / 2,
-      y: (p.py - 20 + ty) / 2,
-      angle: 30,
-      duration: 190,
-      delay: 110,
-      ease: 'Quad.easeIn',
-    });
-    this.time.delayedCall(150, () => {
-      p.setPose('strike');
-      this.guard(hit);
-    });
-    // 收手一定要把 busy 放下，否则这一下出了错，人就再也做不了事
-    this.time.delayedCall(390, () => {
-      this.busy = false;
-      this.hintKey = '';
-      this.guard(() => {
-        p.setPose(null);
-        icon.setVisible(false);
-      });
-    });
   }
 
   talk(person) {
@@ -300,7 +277,6 @@ export class VillageScene extends Phaser.Scene {
     return touchThing(this, thing);
   }
 
-  /** 点了世界里的一个位置：走过去；那儿有事可做就做。 */
   /** 点了世界里的一个位置：走过去；那儿有事可做就做（见 tap.js）。 */
   tap(wx, wy) {
     tapAt(this, wx, wy);
@@ -320,8 +296,13 @@ export class VillageScene extends Phaser.Scene {
       }
       if (FEEDBACK[f.type]) {
         const [effect, sound] = FEEDBACK[f.type];
-        this.effects[effect](d.x, d.y);
+        this.effects[effect](d.x, d.y, d.crop);
         platform.audio.play(sound);
+        platform.haptic();
+        if (f.type === 'plot.sown') {
+          const stone = this.villagers.find(v => v.id === 'shi');
+          stone?.work.inspectSowing(d, this.deps.game.ask('clock').day);
+        }
         plots = true;
       } else if (f.type === 'can.refilled') {
         this.effects.refilled(d.x * TILE + 8, d.y * TILE + 8);
@@ -354,7 +335,8 @@ export class VillageScene extends Phaser.Scene {
   /** 时间变了：天色、村民的去向、炊烟。 */
   retime(jump) {
     const { minute, season } = this.deps.game.ask('clock');
-    this.ambient.setTime(minute, season, this.deps.game.ask('weather').tags);
+    this.weather = this.deps.game.ask('weather');
+    this.ambient.setTime(minute, season, this.weather.tags);
     // 换季才换贴图：每十分钟一次的走时也把上百个物件的贴图重设一遍，手机上会顿一下
     if (season !== this.season) {
       this.season = season;
@@ -362,7 +344,14 @@ export class VillageScene extends Phaser.Scene {
       for (const s of this.scenery) this.dress(s);
     }
     this.deps.shell.set({ tint: this.map.indoor ? '#ffffff' : skyTint(minute) });
-    for (const v of this.villagers) v.retime(minute, jump);
+    const residents = this.deps.game.ask('residents');
+    const wet = this.weather.tags.includes('wet');
+    for (const v of this.villagers)
+      v.retime(
+        residents.find(p => p.id === v.id),
+        wet,
+        jump,
+      );
     this.effects.setCooking((minute >= 660 && minute < 780) || (minute >= 1020 && minute < 1140));
   }
 

@@ -1,6 +1,6 @@
 // 世界里不依赖画面的算法：寻路、面前是哪一格、点一下该做什么。
 // 这个文件不引用 Phaser，也不碰浏览器，所以能在 Node 里直接测试。
-import { TOOLS } from '../content/items.js';
+import { TOOLS, SOIL, isRipe } from '../content/items.js';
 
 export const TILE = 16;
 export const STEP = Object.freeze({
@@ -95,14 +95,13 @@ export function sideSpot(walk, from, target) {
   return best || { ...from, face: target.x < from.x ? 'left' : 'right', path: [] };
 }
 
-const ORDER = ['hand', 'seed', 'can', 'hoe'];
-
-/**
- * 这一格现在最该用哪件工具。why(tool, x, y, at) 来自规则的 farm.why 查询：能做返回 null。
- * 依次试采收、播种、浇水、锄地（空地先下种再浇水）；都不行返回 null。
- */
-export function bestTool(why, x, y, at) {
-  return ORDER.find(tool => why(tool, x, y, at) === null) || null;
+// 自动农具由地块决定，缺水或行囊满时仍能告诉玩家原本想做什么。
+export function fieldTool(plot) {
+  if (!plot) return 'hoe';
+  if (plot.crop && isRipe(plot.crop, plot.age)) return 'hand';
+  if (plot.water < SOIL.wet) return 'can';
+  if (!plot.crop) return 'seed';
+  return plot.water < SOIL.moist ? 'can' : null;
 }
 
 /** 工具 → 对应的命令。 */

@@ -2,6 +2,7 @@
 // 这里只管组装和跨着几块的流程：读档、自动存档、清早备份、时间流逝，以及出了岔子怎么办。
 // 面板按钮能做的事分在同目录的几个文件里。
 import '../panels/style.css';
+import '../panels/play-hud.css';
 import { createGame } from '../port/game.js';
 import { createWebPlatform } from '../platform/web.js';
 import { createIntents } from '../shell/intents.js';
@@ -139,9 +140,10 @@ function start() {
 
   intents.on('tool', data => {
     const id = data.id || TOOLS[data.index]?.id;
-    if (id) shell.set({ tool: id });
+    if (id && !shell.paused())
+      shell.set({ tool: id, manualTool: !(shell.get().manualTool && shell.get().tool === id) });
   });
-  intents.on('tool.step', data => shell.stepTool(data.by));
+  intents.on('tool.step', data => !shell.paused() && shell.stepTool(data.by));
 
   game.onCommit(facts => {
     clearTimeout(saveTimer);

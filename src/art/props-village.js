@@ -177,3 +177,33 @@ export function crates(seed) {
   for (let x = 13; x < 22; x += 2) g.set(x, 11, veg[(x >> 1) % 2]).set(x + 1, 12, veg[0]);
   return made(g, 12, 22);
 }
+
+// 参考菜畦图里的竹棚：前后两排杆错开，藤只攀半架，让横梁和里面的空隙透出来。
+export function trellis(seed) {
+  const g = new Grid(40, 34);
+  const r = rng(seed);
+  for (const x of [6, 31]) {
+    g.line(x + 2, 3, x + 2, 24, P.t3).line(x + 3, 3, x + 3, 23, P.b2);
+    g.line(x, 10, x - 2, 32, P.t3).line(x + 1, 10, x - 1, 31, P.h2);
+  }
+  for (const y of [4, 7, 11]) g.hline(3, 36, y, P.t3).hline(4, 36, y - 1, P.b2);
+  for (const x of [5, 12, 19, 26, 33]) g.line(x, 12, x + 4, 2, P.h2);
+  for (let i = 0; i < 29; i++) {
+    const x = 7 + Math.floor(r() * 27),
+      y = 3 + Math.floor(r() * 7) + (x > 22 ? Math.floor(r() * 9) : 0);
+    g.line(x - 2, y - 2, x + 1, y + 2, P.v3)
+      .ellipse(x, y, 3, 2, P.v2)
+      .hline(x - 2, x, y - 1, P.v0);
+  }
+  g.line(28, 10, 27, 24, P.b4).line(27, 23, 24, 26, P.b4);
+  for (const [x, y] of [
+    [9, 8],
+    [19, 7],
+    [26, 14],
+  ]) {
+    g.set(x, y - 1, P.y0)
+      .hline(x - 1, x + 1, y, P.y1)
+      .set(x, y + 1, P.y2);
+  }
+  return made(g, 27, 33);
+}

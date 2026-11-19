@@ -47,7 +47,8 @@ export function homeActions({ game, shell, run, here, world }) {
       if (!out.ok) return;
       const day = game.ask('clock').day;
       const notes = game.ask('notes', day);
-      if (notes.length) shell.set({ modal: { kind: 'notes', day, notes } });
+      const gifts = out.facts.filter(f => f.type === 'gift.returned').map(f => f.data);
+      if (notes.length) shell.set({ modal: { kind: 'notes', day, notes, gifts } });
       else shell.toast(`第 ${day} 日的清早。`);
     },
     /** 在对话里再问一件事（近况、安排、天色）：换上他这回说的话。 */

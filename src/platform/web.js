@@ -172,12 +172,17 @@ function fullscreen(view) {
 /** @param {HTMLElement} root 整个游戏画面的最外层元素（横屏时转的就是它） */
 export function createWebPlatform(root) {
   const view = viewport(root);
+  const input = device(view);
+  const quiet = matchMedia('(prefers-reduced-motion: reduce)');
   return {
     name: 'web',
     storage: createStorage(),
     files,
     viewport: view,
-    device: device(view),
+    device: input,
+    haptic() {
+      if (input.profile().touch && !quiet.matches) navigator.vibrate?.(12);
+    },
     audio: audio(),
     fullscreen: fullscreen(view),
     /** 窗口被切走或要关掉时调用 fn（用来存档、松开按键）。 */

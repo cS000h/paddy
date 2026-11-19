@@ -3,6 +3,7 @@
 // 工具栏整个重建，手机上会顿一下，手指正按着的按钮也会被换掉，点了没反应。
 import { TOOLS, ITEMS } from '../content/items.js';
 import { toolIconUrl, itemIconUrl } from './icons.js';
+import { termOf } from '../content/calendar.js';
 import { esc } from './html.js';
 
 // 身上的四样：一个圈一样，圈里一个字；快见底时圈变成朱砂色。
@@ -16,8 +17,22 @@ const gauge = ([id, mark]) =>
   `<button class="gauge ${id}" data-do="vital" data-vital="${id}" data-id="${id}">` +
   `<i>${mark}</i></button>`;
 
+// 16 格以内的单色印记，和工具图共用整数像素的边缘。
+const glyphs = {
+  bag: 'M5 1h6v2H9v2h3v2h2v6h-2v2H4v-2H2V7h2V5h3V3H5z M5 8v4h1V8z',
+  map: 'M1 4l5-2 5 2 4-2v11l-4 2-5-2-5 2z M3 5v7l2-1V4z M7 4v7l3 1V5z M12 5v7l1-1V4z',
+  journal: 'M3 1h10v14H3v-2H1v-1h2V9H1V8h2V5H1V4h2z M5 3v10h6V3z M6 5h4v1H6z M6 8h4v1H6z',
+  menu: 'M2 3h12v2H2z M2 7h12v2H2z M2 11h12v2H2z',
+};
+const navKey = (
+  id,
+  label,
+  cls = '',
+) => `<button class="menu-btn ${cls}" data-do="${id}" aria-label="${label}">
+  <svg aria-hidden="true" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill-rule="evenodd" d="${glyphs[id]}"/></svg>${label}</button>`;
+
 const toolButton = (tool, i) =>
-  `<button data-tool="${tool.id}"><img class="pixel" alt="" />` +
+  `<button data-tool="${tool.id}" aria-label="${tool.name}"><img class="pixel" alt="" />` +
   `<i class="badge"></i><span class="name">${tool.name}</span><em class="key">${i + 1}</em></button>`;
 
 /** 常驻几块的骨架；带 data-id 的元素由 renderHud 填。 */
@@ -30,20 +45,20 @@ export const HUD_HTML = `
     </div>
     <button class="card next" data-do="next" data-id="next" hidden></button>
   </div>
-  <div class="card vitals">
+  <div class="vitals"><div class="body-strip">
     ${gauge(GAUGES[0])}<em class="vigor" data-id="vigor"></em>
     ${GAUGES.slice(1).map(gauge).join('')}
     <span class="buff" data-id="buff" hidden></span>
-    <span class="coins" title="铜钱"><img class="pixel" width="16" height="16"
+    </div><span class="coins" title="铜钱"><img class="pixel" width="16" height="16"
       src="${toolIconUrl('coin')}" alt="铜钱" /><span data-id="coins"></span></span>
-    <button class="menu-btn" data-do="bag">行囊</button>
-    <button class="menu-btn" data-do="map">地图</button>
-    <button class="menu-btn roomy" data-do="book">册子</button>
-    <button class="menu-btn roomy" data-do="journal">手记</button>
-    <button class="menu-btn more" data-do="menu" aria-label="更多"><span></span></button>
+    <nav class="system-keys" aria-label="常用入口">
+      ${navKey('bag', '行囊')}${navKey('map', '地图')}
+      <button class="menu-btn book-key" data-do="book">册子</button>
+      ${navKey('journal', '手记')}${navKey('menu', '菜单')}
+    </nav>
   </div>
   <nav class="toolbar" data-id="toolbar">${TOOLS.map(toolButton).join('')}<span class="sep"></span>
-    <button class="chip" data-do="seeds">选种</button><button class="chip" data-do="field">看地</button>
+    <span class="tool-mode" data-id="mode" hidden>手选 · 再点解锁</span><button class="chip" data-do="seeds">选种</button><button class="chip" data-do="field">看地</button>
   </nav>`;
 
 /** 字变了才改，不变就不碰 DOM。 */
@@ -78,8 +93,15 @@ function syncTools(el, game, seed) {
 
 /** 工具栏上哪件工具拿在手里；面前那格地要照料时，“看地”点上一点朱砂。 */
 export function syncToolbar(el, state) {
+  el.mode.hidden = !state.manualTool;
   for (const button of el.toolbar.querySelectorAll('button')) {
-    button.classList.toggle('on', button.dataset.tool === state.tool);
+    const tool = button.dataset.tool;
+    if (tool) {
+      const active = tool === (state.manualTool ? state.tool : state.hint?.tool);
+      button.classList.toggle('on', active);
+      button.classList.toggle('locked', active && state.manualTool);
+      attr(button, 'aria-pressed', String(active && state.manualTool));
+    }
     if (button.dataset.do === 'field') button.classList.toggle('alert', !!state.hint?.care);
   }
 }
@@ -102,7 +124,7 @@ export function renderHud(el, { game, shell }) {
   const hero = game.ask('hero');
   const body = game.ask('body');
   const weather = game.ask('weather');
-  put(el.date, `${clock.seasonName} · 第 ${clock.dayOfSeason} 日`);
+  put(el.date, `${termOf(clock)} · 第 ${clock.dayOfSeason} 日`);
   put(el.time, `${clock.hour} ${clock.clock}`);
   attr(el.time, 'title', clock.period);
   put(el.weather, `${weather.name} ${weather.temperature}° · ${game.ask('comfort').word}`);
@@ -110,12 +132,12 @@ export function renderHud(el, { game, shell }) {
     el.energy,
     (hero.energy / hero.energyMax) * 100,
     `体力 ${hero.energy}`,
-    hero.energy < 20,
+    hero.energy / hero.energyMax < 0.3,
   );
   put(el.vigor, String(hero.energy));
-  setGauge(el.hunger, body.hunger, `饱腹 ${body.hunger}：${body.hungerWord}`, body.hunger < 20);
+  setGauge(el.hunger, body.hunger, `饱腹 ${body.hunger}：${body.hungerWord}`, body.hunger < 30);
   setGauge(el.thirst, body.thirst, `水分 ${body.thirst}：${body.thirstWord}`, body.thirst < 30);
-  setGauge(el.mood, body.mood, `心情 ${body.mood}：${body.moodWord}`, body.mood <= 25);
+  setGauge(el.mood, body.mood, `心情 ${body.mood}：${body.moodWord}`, body.mood < 30);
   el.buff.hidden = !body.buff;
   if (body.buff) {
     put(el.buff, `${body.buff.name} ${body.buff.left}`);

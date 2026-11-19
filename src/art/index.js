@@ -51,6 +51,7 @@ const OBJECT_MAKERS = {
   rack: () => props.rack(),
   jars: () => props.jars(),
   scarecrow: () => props.scarecrow(),
+  trellis: seed => village.trellis(seed),
   sign: () => props.sign(),
   rock: seed => props.rock(seed),
   flowers: seed => props.flowers(seed),
@@ -151,6 +152,7 @@ export function personShadow() {
 }
 
 export { ACTS, actFrame, actSheet } from './acts.js';
+export { farmFrame } from './farm-frame.js';
 export { hen } from './acts-yard.js';
 export { seasonGrid } from './seasons.js';
 export { plotMark, PLOT_MARKS } from './plot-marks.js';

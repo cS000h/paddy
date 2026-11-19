@@ -9,7 +9,16 @@
 //   day.started → gift.returned {from, item, n}   昨天收了东西的人留下回礼和便条
 import { is, check } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
-import { PEOPLE, ON_MAP, LINES, RETURN_GIFT, FESTIVE, ROUTINE_DAY } from '../../content/people.js';
+import {
+  PEOPLE,
+  ON_MAP,
+  LINES,
+  RETURN_GIFT,
+  AFTER_RETURN,
+  SHI_FIRST_FIELD,
+  FESTIVE,
+  ROUTINE_DAY,
+} from '../../content/people.js';
 import { TOPICS, tierOf } from '../../content/talk.js';
 import { GIFT_DISH, GIFT_ITEM, GIFT_FAVORITE, GIFT_SPOILED } from '../../content/gift-lines.js';
 import { ITEMS, CROPS, SOIL, cropStage } from '../../content/items.js';
@@ -171,7 +180,19 @@ export const social = {
       b.talked[to] = w.clock.day;
       if (topic !== 'life') b.asked[to] = [...asked, topic];
       // 照 0.12：挑哪句话看的是这回说话之前熟到哪一层
-      const said = first ? { line: LINES[to].first } : say(w, to, topic, c);
+      let said;
+      if (first && topic === 'life') {
+        const atField =
+          to === 'shi' &&
+          c.field.planted &&
+          c.field.growth === 0 &&
+          c.field.water <= SOIL.soggy &&
+          ctx.services.residents.positions(w).find(p => p.id === to)?.place === 'field';
+        const soil = c.field.water < SOIL.wet ? 'dry' : 'wet';
+        said = { line: atField ? SHI_FIRST_FIELD[soil] : LINES[to].first };
+      } else if (gained && topic === 'life' && b.gifted[to] === w.clock.day - 1) {
+        said = { line: AFTER_RETURN[to] };
+      } else said = say(w, to, topic, c);
       fact('person.talked', {
         who: people.who(w),
         to,
@@ -249,9 +270,9 @@ export const social = {
         w.bonds.asked = {};
         for (const o of w.bonds.owed.filter(x => x.day <= w.clock.day)) {
           const g = RETURN_GIFT[o.from];
-          pack.deliver(w, people.who(w), g.item, g.n, `${PEOPLE[o.from].name}的回礼`);
+          const where = pack.deliver(w, people.who(w), g.item, g.n, `${PEOPLE[o.from].name}的回礼`);
           core.post(w, { title: `${PEOPLE[o.from].name}的回礼`, text: g.text });
-          emit('gift.returned', { from: o.from, item: g.item, n: g.n });
+          emit('gift.returned', { from: o.from, item: g.item, n: g.n, where });
         }
         w.bonds.owed = w.bonds.owed.filter(x => x.day > w.clock.day);
       },

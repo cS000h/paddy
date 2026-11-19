@@ -130,6 +130,8 @@ test('地块和图标：32 张土、4 个作物阶段、5 个图标、草和虫�
     assert.deepEqual(offPalette(g), []);
   }
   assert.notDeepEqual(soil['dry.15'].data, soil['wet.15'].data, '干土和湿土要看得出区别');
+  assert.ok(soil['wet.15'].data.includes(P.wet2), '湿土用深泥色');
+  assert.ok(!soil['wet.15'].data.includes(P.m2), '草色不能覆盖泥色');
   assert.deepEqual(art.PLOT_MARKS, ['weeds', 'bugs']);
   // 记号留出正中给作物：中间 6×6 一个像素都不画
   for (const name of art.PLOT_MARKS)

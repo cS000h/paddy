@@ -11,7 +11,7 @@ export function fieldActions({ game, shell, run, here, world }) {
       shell.set({ modal: { kind: 'seeds' } });
     },
     seedChoose({ seed }) {
-      shell.set({ seed, tool: 'seed', modal: null });
+      shell.set({ seed, tool: 'seed', manualTool: true, modal: null });
     },
     field() {
       const t = world.scene().target();
