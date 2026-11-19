@@ -21,7 +21,7 @@ import * as waterside from './waterside.js';
 import * as village from './props-village.js';
 import { critters } from './critters.js';
 import { soilTile, cropFrames, cursor, icon } from './tiles.js';
-import { personSheet, LOOK_NAMES, FRAME_W, FRAME_H, POSES, DIRS } from './people.js';
+import { personFrame, personSheet, LOOK_NAMES, FRAME_W, FRAME_H, POSES, DIRS } from './people.js';
 import { plants } from './items-plants.js';
 import { pantry } from './items-pantry.js';
 import { things } from './items-things.js';
@@ -151,7 +151,7 @@ export function soilSet() {
   return out;
 }
 
-export { cropFrames, cursor, icon, personSheet, critters };
+export { cropFrames, cursor, icon, personFrame, personSheet, critters };
 export const lanternGlobe = landmarks.lanternGlobe;
 
 // 物品的图标：键和 content/pantry.js 里的物品一一对应（测试会检查）。
@@ -179,3 +179,4 @@ export { seasonGrid } from './seasons.js';
 export { plotMark, PLOT_MARKS } from './plot-marks.js';
 export { cropSet } from './crops.js';
 export { cookingFrame, prepBoard, COOK_FRAMES } from './cooking-frames.js';
+export { uiIcon, UI_ICONS } from './ui-icons.js';

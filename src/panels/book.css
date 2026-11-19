@@ -1,0 +1,284 @@
+/* 平涂像素小册子（左侧实体书签打通底板、分格心境、五维条、性情卡、身边风物左格右文）
+   与头顶紧凑像素方角气泡样式。 */
+
+/* — 头顶紧凑像素气泡（替代半透明大灰条） — */
+#ui .caption.head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 7px;
+  background: #f4efe0;
+  color: #36322b;
+  border: 2px solid #524a3e;
+  border-radius: 2px;
+  box-shadow: 0 2px 0 #36322b33;
+  font-size: 13px;
+  line-height: 1.25;
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 10px));
+}
+#ui .caption.head::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #524a3e;
+}
+#ui .caption.head::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #f4efe0;
+}
+#ui .caption.head .bubble-ico {
+  flex: none;
+  image-rendering: pixelated;
+}
+
+/* — 实体书签式小册子外壳 — */
+.book-shell {
+  display: flex;
+  align-items: stretch;
+  margin: 0 -18px;
+  min-height: 100%;
+}
+.book-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 0 12px 6px;
+  background: #e5e0ce;
+  border-right: 2px solid #a9a08d;
+  flex: none;
+}
+.book-tab {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  background: #ddd7c3;
+  border: 2px solid #a9a08d;
+  border-right: 0;
+  border-radius: 4px 0 0 4px;
+  cursor: pointer;
+}
+.book-tab.on {
+  position: relative;
+  z-index: 2;
+  margin-right: -2px;
+  background: var(--moon);
+  border-color: #7c7566;
+}
+.book-page {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 14px 16px 12px;
+}
+
+/* — 顶部人物像与像素分格心境条 — */
+.hero-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.hero-pic {
+  width: 58px;
+  height: 68px;
+  display: grid;
+  place-items: end center;
+  overflow: hidden;
+  background: #d8e1d4;
+  border: 2px solid #9ea695;
+  border-radius: 3px;
+  flex: none;
+}
+.hero-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.hero-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.hero-name b {
+  font-size: 16px;
+}
+.hero-tag {
+  padding: 2px 7px;
+  font-size: 11px;
+  background: #9aa78d;
+  color: #f8f6ee;
+  border-radius: 3px;
+}
+.mood-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.mood-bar {
+  display: inline-flex;
+  gap: 3px;
+}
+.mood-seg {
+  display: inline-block;
+  width: 9px;
+  height: 13px;
+  background: #d7d2c2;
+  border: 1px solid #b5af9d;
+}
+.mood-seg.on {
+  background: #7c9980;
+  border-color: #5c7660;
+}
+
+/* — 五维平涂像素条 — */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  padding: 7px 6px;
+  margin-bottom: 10px;
+  background: #efe6cf;
+  border: 1px solid #c9be9e;
+  border-radius: 4px;
+  text-align: center;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.stat-item span {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.stat-item b {
+  font-size: 13px;
+}
+
+/* — 性情物象卡片 — */
+.sec-hd {
+  margin: 8px 0 6px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.trait-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.trait-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 4px;
+  background: #dde3d5;
+  border: 1px solid #aeb7a4;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.trait-card.spark {
+  background: #dff3ea;
+  border-color: #82b59f;
+}
+
+/* — 身边风物：左格右文并排 — */
+.mod-split {
+  display: grid;
+  grid-template-columns: minmax(96px, 44%) 1fr;
+  gap: 8px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+.mod-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mod-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 46px;
+  padding: 5px 2px 4px;
+  background: #ece7d6;
+  border: 2px solid #b5ae9a;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.mod-tile.on {
+  border-color: #4c7c66;
+  background: #dfe9de;
+}
+.mod-tile.bad.on {
+  border-color: #a85c38;
+  background: #f0e2d8;
+}
+.mod-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 6px;
+  background: #ece7d6;
+  border: 1px dashed #b5ae9a;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+.mod-detail {
+  padding: 8px 10px;
+  background: #dfe7dc;
+  border: 1px solid #a5b3a0;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.mod-detail.bad {
+  background: #efe2d9;
+  border-color: #c29b86;
+}
+.mod-detail b {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 13px;
+}
+.mod-detail p {
+  margin: 0 0 6px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.mod-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.mod-pills span {
+  padding: 1px 6px;
+  background: #8ea08c;
+  color: #f9f7ef;
+  border-radius: 2px;
+  font-size: 11px;
+}
+.ui-ico {
+  image-rendering: pixelated;
+  display: block;
+}

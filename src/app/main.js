@@ -3,6 +3,7 @@
 // 面板按钮能做的事分在同目录的几个文件里。
 import '../panels/style.css';
 import '../panels/play-hud.css';
+import '../panels/book.css';
 import { createGame } from '../port/game.js';
 import { createWebPlatform } from '../platform/web.js';
 import { createIntents } from '../shell/intents.js';

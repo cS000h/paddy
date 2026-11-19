@@ -1,13 +1,11 @@
-// 冒出来的字。原来所有提醒都挤在画面上方一个窄窄的小框里，和人、和事都对不上。现在：
-//   - 短的提醒（“太累了，回屋歇一歇吧”）冒在人头顶，像一句心里话；
-//   - 长的旁白（成就、升级、清早的一句）横在画面下方，像题在画上的一行字；
-//   - 吃喝、干活带来的数变化（饱腹 +14、体力 −3）从人身边飘起来，一两秒就散。
-// 都不接手指，不挡操作。spot() 问世界：操控的人头顶此刻在画面上的哪一点。
+// 冒出来的字：短提醒做成头顶紧凑的像素方角气泡（带小尾巴和左侧像素小卷感叹号），
+// 长的旁白横在画面下方，数的变化从人身边飘起来。都不接手指，不挡操作。
+import { uiIconUrl } from './icons.js';
 
 const SHORT = 18; // 不超过这么多字，冒在头顶
 
-/** 摆在头顶的位置不出画面：左右留出半个字条的宽度，上面留出一行。 */
-function clampTo(root, at, margin = 60) {
+/** 摆在头顶的位置不出画面：左右留出半个气泡的宽度，上面留出一行。 */
+function clampTo(root, at, margin = 64) {
   return {
     x: Math.max(margin, Math.min(root.clientWidth - margin, at.x)),
     y: Math.max(54, Math.min(root.clientHeight - 40, at.y)),
@@ -31,13 +29,23 @@ export function createCaptions(root, spot) {
   const later = (node, ms) => setTimeout(() => node.remove(), ms);
 
   return {
-    /** 说一句。短的冒在头顶，长的横在下方；同一处一次只留一句。 */
+    /** 说一句。短的冒成头顶紧凑像素气泡，长的横在下方；同一处一次只留一句。 */
     say(text) {
       if (!text) return;
       const head = spot();
       if (text.length <= SHORT && head) {
         layer.querySelector('.caption.head')?.remove();
-        const node = make('caption head', text);
+        const node = document.createElement('div');
+        node.className = 'caption head';
+        const img = document.createElement('img');
+        img.className = 'pixel bubble-ico';
+        img.width = 16;
+        img.height = 16;
+        img.alt = '';
+        img.src = uiIconUrl('scroll_exclaim');
+        const span = document.createElement('span');
+        span.textContent = text;
+        node.append(img, span);
         const at = clampTo(root, head);
         node.style.left = at.x + 'px';
         node.style.top = at.y + 'px';
@@ -72,7 +80,6 @@ export function createCaptions(root, spot) {
 
 /**
  * 对话里那句话一个字一个字地出来；点一下就整句显示。返回“立刻写完”的函数。
- * 没出来的字先占着位置（透明），框不会一行一行地长高、跳动。
  */
 export function typeOut(node, perChar = 26) {
   const full = node.textContent;

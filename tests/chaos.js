@@ -379,26 +379,31 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   }
 
   function pulseAndVisitors() {
+    const map = hero().map;
     const ev = game.ask('events').active;
-    if (ev) {
+    if (ev && ev.map === map) {
       const ok = ev.choices.filter(c => !c.disabled);
       const pickChoice = ok.length ? pick(ok) : pick(ev.choices);
-      return send('event.choose', { choice: pickChoice.index });
+      return send('event.choose', { choice: pickChoice.index, at: { x: ev.x, y: ev.y, dir: 'down' } });
     }
-    const vs = game.ask('visitors').active;
+    const vs = game.ask('visitors').active.filter(v => v.map === map);
     if (!vs.length) return;
     const v = pick(vs);
-    if (!v.talkedToday && chance(0.6)) return send('visitor.talk', { id: v.id });
+    const spots = layout(map).stand.filter(
+      s => Math.abs(s.x - v.x) <= 1 && Math.abs(s.y - v.y) <= 1,
+    );
+    const at = spots.length ? { ...pick(spots), dir: pick(DIRS) } : { x: v.x, y: v.y, dir: 'down' };
+    if (!v.talkedToday && chance(0.6)) return send('visitor.talk', { id: v.id, at });
     if (!v.done) {
       if (v.need.kind === 'dish') {
-        const k = game.ask('kitchen', here());
+        const k = game.ask('kitchen', at);
         const d = k.carried[0] || k.dishes[0];
-        if (d) return send('visitor.fulfill', { id: v.id, dish: d.id, at: here() });
+        if (d) return send('visitor.fulfill', { id: v.id, dish: d.id, at });
       } else {
-        return send('visitor.fulfill', { id: v.id, at: here() });
+        return send('visitor.fulfill', { id: v.id, at });
       }
     }
-    return send('visitor.talk', { id: v.id });
+    return send('visitor.talk', { id: v.id, at });
   }
 
   const PLANS = [

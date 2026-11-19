@@ -1,6 +1,7 @@
-// 衣橱原画的布纹、下摆与袖口。调用方传入人物底图。
+// 衣橱原画的布纹、下摆与袖口。调用方传入人物底图，全部只用调色板颜色。
 import { P } from './palette.js';
 import { Grid } from './pixel.js';
+
 export const coats = {
   hoodie: [P.n0, P.n1, P.n2, P.r2],
   stripe: [P.l0, P.s2, P.i3, P.i2],
@@ -12,9 +13,51 @@ export const coats = {
   rain: [P.h1, P.h3, P.b3, P.u2],
   winter: [P.c1, P.c3, P.l1, P.r3],
   feast: [P.p2, P.p3, P.i3, P.u2],
+  bamboo: [P.g3, P.g5, P.i3, P.ink2],
+  lotus: [P.p1, P.p3, P.l0, P.p2],
+  ink: [P.i2, P.i3, P.l1, P.ink1],
+  harvest: [P.y1, P.h2, P.t2, P.u2],
+  cloud: [P.paper0, P.l2, P.g4, P.i2],
+  plum: [P.c2, P.c3, P.p1, P.ink2],
 };
+
+function drawExtraCoat(g, coat, [base, shade, trim], x, side, back, d) {
+  if (coat === 'bamboo' || coat === 'cloud') {
+    // 长衫：交领斜领配束腰长摆
+    g.rect(x, 21 + d, side ? 6 : 8, 7, base)
+      .hline(x, x + (side ? 5 : 7), 27 + d, shade)
+      .hline(x, x + (side ? 5 : 7), 22 + d, trim);
+    if (!back) {
+      g.line(x + 1, 17 + d, x + 4, 21 + d, trim);
+      g.vline(side ? 8 : 9, 22 + d, 26 + d, trim);
+    }
+  } else if (coat === 'lotus') {
+    // 荷粉衣裙：短上衣配素白长裙摆
+    g.rect(x, 17 + d, side ? 6 : 8, 5, base).hline(x, x + (side ? 5 : 7), 21 + d, trim);
+    g.rect(x - 1, 22 + d, side ? 8 : 10, 6, P.l0).hline(x - 1, side ? 11 : 12, 27 + d, shade);
+    if (!back) g.vline(side ? 7 : 6, 22 + d, 26 + d, P.l2).vline(side ? 9 : 9, 22 + d, 26 + d, P.l2);
+  } else if (coat === 'ink') {
+    // 墨青短衫：干练立领与浅袖边
+    g.rect(x, 17 + d, side ? 6 : 8, 7, base).hline(x, x + (side ? 5 : 7), 23 + d, shade);
+    g.hline(x + 1, x + 4, 17 + d, trim);
+    if (!back) g.vline(side ? 8 : 7, 18 + d, 22 + d, trim);
+  } else if (coat === 'harvest') {
+    // 稻黄暖袄：暖厚衣摆与侧领纽扣
+    g.rect(x - 1, 19 + d, side ? 8 : 10, 6, base).hline(x - 1, side ? 11 : 12, 24 + d, shade);
+    g.hline(x, x + (side ? 5 : 7), 17 + d, P.l1);
+    if (!back) g.set(x + 2, 19 + d, trim).set(x + 2, 21 + d, trim).set(x + 2, 23 + d, trim);
+  } else if (coat === 'plum') {
+    // 朱红冬衣：披肩冬披配浅色滚边
+    g.rect(x - 1, 18 + d, side ? 8 : 10, 8, base).hline(x - 1, side ? 11 : 12, 25 + d, shade);
+    g.hline(x - 1, side ? 11 : 12, 18 + d, P.paper0).hline(x, side ? 10 : 11, 26 + d, trim);
+    if (!back) g.vline(side ? 9 : 8, 19 + d, 25 + d, trim);
+  }
+}
+
 export function clothed(original, coat, dir, pose) {
-  const [base, shade, trim, pants] = coats[coat];
+  const palette = coats[coat];
+  if (!palette) return new Grid(16, 32).blit(original, 0, 0);
+  const [base, shade, trim, pants] = palette;
   const side = dir === 'right',
     back = dir === 'up',
     d = Number(pose === 'strike');
@@ -100,6 +143,8 @@ export function clothed(original, coat, dir, pose) {
     g.rect(x - 1, 21 + d, side ? 8 : 10, 5, base).hline(x - 1, side ? 11 : 12, 25 + d, shade);
     g.hline(x - 1, x + 6, 17 + d, P.l2).hline(x, x + 4, 18 + d, P.l0);
     if (!back) for (let y = 20; y < 25; y += 2) g.set(x + 4, y + d, P.y1);
+  } else if (['bamboo', 'lotus', 'ink', 'harvest', 'cloud', 'plum'].includes(coat)) {
+    drawExtraCoat(g, coat, palette, x, side, back, d);
   } else {
     g.poly(
       [
@@ -113,9 +158,8 @@ export function clothed(original, coat, dir, pose) {
     g.hline(side ? 4 : 3, side ? 11 : 13, 27 + d, shade).hline(x, x + 6, 21 + d, trim);
     if (!back) g.vline(side ? 9 : 10, 22 + d, 25 + d, P.i1).set(side ? 8 : 9, 26 + d, P.l0);
   }
-  // 衣服上的图案可能经过伸出来的手，重新露出手掌。
-  original.each((x, y, c) => {
-    if (y >= 17 && (c === P.k1 || c === P.k0)) g.set(x, y, c);
+  original.each((px, py, c) => {
+    if (py >= 17 && (c === P.k1 || c === P.k0)) g.set(px, py, c);
   });
   return g;
 }

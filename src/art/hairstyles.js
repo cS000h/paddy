@@ -1,6 +1,7 @@
 // 发束随步态摆动；长度按各发式的成品轮廓取值。
 import { P } from './palette.js';
 import { Grid } from './pixel.js';
+
 // 辫根绕到耳后，束节在脸廓外一浅一深交错。只有辫梢随步子摆动。
 function braid(g, side, back, length, drop, swing) {
   const root = back ? 8 : side ? 3 : 13;
@@ -23,6 +24,29 @@ function braid(g, side, back, length, drop, swing) {
   const tip = root + swing;
   const end = start + sections * 2;
   g.hline(tip - 1, tip, end, P.h2).set(tip, end + 1, P.u2);
+}
+
+function extraHair(g, style, side, back, y, dark, light, c) {
+  if (style === 'topknot') {
+    const cx = side ? 6 : 8;
+    g.rect(cx - 2, 1 + y, 4, 4, dark).hline(cx - 1, cx + 1, 2 + y, P.a0).set(cx, 1 + y, light);
+    g.hline(cx - 3, cx + 3, 3 + y, P.h2).set(cx + 3, 3 + y, P.y1);
+  } else if (style === 'sidebun') {
+    const cx = side ? 4 : 12;
+    g.ellipse(cx, 6 + y, 2.2, 2.2, dark).set(cx - 1, 5 + y, light).hline(cx - 1, cx + 1, 8 + y, c);
+  } else if (style === 'short') {
+    g.hline(3, 12, 5 + y, P.a0).hline(4, 11, 4 + y, dark).hline(5, 8, 5 + y, light);
+    if (back) g.rect(3, 8 + y, 10, 5, P.a0).hline(4, 11, 13 + y, dark);
+    else g.vline(side ? 3 : 2, 8 + y, 11 + y, dark);
+  } else if (style === 'doublebun') {
+    for (const cx of side ? [5] : [3, 12]) {
+      g.ellipse(cx, 4 + y, 2, 2, dark).set(cx, 3 + y, light).hline(cx - 1, cx + 1, 6 + y, c);
+    }
+  } else if (style === 'cap') {
+    // 乡间靛蓝包头，后脑垂一小角
+    g.rect(3, 4 + y, 10, 4, P.i2).hline(4, 11, 4 + y, P.i1).hline(3, 12, 7 + y, P.i3);
+    if (back || side) g.rect(side ? 2 : 7, 8 + y, 2, 4, P.i2).set(side ? 2 : 8, 12 + y, P.i3);
+  }
 }
 
 export function hairLayer(hair, dir, pose) {
@@ -111,19 +135,21 @@ export function hairLayer(hair, dir, pose) {
     }
   } else if (style === 'braid') {
     braid(g, side, back, n, y, sw);
+  } else if (['topknot', 'sidebun', 'short', 'doublebun', 'cap'].includes(style)) {
+    extraHair(g, style, side, back, y, dark, light, c);
   } else {
     const cx = side ? 2 : back ? 8 : 12;
     const start = side ? 10 : 13;
     strand(cx - 1, start, start + 2 + n * 2, 2);
     g.hline(cx - 1, cx + 1, start + y, c).set(cx + 2, start + 1 + y, c);
   }
-  if (!back) {
+  if (!back && style !== 'cap') {
     if (part === 'middle')
       g.line(7, 7 + y, 4, 10 + y, P.a0)
         .line(8, 7 + y, 11, 9 + y, P.a0)
         .set(7, 9 + y, P.k0);
     else g.line(5, 8 + y, side ? 10 : 9, 9 + y, P.a0).set(side ? 9 : 8, 10 + y, P.a0);
-  } else g.hline(5, 8, 7 + y, light);
+  } else if (back && style !== 'cap') g.hline(5, 8, 7 + y, light);
   // 远景只用两点表示眼睛，留出眼周和脸颊的底色，各种发式都能看清朝向。
   if (!back) g.rect(side ? 9 : 4, 11 + y, side ? 5 : 8, 4, 0);
   return g;

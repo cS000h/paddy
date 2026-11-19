@@ -1,5 +1,5 @@
 // 面板里用的小图：把 art 层画好的像素格子变成 <img> 能用的地址。同一张图只转一次。
-import { icon, itemIcon } from '../art/index.js';
+import { icon, itemIcon, uiIcon, personFrame, Grid } from '../art/index.js';
 
 const cache = new Map();
 
@@ -25,3 +25,18 @@ export const itemIconUrl = id => cached('item:' + id, () => itemIcon(id));
 /** 一样物品的 <img>。 */
 export const itemImg = id =>
   `<img class="pixel item" width="32" height="32" src="${itemIconUrl(id)}" alt="" />`;
+
+/** 界面用平涂像素图标的地址与 <img>。 */
+export const uiIconUrl = id => cached('ui:' + id, () => uiIcon(id));
+export const uiIconImg = (id, size = 20) =>
+  `<img class="pixel ui-ico" width="${size}" height="${size}" src="${uiIconUrl(id)}" alt="" />`;
+
+/** 人物上半身像素小像（截取站立正面，不画近脸特写）。 */
+export const heroPortraitUrl = look =>
+  cached('bust:' + look, () => {
+    const full = personFrame(look, 'down', 'stand');
+    const bust = new Grid(16, 22);
+    for (let y = 0; y < 22; y++)
+      for (let x = 0; x < 16; x++) bust.set(x, y, full.get(x, y + 3));
+    return bust;
+  });

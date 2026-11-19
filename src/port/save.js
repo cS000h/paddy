@@ -8,6 +8,29 @@ export const SAVE_FORMAT = 'dao.save';
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
 const MIGRATIONS = {
+  12(state) {
+    // M9 进世界：过客带外观与实景坐标，随机小事带发生地坐标
+    const w = state.world;
+    w.meta.version = 13;
+    const roleLook = {
+      peddler: ['hero/field/crop/0', 'market', 12, 12, 'down'],
+      healer: ['hero/tea/knot/2', 'tea', 11, 12, 'down'],
+      scholar: ['hero/feast/tail/2', 'tea', 11, 12, 'down'],
+      grocer: ['hero/cook/bun/2', 'market', 16, 12, 'down'],
+      carpenter: ['hero/rain/plain/0', 'river', 13, 11, 'down'],
+      matchmaker: ['hero/winter/braid/3', 'tea', 14, 13, 'left'],
+    };
+    if (w.pulse?.active) {
+      w.pulse.active = { map: 'yard', x: 8, y: 14, ...w.pulse.active };
+    }
+    if (w.visitors?.active) {
+      for (const v of w.visitors.active) {
+        const [look, map, x, y, dir] = roleLook[v.role] || roleLook.scholar;
+        Object.assign(v, { look, map, x, y, dir });
+      }
+    }
+    return state;
+  },
   11(state) {
     // M9：时限修正、随机小事与流动过客
     const w = state.world;

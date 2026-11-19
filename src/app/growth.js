@@ -11,6 +11,9 @@ export function growthActions({ game, shell, run }) {
     bookPage({ page }) {
       edit({ page: Number(page) });
     },
+    bookMod({ mod }) {
+      edit({ mod });
+    },
     origin() {
       shell.set({ modal: { kind: 'origin' } });
     },

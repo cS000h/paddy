@@ -11,6 +11,12 @@ export const COATS = Object.freeze({
   rain: '芦黄蓑衣',
   winter: '柿红夹袄',
   feast: '藕荷长衫',
+  bamboo: '竹青长衫',
+  lotus: '荷粉衣裙',
+  ink: '墨青短衫',
+  harvest: '稻黄暖袄',
+  cloud: '云白茶衫',
+  plum: '朱红冬衣',
 });
 export const HAIR = Object.freeze({
   plain: ['原发', 0],
@@ -23,6 +29,11 @@ export const HAIR = Object.freeze({
   bun: ['盘髻', 2],
   braid: ['垂辫', 3],
   twins: ['双结', 2],
+  topknot: ['束顶高髻', 2],
+  sidebun: ['侧梳小髻', 2],
+  short: ['清爽短发', 0],
+  doublebun: ['双小髻', 2],
+  cap: ['青布包头', 1],
 });
 export function outfitLook(base, coat, hair) {
   return coat === 'plain' && hair === 'plain' ? base : [base, coat, hair, HAIR[hair][1]].join('/');

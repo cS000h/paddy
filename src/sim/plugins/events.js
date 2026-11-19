@@ -1,12 +1,13 @@
-// 随机小事：晨起小事、场景触发与过几天的后续。
-// 低打扰节奏：每天最多自动挂起 1 条事件，玩家随时点开处理；
-// 选项支持稳稳项、带明确成功率的五维属性检定项、以及特质独有项。
-//   event.choose {choice} → pulse.resolved {id, title, success, line}
+// 随机小事引擎：晨起小事、场景遇事与过几天后续。
+// 每件小事落在地图上的具体位置（map, x, y），玩家走到跟前在底部对话条里处理。
+//   event.choose {choice, at} → pulse.resolved {id, title, success, line, map, x, y}
 import { is, check } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { EVENTS, MORNING_EVENTS, SCENE_EVENTS, checkChance } from '../../content/events.js';
 import { STATS, MODIFIERS } from '../../content/modifiers.js';
 import { TRAITS } from '../../content/growth.js';
+import { MAPS } from '../../content/maps/index.js';
+import { near } from './people.js';
 
 const MAX_DELAYED = 16;
 
@@ -33,7 +34,13 @@ export const events = {
     const { modifiers } = ctx.services;
 
     const activeOk = a =>
-      a === null || (is.obj(a) && Object.hasOwn(EVENTS, a.id) && is.int(a.day, 1));
+      a === null ||
+      (is.obj(a) &&
+        Object.hasOwn(EVENTS, a.id) &&
+        is.int(a.day, 1) &&
+        Object.hasOwn(MAPS, a.map) &&
+        is.int(a.x, 0, 99) &&
+        is.int(a.y, 0, 99));
     const delayedOk = d => is.obj(d) && Object.hasOwn(EVENTS, d.id) && is.int(d.day, 1);
 
     schema.slice('pulse', {
@@ -55,8 +62,10 @@ export const events = {
     const eligible = (w, list) =>
       list.filter(id => !w.pulse.done[id] || w.clock.day - w.pulse.done[id] >= 5);
 
-    const spawn = (w, id) => {
-      w.pulse.active = { id, day: w.clock.day };
+    const spawn = (w, id, here = null) => {
+      const def = EVENTS[id].spot;
+      const pos = here && Object.hasOwn(MAPS, here.map) ? here : def;
+      w.pulse.active = { id, day: w.clock.day, map: pos.map, x: pos.x, y: pos.y };
       w.pulse.lastDay = w.clock.day;
     };
 
@@ -69,10 +78,11 @@ export const events = {
       );
       if (!pool.length) return;
       const id = pool[Math.floor(core.random(w) * pool.length)];
-      spawn(w, id);
+      const me = people.me(w);
+      spawn(w, id, { map: me.map, x: me.x, y: me.y });
     };
 
-    // 清早随机：优先触发到期的过几天伏笔，否则按概率抽 1 条晨起小事。
+    // 清早小事：优先触发到期的后续，否则按概率抽 1 条晨起小事落在具体位置。
     reactions.on(
       'day.started',
       s => {
@@ -84,7 +94,7 @@ export const events = {
         if (idx >= 0) {
           const next = w.pulse.delayed.splice(idx, 1)[0];
           spawn(w, next.id);
-          core.post(w, { title: EVENTS[next.id].title, text: EVENTS[next.id].text });
+          core.post(w, { title: EVENTS[next.id].title, text: EVENTS[next.id].spot.hint });
           return;
         }
         if (day < 2 || core.random(w) >= 0.45) return;
@@ -96,7 +106,7 @@ export const events = {
       { priority: 52 },
     );
 
-    // 动作与场景随机：下地、采集、做饭、喝茶、赶集后时而有小事。
+    // 动作与场景遇事：下地、采集、做饭、喝茶、赶集后就地发生小事。
     reactions.on(
       'action.performed',
       (s, e) => {
@@ -115,7 +125,8 @@ export const events = {
       if (out.mood) body.mood(w, who, out.mood, title);
       if (out.energy > 0) people.restore(w, who, out.energy, title);
       if (out.give) pack.deliver(w, who, out.give.item, out.give.n, title);
-      if (out.mod && Object.hasOwn(MODIFIERS, out.mod)) modifiers.add(w, who, out.mod, null, title);
+      if (out.mod && Object.hasOwn(MODIFIERS, out.mod))
+        modifiers.add(w, who, out.mod, null, title);
       if (out.delay && Object.hasOwn(EVENTS, out.delay.id)) {
         if (w.pulse.delayed.length >= MAX_DELAYED) w.pulse.delayed.shift();
         w.pulse.delayed.push({ id: out.delay.id, day: w.clock.day + out.delay.days });
@@ -126,6 +137,8 @@ export const events = {
       const w = draft.world;
       const cur = w.pulse.active;
       if (!cur) refuse('眼下没有待处理的小事');
+      const me = people.place(w, input.at);
+      if (me.map !== cur.map || !near(me, cur)) refuse('走到跟前再处理这件事');
       const ev = EVENTS[cur.id];
       const idx = input.choice;
       if (!is.int(idx, 0, ev.choices.length - 1)) refuse('没有这个选项');
@@ -153,6 +166,9 @@ export const events = {
         title: ev.title,
         success,
         line: outcome.line,
+        map: cur.map,
+        x: cur.x,
+        y: cur.y,
       });
     });
 
@@ -168,6 +184,11 @@ export const events = {
         active: {
           id: ev.id,
           day: cur.day,
+          map: cur.map,
+          x: cur.x,
+          y: cur.y,
+          place: ev.spot.place,
+          hint: ev.spot.hint,
           title: ev.title,
           text: ev.text,
           choices: ev.choices.map((c, index) => {

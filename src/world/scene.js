@@ -2,10 +2,8 @@ import { daylight } from '../art/daylight.js';
 import { worldLighting } from './room-light.js';
 import { changeMap } from './doorway.js';
 import { DEPTH, sceneryParts } from './depth.js';
-// 村庄场景：把地面、物件、人摆出来，镜头跟着操控的人，把“意图”变成走路和命令。
-// 这里只通过端口（deps.game）碰规则：发命令用 dispatch，问情况用 ask，听结果用 onCommit。
 import Phaser from 'phaser';
-import { MAPS, walkable, farmable, waterSource, actAt } from '../content/maps/index.js';
+import { MAPS, walkable, farmable } from '../content/maps/index.js';
 import { PEOPLE } from '../content/people.js';
 import { variantAt } from '../art/index.js';
 import { CSS } from '../art/palette.js';
@@ -15,16 +13,18 @@ import { createEffects } from './effects.js';
 import { weatherEffects } from './weather.js';
 import { refreshPlots } from './plots.js';
 import { bindKeyboard, bindPointer } from './input.js';
-import { hintFor, touchThing, decorAt, poke } from './interactions.js';
+import { hintFor, touchThing, poke } from './interactions.js';
 import { swing } from './farm-motion.js';
 import { tapAt } from './tap.js';
 import { leaveByRoad } from './travel.js';
 import { createAmbient } from './ambient.js';
 import { createPerformer } from './perform.js';
+import { createFieldExtras } from './visitors-events.js';
+import { smartTarget, blockedByActor } from './target.js';
 import { showEmote } from './emotes.js';
 import { AFTER } from '../content/resident-work.js';
 import { safely } from './safety.js';
-import { TILE, facing, dirTo, COMMAND_OF, fitView } from './logic.js';
+import { TILE, dirTo, COMMAND_OF, fitView } from './logic.js';
 
 const VOID = CSS.paper1; // 屋子外头留白，和 art/interior.js 里屋外的纸色一样
 
@@ -40,11 +40,9 @@ export class VillageScene extends Phaser.Scene {
   constructor() {
     super('village');
   }
-
   init(deps) {
     this.deps = deps; // {game, intents, shell, platform, map}
   }
-
   // 场景没能搭起来（比如某张地图的素材坏了），世界会是一片空白：记下错，请玩家刷新或导出进度
   create() {
     try {
@@ -54,7 +52,6 @@ export class VillageScene extends Phaser.Scene {
       this.deps.shell.set({ modal: { kind: 'trouble' } });
     }
   }
-
   build() {
     const { game, intents, shell, map } = this.deps;
     this.map = map;
@@ -87,7 +84,6 @@ export class VillageScene extends Phaser.Scene {
       .setOrigin(0)
       .setDepth(DEPTH.cursor)
       .setVisible(false);
-
     const hero = game.ask('hero');
     this.player = new Walker(this, hero.look, hero.x, hero.y, hero.dir);
     this.approaching = null;
@@ -99,7 +95,7 @@ export class VillageScene extends Phaser.Scene {
     this.weatherFx = weatherEffects(this);
     this.ambient = createAmbient(this, map);
     this.performer = createPerformer(this);
-
+    this.extras = createFieldExtras(this);
     const camera = this.cameras.main;
     // 屋里看得比屋子大时，四周留白，像画在纸上的一间屋
     if (map.indoor) camera.setBackgroundColor(VOID);
@@ -109,7 +105,6 @@ export class VillageScene extends Phaser.Scene {
     const fit = () => this.fit();
     this.scale.on('resize', fit);
     this.fit();
-
     this.cleanups = [
       () => this.scale.off('resize', fit),
       bindKeyboard(this, intents),
@@ -118,13 +113,14 @@ export class VillageScene extends Phaser.Scene {
       intents.on('tap', p => this.tap(p.x, p.y)),
       game.onCommit(facts => this.onFacts(facts)),
       () => this.performer.stop(),
+      () => this.extras.destroy(),
     ];
     this.events.once('shutdown', () => this.cleanups.forEach(off => off()));
     this.refreshPlots();
     this.relook();
     this.retime(true);
+    this.extras.sync();
   }
-
   /** 有的物件随规则里的状态换样子。现在只有鸡窝：还没搭是一块空地，养了鸡能看见鸡。 */
   relook() {
     const coops = this.scenery.filter(s => s.kind === 'coop');
@@ -138,33 +134,27 @@ export class VillageScene extends Phaser.Scene {
       if (this.season !== null) this.dress(s);
     }
   }
-
   /** 按窗口大小定放大倍数和镜头能走到哪儿（见 logic.js 的 fitView）。 */
   fit() {
     const { width, height } = this.scale.gameSize;
     const { zoom, bounds } = fitView(width, height, this.map);
     this.cameras.main.setZoom(zoom).setBounds(...bounds);
   }
-
   blocked(px, py) {
     const ok = (x, y) => walkable(this.map, Math.floor(x / TILE), Math.floor(y / TILE));
-    return !(ok(px - 4, py - 5) && ok(px + 4, py - 5) && ok(px - 4, py) && ok(px + 4, py));
+    return !(ok(px - 4, py - 5) && ok(px + 4, py - 5) && ok(px - 4, py) && ok(px + 4, py)) || blockedByActor(this, px, py);
   }
-
   /** 给规则报告的站位。 */
   at() {
     return { ...this.player.tile, dir: this.player.dir };
   }
-
   /** 跑一段可能出错的画面代码：出错交给 report，这一帧的其余部分照常画完。 */
   guard(fn) {
     return safely(this.deps.report, fn);
   }
-
   update(time, delta) {
     this.guard(() => this.frame(time, delta));
   }
-
   frame(time, delta) {
     this.ambient.update(time, delta);
     this.weatherFx.update(time, this.map.indoor ? 'sunny' : this.weather.code);
@@ -191,21 +181,9 @@ export class VillageScene extends Phaser.Scene {
     } else if (!this.player.follow(dt)) this.player.animate(false);
     this.updateHint();
   }
-
-  /** 面前有什么可以互动的：村民、物件，或者一格地。 */
+  /** 面前或身边一圈有什么可以互动的（见 target.js）。 */
   target() {
-    const here = this.player.tile;
-    const t = facing(here.x, here.y, this.player.dir);
-    const person = this.villagers.find(
-      v => v.present && Math.abs(v.tile.x - t.x) + Math.abs(v.tile.y - t.y) === 0,
-    );
-    if (person) return { kind: 'person', person, ...t };
-    const thing = actAt(this.map, t.x, t.y);
-    if (thing) return { kind: 'thing', thing, ...t };
-    if (waterSource(this.map, t.x, t.y)) return { kind: 'water', ...t };
-    const decor = decorAt(this, t.x, t.y);
-    if (decor) return { kind: 'decor', decor, ...t };
-    return { kind: 'plot', ...t };
+    return smartTarget(this);
   }
 
   updateHint() {
@@ -247,7 +225,11 @@ export class VillageScene extends Phaser.Scene {
     if (this.busy || shell.paused()) return;
     platform.audio.unlock();
     const t = this.target();
+    const here = this.player.tile;
+    if (t.x !== here.x || t.y !== here.y) this.player.face(dirTo(here, t));
     if (t.kind === 'person') return this.talk(t.person);
+    if (t.kind === 'visitor') return this.extras.interactVisitor(t.visitor);
+    if (t.kind === 'pulse') return this.extras.interactEvent(t.pulse);
     if (t.kind === 'thing') return this.touch(t.thing);
     if (t.kind === 'water') return shell.set({ modal: { kind: 'water', x: t.x, y: t.y } });
     if (t.kind === 'decor') return poke(this, t.decor);
@@ -356,6 +338,7 @@ export class VillageScene extends Phaser.Scene {
         plots = true;
       }
     }
+    this.extras.onFacts(facts);
     if (plots) this.refreshPlots();
     this.hintKey = '';
   }

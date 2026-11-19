@@ -53,7 +53,7 @@ export const HUD_HTML = `
       src="${toolIconUrl('coin')}" alt="铜钱" /><span data-id="coins"></span></span>
     <nav class="system-keys" aria-label="常用入口">
       ${navKey('bag', '行囊')}${navKey('map', '地图')}
-      <button class="menu-btn event-key" data-do="event" data-id="event" hidden>小事</button><button class="menu-btn book-key" data-do="book">册子</button>
+      <button class="menu-btn book-key" data-do="book">册子</button>
       ${navKey('journal', '手记')}${navKey('menu', '菜单')}
     </nav>
   </div>
@@ -143,7 +143,6 @@ export function renderHud(el, { game, shell }) {
     put(el.buff, `${body.buff.name} ${body.buff.left}`);
     attr(el.buff, 'title', body.buff.text);
   }
-  if (el.event) el.event.hidden = !game.ask('events').active;
   put(el.coins, String(game.ask('home').coins));
   syncTools(el, game, shell.get().seed);
   syncToolbar(el, shell.get());

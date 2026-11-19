@@ -127,7 +127,9 @@ export const frameOf = (dir, pose) =>
 export function ensurePerson(scene, look) {
   const key = 'person:' + look;
   if (scene.textures.exists(key)) return;
-  const texture = scene.textures.addCanvas(key, gridToCanvas(art.personSheet(look)));
+  const base = look.split('/')[0];
+  const safe = art.LOOK_NAMES.includes(base) ? look : 'hero';
+  const texture = scene.textures.addCanvas(key, gridToCanvas(art.personSheet(safe)));
   art.DIRS.forEach((dir, row) =>
     art.POSES.forEach((pose, col) =>
       texture.add(
