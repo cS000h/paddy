@@ -1,4 +1,4 @@
-// 随机随机事件与流动过客的按钮动作与提示。
+// 随机小事与流动过客的按钮动作和提示。
 export function pulseActions({ game, shell, run }) {
   return {
     event() {
@@ -9,9 +9,7 @@ export function pulseActions({ game, shell, run }) {
       if (!out.ok) return;
       const f = out.facts.find(x => x.type === 'pulse.resolved')?.data;
       shell.set({
-        modal: f
-          ? { kind: 'event', title: f.title, success: f.success, line: f.line }
-          : null,
+        modal: f ? { kind: 'event', title: f.title, success: f.success, line: f.line } : null,
       });
     },
     visitors() {

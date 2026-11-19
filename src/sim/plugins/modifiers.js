@@ -1,4 +1,4 @@
-// 统一时限修正里与五维底子属性合算。
+// 时限修正与五维属性的合算。
 // 每次读五维属性时动态把「技能换算 + 十二个长期特质 + 未过期的时限修正」加总；
 // 时限修正同时接入 compute 计算管道（体力、收成、关系、经验、歇息）。
 import { is, check } from '../../kernel/schema.js';
@@ -16,10 +16,7 @@ export const modifiers = {
     const { schema, queries, reactions, compute, core, people, growth } = ctx.services;
 
     const modOk = m =>
-      is.obj(m) &&
-      Object.hasOwn(MODIFIERS, m.id) &&
-      is.int(m.until, 1) &&
-      is.str(m.from, 40);
+      is.obj(m) && Object.hasOwn(MODIFIERS, m.id) && is.int(m.until, 1) && is.str(m.from, 40);
 
     schema.slice('modifiers', {
       initial: (env, w) => Object.fromEntries(Object.keys(w.packs).map(id => [id, []])),
@@ -69,7 +66,7 @@ export const modifiers = {
       const mods = active(w, who);
       for (const [k, def] of Object.entries(STATS)) {
         const primary = growth.level(w, def.skill, who);
-        const alt = def.alt ? growth.level(w, def.alt, who) : 0;
+        const alt = 'alt' in def ? growth.level(w, def.alt, who) : 0;
         const base = 2 + Math.max(primary, alt);
         let traitSum = 0;
         for (const [t, map] of Object.entries(TRAIT_STATS))
@@ -80,7 +77,15 @@ export const modifiers = {
           modSum += d;
         }
         values[k] = Math.max(1, base + traitSum + modSum);
-        detail[k] = { id: k, name: def.name, desc: def.desc, value: values[k], base, traitSum, modSum };
+        detail[k] = {
+          id: k,
+          name: def.name,
+          desc: def.desc,
+          value: values[k],
+          base,
+          traitSum,
+          modSum,
+        };
       }
       return { values, detail };
     }

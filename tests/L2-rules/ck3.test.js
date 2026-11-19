@@ -28,7 +28,10 @@ test('人物五维属性汇总基础值与特质加成，吃拿手热饭获得�
   const dishId = cooked.facts.find(f => f.type === 'meal.cooked').data.ids[0];
   must(g, 'dish.eat', { id: dishId, at: { x: 10, y: 11, dir: 'up' } });
   const mods = g.ask('modifiers').list;
-  assert.ok(mods.some(m => m.id === 'good_meal' && m.left >= 2), '拿手饭给 3 天好饭提劲');
+  assert.ok(
+    mods.some(m => m.id === 'good_meal' && m.left >= 2),
+    '拿手饭给 3 天好饭提劲',
+  );
   // 过三天后自动过期
   for (let i = 0; i < 3; i++) must(g, 'sleep');
   assert.equal(

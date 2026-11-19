@@ -1,4 +1,4 @@
-// 随机随机事件引擎：晨起小事、场景触发与过几天后续。
+// 随机小事：晨起小事、场景触发与过几天的后续。
 // 低打扰节奏：每天最多自动挂起 1 条事件，玩家随时点开处理；
 // 选项支持稳稳项、带明确成功率的五维属性检定项、以及特质独有项。
 //   event.choose {choice} → pulse.resolved {id, title, success, line}
@@ -115,8 +115,7 @@ export const events = {
       if (out.mood) body.mood(w, who, out.mood, title);
       if (out.energy > 0) people.restore(w, who, out.energy, title);
       if (out.give) pack.deliver(w, who, out.give.item, out.give.n, title);
-      if (out.mod && Object.hasOwn(MODIFIERS, out.mod))
-        modifiers.add(w, who, out.mod, null, title);
+      if (out.mod && Object.hasOwn(MODIFIERS, out.mod)) modifiers.add(w, who, out.mod, null, title);
       if (out.delay && Object.hasOwn(EVENTS, out.delay.id)) {
         if (w.pulse.delayed.length >= MAX_DELAYED) w.pulse.delayed.shift();
         w.pulse.delayed.push({ id: out.delay.id, day: w.clock.day + out.delay.days });

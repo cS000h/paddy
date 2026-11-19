@@ -15,14 +15,14 @@ export const esc = text =>
  * @param {string} action
  * @param {string} label
  * @param {{data?: object, main?: boolean, chosen?: boolean, disabled?: boolean,
- *   title?: string, html?: string}} [options]
+ *   title?: string, html?: string, cls?: string}} [options]
  */
 export function button(action, label, options = {}) {
   const { data = {}, main = false, chosen = false, disabled = false, title = '' } = options;
   const attrs = Object.entries(data)
     .map(([key, value]) => ` data-${key}="${esc(value)}"`)
     .join('');
-  const classes = [main && 'main', chosen && 'chosen'].filter(Boolean).join(' ');
+  const classes = [main && 'main', chosen && 'chosen', options.cls].filter(Boolean).join(' ');
   const inner = options.html ?? esc(label);
   return (
     `<button data-do="${action}"${attrs}${classes ? ` class="${classes}"` : ''}` +

@@ -1,4 +1,4 @@
-// 流动过客里与熟人册：赶上赶集或换季刷出过客，停留在茶摊、杂货铺或渡口；
+// 流动过客与熟人册：赶上赶集或换季刷出过客，停留在茶摊、杂货铺或渡口；
 // 聊闲话、满足诉求（点菜或收鲜货）后记入熟人册，下次优先回头再来。
 //   visitor.talk    {id}        → visitor.talked {id, name, line, known}
 //   visitor.fulfill {id, dish?} → visitor.fulfilled {id, name, coins, item, line}

@@ -1,4 +1,4 @@
-// 随机随机事件弹窗与流动过客面板（含熟人册）。
+// 随机小事的弹窗与流动过客面板（含熟人册）。
 import { button, actions, close, title, para, esc } from './html.js';
 
 export function eventView(m, game) {
@@ -44,11 +44,15 @@ function visitorCard(v, dish) {
     disabled: v.talkedToday,
   });
   const canDish = v.need.kind !== 'dish' || !!dish;
-  const fulfillBtn = button('visitorFulfill', v.done ? '已办好' : v.need.kind === 'dish' ? '端份热饭' : '交给他', {
-    data: { id: v.id, ...(dish ? { dish: dish.id } : {}) },
-    disabled: v.done || !canDish,
-    main: !v.done && canDish,
-  });
+  const fulfillBtn = button(
+    'visitorFulfill',
+    v.done ? '已办好' : v.need.kind === 'dish' ? '端份热饭' : '交给他',
+    {
+      data: { id: v.id, ...(dish ? { dish: dish.id } : {}) },
+      disabled: v.done || !canDish,
+      main: !v.done && canDish,
+    },
+  );
   return `<li><span class="what">
     <b>${esc(v.name)} · ${esc(v.title)}${mark}</b>
     <small>${esc(v.spotName)} · 还留 ${v.left} 天 · 性情：${esc(traits)} · 熟悉 ${v.rel}</small>

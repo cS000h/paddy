@@ -53,7 +53,7 @@ export const SCENE_MAP = Object.freeze({
         onOk: {
           mod: 'keen_eye',
           give: { item: 'herb', n: 2 },
-          line: '眼力真不错，顺着土缝又找出两份好竹笋。',
+          line: '眼力真不错，顺着土缝又找出两把香草。',
         },
         onFail: {
           mod: 'rain_damp',
@@ -107,7 +107,7 @@ export const SCENE_MAP = Object.freeze({
     id: 'scene_farm_coin',
     trigger: 'farm',
     title: '土里的小惊喜',
-    text: '收完这一茬菜，锄头碰到了硬东西，扒开泥土一看，居然是几枚带着青印的旧钱和肥厚腐土。',
+    text: '地里正干着活，脚边的土里露出一点硬东西，扒开一看，居然是几枚带着青印的旧钱和肥厚腐土。',
     choices: [
       {
         label: '擦干净收进口袋',
@@ -202,5 +202,4 @@ export const SCENE_MAP = Object.freeze({
       },
     ],
   },
-
 });

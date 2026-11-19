@@ -72,6 +72,14 @@
   width: 42px;
   height: 42px;
 }
+/* 有小事时，「小事」排在四个键下面横着一条，四个键不挪位置，手指记住的地方还在。 */
+.touch .system-keys .event-key {
+  order: 9;
+  grid-column: 1 / -1;
+  width: auto;
+  height: 26px;
+  min-height: 26px;
+}
 .touch .vitals .coins {
   min-height: 30px;
   margin-top: 3px;

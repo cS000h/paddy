@@ -9,7 +9,7 @@ export const SAVE_FORMAT = 'dao.save';
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
 const MIGRATIONS = {
   11(state) {
-    // M9：时限修正里、随机随机事件与流动过客
+    // M9：时限修正、随机小事与流动过客
     const w = state.world;
     w.meta.version = 12;
     w.modifiers = Object.fromEntries(Object.keys(w.packs).map(id => [id, []]));

@@ -6,7 +6,13 @@ export const STATS = Object.freeze({
   cook: { id: 'cook', name: '灶艺', skill: 'cook', desc: '掌火切菜、做饭提味与灶房小事' },
   craft: { id: 'craft', name: '手艺', skill: 'craft', desc: '编竹修补、动手置办与挑货眼力' },
   social: { id: 'social', name: '交际', skill: 'social', desc: '待人接物、茶摊闲话与议价说和' },
-  insight: { id: 'insight', name: '见识', skill: 'sky', alt: 'forage', desc: '看天识路、山野采集与遇事留心' },
+  insight: {
+    id: 'insight',
+    name: '见识',
+    skill: 'sky',
+    alt: 'forage',
+    desc: '看天识路、山野采集与遇事留心',
+  },
 });
 
 // 现有十二个长期特质对应的五维属性加成（有得有失，贴合人物性格）。

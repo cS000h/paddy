@@ -62,7 +62,9 @@ function personaBody(game) {
     })
     .join('');
   const seals = owned.length
-    ? owned.map(t => `<span class="trait-seal" title="${esc(t.effect)}">${esc(t.name)}</span>`).join('')
+    ? owned
+        .map(t => `<span class="trait-seal" title="${esc(t.effect)}">${esc(t.name)}</span>`)
+        .join('')
     : '<small>还没有立下性情印记</small>';
   const mods = m.list.length
     ? m.list
