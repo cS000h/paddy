@@ -29,6 +29,7 @@ const COMMANDS = [
   'origin.choose',
   'pack.put',
   'pack.take',
+  'person.dress',
   'person.place',
   'sip',
   'sky.look',

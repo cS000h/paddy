@@ -179,7 +179,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     await frames(wide.page, 30);
     await shot(wide.page, 'smoke-phone-landscape.png');
     // 新来的人：手记收着时左上角有“下一步”，用这台设备的说法讲怎么做
-    assert.match(await wide.page.locator('.next').textContent(), /锄松一格地.*菜地.*点「做」/);
+    assert.match(await wide.page.locator('.next').textContent(), /锄松一格地.*菜地.*点右下印章/);
     assert.equal(await desk.page.locator('.journal').isVisible(), false);
     await desk.page.evaluate(() => window.__dao.shell.set({ modal: null }));
     assert.match(await desk.page.locator('.next').textContent(), /下一步.*按空格/);
@@ -362,6 +362,33 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       };
       await go(8, 9, 'cottage');
       await shot(p, session === desk ? 'cottage-desktop.png' : 'cottage-phone.png');
+      await tap(p, 8, 4);
+      await frames(p, 400);
+      await p.locator('[data-do="fittingPick"][data-id="winter"]').click();
+      await p.locator('[data-do="fittingTab"][data-tab="hair"]').click();
+      await p.locator('[data-do="fittingPick"][data-id="braid"]').click();
+      await shot(p, session === desk ? 'wardrobe-desktop.png' : 'wardrobe-phone.png');
+      await p.locator('[data-do="fittingWear"]').click();
+      assert.equal(
+        await p.evaluate(() => window.__dao.world.scene().player.look),
+        'hero/winter/braid/3',
+      );
+      // 走向工位时腿要持续迈步；中途用方向打断，当帧归还人物和路径。
+      const handoff = await p.evaluate(() => {
+        const { world, intents } = window.__dao;
+        const s = world.scene();
+        world.perform('drink', { target: { x: 17, y: 8 } });
+        let walked = false;
+        for (let i = 0; i < 16; i++) {
+          s.game.step(performance.now() + i * 16.67, 16.67);
+          walked ||= s.player.moving && s.player.sprite.anims.isPlaying;
+        }
+        intents.setMove('cut-in', -1, 0);
+        s.game.step(performance.now() + 280, 16.67);
+        intents.setMove('cut-in', 0, 0);
+        return [walked, s.performer.active, s.player.path.length, s.player.sprite.alpha];
+      });
+      assert.deepEqual(handoff, [true, false, 0, 1]);
       await tap(p, 15, 7);
       await frames(p, 400);
       await p.locator('[data-do="cookPick"][data-item="potato"]').click();
@@ -403,6 +430,10 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.reload();
       await p.waitForFunction(() => window.__dao?.world.scene()?.player);
       assert.equal(await p.evaluate(() => window.__dao.game.ask('hero').map), 'cottage');
+      assert.equal(
+        await p.evaluate(() => window.__dao.world.scene().player.look),
+        'hero/winter/braid/3',
+      );
       assert.deepEqual(session.errors, []);
     }
     assert.deepEqual(wide.errors, []);

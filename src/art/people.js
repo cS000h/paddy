@@ -1,6 +1,8 @@
 // 人物。每个人是一张“纸娃娃”：头、身子、胳膊、腿分开画，按姿势挪一挪位置，最后统一描边。
 // 一帧 16×32。一行一个朝向（下、左、右、上），一行六帧：站、迈左、站、迈右、抬手、落手。
 // 人物只画成远处的小人：两点眼睛，没有五官细节，也不做近脸。
+import { clothed, coats } from './garments.js';
+import { hairLayer } from './hairstyles.js';
 import { Grid } from './pixel.js';
 import { P } from './palette.js';
 
@@ -165,6 +167,9 @@ function facing(g, L, pose, back) {
     g.line(3, 18 + drop, 6, 23 + drop, L.cloth).line(2, 18 + drop, 5, 23 + drop, L.shade);
     g.line(12, 18 + drop, 9, 23 + drop, L.cloth).line(13, 18 + drop, 10, 23 + drop, L.shade);
     if (!back) g.rect(6, 24 + drop, 4, 1, P.k1);
+  } else if (pose === 'ready') {
+    arm(3, 18, 20, 21);
+    arm(11, 18, 20, 21);
   } else {
     const swing = pose === 'walkA' ? [-1, 1] : pose === 'walkB' ? [1, -1] : [0, 0];
     arm(2, 17, 21 + swing[0], 22 + swing[0]);
@@ -218,7 +223,7 @@ function side(g, L, pose) {
       .hline(9, 13, 20 + drop, L.shade)
       .rect(13, 19 + drop, 2, 2, P.k1);
   } else {
-    const swing = pose === 'walkA' ? 2 : pose === 'walkB' ? -2 : 0;
+    const swing = pose === 'ready' ? 3 : pose === 'walkA' ? 2 : pose === 'walkB' ? -2 : 0;
     g.line(7, 18, 7 + swing, 22, L.shade).line(8, 18, 8 + swing, 22, L.shade);
     g.rect(7 + swing, 23, 2, 1, P.k1);
   }
@@ -241,14 +246,19 @@ function side(g, L, pose) {
 
 /** 画一帧。 */
 export function personFrame(look, dir, pose) {
-  const L = LOOKS[look];
+  const [base, coat, style, length] = look.split('/');
+  const L = LOOKS[base];
   if (!L) throw new Error('没有这个外观：' + look);
   const g = new Grid(FRAME_W, FRAME_H);
   if (dir === 'down' || dir === 'up') facing(g, L, pose, dir === 'up');
   else side(g, L, pose);
   g.outline(P.ink1);
-  if (dir !== 'left') return g;
-  return new Grid(FRAME_W, FRAME_H).blit(g, 0, 0, { flipX: true });
+  const view = dir === 'left' ? 'right' : dir;
+  const dressed = coat && coat !== 'plain' ? clothed(g, coat, view, pose) : g;
+  if (style && style !== 'plain') {
+    dressed.blit(hairLayer({ style, length: Number(length), part: 'side' }, view, pose), 0, 0);
+  }
+  return dir === 'left' ? new Grid(FRAME_W, FRAME_H).blit(dressed, 0, 0, { flipX: true }) : dressed;
 }
 
 /** 一个人的整张图：4 行朝向 × 6 列姿势。 */
@@ -265,4 +275,10 @@ export function personSheet(look) {
 export const LOOK_NAMES = Object.keys(LOOKS);
 
 /** 一个外观的几样颜色（衣、衣影、腰带、裤、鞋……）；做活的人（worker.js）按它给身子上色。 */
-export const lookColors = look => LOOKS[look] || LOOKS.hero;
+export function lookColors(look) {
+  const [base, coat] = look.split('/');
+  const original = LOOKS[base] || LOOKS.hero;
+  if (!coat || coat === 'plain') return original;
+  const [cloth, shade, trim, pants] = coats[coat];
+  return { ...original, cloth, shade, trim, pants, sash: trim };
+}

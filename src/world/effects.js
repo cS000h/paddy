@@ -1,10 +1,20 @@
+import { DEPTH } from './depth.js';
 // 画面上的反馈和气氛：土块、水滴、收菜时的一跳、飘落的花瓣、炊烟、水面的闪光。
 // 都是“看得见、不影响规则”的东西；规则里发生了什么事（事实），这里就给什么反馈。
+import { actAt } from '../content/maps/index.js';
 import { TILE } from './logic.js';
 
 export function createEffects(scene, map) {
-  const burst = (texture, config) =>
-    scene.add.particles(0, 0, texture, { emitting: false, ...config }).setDepth(9000);
+  // 同时在两块地上扬土，各自属于自己的接地点，后一次不能把前一次的粒子提到前景。
+  const burst =
+    (texture, config) =>
+    (count, px, py, foot = py) => {
+      const emitter = scene.add
+        .particles(px, py, texture, { emitting: false, ...config })
+        .setDepth(foot + 0.25);
+      emitter.once('complete', () => emitter.destroy());
+      emitter.explode(count);
+    };
 
   const dirt = burst('fx:dirt', {
     speed: { min: 25, max: 70 },
@@ -51,10 +61,11 @@ export function createEffects(scene, map) {
 
   const centre = (x, y) => [x * TILE + 8, y * TILE + 9];
 
+  const petals = [];
   // 桃树下慢慢飘落的花瓣
   for (const [kind, x, y] of map.objects) {
     if (kind !== 'tree.peach') continue;
-    scene.add
+    const emitter = scene.add
       .particles(x * TILE + 8, y * TILE - 26, 'fx:petal', {
         x: { min: -14, max: 14 },
         y: { min: -8, max: 8 },
@@ -65,6 +76,7 @@ export function createEffects(scene, map) {
         alpha: { start: 1, end: 0 },
       })
       .setDepth((y + 1) * TILE + 1);
+    petals.push(emitter);
   }
 
   // 水面上一闪一闪的光
@@ -75,7 +87,7 @@ export function createEffects(scene, map) {
     if (map.ground[y][x] !== 'w') continue;
     const glint = scene.add
       .image(x * TILE + 3 + Math.random() * 9, y * TILE + 3 + Math.random() * 10, 'fx:glint')
-      .setDepth(-900)
+      .setDepth(DEPTH.reflection)
       .setAlpha(0);
     scene.tweens.add({
       targets: glint,
@@ -102,29 +114,34 @@ export function createEffects(scene, map) {
           lifespan: 3200,
           frequency: 420,
         })
-        .setDepth(9000)
+        .setDepth((gui[2] + 1) * TILE + 1)
     : null;
   smoke?.stop();
 
   return {
+    setSky(season, minute, tags) {
+      const clear = !tags.includes('snow') && !tags.includes('wet');
+      for (const emitter of petals) emitter.emitting = season === 0 && clear;
+      for (const glint of glints) glint.setVisible(clear && minute >= 360 && minute < 1080);
+    },
     tilled(x, y) {
       const [px, py] = centre(x, y);
-      dirt.explode(7, px, py);
-      clod.explode(4, px, py);
+      dirt(7, px, py);
+      clod(4, px, py);
     },
     sown(x, y) {
       const [px, py] = centre(x, y);
-      seeds.explode(5, px, py - 6);
+      seeds(5, px, py - 6, py);
     },
     watered(x, y) {
       const [px, py] = centre(x, y);
-      drops.explode(9, px, py - 10);
-      scene.time.delayedCall(180, () => splash.explode(6, px, py));
+      drops(9, px, py - 10, py);
+      scene.time.delayedCall(180, () => splash(6, px, py));
     },
     harvested(x, y, crop) {
       const [px, py] = centre(x, y);
-      leaves.explode(6, px, py - 2);
-      const veg = scene.add.image(px, py - 4, 'crop:' + crop + ':3').setDepth(9100);
+      leaves(6, px, py - 2, py);
+      const veg = scene.add.image(px, py - 4, 'crop:' + crop + ':3').setDepth(py + 1);
       scene.tweens.add({
         targets: veg,
         y: py - 26,
@@ -134,22 +151,21 @@ export function createEffects(scene, map) {
         onComplete: () => veg.destroy(),
       });
     },
-    refilled(px, py) {
-      splash.explode(8, px, py - 4);
-    },
     /** 拍了拍草垛、稻草人、芦苇：扑起一阵草屑。 */
     straw(px, py) {
-      seeds.explode(9, px, py);
+      seeds(9, px, py);
     },
     /** 劈柴、敲钉子：那一格上木屑飞起来。 */
     chips(x, y) {
       const [px, py] = centre(x, y);
-      scene.time.delayedCall(680, () => chips.explode(8, px, py - 4));
+      chips(8, px, py - 4, py);
     },
     /** 舀水、下竿：那一格溅起水花。 */
     splashAt(x, y) {
       const [px, py] = centre(x, y);
-      splash.explode(8, px, py - 2);
+      const source = actAt(map, x, y)?.kind;
+      const rise = source === 'well' ? 12 : source === 'vat' ? 10 : 0;
+      splash(8, px, py - rise, py);
     },
     /** 一格新长出来的东西轻轻弹一下。 */
     pop(target) {

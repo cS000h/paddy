@@ -26,6 +26,19 @@ export function homeActions({ game, shell, run, here, world }) {
       run('pack.take', { item, n, ...at() });
     },
     // 喝水、打水：成了就合上小窗，人在水边弯腰舀一瓢
+    fittingTab({ tab }) {
+      shell.set({ modal: { ...shell.get().modal, tab } });
+    },
+    fittingPick({ id }) {
+      const m = shell.get().modal;
+      shell.set({ modal: { ...m, [m.tab === 'hair' ? 'hair' : 'coat']: id } });
+    },
+    fittingWear() {
+      const m = shell.get().modal;
+      const hero = game.ask('hero');
+      if (run('person.dress', { ...at(), coat: m.coat ?? hero.coat, hair: m.hair ?? hero.hair }).ok)
+        shell.set({ modal: null });
+    },
     drink() {
       const where = spot();
       if (!run('drink', { ...where, ...at() }).ok) return;
@@ -36,7 +49,7 @@ export function homeActions({ game, shell, run, here, world }) {
       const where = spot();
       if (!run('farm.refill', { ...where, ...at() }).ok) return;
       shell.set({ modal: null });
-      world.perform('drink', { target: where });
+      world.perform('refill', { target: where });
     },
     async sleep() {
       shell.set({ modal: null, veil: 1 });

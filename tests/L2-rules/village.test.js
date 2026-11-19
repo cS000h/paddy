@@ -97,7 +97,7 @@ test('手记：做到一件记一件，每件只记一次', () => {
     .ask('guide')
     .filter(q => q.done)
     .map(q => q.id);
-  assert.deepEqual(done, ['till', 'sow', 'water', 'meet', 'harvest']);
+  assert.deepEqual(done, ['till', 'water', 'sow', 'meet', 'harvest']);
   assert.ok(!must(g, 'farm.till', { x: 7, y: 19, at: FIELD.at }).includes('guide.done'));
 });
 

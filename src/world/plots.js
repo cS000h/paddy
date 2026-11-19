@@ -1,3 +1,4 @@
+import { DEPTH } from './depth.js';
 // 把规则里的田地画出来：翻过的土（干湿、和邻格拼成一片）、作物的阶段、长的草和生的虫。
 import { TILE } from './logic.js';
 
@@ -17,9 +18,9 @@ function create(scene, p) {
       .setDepth(depth)
       .setVisible(false);
   return {
-    soil: at('soil:dry.0', -900).setVisible(true),
+    soil: at('soil:dry.0', DEPTH.soil).setVisible(true),
     // 草贴着土长，人走过去会盖住它；虫趴在叶子上，画在作物上面
-    weeds: at('mark:weeds', -890),
+    weeds: at('mark:weeds', DEPTH.weeds),
     crop: scene.add
       .image(p.x * TILE + 8, bottom - 2, 'crop:0')
       .setOrigin(0.5, 1)

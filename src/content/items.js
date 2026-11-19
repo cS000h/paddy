@@ -84,7 +84,7 @@ export const TOOLS = Object.freeze([
   { id: 'hoe', name: '锄头', verb: '锄地' },
   { id: 'seed', name: '菜种', verb: '播种' },
   { id: 'can', name: '水壶', verb: '浇水' },
-  { id: 'hand', name: '采收', verb: '采收' },
+  { id: 'hand', name: '徒手', verb: '采收' },
 ]);
 
 export const CAN_CAPACITY = 10;

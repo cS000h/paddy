@@ -36,7 +36,8 @@ export const SCRIPTS = Object.freeze({
   rest: [{ act: 'sit', times: 2 }],
   stars: [{ act: 'sit', times: 2 }],
   // 打水、喝水
-  drink: once('scoop', { around: 'splash', sound: 'refill' }),
+  drink: once('scoop', { around: 'drawWater', sound: 'refill' }),
+  refill: once('fillCan', { around: 'drawWater', sound: 'refill' }),
   // 买卖
   trade: once('pay', { sound: 'talk' }),
   // 钓鱼：甩出去以后一直等着，直到收竿那一下换成 reel 或 miss

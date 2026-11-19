@@ -11,7 +11,7 @@ export function costText(cost) {
 }
 
 /** 按这台设备的说法讲“怎么做”：键鼠是按空格，触屏是点“做”。 */
-export const doWord = touch => (touch ? '点「做」' : '按空格');
+export const doWord = touch => (touch ? '点右下印章' : '按空格');
 
 /** 一格地要不要照料，一句话；不用照料（或还没锄）是空字符串。detail 来自 farm.detail 查询。 */
 export function careNote(detail) {

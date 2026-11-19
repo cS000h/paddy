@@ -16,7 +16,6 @@ export function createShellState({ onError = null } = {}) {
     modal: null, // 弹着的东西：null，或 {kind: 'talk' | 'sleep' | 'basket' | 'sign' | 'notes', …}
     hint: null, // 面前这一格能做什么：{text, ok}
     toast: null, // 一句短提示：{text, id}
-    tint: '#ffffff', // 天色（正片叠底盖在世界上）
     veil: 0, // 0–1，过夜时盖住世界的那层纸
   });
   const listeners = new Set();

@@ -1,19 +1,19 @@
 // 手记里头几天的小目标。on 是听到哪件事算做到；hint 是还没做到时，手记里那一行底下的小字，
-// 手记合上时也显示在左上角的“下一步”里。{do} 由画面换成这台设备的说法（按空格，或点「做」）。
+// 手记合上时也显示在左上角的“下一步”里。{do} 由画面换成这台设备的说法（按空格，或点右下印章）。
 export const GOALS = Object.freeze([
   {
     id: 'till',
     on: 'plot.tilled',
     text: '锄松一格地',
-    hint: '拿锄头，出院门往南过石板路就是菜地，对着地{do}',
+    hint: '出院门往南过石板路就是菜地，对着地{do}',
   },
-  { id: 'sow', on: 'plot.sown', text: '种下第一粒菜种', hint: '换成菜种，对着锄过的地{do}' },
   {
     id: 'water',
     on: 'plot.watered',
-    text: '给它浇上水',
-    hint: '换成水壶浇一浇；水壶空了去水缸、水井或溪边打水',
+    text: '润一格土',
+    hint: '面朝干土{do}，水壶空了去井边打水',
   },
+  { id: 'sow', on: 'plot.sown', text: '种下第一粒菜种', hint: '面朝润过的空地{do}' },
   {
     id: 'meet',
     on: 'person.talked',

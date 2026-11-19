@@ -30,3 +30,18 @@ export function placeAction(sprite, sheet, dir) {
     .setOrigin(left ? 1 - sheet.ax / sheet.w : sheet.ax / sheet.w, sheet.ay / sheet.h)
     .setFlipX(left);
 }
+
+// 玩家演出和乡邻做活共用这一处换帧。位置、朝向和脚底排序在交出人物的同一帧确定。
+export function playBody(sprite, info, actor, dir, times = 1) {
+  return placeAction(sprite, info, dir)
+    .setPosition(Math.round(actor.px), Math.round(actor.py))
+    .setDepth(actor.py)
+    .setVisible(true)
+    .play(times > 1 ? { key: info.key, repeat: times - 1 } : info.key);
+}
+export function supportedAct(map, tile, act) {
+  if (act !== 'sit' && act !== 'sip') return act;
+  if (map.objects.some(([kind, x, y]) => kind === 'stool' && x === tile.x && y === tile.y))
+    return act;
+  return act === 'sit' ? 'shadeEyes' : 'standSip';
+}

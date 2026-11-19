@@ -58,9 +58,9 @@ export function createWorld(deps) {
      * 把一件已经结算好的活演出来（见 perform.js）：steps 一步步放，target 是对着的那一格，
      * then 演完以后调用。场景还没起来时直接调用 then。
      */
-    perform(steps, { target = null, then = null } = {}) {
+    perform(steps, { target = null, water = false, then = null } = {}) {
       const s = scene();
-      if (s?.performer) s.performer.play(steps, { target, then });
+      if (s?.performer) s.performer.play(steps, { target, water, then });
       else then?.();
     },
     /** 正在演的那一场马上收场（比如钓鱼时没收竿就把小窗关了）。 */

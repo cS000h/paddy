@@ -22,10 +22,11 @@ export const GROUND = Object.freeze({
 // act = 走到旁边按互动键时发生什么（由外壳解释）；drink = 能喝的水（见 content/body.js 的 DRINKS）。
 export const OBJECTS = Object.freeze({
   bed: { foot: [-1, -1, 1, 0], act: 'sleep' },
-  roomWindow: {},
-  scroll: {}, // 后墙上挂的字画
-  hangings: {}, // 后墙上挂的干辣椒、玉米
-  rug: {},
+  roomWindow: { floor: true },
+  scroll: { floor: true }, // 后墙上挂的字画
+  hangings: { floor: true }, // 后墙上挂的干辣椒、玉米
+  rug: { floor: true },
+  dresser: { act: 'wardrobe', foot: [0, 0, 0, 0] },
   boat: {},
   route: { act: 'travel' },
   teaCounter: { foot: [-1, 0, 1, 0], act: 'tea' },
@@ -56,7 +57,12 @@ export const OBJECTS = Object.freeze({
   haystack: { foot: [0, 0, 1, 0] },
   rack: { foot: [0, 0, 1, 0] },
   jars: { foot: [0, 0, 0, 0] },
-  trellis: {}, // 棚下可以穿行，旧存档的站位也依然能走。
+  trellis: {
+    parts: [
+      ['rear', -9],
+      ['front', 0],
+    ],
+  }, // 棚下可以穿行，旧存档的站位也依然能走。
   scarecrow: { foot: [0, 0, 0, 0] },
   sign: { foot: [0, 0, 0, 0], act: 'sign' },
   'tree.broad': { foot: [0, 0, 0, 0] },
@@ -67,24 +73,24 @@ export const OBJECTS = Object.freeze({
   bamboo: { foot: [0, 0, 0, 0] },
   bush: { foot: [0, 0, 0, 0] },
   rock: { foot: [0, 0, 0, 0] },
-  flowers: {},
-  reeds: {},
+  flowers: { sortOffset: -6 },
+  reeds: { sortOffset: -5 },
   // 各地的标志物（art/landmarks.js）
   lantern: { foot: [0, 0, 0, 0] },
   stall: { foot: [-1, 0, 1, 0] },
   pavilion: { foot: [-1, -1, 1, 0], act: 'housework' },
-  lotus: {},
+  lotus: { floor: true },
   shrine: { foot: [0, 0, 0, 0], act: 'sign' },
   cart: { foot: [0, 0, 1, 0] },
-  stones: {},
+  stones: { floor: true },
   netRack: { foot: [0, 0, 1, 0] },
   // 人家门口、摊子旁边的零碎（art/props-village.js）
   barrels: { foot: [0, 0, 0, 0] },
   firewood: { foot: [0, 0, 0, 0] },
   sacks: { foot: [0, 0, 0, 0] },
-  trays: {},
-  fern: {},
-  stool: {},
+  trays: { floor: true },
+  fern: { sortOffset: -5 },
+  stool: { sortOffset: -10 },
   bench: { foot: [0, 0, 1, 0] },
   rockPile: { foot: [0, 0, 0, 0] },
   crates: { foot: [0, 0, 0, 0] },

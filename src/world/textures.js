@@ -72,32 +72,6 @@ export function buildTextures(scene, map) {
   for (const name of ['hoe', 'seed', 'can', 'hand']) add('icon:' + name, art.icon(name));
   add('shadow', art.personShadow());
 
-  for (const look of art.LOOK_NAMES) {
-    const texture = add('person:' + look, art.personSheet(look));
-    art.DIRS.forEach((dir, row) =>
-      art.POSES.forEach((pose, col) =>
-        texture.add(
-          row * art.POSES.length + col,
-          0,
-          col * art.FRAME_W,
-          row * art.FRAME_H,
-          art.FRAME_W,
-          art.FRAME_H,
-        ),
-      ),
-    );
-    art.DIRS.forEach((dir, row) => {
-      const frame = col => ({ key: 'person:' + look, frame: row * art.POSES.length + col });
-      if (scene.anims.exists(`${look}:walk:${dir}`)) return;
-      scene.anims.create({
-        key: `${look}:walk:${dir}`,
-        frames: [1, 2, 3, 0].map(frame),
-        frameRate: 8,
-        repeat: -1,
-      });
-    });
-  }
-
   add('fx:dirt', speck(2, 2, P.d2));
   add('fx:clod', speck(2, 2, P.d0));
   add('fx:drop', speck(1, 2, P.w3));
@@ -148,3 +122,32 @@ function flame() {
 /** 人物贴图里某个朝向、某个姿势是第几帧。 */
 export const frameOf = (dir, pose) =>
   art.DIRS.indexOf(dir) * art.POSES.length + art.POSES.indexOf(pose);
+
+// 穿上时才生成这一套动作。
+export function ensurePerson(scene, look) {
+  const key = 'person:' + look;
+  if (scene.textures.exists(key)) return;
+  const texture = scene.textures.addCanvas(key, gridToCanvas(art.personSheet(look)));
+  art.DIRS.forEach((dir, row) =>
+    art.POSES.forEach((pose, col) =>
+      texture.add(
+        row * art.POSES.length + col,
+        0,
+        col * art.FRAME_W,
+        row * art.FRAME_H,
+        art.FRAME_W,
+        art.FRAME_H,
+      ),
+    ),
+  );
+  art.DIRS.forEach((dir, row) => {
+    const frame = col => ({ key: 'person:' + look, frame: row * art.POSES.length + col });
+    if (scene.anims.exists(`${look}:walk:${dir}`)) return;
+    scene.anims.create({
+      key: `${look}:walk:${dir}`,
+      frames: [1, 2, 3, 0].map(frame),
+      frameRate: 8,
+      repeat: -1,
+    });
+  });
+}

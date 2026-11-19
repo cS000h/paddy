@@ -179,13 +179,14 @@ export function crates(seed) {
 }
 
 // 参考菜畦图里的竹棚：前后两排杆错开，藤只攀半架，让横梁和里面的空隙透出来。
-export function trellis(seed) {
+export function trellis(seed, part = 'whole') {
   const g = new Grid(40, 34);
   const r = rng(seed);
   for (const x of [6, 31]) {
-    g.line(x + 2, 3, x + 2, 24, P.t3).line(x + 3, 3, x + 3, 23, P.b2);
-    g.line(x, 10, x - 2, 32, P.t3).line(x + 1, 10, x - 1, 31, P.h2);
+    if (part !== 'front') g.line(x + 2, 3, x + 2, 24, P.t3).line(x + 3, 3, x + 3, 23, P.b2);
+    if (part !== 'rear') g.line(x, 10, x - 2, 32, P.t3).line(x + 1, 10, x - 1, 31, P.h2);
   }
+  if (part === 'rear') return made(g, 27, 33);
   for (const y of [4, 7, 11]) g.hline(3, 36, y, P.t3).hline(4, 36, y - 1, P.b2);
   for (const x of [5, 12, 19, 26, 33]) g.line(x, 12, x + 4, 2, P.h2);
   for (let i = 0; i < 29; i++) {

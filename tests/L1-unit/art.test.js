@@ -2,6 +2,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as art from '../../src/art/index.js';
+import { daylight } from '../../src/art/daylight.js';
+import { roomLight, roomExposure, lightSources } from '../../src/art/room-light.js';
+import { WEATHER_TYPES } from '../../src/content/weather.js';
 import { P, SHADOW } from '../../src/art/palette.js';
 import { MAPS, GROUND, OBJECTS } from '../../src/content/maps/index.js';
 import { PEOPLE, ON_MAP } from '../../src/content/people.js';
@@ -199,4 +202,34 @@ test('头顶的记号：每种都画得出来，只用调色板，彼此不一�
   }
   for (const kind of [...Object.values(GREET), ...Object.values(AFTER)])
     assert.ok(art.EMOTES.includes(kind), kind);
+});
+
+test('窗光随时辰和天气投影，夜灯照近处，室外留白不受局部灯光影响', () => {
+  const map = MAPS.cottage;
+  const clear = daylight(720, 'sunny', true),
+    rain = daylight(720, 'rain', true),
+    night = daylight(1320, 'rain', true);
+  assert.notEqual(clear.tint, rain.tint);
+  assert.notEqual(clear.tint, daylight(720, 'sunny').tint);
+  for (const weather of Object.keys(WEATHER_TYPES)) {
+    const early = daylight(480, weather, true),
+      late = daylight(1020, weather, true);
+    assert(early.slope > 0 && late.slope < 0);
+    assert.equal(daylight(1320, weather, true).direct, 0);
+  }
+  assert(rain.direct === 0 && clear.direct > 0.9 && night.lamp > clear.lamp);
+  const win = map.objects.find(([k]) => k === 'roomWindow');
+  const x = (win[1] + 0.5) * 16,
+    y = (win[2] + 1) * 16 + 22;
+  const lit = roomLight(map, 16, clear),
+    overcast = roomLight(map, 16, rain);
+  const alpha = (g, x, y) => g.get(x, y) >>> 24;
+  assert(alpha(lit, x - 4, y) > alpha(lit, x, y) + 45);
+  assert(alpha(lit, x - 4, y) > alpha(overcast, x - 4, y) + 45);
+  assert.equal(alpha(lit, 0, 0), 0);
+  const sources = lightSources(map, 16),
+    lamp = sources.find(s => s.kind === 'lamp');
+  const sky = roomExposure(map, 16, night, sources);
+  assert((sky.get(lamp.x, lamp.y) & 255) > (sky.get(0, 0) & 255) + 65);
+  assert.equal(sky.get(0, 0), sky.get(10, 10));
 });

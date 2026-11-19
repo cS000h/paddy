@@ -1,8 +1,9 @@
+import { DEPTH } from './depth.js';
 // 天气只改变表现，不参与规则随机数；粒子位置由时间和序号决定。
 import { P } from '../art/palette.js';
 const rgb = c => ((c & 255) << 16) | (c & 65280) | ((c >>> 16) & 255);
 export function weatherEffects(scene) {
-  const g = scene.add.graphics().setDepth(9500).setScrollFactor(0);
+  const g = scene.add.graphics().setDepth(DEPTH.weather).setScrollFactor(0);
   return {
     update(time, code) {
       g.clear();

@@ -1,6 +1,7 @@
 // 各种小窗里写什么。每种小窗一个函数 (modal, game, here) → HTML；按钮上的 data-do 说明点了以后做什么。
 // 加一种小窗 = 在 VIEWS 里登记一个函数，再让 app 的 actions 认得它的按钮。
 // here 是操控的人此刻站的格子，问“够得着什么”时要带上。
+import { wardrobeView } from './wardrobe.js';
 import { savesView } from './saves.js';
 import { marketView, teaView } from './market.js';
 import { weatherView, seedsView, fieldView } from './field.js';
@@ -14,6 +15,7 @@ import * as n from './notices.js';
 import { actions, close, title, para } from './html.js';
 
 const VIEWS = {
+  wardrobe: wardrobeView,
   saves: savesView,
   market: marketView,
   tea: teaView,

@@ -1,6 +1,7 @@
 // 屋里的家什和村里的几样台子。每个函数返回 {grid, ax, ay}，ax、ay 是脚下那一格的底边中点。
 import { Grid } from './pixel.js';
 import { P, SHADOW } from './palette.js';
+import { dresser } from './dresser.js';
 const wrap = (g, ax = g.w / 2) => ({ grid: g, ax, ay: g.h });
 export const indoors = {
   // 木床靠着后墙：床头板、叠在床头的被头、一床拼布被，被面一块块拼的布，针脚压着缝。
@@ -34,6 +35,9 @@ export const indoors = {
     return wrap(g);
   },
   // 饭桌底下的一张草席：稻草编的人字纹，四边包着布。
+  dresser() {
+    return wrap(dresser());
+  },
   rug() {
     const g = new Grid(46, 20);
     g.rect(0, 1, 46, 18, P.h2).rect(2, 3, 42, 14, P.h0);

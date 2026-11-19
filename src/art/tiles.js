@@ -139,6 +139,8 @@ export function cursor(ok) {
 }
 
 const ICON_COLORS = {
+  a: P.k0,
+  A: P.k1,
   t: P.t1,
   T: P.t3,
   s: P.s4,
@@ -207,19 +209,18 @@ const ICONS = {
   ],
   hand: [
     '',
-    '......ssss......',
-    '....ssSSSSss....',
-    '...sSSs...sSs...',
-    '..sSs......sSs..',
-    '..ss........sS..',
-    '............sS..',
-    '...........sSs..',
-    '..........tTs...',
-    '.........tT.....',
-    '........tT......',
-    '.......tT.......',
-    '......tT........',
-    '.....tT.........',
+    '',
+    '.......aa.......',
+    '.....a.aa.aa....',
+    '.....aaaa.aa....',
+    '...a.aaaaaaa.a..',
+    '...aaaaaaaaaaa..',
+    '....aaaaaaaaaa..',
+    '....aAaaaaaaA...',
+    '.....aAAAAAA....',
+    '......AAAAA.....',
+    '......wwwww.....',
+    '......WWWWW.....',
   ],
   coin: [
     '',
@@ -236,7 +237,7 @@ const ICONS = {
   ],
 };
 
-/** 16×16 的图标：hoe 锄头、seed 菜种、can 水壶、hand 镰刀（采收）、coin 铜钱。 */
+/** 16×16 的图标：hoe 锄头、seed 菜种、can 水壶、hand 徒手采收、coin 铜钱。 */
 export function icon(name) {
   const g = new Grid(16, 16);
   g.blit(fromText(ICONS[name], ICON_COLORS), 0, 0);

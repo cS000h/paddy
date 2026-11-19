@@ -83,10 +83,20 @@ body {
   pointer-events: none;
 }
 
-.sky {
-  mix-blend-mode: multiply;
-  background: #fff;
-  transition: background-color 3s linear;
+.doorway-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.doorway-frame.arrived {
+  animation: through-door 0.48s ease-out forwards;
+}
+@keyframes through-door {
+  to {
+    opacity: 0;
+  }
 }
 
 /* 画的四角压暗一点点，像装在框里；不再往画上罩白雾，颜色是多少就是多少 */

@@ -22,6 +22,7 @@ export const ACT_HINT = {
   sign: '看路牌',
   kitchen: '生火做饭',
   book: '翻一翻册子',
+  wardrobe: '照衣镜',
 };
 
 // 印上刻的字：一到两个字，竖着排，一眼看出按下去做什么
@@ -38,6 +39,7 @@ const STAMP = {
   sign: '看看',
   kitchen: '做饭',
   book: '翻册',
+  wardrobe: '换装',
 };
 const STATION_STAMP = {
   forage: '找菜',
@@ -128,6 +130,7 @@ export function touchThing(scene, thing) {
   const kind = {
     water: 'water',
     store: 'store',
+    wardrobe: 'wardrobe',
     basket: 'basket',
     kitchen: 'kitchen',
     book: 'book',

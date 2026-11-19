@@ -53,7 +53,6 @@ export function createPanels({
   const el = Object.fromEntries(
     [...root.querySelectorAll('[data-id]')].map(node => [node.dataset.id, node]),
   );
-  const sky = document.getElementById('sky');
   const veil = document.getElementById('veil');
   const captions = createCaptions(root, spot);
   const small = profile => profile.narrow || profile.compact;
@@ -134,7 +133,6 @@ export function createPanels({
   }
 
   function renderShell(state) {
-    sky.style.backgroundColor = state.tint;
     veil.style.opacity = state.veil;
     if (state.modal && journalOpen) {
       journalOpen = false;

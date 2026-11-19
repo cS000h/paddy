@@ -4,6 +4,9 @@ import { P } from './palette.js';
 import { personFrame, lookColors } from './people.js';
 
 export function farmFrame(look, tool, dir, phase) {
+  if (phase === -1 || phase === 4) {
+    return new Grid(49, 55).blit(personFrame(look, dir, 'ready'), 16, 6);
+  }
   const left = dir === 'left';
   const facing = left ? 'right' : dir;
   const side = facing === 'right';
@@ -17,7 +20,7 @@ export function farmFrame(look, tool, dir, phase) {
   for (let y = 0; y < body.h; y++) {
     const lean = y < 24 ? 1 : Math.max(0, (30 - y) / 6);
     const shift = Math.round(lean * bend);
-    const row = y + 7 + shift * (facing === 'up' ? 0 : 1);
+    const row = y + 6 + shift * (facing === 'up' ? 0 : 1);
     for (let x = 0; x < body.w; x++) {
       const color = body.get(x, y);
       if (color) g.set(x + 16 + (side ? shift : 0), row, color);
@@ -48,9 +51,9 @@ export function farmFrame(look, tool, dir, phase) {
     g.ellipse(22, 28 + bend, 3, 4, P.h2).hline(20, 23, 25 + bend, P.t3);
     if (phase === 2) g.set(endX, endY, P.h0).set(endX + 2, endY - 2, P.h1);
   } else {
-    // 镰刃横扫；真正摘到的品种由收获事实画出来。
-    g.line(x, y, x + 3, y + 2, P.t2).line(x + 3, y + 2, endX, endY, P.s4);
-    g.hline(endX - 3, endX, endY, P.s1);
+    // 另一只手托住菜叶，随主手收向身前。
+    g.line(x - 3, y + 3, endX - 3, endY, shirt.shade);
+    g.rect(endX - 3, endY - 1, 2, 2, P.k1);
   }
   g.line(side ? 26 + bend : 29, 24 + bend, x, y, shirt.shade).rect(x, y, 2, 2, P.k1);
   return left ? new Grid(g.w, g.h).blit(g, 0, 0, { flipX: true }) : g;

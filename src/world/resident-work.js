@@ -1,5 +1,5 @@
 import { walkable } from '../content/maps/index.js';
-import { actionTexture, placeAction } from './action-texture.js';
+import { actionTexture, playBody, supportedAct } from './action-texture.js';
 import { findPath, sideSpot } from './logic.js';
 
 import { RESIDENT_WORK } from '../content/resident-work.js';
@@ -52,7 +52,6 @@ export class ResidentWork {
     if (this.image?.visible) {
       this.image.setVisible(false);
       this.actor.sprite.setAlpha(1);
-      this.actor.shadow.setAlpha(1);
     }
   }
 
@@ -61,28 +60,46 @@ export class ResidentWork {
     const p = this.actor;
     this.wait -= dt;
     if (this.wait > 0) return;
-    if (this.image?.visible) {
-      this.hide();
-      this.wait = 1.3;
-      const stops = this.job.stops;
-      if (!stops) return;
-      this.stopIndex = this.inspectDir ? 0 : (this.stopIndex + 1) % stops.length;
-      this.inspectDir = null;
-      const [dx, dy] = stops[this.stopIndex];
-      const goal = { x: p.plan.x + dx, y: p.plan.y + dy };
-      const path = findPath((x, y) => walkable(p.map, x, y), p.tile, goal);
-      if (path) p.walk(path, () => p.face(p.plan.dir));
+    const dir = this.inspectDir || p.plan.dir;
+    const work = supportedAct(p.map, p.tile, this.act);
+    if (!this.image?.visible) {
+      p.face(dir === 'left' ? 'left' : 'right');
+      this.phase = 'ready';
+      this.play('readyHands', dir);
       return;
     }
-    const s = actionTexture(p.scene, this.act, p.look);
+    if (this.phase === 'ready' || this.phase === 'rest') {
+      this.phase = 'work';
+      this.play(work, dir);
+      return;
+    }
+    if (this.phase === 'work') {
+      // 不换回站立帧：休息时手落在原处，杯子、凳子也还在。
+      this.phase = 'rest';
+      this.wait = 1.3;
+      if (this.job.stops) {
+        this.phase = 'leave';
+        this.play('lowerHands', dir);
+      }
+      return;
+    }
+    this.hide();
+    this.wait = 0.45;
+    const stops = this.job.stops;
+    this.stopIndex = this.inspectDir ? 0 : (this.stopIndex + 1) % stops.length;
+    this.inspectDir = null;
+    const [dx, dy] = stops[this.stopIndex];
+    const goal = { x: p.plan.x + dx, y: p.plan.y + dy };
+    const path = findPath((x, y) => walkable(p.map, x, y), p.tile, goal);
+    if (path) p.walk(path, () => p.face(p.plan.dir));
+  }
+
+  play(act, dir) {
+    const p = this.actor;
+    const s = actionTexture(p.scene, act, p.look);
     this.image ??= p.scene.add.sprite(0, 0, s.key);
-    placeAction(this.image, s, this.inspectDir || p.plan.dir)
-      .setPosition(Math.round(p.px), Math.round(p.py))
-      .setDepth(p.py)
-      .setVisible(true)
-      .play(s.key);
+    playBody(this.image, s, p, dir);
     p.sprite.setAlpha(0);
-    p.shadow.setAlpha(0);
-    this.wait = s.frames / s.fps + 0.35;
+    this.wait = s.frames / s.fps;
   }
 }

@@ -87,7 +87,14 @@ const VARIANTS = 4;
 export const OBJECT_KINDS = Object.keys(OBJECT_MAKERS);
 
 // 有的物件随规则里的状态换一副样子（鸡窝：还没搭、养了鸡）。世界按状态来挑，没有就用平常的样子。
-const OBJECT_LOOKS = { ...wildLooks, ...indoorLooks };
+const OBJECT_LOOKS = {
+  ...wildLooks,
+  ...indoorLooks,
+  trellis: {
+    rear: seed => village.trellis(seed, 'rear'),
+    front: seed => village.trellis(seed, 'front'),
+  },
+};
 
 /** 某种物件除了平常的样子，还有哪几副样子。 */
 export const objectLooks = kind => Object.keys(OBJECT_LOOKS[kind] || {});

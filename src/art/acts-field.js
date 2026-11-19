@@ -1,6 +1,7 @@
 // 田边的手上活：人蹲下，指尖捻土，托起土块看一眼，再放回田里。
 import { worker, pose, finish } from './worker.js';
 import { P } from './palette.js';
+import { personFrame } from './people.js';
 
 function feelSoil(g, f, look) {
   const [bend, lean, x, y] = pose(
@@ -31,7 +32,6 @@ function chores(name) {
       at: [x, y],
       far: [23, y + 2],
       bend: name === 'hangCloth' ? 0 : 2,
-      sitting: name === 'mendNet',
       look,
     });
     if (name === 'hangCloth') {
@@ -66,7 +66,27 @@ function chores(name) {
 
 const chore = name => ({ w: 48, h: 44, ax: 15, ay: 40, frames: 13, fps: 6, draw: chores(name) });
 
+// 脚底固定，先收一步、屈肘，再把手送到身前；收势按相反顺序还原。
+const handoff = reverse => ({
+  w: 40,
+  h: 40,
+  ax: 16,
+  ay: 34,
+  frames: 3,
+  fps: 20,
+  draw(g, frame, look) {
+    const f = reverse ? 2 - frame : frame;
+    if (f < 2) g.blit(personFrame(look, 'right', f === 0 ? 'stand' : 'ready'), 8, 4);
+    else {
+      worker(g, { x: 16, feet: 33, at: [23, 21], look });
+      finish(g);
+    }
+  },
+});
+
 export const FIELD_ACTS = {
+  readyHands: handoff(false),
+  lowerHands: handoff(true),
   hangCloth: chore('hangCloth'),
   sortGreens: chore('sortGreens'),
   mendNet: chore('mendNet'),

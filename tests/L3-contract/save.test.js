@@ -80,3 +80,18 @@ test('第4日的初版存档升级后仍停在第4日，钱、种下的菜和乡
   );
   assert.equal(JSON.stringify(old), before, '迁移不改调用者持有的原档');
 });
+
+test('衣镜换装独立搭配，拒绝无效选项，读档保留人物外观', () => {
+  const g = newGame();
+  const wear = { coat: 'winter', hair: 'braid', at: { x: 8, y: 5 } };
+  assert.equal(g.dispatch('person.dress', wear).ok, false);
+  must(g, 'travel.to', { to: 'cottage' });
+  must(g, 'person.dress', wear);
+  const saved = JSON.stringify(g.save());
+  assert.equal(g.dispatch('person.dress', { ...wear, hair: '未知' }).ok, false);
+  assert.equal(JSON.stringify(g.save()), saved);
+  const back = createGame({ saved: JSON.parse(saved) });
+  assert.equal(back.ask('hero').look, 'hero/winter/braid/3');
+  must(back, 'person.dress', { ...wear, coat: 'plain' });
+  assert.equal(back.ask('hero').look, 'hero/plain/braid/3');
+});

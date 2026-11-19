@@ -162,7 +162,7 @@ function chop(g, f, look) {
 }
 
 // 弯腰拿瓢舀水，举到嘴边喝一口
-function scoop(g, f, look) {
+function scoop(g, f, look, fill = false) {
   const [bend, lean, hx, hy] = pose(
     [
       [0, 0, 0, 27, 41],
@@ -174,6 +174,14 @@ function scoop(g, f, look) {
     ],
     f,
   );
+  if (fill) {
+    const cy = f > 6 ? Math.max(hy, 39) : hy;
+    worker(g, { x: X, feet: FEET, bend, lean, at: [hx, cy], look });
+    g.rect(hx, cy + 1, 7, 5, P.i2).rect(hx + 1, cy + 2, 5, 3, P.i1);
+    g.line(hx + 5, cy + 3, hx + 9, cy, P.i2).hline(hx + 1, hx + 4, cy - 1, P.i2);
+    finish(g);
+    return;
+  }
   worker(g, { x: X, feet: FEET, bend, lean, at: [hx, hy], look });
   g.ellipse(hx + 3, hy + 1, 2.6, 1.6, P.h1)
     .hline(hx + 1, hx + 5, hy, P.h2)
@@ -183,7 +191,7 @@ function scoop(g, f, look) {
 }
 
 // 坐下歇一会儿；cup 为真时手里一盏茶，举到嘴边；没有茶就抬手搭个凉棚，看看天
-function sit(cup) {
+function sit(cup, seated = true) {
   return (g, f, look) => {
     const [hx, hy] = cup
       ? pose(
@@ -205,7 +213,7 @@ function sit(cup) {
           ],
           f,
         );
-    worker(g, { x: X, feet: FEET, at: [hx, hy], sitting: true, look });
+    worker(g, { x: X, feet: FEET, at: [hx, hy], sitting: seated, look });
     if (cup) g.rect(hx + 1, hy - 3, 3, 3, P.l1).hline(hx + 1, hx + 3, hy - 3, P.i2);
     finish(g);
     if (cup && f >= 3 && f <= 9) g.set(hx + 2, hy - 5 - (f % 2), P.l2).set(hx + 3, hy - 7, P.l1);
@@ -365,8 +373,11 @@ export const WORK_ACTS = {
   'gather:shoot': { ...base, frames: 12, fps: 9, draw: gather('shoot') },
   'gather:wood': { ...base, frames: 12, fps: 9, draw: gather('wood') },
   chop: { ...base, frames: 12, fps: 10, draw: chop },
+  fillCan: { ...base, frames: 12, fps: 9, draw: (g, f, look) => scoop(g, f, look, true) },
   scoop: { ...base, frames: 12, fps: 9, draw: scoop },
   sit: { ...base, frames: 12, fps: 5, draw: sit(false) },
+  standSip: { ...base, frames: 12, fps: 6, draw: sit(true, false) },
+  shadeEyes: { ...base, frames: 12, fps: 5, draw: sit(false, false) },
   sip: { ...base, frames: 12, fps: 6, draw: sit(true) },
   hammer: { ...base, frames: 12, fps: 10, draw: hammer },
   press: { ...base, frames: 12, fps: 8, draw: press },

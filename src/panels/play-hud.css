@@ -349,3 +349,22 @@
 #ui .journal:not([hidden]) ~ .award-stamp {
   right: calc(min(285px, 90%) + 24px + var(--safe-r));
 }
+
+.fitting-preview {
+  display: flex;
+  justify-content: center;
+  align-items: end;
+  gap: 15px;
+  padding: 8px;
+  background: #e9e1c8;
+  border-bottom: 2px solid #beaa86;
+}
+.fitting-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 6px 0;
+}
+.fitting-choices button {
+  min-height: 40px;
+}

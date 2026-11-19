@@ -1,3 +1,4 @@
+import { DEPTH } from './depth.js';
 // 人头顶冒的小记号（贴图见 art/emotes.js）：弹出来、停一会儿、淡掉。人走动时记号跟着走（Walker.sync）。
 const HOLD = 1400;
 
@@ -8,7 +9,7 @@ export function showEmote(scene, actor, kind) {
   const image = scene.add
     .image(Math.round(actor.px), Math.round(actor.py) - 31, 'emote:' + kind)
     .setOrigin(0.5, 1)
-    .setDepth(9500)
+    .setDepth(DEPTH.emote)
     .setScale(0.3);
   actor.emote = image;
   scene.tweens.add({ targets: image, scale: 1, duration: 170, ease: 'Back.easeOut' });

@@ -1,3 +1,7 @@
+import { daylight } from '../art/daylight.js';
+import { worldLighting } from './room-light.js';
+import { changeMap } from './doorway.js';
+import { DEPTH, sceneryParts } from './depth.js';
 // 村庄场景：把地面、物件、人摆出来，镜头跟着操控的人，把“意图”变成走路和命令。
 // 这里只通过端口（deps.game）碰规则：发命令用 dispatch，问情况用 ask，听结果用 onCommit。
 import Phaser from 'phaser';
@@ -5,7 +9,7 @@ import { MAPS, walkable, farmable, waterSource, actAt } from '../content/maps/in
 import { PEOPLE } from '../content/people.js';
 import { variantAt } from '../art/index.js';
 import { CSS } from '../art/palette.js';
-import { buildTextures } from './textures.js';
+import { buildTextures, ensurePerson } from './textures.js';
 import { Walker, Villager } from './actors.js';
 import { createEffects } from './effects.js';
 import { weatherEffects } from './weather.js';
@@ -20,7 +24,7 @@ import { createPerformer } from './perform.js';
 import { showEmote } from './emotes.js';
 import { AFTER } from '../content/resident-work.js';
 import { safely } from './safety.js';
-import { TILE, facing, dirTo, COMMAND_OF, skyTint, fitView } from './logic.js';
+import { TILE, facing, dirTo, COMMAND_OF, fitView } from './logic.js';
 
 const VOID = CSS.paper1; // 屋子外头留白，和 art/interior.js 里屋外的纸色一样
 
@@ -54,27 +58,35 @@ export class VillageScene extends Phaser.Scene {
   build() {
     const { game, intents, shell, map } = this.deps;
     this.map = map;
+    this.destination = null;
     this.busy = false;
     this.hintKey = '';
     this.season = null; // 换地图时场景对象是同一个，季节要重新记
     this.roadArmed = false; // 刚到时可能站在路口边，先离开路口再算
     const { anchors } = buildTextures(this, map);
     this.anchors = anchors;
-    this.groundImage = this.add.image(0, 0, 'ground').setOrigin(0).setDepth(-1000);
+    this.groundImage = this.add.image(0, 0, 'ground').setOrigin(0).setDepth(DEPTH.terrain);
     this.scenery = [];
     for (const [kind, x, y, data] of map.objects) {
       const key = `obj:${kind}:${variantAt(x, y)}`;
       // 地图数据可以指定换一副样子（屋里的木方桌、门洞），见 art/index.js 的 OBJECT_LOOKS
-      const look = data?.look || null;
-      const a = anchors[look ? key + '@' + look : key];
-      const sprite = this.add
-        .image(x * TILE + 8, (y + 1) * TILE, look ? key + '@' + look : key)
-        .setOrigin(a.ox, a.oy)
-        .setDepth((y + 1) * TILE);
-      this.scenery.push({ sprite, key, kind, look, x, y });
+      const bottom = (y + 1) * TILE;
+      for (const { look, depth } of sceneryParts(kind, bottom, data?.look)) {
+        const texture = look ? key + '@' + look : key;
+        const a = anchors[texture];
+        const sprite = this.add
+          .image(x * TILE + 8, bottom, texture)
+          .setOrigin(a.ox, a.oy)
+          .setDepth(depth);
+        this.scenery.push({ sprite, key, kind, look, x, y });
+      }
     }
     this.plots = new Map();
-    this.cursor = this.add.image(0, 0, 'cursor:ok').setOrigin(0).setDepth(-800).setVisible(false);
+    this.cursor = this.add
+      .image(0, 0, 'cursor:ok')
+      .setOrigin(0)
+      .setDepth(DEPTH.cursor)
+      .setVisible(false);
 
     const hero = game.ask('hero');
     this.player = new Walker(this, hero.look, hero.x, hero.y, hero.dir);
@@ -82,6 +94,7 @@ export class VillageScene extends Phaser.Scene {
     this.villagers = game
       .ask('residents')
       .map(p => new Villager(this, map, p.id, PEOPLE[p.id].look, p));
+    this.lighting = worldLighting(this, map);
     this.effects = createEffects(this, map);
     this.weatherFx = weatherEffects(this);
     this.ambient = createAmbient(this, map);
@@ -164,7 +177,8 @@ export class VillageScene extends Phaser.Scene {
     const move = intents.move();
     // 演着一件活时推摇杆、按方向键：戏就此收场，人照着走
     if ((move.x || move.y) && this.performer.active && !shell.paused()) this.performer.stop();
-    if (shell.paused() || this.busy) {
+    if (this.busy) return;
+    if (shell.paused()) {
       this.player.animate(false);
       return;
     }
@@ -296,8 +310,15 @@ export class VillageScene extends Phaser.Scene {
       if (f.type === 'person.travelled') {
         this.player.stop();
         this.deps.shell.toast(d.name);
-        this.scene.restart({ ...this.deps, map: MAPS[d.to] });
+        changeMap(this, MAPS[d.to]);
         return;
+      }
+      if (f.type === 'person.dressed') {
+        const p = this.player;
+        p.look = this.deps.game.ask('hero').look;
+        ensurePerson(this, p.look);
+        p.sprite.setTexture('person:' + p.look);
+        p.setPose(null);
       }
       if (FEEDBACK[f.type]) {
         const [effect, sound] = FEEDBACK[f.type];
@@ -314,9 +335,6 @@ export class VillageScene extends Phaser.Scene {
         const liked = d.liked || d.favorite;
         const kind = gift ? (liked ? AFTER.liked : AFTER.plain) : d.gained && AFTER.closer;
         if (v) showEmote(this, v, kind);
-      } else if (f.type === 'can.refilled') {
-        this.effects.refilled(d.x * TILE + 8, d.y * TILE + 8);
-        platform.audio.play('refill');
       } else if (f.type === 'home.worked') {
         this.relook();
         this.retime(false);
@@ -348,13 +366,15 @@ export class VillageScene extends Phaser.Scene {
     this.today = day;
     this.weather = this.deps.game.ask('weather');
     this.ambient.setTime(minute, season, this.weather.tags);
+    this.effects.setSky(season, minute, this.weather.tags);
     // 换季才换贴图：每十分钟一次的走时也把上百个物件的贴图重设一遍，手机上会顿一下
     if (season !== this.season) {
       this.season = season;
       this.groundImage.setTexture('ground:' + season);
       for (const s of this.scenery) this.dress(s);
     }
-    this.deps.shell.set({ tint: this.map.indoor ? '#ffffff' : skyTint(minute) });
+    const light = daylight(minute, this.weather.code, !!this.map.indoor);
+    this.lighting(light, minute, this.weather.code);
     const residents = this.deps.game.ask('residents');
     const wet = this.weather.tags.includes('wet');
     for (const v of this.villagers)

@@ -1,7 +1,8 @@
+import { daylight } from '../art/daylight.js';
 // 世界里不依赖画面的算法：寻路、面前是哪一格、点一下该做什么。
 // 这个文件不引用 Phaser，也不碰浏览器，所以能在 Node 里直接测试。
 import { TOOLS, SOIL, isRipe } from '../content/items.js';
-import { routeTo } from '../content/maps/index.js';
+import { routeTo, walkable, groundAt } from '../content/maps/index.js';
 
 export const TILE = 16;
 export const STEP = Object.freeze({
@@ -138,31 +139,7 @@ export function fitView(width, height, map) {
   return { zoom, bounds: [x, y, Math.max(mw, vw), Math.max(mh, vh)] };
 }
 
-/** 一天里某一分钟的天色（正片叠底盖在画面上）。清晨偏暖，白天不染，傍晚橘，入夜青蓝。 */
-export function skyTint(minute) {
-  const stops = [
-    [0, [150, 165, 205]],
-    [330, [150, 165, 205]],
-    [390, [255, 232, 214]],
-    [480, [255, 255, 255]],
-    [990, [255, 255, 255]],
-    [1110, [255, 220, 184]],
-    [1200, [196, 190, 220]],
-    [1320, [150, 165, 205]],
-    [1440, [128, 144, 190]],
-  ];
-  let i = 0;
-  while (i < stops.length - 2 && minute >= stops[i + 1][0]) i++;
-  const [m0, c0] = stops[i];
-  const [m1, c1] = stops[i + 1];
-  const t = Math.max(0, Math.min(1, (minute - m0) / (m1 - m0)));
-  const hex = c0.map((v, k) =>
-    Math.round(v + (c1[k] - v) * t)
-      .toString(16)
-      .padStart(2, '0'),
-  );
-  return '#' + hex.join('');
-}
+export const skyTint = minute => daylight(minute).tint;
 
 /**
  * 村民离开这张图时往哪儿走（从别处来时反过来，从这儿走进来）：
@@ -184,4 +161,22 @@ export function exitToward(map, to, who, near) {
     if (!best || d < best.d) best = { x, y, d };
   }
   return best && { x: best.x, y: best.y };
+}
+
+// 钓竿侧面帧的浮漂离脚底约三格。只有这一端确实落在水里的岸位才可下竿。
+export function bankSpot(map, from, station) {
+  const walk = (x, y) => walkable(map, x, y);
+  let best = null;
+  for (const [dx, dy] of Object.values(STEP)) {
+    const spot = { x: station.x + dx, y: station.y + dy };
+    if (!walk(spot.x, spot.y)) continue;
+    for (const sign of [-1, 1]) {
+      const water = { x: spot.x + sign * 3, y: spot.y };
+      if (groundAt(map, water.x, water.y).id !== 'water') continue;
+      const path = findPath(walk, from, spot);
+      if (path && (!best || path.length < best.path.length))
+        best = { ...spot, path, water, face: sign < 0 ? 'left' : 'right' };
+    }
+  }
+  return best;
 }

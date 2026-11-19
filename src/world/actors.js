@@ -3,7 +3,7 @@ import { TILE, tileOf, dirTo, findPath, exitToward } from './logic.js';
 import { ResidentWork } from './resident-work.js';
 import { showEmote } from './emotes.js';
 import { GREET } from '../content/resident-work.js';
-import { frameOf } from './textures.js';
+import { frameOf, ensurePerson } from './textures.js';
 import { walkable } from '../content/maps/index.js';
 
 const FOOT_Y = 13; // 人站在一格里时，脚的位置离格子顶边多少像素
@@ -11,6 +11,7 @@ const FOOT_Y = 13; // 人站在一格里时，脚的位置离格子顶边多少�
 export class Walker {
   /** x、y 是格子坐标。 */
   constructor(scene, look, x, y, dir = 'down') {
+    ensurePerson(scene, look);
     this.scene = scene;
     this.look = look;
     this.dir = dir;
@@ -62,8 +63,12 @@ export class Walker {
   animate(moving) {
     if (this.pose) return;
     const key = `${this.look}:walk:${this.dir}`;
-    if (moving && this.sprite.anims.currentAnim?.key !== key) this.sprite.play(key);
-    else if (moving && !this.sprite.anims.isPlaying) this.sprite.play(key);
+    if (moving && this.sprite.anims.currentAnim?.key !== key) {
+      const phase =
+        this.moving && this.sprite.anims.isPlaying ? this.sprite.anims.getProgress() : 0;
+      this.sprite.play(key);
+      this.sprite.anims.setProgress(phase);
+    } else if (moving && !this.sprite.anims.isPlaying) this.sprite.play(key);
     else if (!moving && this.moving) {
       this.sprite.anims.stop();
       this.sprite.setFrame(frameOf(this.dir, 'stand'));

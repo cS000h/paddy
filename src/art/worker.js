@@ -1,8 +1,7 @@
 // 做活的人：侧身朝右，脚踩一个固定点，按弯腰、前探、手的位置摆出姿势。
 // 头和肩取走路那张纸娃娃的侧面（personFrame），身子、胳膊、腿在这里按姿势现画，颜色跟着外观走。
 // 原型是「稻_院中日常」里 Astra 画撒谷、拾蛋、编篮用的那个小人，这里做成各种活计共用的。
-import { Grid } from './pixel.js';
-import { P, SHADOW } from './palette.js';
+import { P } from './palette.js';
 import { personFrame, lookColors } from './people.js';
 
 const R = Math.round;
@@ -21,8 +20,7 @@ export function pose(keys, frame) {
 
 const heads = new Map();
 function head(look) {
-  if (!heads.has(look))
-    heads.set(look, new Grid(16, 18).blit(personFrame(look, 'right', 'stand'), 0, 0));
+  if (!heads.has(look)) heads.set(look, personFrame(look, 'right', 'stand'));
   return heads.get(look);
 }
 
@@ -52,7 +50,6 @@ export function worker(g, o) {
   const C = lookColors(look);
   const hip = feet - 8 + bend - (sitting ? 1 : 0);
   const shoulder = [x + lean, hip - 8];
-  g.ellipse(x + 1, feet + 1, 6, 1.4, SHADOW);
   for (const side of [-2, 1]) {
     const knee = x + side + (sitting ? 6 : bend);
     const ankle = sitting ? x + side + 5 : x + side;
@@ -75,7 +72,15 @@ export function worker(g, o) {
     g.hline(left, left + 7, hip - 9 + j, C.cloth).set(left, hip - 9 + j, C.sash);
   }
   g.hline(x - 3, x + 3, hip - 2, C.sash);
-  g.blit(head(look), shoulder[0] - 8, hip - 25);
+  const body = head(look);
+  for (let row = 0; row < (look.includes('/') ? 26 : 18); row++) {
+    const shift = row < 18 ? lean : R((lean * (25 - row)) / 8);
+    for (let col = 0; col < body.w; col++) {
+      const color = body.get(col, row);
+      // 垂着的手不印到正在做活的手臂上。
+      if (color && (row < 18 || col < 10)) g.set(x - 8 + col + shift, hip - 25 + row, color);
+    }
+  }
   const elbow = [R((shoulder[0] + at[0]) / 2) - 1, Math.max(shoulder[1] + 3, at[1] - 1)];
   arm(g, C, shoulder, elbow, at, false);
   return shoulder;

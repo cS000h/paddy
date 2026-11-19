@@ -60,7 +60,7 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '61584f01' }; // M7：乡邻的心情、话题、送礼和约定
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: 'd0e37370' }; // 第十一版存档把衣装与发式记在每个人身上
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};

@@ -1,3 +1,4 @@
+import { DEPTH } from './depth.js';
 // 世界里的风和小生灵：草木随风轻摆、灯笼晃，蝴蝶和蜻蜓飞，鸟群掠过，鱼跃出水，树叶飘落，
 // 夜里有萤火，下雨时水面一圈圈涟漪。都只是画面，规则不知道；出不出来看地方、季节、天气和钟点。
 // 小生灵只在镜头附近生，离得远了就收掉，数目封顶，手机上也不费力。
@@ -91,7 +92,9 @@ export function createAmbient(scene, map) {
   const count = type => critters.filter(c => c.type === type).length;
 
   function add(type, texture, x, y, extra) {
-    const sprite = scene.add.image(x, y, texture).setDepth(type === 'bird' ? 9600 : 8800);
+    const sprite = scene.add
+      .image(x, y, texture)
+      .setDepth(type === 'bird' ? DEPTH.sky : type === 'dragonfly' ? DEPTH.waterInsect : y + 2);
     const c = { type, sprite, x, y, vx: 0, vy: 0, t: rand(0, 1000), ...extra };
     critters.push(c);
     return c;
@@ -118,8 +121,8 @@ export function createAmbient(scene, map) {
     const spots = tiles.water.filter(t => inView(t, 0));
     if (!spots.length) return;
     const [tx, ty] = pick(spots);
-    add('dragonfly', 'fx:dragonfly.0', tx * TILE + 8, ty * TILE + 2, {
-      home: [tx * TILE + 8, ty * TILE + 2],
+    add('dragonfly', 'fx:dragonfly.0', tx * TILE + 8, ty * TILE + 8, {
+      home: [tx * TILE + 8, ty * TILE + 8],
       target: null,
       rest: 0,
     });
@@ -147,7 +150,7 @@ export function createAmbient(scene, map) {
     const x = tx * TILE + rand(3, 13);
     const y = ty * TILE + rand(6, 12);
     ripple(x, y);
-    const fish = scene.add.image(x, y, 'fx:fish').setDepth(8700);
+    const fish = scene.add.image(x, y, 'fx:fish').setDepth(DEPTH.fish);
     const dir = Math.random() < 0.5 ? -1 : 1;
     fish.setFlipX(dir < 0);
     scene.tweens.add({
@@ -163,7 +166,11 @@ export function createAmbient(scene, map) {
     });
   }
   function ripple(x, y) {
-    const ring = scene.add.image(x, y, 'fx:ripple').setDepth(-850).setAlpha(0.9).setScale(0.4);
+    const ring = scene.add
+      .image(x, y, 'fx:ripple')
+      .setDepth(DEPTH.ripple)
+      .setAlpha(0.9)
+      .setScale(0.4);
     scene.tweens.add({
       targets: ring,
       scale: 1.4,
@@ -186,7 +193,7 @@ export function createAmbient(scene, map) {
     }
     const bit = scene.add
       .image(px, py, texture)
-      .setDepth(9000)
+      .setDepth(py + 24)
       .setTint(tint ?? (texture === 'fx:leaf' ? LEAF_TINT[now.season] : 0xffffff));
     scene.tweens.add({
       targets: bit,
@@ -228,8 +235,20 @@ export function createAmbient(scene, map) {
     const dx = c.target[0] - c.x;
     const dy = c.target[1] - c.y;
     const d = Math.hypot(dx, dy) || 1;
-    c.x += (dx / d) * speed * dt;
-    c.y += (dy / d) * speed * dt + Math.sin(c.t * 0.012) * wobble * dt;
+    const nx = c.x + (dx / d) * speed * dt;
+    const ny = c.y + (dy / d) * speed * dt + Math.sin(c.t * 0.012) * wobble * dt;
+    if (
+      c.type === 'dragonfly' &&
+      ![-4, 4].every(
+        offset => map.ground[Math.floor(ny / TILE)]?.[Math.floor((nx + offset) / TILE)] === 'w',
+      )
+    ) {
+      c.target = null;
+      return;
+    }
+    c.x = nx;
+    c.y = ny;
+    if (c.type !== 'dragonfly') c.sprite.setDepth(ny + 2);
     c.sprite.setPosition(Math.round(c.x), Math.round(c.y));
     c.sprite.setFlipX(dx < 0);
   }

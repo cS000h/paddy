@@ -25,7 +25,11 @@ export function activityActions({ shell, run, here, world }) {
     const out = run('fish.reel', { value, at: here() });
     const caught = out.ok && out.facts.some(f => f.type === 'fish.caught');
     const line = out.ok ? lineOf(out.facts, 'fish.caught', 'fish.missed') : '';
-    world.perform(caught ? 'reel' : 'miss', { then: () => line && shell.toast(line) });
+    world.perform(caught ? 'reel' : 'miss', {
+      target: fishingAt,
+      water: true,
+      then: () => line && shell.toast(line),
+    });
     if (out.ok) fishingAt = null;
   }
 
@@ -44,6 +48,7 @@ export function activityActions({ shell, run, here, world }) {
       world.work(m.group, id, spotOf(m));
     },
     resumeFish() {
+      fishingAt = spotOf(shell.get().modal) || fishingAt;
       world.perform('cast', { target: fishingAt, water: true });
       fishing();
     },

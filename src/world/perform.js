@@ -2,23 +2,12 @@
 // 东西本身也跟着动（灶膛起火冒烟、锅上冒热气、木屑飞、水花），放完换回走路的样子。
 // 规则早在开演之前就结算好了，这里只是把已经发生的事演给玩家看：演的时候人不能走动，
 // 点一下或按互动键就快进到结尾；出了岔子最多十几秒也一定收场，人不会被卡在那儿。
-import { actionTexture, placeAction } from './action-texture.js';
-import { walkable, groundAt } from '../content/maps/index.js';
-import { TILE, sideSpot } from './logic.js';
+import { actionTexture, playBody, supportedAct } from './action-texture.js';
+import { walkable } from '../content/maps/index.js';
+import { TILE, sideSpot, bankSpot } from './logic.js';
 import { SCRIPTS } from './scripts.js';
 
 const SPARE = 3000; // 算好的时长再多等一会儿，还没演完就强行收场
-
-/** 站在 spot 时，左右哪一边四格之内有水（钓鱼甩竿朝那边）；两边都没有返回 null。 */
-function towardWater(map, spot) {
-  for (let d = 1; d <= 4; d++)
-    for (const [dx, face] of [
-      [-d, 'left'],
-      [d, 'right'],
-    ])
-      if (groundAt(map, spot.x + dx, spot.y)?.id === 'water') return face;
-  return null;
-}
 
 export function createPerformer(scene) {
   let show = null;
@@ -56,7 +45,7 @@ export function createPerformer(scene) {
         lifespan: 2400,
         frequency: 260,
       })
-      .setDepth(9100);
+      .setDepth((at.y + 1) * TILE + 1);
     return [flame, embers, smoke];
   }
 
@@ -73,18 +62,28 @@ export function createPerformer(scene) {
           lifespan: 1300,
           frequency: 160,
         })
-        .setDepth(9100),
+        .setDepth((at.y + 1) * TILE + 1),
     ];
   }
 
   // 每一步开始时，东西那边跟着做的事。period 是这个动作放一遍多久，times 是放几遍
+  function cue(delay, fn) {
+    const s = show;
+    s.cues.push(
+      scene.time.delayedCall(delay, () =>
+        scene.guard(() => {
+          if (show === s) fn();
+        }),
+      ),
+    );
+  }
   const AROUND = {
     fire: at => show.lasting.push(...fire(at)),
     steam: at => show.lasting.push(...steam(at)),
     chips: (at, period, times) => {
-      for (let k = 0; k < times; k++)
-        scene.time.delayedCall(k * period, () => scene.effects.chips(at.x, at.y));
+      for (let k = 0; k < times; k++) cue(k * period + 680, () => scene.effects.chips(at.x, at.y));
     },
+    drawWater: (at, period) => cue((period * 5) / 12, () => scene.effects.splashAt(at.x, at.y)),
     splash: at => scene.effects.splashAt(at.x, at.y),
   };
 
@@ -97,24 +96,22 @@ export function createPerformer(scene) {
     const next = s.steps[s.i++];
     if (!next) return finish();
     const info = actionTexture(scene, next.act, s.look);
-    placeAction(s.sprite, info, s.face);
     const times = next.times || 1;
-    s.sprite.play(times > 1 ? { key: info.key, repeat: times - 1 } : info.key);
+    playBody(s.sprite, info, scene.player, s.face, times);
     const period = (info.frames * 1000) / info.fps;
-    if (!s.fast && next.around && AROUND[next.around])
+    if (next.around && AROUND[next.around])
       scene.guard(() => AROUND[next.around](s.target, period, times));
-    if (!s.fast && next.sound) scene.deps.platform.audio.play(next.sound);
+    if (next.sound) scene.deps.platform.audio.play(next.sound);
     s.timer?.remove();
-    s.timer = scene.time.delayedCall(s.fast ? 0 : lasting(next, info), step);
+    s.timer = scene.time.delayedCall(lasting(next, info), step);
   }
 
   function begin() {
     const s = show;
     const p = scene.player;
     p.face(s.face);
-    p.setVisible(false);
-    s.px = Math.round(p.px);
-    s.sprite = scene.add.sprite(s.px, Math.round(p.py), '__DEFAULT').setDepth(p.py);
+    p.sprite.setAlpha(0);
+    s.sprite = scene.add.sprite(Math.round(p.px), Math.round(p.py), '__DEFAULT').setDepth(p.py);
     step();
   }
 
@@ -124,14 +121,16 @@ export function createPerformer(scene) {
     show = null;
     s.timer?.remove();
     s.watchdog?.remove();
+    for (const timer of s.cues) timer.remove();
     for (const thing of s.lasting) {
       if (thing.stop) thing.stop();
       scene.tweens.killTweensOf(thing);
       scene.time.delayedCall(thing.stop ? 1800 : 0, () => thing.destroy());
     }
+    if (s.walking) scene.player.stop();
     s.sprite?.destroy();
     const p = scene.player;
-    p.setVisible(true);
+    p.sprite.setAlpha(1);
     p.setPose(null);
     scene.busy = false;
     scene.hintKey = '';
@@ -149,17 +148,32 @@ export function createPerformer(scene) {
      * then：演完以后做什么。
      */
     play(script, { target = null, water = false, then = null } = {}) {
-      const steps = typeof script === 'string' ? SCRIPTS[script] : script;
+      let steps = typeof script === 'string' ? SCRIPTS[script] : script;
       if (!steps?.length) return then?.();
+      const continuous = water && show?.water && !!show.sprite;
       if (show) finish();
       const p = scene.player;
       const walk = (x, y) => walkable(scene.map, x, y);
-      const spot = target
-        ? sideSpot(walk, p.tile, target)
-        : { ...p.tile, face: p.dir === 'left' ? 'left' : 'right', path: [] };
+      const bank = target && water && bankSpot(scene.map, p.tile, target);
+      const spot =
+        bank ||
+        (target
+          ? sideSpot(walk, p.tile, target)
+          : { ...p.tile, face: p.dir === 'left' ? 'left' : 'right', path: [] });
+      steps = steps.map(s => ({ ...s, act: supportedAct(scene.map, spot, s.act) }));
+      steps = [...(continuous ? [] : [{ act: 'readyHands' }]), ...steps, { act: 'lowerHands' }];
       scene.busy = true;
-      show = { steps, i: 0, target: target || p.tile, then, look: p.look, lasting: [] };
-      show.face = water ? towardWater(scene.map, spot) || spot.face : spot.face;
+      show = {
+        steps,
+        i: 0,
+        water,
+        target: bank?.water || target || p.tile,
+        then,
+        look: p.look,
+        lasting: [],
+        cues: [],
+      };
+      show.face = spot.face;
       const total = steps.reduce(
         (sum, next) => sum + lasting(next, actionTexture(scene, next.act, p.look)),
         0,
@@ -183,10 +197,7 @@ export function createPerformer(scene) {
 
     /** 点一下：快进到结尾（规则早已结算，跳过的只是动画）。 */
     skip() {
-      if (!show || show.walking) return;
-      show.fast = true;
-      show.timer?.remove();
-      step();
+      if (show && !show.walking) finish();
     },
 
     /** 换地图、场景关掉时：马上收场。 */
