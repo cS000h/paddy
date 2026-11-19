@@ -384,7 +384,10 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     if (ev && ev.map === map) {
       const ok = ev.choices.filter(c => !c.disabled);
       const pickChoice = ok.length ? pick(ok) : pick(ev.choices);
-      return send('event.choose', { choice: pickChoice.index, at: { x: ev.x, y: ev.y, dir: 'down' } });
+      return send('event.choose', {
+        choice: pickChoice.index,
+        at: { x: ev.x, y: ev.y, dir: 'down' },
+      });
     }
     const vs = game.ask('visitors').active.filter(v => v.map === map);
     if (!vs.length) return;

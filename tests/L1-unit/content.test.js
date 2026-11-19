@@ -237,3 +237,37 @@ test('生活文字：每件采集和家务做完都有一段话，沿溪能找�
     if (a.id !== 'rest') assert.ok(text.ACTIVITY_TEXT[a.id], `${a.label} 做完没有话说`);
   assert.ok(text.REST_TEXT.yard && text.STICKS_TEXT.few && text.STICKS_TEXT.many);
 });
+
+test('过客站位和小事的默认地点能站人、能走到跟前，不和乡邻的去处、过客站位重在一格', async () => {
+  const { VISITOR_SPOTS, VISITOR_ROLES } = await import('../../src/content/visitors.js');
+  const { EVENTS } = await import('../../src/content/events.js');
+  const standable = (mapId, x, y, what) => {
+    const map = MAPS[mapId];
+    assert.ok(map, `${what}：没有地图 ${mapId}`);
+    assert.ok(walkable(map, x, y) && !actAt(map, x, y), `${what}：${mapId}(${x},${y}) 站不了人`);
+    const ways = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ].filter(([dx, dy]) => walkable(map, x + dx, y + dy));
+    assert.ok(ways.length, `${what}：${mapId}(${x},${y}) 四面都走不到跟前`);
+  };
+  const residents = mapId =>
+    Object.entries(MAPS[mapId].spots)
+      .filter(([name]) => name.includes('.') && !name.startsWith('hero'))
+      .map(([name, [x, y]]) => ({ name, x, y }));
+  for (const role of Object.values(VISITOR_ROLES)) assert.ok(VISITOR_SPOTS[role.spot], role.id);
+  for (const [mapId, list] of Object.entries(VISITOR_SPOTS))
+    for (const s of list) {
+      standable(mapId, s.x, s.y, '过客站位');
+      const clash = residents(mapId).find(r => r.x === s.x && r.y === s.y);
+      assert.ok(!clash, `过客站位 ${mapId}(${s.x},${s.y}) 和 ${clash?.name} 重了`);
+    }
+  for (const ev of Object.values(EVENTS)) {
+    const { map, x, y } = ev.spot;
+    standable(map, x, y, ev.id);
+    const visitor = (VISITOR_SPOTS[map] || []).some(s => s.x === x && s.y === y);
+    assert.ok(!visitor, `${ev.id} 的默认地点压在过客站位上，过客在时点不中`);
+  }
+});

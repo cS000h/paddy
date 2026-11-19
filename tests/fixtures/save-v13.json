@@ -313,9 +313,7 @@
       },
       "households": {
         "home": {
-          "members": [
-            "hero"
-          ],
+          "members": ["hero"],
           "coins": 16,
           "items": {
             "rice": 3,
@@ -356,12 +354,7 @@
       "weather": {
         "now": "overcast",
         "today": "overcast",
-        "history": [
-          "sunny",
-          "cloudy",
-          "overcast",
-          "overcast"
-        ],
+        "history": ["sunny", "cloudy", "overcast", "overcast"],
         "tomorrow": "cloudy",
         "forecast": "drizzle",
         "acc": 55,
@@ -482,9 +475,7 @@
             "sky": 0,
             "craft": 0
           },
-          "traits": [
-            "earlybird"
-          ],
+          "traits": ["earlybird"],
           "counters": {
             "wetOut": 0,
             "cold": 0,
@@ -624,23 +615,13 @@
               "item": "wine",
               "left": 1,
               "price": 17,
-              "why": [
-                [
-                  "货少",
-                  1
-                ]
-              ]
+              "why": [["货少", 1]]
             },
             {
               "item": "umbrella",
               "left": 1,
               "price": 33,
-              "why": [
-                [
-                  "货少",
-                  1
-                ]
-              ]
+              "why": [["货少", 1]]
             },
             {
               "item": "flask",
@@ -744,10 +725,7 @@
             "x": 12,
             "y": 12,
             "dir": "down",
-            "traits": [
-              "爽快",
-              "重义"
-            ],
+            "traits": ["爽快", "重义"],
             "until": 6,
             "rel": 0,
             "talkedDay": 0,
@@ -762,10 +740,7 @@
             "x": 13,
             "y": 11,
             "dir": "down",
-            "traits": [
-              "热心",
-              "爱说话"
-            ],
+            "traits": ["热心", "爱说话"],
             "until": 7,
             "rel": 0,
             "talkedDay": 0,

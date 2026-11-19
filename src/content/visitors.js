@@ -2,7 +2,8 @@
 // 每次赶集或换季刷出，站在茶摊、杂货铺或渡口；走到跟前才能搭话办事。
 import { outfitLook } from './wardrobe.js';
 
-// 各处可站立的过客点位（都已核对为可通行格，且避开常驻村民工位）。
+// 各处可站立的过客点位：能站人，不和乡邻在那张图上的去处重在一格（L1 内容测试会查）。
+// 杂货铺门前那两格原先和阿满、桂嫂下午站的地方重了，人叠在一起，过客也点不中。
 export const VISITOR_SPOTS = Object.freeze({
   tea: [
     { x: 11, y: 12, dir: 'down' },
@@ -10,8 +11,8 @@ export const VISITOR_SPOTS = Object.freeze({
     { x: 10, y: 13, dir: 'right' },
   ],
   market: [
-    { x: 12, y: 12, dir: 'down' },
-    { x: 16, y: 12, dir: 'down' },
+    { x: 11, y: 13, dir: 'down' },
+    { x: 17, y: 13, dir: 'down' },
     { x: 14, y: 13, dir: 'down' },
   ],
   river: [

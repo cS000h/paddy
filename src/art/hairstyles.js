@@ -29,22 +29,32 @@ function braid(g, side, back, length, drop, swing) {
 function extraHair(g, style, side, back, y, dark, light, c) {
   if (style === 'topknot') {
     const cx = side ? 6 : 8;
-    g.rect(cx - 2, 1 + y, 4, 4, dark).hline(cx - 1, cx + 1, 2 + y, P.a0).set(cx, 1 + y, light);
+    g.rect(cx - 2, 1 + y, 4, 4, dark)
+      .hline(cx - 1, cx + 1, 2 + y, P.a0)
+      .set(cx, 1 + y, light);
     g.hline(cx - 3, cx + 3, 3 + y, P.h2).set(cx + 3, 3 + y, P.y1);
   } else if (style === 'sidebun') {
     const cx = side ? 4 : 12;
-    g.ellipse(cx, 6 + y, 2.2, 2.2, dark).set(cx - 1, 5 + y, light).hline(cx - 1, cx + 1, 8 + y, c);
+    g.ellipse(cx, 6 + y, 2.2, 2.2, dark)
+      .set(cx - 1, 5 + y, light)
+      .hline(cx - 1, cx + 1, 8 + y, c);
   } else if (style === 'short') {
-    g.hline(3, 12, 5 + y, P.a0).hline(4, 11, 4 + y, dark).hline(5, 8, 5 + y, light);
+    g.hline(3, 12, 5 + y, P.a0)
+      .hline(4, 11, 4 + y, dark)
+      .hline(5, 8, 5 + y, light);
     if (back) g.rect(3, 8 + y, 10, 5, P.a0).hline(4, 11, 13 + y, dark);
     else g.vline(side ? 3 : 2, 8 + y, 11 + y, dark);
   } else if (style === 'doublebun') {
     for (const cx of side ? [5] : [3, 12]) {
-      g.ellipse(cx, 4 + y, 2, 2, dark).set(cx, 3 + y, light).hline(cx - 1, cx + 1, 6 + y, c);
+      g.ellipse(cx, 4 + y, 2, 2, dark)
+        .set(cx, 3 + y, light)
+        .hline(cx - 1, cx + 1, 6 + y, c);
     }
   } else if (style === 'cap') {
     // 乡间靛蓝包头，后脑垂一小角
-    g.rect(3, 4 + y, 10, 4, P.i2).hline(4, 11, 4 + y, P.i1).hline(3, 12, 7 + y, P.i3);
+    g.rect(3, 4 + y, 10, 4, P.i2)
+      .hline(4, 11, 4 + y, P.i1)
+      .hline(3, 12, 7 + y, P.i3);
     if (back || side) g.rect(side ? 2 : 7, 8 + y, 2, 4, P.i2).set(side ? 2 : 8, 12 + y, P.i3);
   }
 }

@@ -1,10 +1,11 @@
 // 场景与动作触发的随机小事，供 content/events.js 合并导出。
-// 每件小事带默认发生地（触发时要是主角就在现场，则落在主角脚边）。
+// 每件小事带默认发生地；触发时落在主角身边空着的一格，身边没空地才用默认的地方。
+// 默认的地方不和过客站位重：重了的话过客站着时，点到的总是过客。
 export const SCENE_MAP = Object.freeze({
   scene_tea_merchant: {
     id: 'scene_tea_merchant',
     trigger: 'tea',
-    spot: { map: 'tea', x: 11, y: 12, place: '樟树茶摊', hint: '茶桌边好像有人在说外头的事' },
+    spot: { map: 'tea', x: 13, y: 13, place: '樟树茶摊', hint: '茶桌边好像有人在说外头的事' },
     title: '茶摊听闻',
     text: '樟树下坐着位歇脚的走村货客，正说起外头集市抢手的吃食。',
     choices: [
@@ -86,7 +87,7 @@ export const SCENE_MAP = Object.freeze({
     trigger: 'farm',
     spot: { map: 'yard', x: 6, y: 18, place: '菜地边', hint: '菜地土里好像翻出了什么' },
     title: '土里的小惊喜',
-    text: '收完这一茬菜，锄头碰到硬东西，扒开泥土居然是几枚旧钱和肥厚腐土。',
+    text: '地头干着活，脚边土里露出点硬东西，扒开居然是几枚旧钱和肥厚腐土。',
     choices: [
       { label: '擦净收好', coins: 6, line: '洗去泥土，平白多了 6 文零钱。' },
       {
@@ -111,7 +112,7 @@ export const SCENE_MAP = Object.freeze({
   scene_market_scale: {
     id: 'scene_market_scale',
     trigger: 'market',
-    spot: { map: 'market', x: 14, y: 13, place: '村口杂货铺', hint: '杂货铺外新倒出一筐零碎货' },
+    spot: { map: 'market', x: 13, y: 13, place: '村口杂货铺', hint: '杂货铺外新倒出一筐零碎货' },
     title: '集口挑货',
     text: '杂货铺外的竹筐里新倒出一堆时令零碎，摊主说看中了可以按捆拿。',
     choices: [

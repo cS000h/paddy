@@ -99,13 +99,10 @@ export function createFieldExtras(scene) {
     return null;
   }
 
-  /** 这一格或脚下有没有待处理的小事。 */
-  function eventAt(x, y, here = null) {
+  /** 这一格有没有待处理的小事。 */
+  function eventAt(x, y) {
     const ev = scene.deps.game.ask('events').active;
-    if (!ev || ev.map !== scene.map.id) return null;
-    if (ev.x === x && ev.y === y) return ev;
-    if (here && ev.x === here.x && ev.y === here.y) return ev;
-    return null;
+    return ev && ev.map === scene.map.id && ev.x === x && ev.y === y ? ev : null;
   }
 
   /** 点在像素 (wx, wy) 上是不是点中了世界里的小事记号。 */
@@ -145,10 +142,8 @@ export function createFieldExtras(scene) {
       if (f.type === 'pulse.resolved') {
         needSync = true;
         scene.player.setPose('raise');
-        scene.time.delayedCall(
-          260,
-          scene.guard(() => scene.player.setPose(null)),
-        );
+        // guard 当场就跑传进去的函数，所以要包在回调里面，到点才收手
+        scene.time.delayedCall(260, () => scene.guard(() => scene.player.setPose(null)));
         showEmote(scene, scene.player, d.success ? 'star' : 'sweat');
         platform.audio.play(d.success ? 'harvest' : 'talk');
       } else if (f.type === 'visitor.talked' || f.type === 'visitor.fulfilled') {

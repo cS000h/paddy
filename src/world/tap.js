@@ -31,7 +31,8 @@ export function tapAt(scene, wx, wy) {
 
   const ignore = person || visitor || null;
   const walk = (x, y) =>
-    walkable(scene.map, x, y) && ((x === from.x && y === from.y) || !tileOccupied(scene, x, y, ignore));
+    walkable(scene.map, x, y) &&
+    ((x === from.x && y === from.y) || !tileOccupied(scene, x, y, ignore));
 
   if (!person && !visitor && !pulse && !thing && !farm && !water && !decor) {
     if (tileOccupied(scene, tile.x, tile.y)) return;

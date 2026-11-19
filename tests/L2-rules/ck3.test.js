@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newGame, must, refused } from '../helpers.js';
+import { MAPS, walkable, farmable } from '../../src/content/maps/index.js';
 
 test('人物五维属性汇总基础值与特质加成，吃拿手热饭获得时限修正并按天过期', () => {
   const g = newGame(7);
@@ -27,7 +28,10 @@ test('人物五维属性汇总基础值与特质加成，吃拿手热饭获得�
   const dishId = cooked.facts.find(f => f.type === 'meal.cooked').data.ids[0];
   must(g, 'dish.eat', { id: dishId, at: { x: 10, y: 11, dir: 'up' } });
   const mods = g.ask('modifiers').list;
-  assert.ok(mods.some(m => m.id === 'good_meal' && m.left >= 2), '拿手饭给时限好饭提劲');
+  assert.ok(
+    mods.some(m => m.id === 'good_meal' && m.left >= 2),
+    '拿手饭给时限好饭提劲',
+  );
   for (let i = 0; i < 3; i++) must(g, 'sleep');
   assert.equal(
     g.ask('modifiers').list.some(m => m.id === 'good_meal'),
@@ -98,4 +102,27 @@ test('流动过客站在村里：不在跟前不能搭话端饭，走到茶摊�
   assert.ok(g.ask('home').coins > coinsBefore, '完成托付获得铜钱谢礼');
   assert.equal(g.ask('visitors').book.length, 1, '满意后记入熟人册');
   assert.match(refused(g, 'visitor.fulfill', { id: v.id, dish: dishId, at: beside }), /已经帮完了/);
+});
+
+test('下地时碰上的小事落在主角身边空着的一格，不压在脚下，也不占面前那块地', () => {
+  let found = null;
+  for (let seed = 1; seed < 40 && !found; seed++) {
+    const g = newGame(seed);
+    for (let x = 6; x <= 17 && !found; x++) {
+      const at = { x, y: 18, dir: 'down' };
+      if (!g.dispatch('farm.till', { x, y: 19, at }).ok) break;
+      const ev = g.ask('events').active;
+      if (ev) found = { ev, at };
+    }
+  }
+  assert.ok(found, '锄了这么多地，总该碰上一回');
+  const { ev, at } = found;
+  assert.equal(ev.map, 'yard');
+  assert.ok(Math.abs(ev.x - at.x) <= 1 && Math.abs(ev.y - at.y) <= 1, '就在身边');
+  assert.ok(ev.x !== at.x || ev.y !== at.y, '不压在脚下');
+  assert.ok(!(ev.x === at.x && ev.y === at.y + 1), '不占面前要干活的那一格');
+  assert.ok(
+    walkable(MAPS.yard, ev.x, ev.y) && !farmable(MAPS.yard, ev.x, ev.y),
+    '落在能站人的空地上',
+  );
 });

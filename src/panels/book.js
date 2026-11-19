@@ -89,7 +89,10 @@ function personaBody(m, game) {
 
   // 顶部人物像 + 清爽平涂像素分格「心境」条
   const filled = Math.max(0, Math.min(8, Math.round((body.mood / 100) * 8)));
-  const segs = Array.from({ length: 8 }, (_, i) => `<i class="mood-seg ${i < filled ? 'on' : ''}"></i>`).join('');
+  const segs = Array.from(
+    { length: 8 },
+    (_, i) => `<i class="mood-seg ${i < filled ? 'on' : ''}"></i>`,
+  ).join('');
   const header = `<div class="hero-head">
     <div class="hero-pic"><img class="pixel" width="48" height="66" src="${heroPortraitUrl(hero.look)}" alt="" /></div>
     <div class="hero-meta">
@@ -163,7 +166,9 @@ function folkRows(game) {
   const all = [...here, ...known];
   return all.length
     ? all
-    : ['<li><span class="what"><small>眼下还没记下外村熟人，赶集日去茶摊、村口或渡口转转吧。</small></span></li>'];
+    : [
+        '<li><span class="what"><small>眼下还没记下外村熟人，赶集日去茶摊、村口或渡口转转吧。</small></span></li>',
+      ];
 }
 
 const TABS = [

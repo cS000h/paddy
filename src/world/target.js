@@ -44,13 +44,15 @@ const SIDE_ORDER = {
   ],
 };
 
-function inspectTile(scene, x, y, here = null) {
+const asPulse = pulse => ({ kind: 'pulse', pulse, x: pulse.x, y: pulse.y, rank: 5 });
+
+function inspectTile(scene, x, y) {
   const person = scene.villagers.find(v => v.present && v.tile.x === x && v.tile.y === y);
   if (person) return { kind: 'person', person, x, y, rank: 6 };
   const visitor = scene.extras?.visitorAt(x, y);
   if (visitor) return { kind: 'visitor', visitor, x, y, rank: 6 };
-  const pulse = scene.extras?.eventAt(x, y, here);
-  if (pulse) return { kind: 'pulse', pulse, x: pulse.x, y: pulse.y, rank: 5 };
+  const pulse = scene.extras?.eventAt(x, y);
+  if (pulse) return asPulse(pulse);
   const thing = actAt(scene.map, x, y);
   if (thing) return { kind: 'thing', thing, x, y, rank: 4 };
   if (waterSource(scene.map, x, y)) return { kind: 'water', x, y, rank: 3 };
@@ -64,18 +66,22 @@ function inspectTile(scene, x, y, here = null) {
 export function smartTarget(scene) {
   const here = scene.player.tile;
   const front = facing(here.x, here.y, scene.player.dir);
-  const direct = inspectTile(scene, front.x, front.y, here);
+  const direct = inspectTile(scene, front.x, front.y);
   if (direct) return direct;
 
   let best = null;
   for (const [dx, dy] of SIDE_ORDER[scene.player.dir] || SIDE_ORDER.down) {
-    const hit = inspectTile(scene, here.x + dx, here.y + dy, null);
+    const hit = inspectTile(scene, here.x + dx, here.y + dy);
     if (!hit) continue;
     // 只在正对方向没东西时，优先吸附四邻（上下左右），斜角只吸附人物与小事
     const diagonal = dx !== 0 && dy !== 0;
     if (diagonal && hit.rank < 5) continue;
     if (!best || hit.rank > best.rank) best = hit;
   }
+  // 踩在小事上：面前、身边没有人时才轮到它。它要是排在面前那格前头，
+  // 站在上面锄地、浇水、播种，每按一下都会先打开这件事。
+  const under = scene.extras?.eventAt(here.x, here.y);
+  if (under && (!best || best.rank < 5)) return asPulse(under);
   return best || { kind: 'plot', ...front };
 }
 

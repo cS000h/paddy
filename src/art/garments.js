@@ -35,7 +35,8 @@ function drawExtraCoat(g, coat, [base, shade, trim], x, side, back, d) {
     // 荷粉衣裙：短上衣配素白长裙摆
     g.rect(x, 17 + d, side ? 6 : 8, 5, base).hline(x, x + (side ? 5 : 7), 21 + d, trim);
     g.rect(x - 1, 22 + d, side ? 8 : 10, 6, P.l0).hline(x - 1, side ? 11 : 12, 27 + d, shade);
-    if (!back) g.vline(side ? 7 : 6, 22 + d, 26 + d, P.l2).vline(side ? 9 : 9, 22 + d, 26 + d, P.l2);
+    if (!back)
+      g.vline(side ? 7 : 6, 22 + d, 26 + d, P.l2).vline(side ? 9 : 9, 22 + d, 26 + d, P.l2);
   } else if (coat === 'ink') {
     // 墨青短衫：干练立领与浅袖边
     g.rect(x, 17 + d, side ? 6 : 8, 7, base).hline(x, x + (side ? 5 : 7), 23 + d, shade);
@@ -45,7 +46,10 @@ function drawExtraCoat(g, coat, [base, shade, trim], x, side, back, d) {
     // 稻黄暖袄：暖厚衣摆与侧领纽扣
     g.rect(x - 1, 19 + d, side ? 8 : 10, 6, base).hline(x - 1, side ? 11 : 12, 24 + d, shade);
     g.hline(x, x + (side ? 5 : 7), 17 + d, P.l1);
-    if (!back) g.set(x + 2, 19 + d, trim).set(x + 2, 21 + d, trim).set(x + 2, 23 + d, trim);
+    if (!back)
+      g.set(x + 2, 19 + d, trim)
+        .set(x + 2, 21 + d, trim)
+        .set(x + 2, 23 + d, trim);
   } else if (coat === 'plum') {
     // 朱红冬衣：披肩冬披配浅色滚边
     g.rect(x - 1, 18 + d, side ? 8 : 10, 8, base).hline(x - 1, side ? 11 : 12, 25 + d, shade);

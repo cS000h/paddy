@@ -2,6 +2,8 @@ import { daylight } from '../art/daylight.js';
 import { worldLighting } from './room-light.js';
 import { changeMap } from './doorway.js';
 import { DEPTH, sceneryParts } from './depth.js';
+// 村庄场景：把地面、物件、人摆出来，镜头跟着操控的人，把“意图”变成走路和命令。
+// 这里只通过端口（deps.game）碰规则：发命令用 dispatch，问情况用 ask，听结果用 onCommit。
 import Phaser from 'phaser';
 import { MAPS, walkable, farmable } from '../content/maps/index.js';
 import { PEOPLE } from '../content/people.js';
@@ -142,7 +144,10 @@ export class VillageScene extends Phaser.Scene {
   }
   blocked(px, py) {
     const ok = (x, y) => walkable(this.map, Math.floor(x / TILE), Math.floor(y / TILE));
-    return !(ok(px - 4, py - 5) && ok(px + 4, py - 5) && ok(px - 4, py) && ok(px + 4, py)) || blockedByActor(this, px, py);
+    return (
+      !(ok(px - 4, py - 5) && ok(px + 4, py - 5) && ok(px - 4, py) && ok(px + 4, py)) ||
+      blockedByActor(this, px, py)
+    );
   }
   /** 给规则报告的站位。 */
   at() {

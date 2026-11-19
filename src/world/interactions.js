@@ -70,8 +70,7 @@ export function hintFor(scene, t) {
     return { text: `和${PEOPLE[t.person.id].name}说话`, verb: '说话', ok: true };
   if (t.kind === 'visitor')
     return { text: `和${t.visitor.visitor.name}说话`, verb: '说话', ok: true };
-  if (t.kind === 'pulse')
-    return { text: `看看${t.pulse.title}`, verb: '看看', ok: true };
+  if (t.kind === 'pulse') return { text: `看看${t.pulse.title}`, verb: '看看', ok: true };
   if (t.kind === 'thing') {
     const { act, station, label } = t.thing;
     const verb = STATION_STAMP[station] || STAMP[act] || '看看';

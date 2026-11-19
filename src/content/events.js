@@ -42,7 +42,12 @@ export const EVENTS = Object.freeze({
     title: '米缸受潮',
     text: '掀开橱柜边的小缸盖，闻到一点潮气，缸底的米像是受了湿。',
     choices: [
-      { label: '摊开慢慢晾', mood: 2, mod: 'hearth_warm', line: '把米摊开晒在风口，心里踏实多了。' },
+      {
+        label: '摊开慢慢晾',
+        mood: 2,
+        mod: 'hearth_warm',
+        line: '把米摊开晒在风口，心里踏实多了。',
+      },
       {
         label: '生火烤干缸身',
         check: { stat: 'cook', dc: 3 },
@@ -206,7 +211,7 @@ export const EVENTS = Object.freeze({
   delay_tea_tip: {
     id: 'delay_tea_tip',
     trigger: 'delayed',
-    spot: { map: 'market', x: 14, y: 13, place: '村口杂货铺', hint: '村口那边好像有人找你' },
+    spot: { map: 'market', x: 13, y: 13, place: '村口杂货铺', hint: '村口那边好像有人找你' },
     title: '行情用上了',
     text: '前两天打听到的集市消息用上了，村口有人照你说的价钱收走了多余菜蔬。',
     choices: [
@@ -222,7 +227,7 @@ export const EVENTS = Object.freeze({
   delay_visitor_back: {
     id: 'delay_visitor_back',
     trigger: 'delayed',
-    spot: { map: 'tea', x: 11, y: 12, place: '樟树茶摊', hint: '樟树茶摊那边好像有你的口信' },
+    spot: { map: 'tea', x: 13, y: 13, place: '樟树茶摊', hint: '樟树茶摊那边好像有你的口信' },
     title: '货客捎来的回信',
     text: '上次在樟树茶摊聊得投机的货客托人捎来干货和几文钱，说下回赶集再来喝茶。',
     choices: [

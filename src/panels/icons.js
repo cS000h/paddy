@@ -36,7 +36,6 @@ export const heroPortraitUrl = look =>
   cached('bust:' + look, () => {
     const full = personFrame(look, 'down', 'stand');
     const bust = new Grid(16, 22);
-    for (let y = 0; y < 22; y++)
-      for (let x = 0; x < 16; x++) bust.set(x, y, full.get(x, y + 3));
+    for (let y = 0; y < 22; y++) for (let x = 0; x < 16; x++) bust.set(x, y, full.get(x, y + 3));
     return bust;
   });

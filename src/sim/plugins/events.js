@@ -6,10 +6,22 @@ import { refuse } from '../../kernel/dispatch.js';
 import { EVENTS, MORNING_EVENTS, SCENE_EVENTS, checkChance } from '../../content/events.js';
 import { STATS, MODIFIERS } from '../../content/modifiers.js';
 import { TRAITS } from '../../content/growth.js';
-import { MAPS } from '../../content/maps/index.js';
+import { MAPS, walkable, farmable, actAt } from '../../content/maps/index.js';
 import { near } from './people.js';
 
 const MAX_DELAYED = 16;
+// 就地遇事落在主角身边哪一格：先左右上下，再斜角。面前那一格留给手上正干的活。
+const AROUND = [
+  [-1, 0],
+  [1, 0],
+  [0, -1],
+  [0, 1],
+  [-1, -1],
+  [1, -1],
+  [-1, 1],
+  [1, 1],
+];
+const AHEAD = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
 export const events = {
   id: 'sim.events',
@@ -69,6 +81,25 @@ export const events = {
       w.pulse.lastDay = w.clock.day;
     };
 
+    // 就地遇事落在主角身边空着的一格，不压在脚下：压在脚下的话，接着按「做」、点地，
+    // 都会先打开这件事，手上的活（锄地、浇水、播种）被截走。四周没有空地才用默认的地方。
+    const beside = w => {
+      const me = people.me(w);
+      const map = MAPS[me.map];
+      const ahead = AHEAD[me.dir] || [0, 0];
+      const taken = (x, y) =>
+        w.visitors?.active.some(v => v.map === me.map && v.x === x && v.y === y);
+      for (const [dx, dy] of AROUND) {
+        if (dx === ahead[0] && dy === ahead[1]) continue;
+        const x = me.x + dx;
+        const y = me.y + dy;
+        if (!walkable(map, x, y) || farmable(map, x, y) || actAt(map, x, y) || taken(x, y))
+          continue;
+        return { map: me.map, x, y };
+      }
+      return null;
+    };
+
     const tryScene = (w, trigger, chance) => {
       if (w.pulse.active || w.pulse.lastDay >= w.clock.day) return;
       if (core.random(w) >= chance) return;
@@ -78,8 +109,7 @@ export const events = {
       );
       if (!pool.length) return;
       const id = pool[Math.floor(core.random(w) * pool.length)];
-      const me = people.me(w);
-      spawn(w, id, { map: me.map, x: me.x, y: me.y });
+      spawn(w, id, beside(w));
     };
 
     // 清早小事：优先触发到期的后续，否则按概率抽 1 条晨起小事落在具体位置。
@@ -125,8 +155,7 @@ export const events = {
       if (out.mood) body.mood(w, who, out.mood, title);
       if (out.energy > 0) people.restore(w, who, out.energy, title);
       if (out.give) pack.deliver(w, who, out.give.item, out.give.n, title);
-      if (out.mod && Object.hasOwn(MODIFIERS, out.mod))
-        modifiers.add(w, who, out.mod, null, title);
+      if (out.mod && Object.hasOwn(MODIFIERS, out.mod)) modifiers.add(w, who, out.mod, null, title);
       if (out.delay && Object.hasOwn(EVENTS, out.delay.id)) {
         if (w.pulse.delayed.length >= MAX_DELAYED) w.pulse.delayed.shift();
         w.pulse.delayed.push({ id: out.delay.id, day: w.clock.day + out.delay.days });

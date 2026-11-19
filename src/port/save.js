@@ -13,19 +13,40 @@ const MIGRATIONS = {
     const w = state.world;
     w.meta.version = 13;
     const roleLook = {
-      peddler: ['hero/field/crop/0', 'market', 12, 12, 'down'],
-      healer: ['hero/tea/knot/2', 'tea', 11, 12, 'down'],
-      scholar: ['hero/feast/tail/2', 'tea', 11, 12, 'down'],
-      grocer: ['hero/cook/bun/2', 'market', 16, 12, 'down'],
-      carpenter: ['hero/rain/plain/0', 'river', 13, 11, 'down'],
-      matchmaker: ['hero/winter/braid/3', 'tea', 14, 13, 'left'],
+      peddler: ['hero/field/crop/0', 'market'],
+      healer: ['hero/tea/knot/2', 'tea'],
+      scholar: ['hero/feast/tail/2', 'tea'],
+      grocer: ['hero/cook/bun/2', 'market'],
+      carpenter: ['hero/rain/plain/0', 'river'],
+      matchmaker: ['hero/winter/braid/3', 'tea'],
+    };
+    // 同一张图上的几位按顺序各站一格，不叠在一起
+    const spots = {
+      tea: [
+        [11, 12, 'down'],
+        [14, 13, 'left'],
+        [10, 13, 'right'],
+      ],
+      market: [
+        [11, 13, 'down'],
+        [17, 13, 'down'],
+        [14, 13, 'down'],
+      ],
+      river: [
+        [13, 11, 'down'],
+        [15, 16, 'left'],
+        [11, 12, 'right'],
+      ],
     };
     if (w.pulse?.active) {
       w.pulse.active = { map: 'yard', x: 8, y: 14, ...w.pulse.active };
     }
     if (w.visitors?.active) {
+      const used = {};
       for (const v of w.visitors.active) {
-        const [look, map, x, y, dir] = roleLook[v.role] || roleLook.scholar;
+        const [look, map] = roleLook[v.role] || roleLook.scholar;
+        used[map] = (used[map] || 0) + 1;
+        const [x, y, dir] = spots[map][(used[map] - 1) % spots[map].length];
         Object.assign(v, { look, map, x, y, dir });
       }
     }

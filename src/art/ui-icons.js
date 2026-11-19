@@ -41,7 +41,14 @@ const MAKERS = {
   // — 五维属性图标 —
   stat_farm() {
     const g = blank();
-    g.poly([[8, 2], [13, 7], [3, 7]], P.t2);
+    g.poly(
+      [
+        [8, 2],
+        [13, 7],
+        [3, 7],
+      ],
+      P.t2,
+    );
     g.rect(4, 7, 8, 6, P.l1).rect(7, 9, 2, 4, P.t3).hline(3, 12, 13, P.g4);
     return g;
   },
@@ -54,13 +61,28 @@ const MAKERS = {
   stat_craft() {
     const g = blank();
     g.line(4, 13, 10, 7, P.t2).line(5, 13, 11, 7, P.t3);
-    g.poly([[6, 3], [12, 3], [12, 7], [9, 6]], P.a2);
+    g.poly(
+      [
+        [6, 3],
+        [12, 3],
+        [12, 7],
+        [9, 6],
+      ],
+      P.a2,
+    );
     return g;
   },
   stat_social() {
     const g = blank();
     g.ellipse(5.5, 6, 2.5, 2.5, P.c1).ellipse(10.5, 6, 2.5, 2.5, P.c1);
-    g.poly([[3, 7], [13, 7], [8, 13]], P.c1).set(5, 5, P.c0);
+    g.poly(
+      [
+        [3, 7],
+        [13, 7],
+        [8, 13],
+      ],
+      P.c1,
+    ).set(5, 5, P.c0);
     return g;
   },
   stat_insight() {
@@ -74,7 +96,15 @@ const MAKERS = {
   trait_sickle() {
     const g = blank();
     g.line(11, 13, 8, 8, P.t2).line(12, 13, 9, 8, P.t3);
-    g.poly([[4, 4], [11, 3], [11, 6], [6, 7]], P.a3).hline(5, 10, 4, P.l2);
+    g.poly(
+      [
+        [4, 4],
+        [11, 3],
+        [11, 6],
+        [6, 7],
+      ],
+      P.a3,
+    ).hline(5, 10, 4, P.l2);
     return g;
   },
   trait_tea() {
@@ -90,7 +120,19 @@ const MAKERS = {
   },
   trait_spark() {
     const g = blank();
-    g.poly([[8, 2], [10, 6], [14, 8], [10, 10], [8, 14], [6, 10], [2, 8], [6, 6]], P.g3);
+    g.poly(
+      [
+        [8, 2],
+        [10, 6],
+        [14, 8],
+        [10, 10],
+        [8, 14],
+        [6, 10],
+        [2, 8],
+        [6, 6],
+      ],
+      P.g3,
+    );
     g.rect(7, 7, 2, 2, P.paper0);
     return g;
   },
@@ -98,7 +140,16 @@ const MAKERS = {
   // — 身边风物图标 —
   mod_bird() {
     const g = blank();
-    g.poly([[3, 5], [8, 8], [13, 4], [10, 10], [6, 11]], P.i3);
+    g.poly(
+      [
+        [3, 5],
+        [8, 8],
+        [13, 4],
+        [10, 10],
+        [6, 11],
+      ],
+      P.i3,
+    );
     g.hline(6, 9, 9, P.paper0).set(12, 4, P.c1);
     return g;
   },
