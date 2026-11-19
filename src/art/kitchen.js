@@ -49,13 +49,13 @@ export function stove() {
   return { grid: g, ax: 16, ay: 29 };
 }
 
-// 书架：两层旧木架，立着几册线装书，顶上一盏油灯。
+// 书架：两层浅色的旧木架，立着几册线装书，顶上一盏油灯。
 export function bookshelf() {
   const g = new Grid(22, 30);
   g.ellipse(12, 28, 10, 1.5, SHADOW);
-  g.rect(2, 6, 18, 22, P.t3).rect(3, 7, 16, 20, P.t4).vline(2, 6, 27, P.t2).vline(19, 6, 27, P.t4);
-  g.hline(1, 20, 5, P.t1).hline(1, 20, 6, P.t3).hline(3, 18, 16, P.t2).hline(3, 18, 17, P.t3);
-  g.hline(3, 18, 26, P.t2).hline(2, 19, 27, P.t4);
+  g.rect(2, 6, 18, 22, P.t1).rect(3, 7, 16, 20, P.t2).vline(2, 6, 27, P.t0).vline(19, 6, 27, P.t2);
+  g.hline(1, 20, 5, P.e0).hline(1, 20, 6, P.t1).hline(3, 18, 16, P.t0).hline(3, 18, 17, P.t1);
+  g.hline(3, 18, 26, P.t0).hline(2, 19, 27, P.t2);
   const books = [
     [4, 9, P.i2, 7],
     [6, 8, P.paper1, 8],

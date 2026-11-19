@@ -62,6 +62,7 @@ export function buildTextures(scene, map) {
   }
 
   for (const [key, grid] of Object.entries(art.soilSet())) add('soil:' + key, grid);
+  for (const kind of art.EMOTES) add('emote:' + kind, art.emote(kind));
   for (const id of Object.keys(CROPS))
     art.cropSet(id).forEach((g, stage) => add(`crop:${id}:${stage}`, g));
   art.cropFrames().forEach((grid, stage) => add('crop:' + stage, grid));

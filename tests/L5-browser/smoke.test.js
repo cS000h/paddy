@@ -322,7 +322,14 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.waitForTimeout(250);
       await shot(p, session === desk ? 'm5-weather-desktop.png' : 'm5-weather-phone.png');
       await p.locator('[data-do="close"]').click();
-      if (session === wide) await p.locator('[data-do="menu"]').click();
+      if (session === wide) {
+        // 手机这一局还没锄过 (8,20)：先拿起锄头把它锄松，下面才有地可看、可开沟
+        await p.locator('.toolbar [data-tool="hoe"]').tap();
+        await tap(p, 8, 20);
+        await frames(p, 1600);
+        assert.ok(await plot(p, 8, 20), '手机这一局锄过了 (8,20)');
+        await p.locator('[data-do="menu"]').click();
+      }
       await p.locator('[data-do="seeds"]:visible').click();
       assert.equal(await p.locator('[data-do="seedChoose"]').count(), 7);
       await p.locator('[data-do="seedChoose"][data-seed="seed.qingcai"]').click();

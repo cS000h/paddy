@@ -4,6 +4,7 @@
 import { Grid, noise, hash2 } from './pixel.js';
 import { P } from './palette.js';
 import { canopy } from './canopy.js';
+import { INTERIOR, interiorColor } from './interior.js';
 
 export const TILE = 16;
 
@@ -15,7 +16,7 @@ const BARE = new Set(['earth', 'stone', 'field', 'sand']);
 
 /**
  * @param {string[][]} tiles 每一格的地面种类：grass、earth、stone、field、bridge、water、paddy、thicket、
- *   sand（河滩）、moss（林下苔地）
+ *   sand（河滩）、moss（林下苔地）；屋里还有 boards、flags、wall、void（见 interior.js）
  * @param {number} seed
  * @returns {Grid} 宽高是格子数乘以 16 的一幅地面
  */
@@ -53,11 +54,9 @@ export function paintGround(tiles, seed = 1) {
       const band = noise(x * 0.35, y, 7, seed + 2);
       const fleck = hash2(x, y, seed + 3);
       let c;
-      if (kind === 'boards') {
-        c = y % 8 === 0 ? P.t2 : x % 48 === 0 ? P.t1 : P.t0;
-      } else if (kind === 'wall') {
-        c = y % 16 === 0 ? P.l3 : P.l1;
-        if (x % 64 < 3) c = P.t2;
+      if (INTERIOR.has(kind)) {
+        // 屋里的地板、石板、墙和屋外的暗处（interior.js）
+        c = interiorColor(kind, x, y, K, seed);
       } else if (kind === 'grass') {
         // 橄榄绿的草地：大片的浓淡边界清楚，深的一块块像云影，再撒零星的亮点
         const blot = noise(x, y, 11, seed + 4);

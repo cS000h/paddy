@@ -57,5 +57,8 @@ export const P = Object.freeze(
   Object.fromEntries(Object.entries(table).map(([name, text]) => [name, hex(text)])),
 );
 
+/** 名字 → CSS 颜色（'#rrggbb'），给要写颜色字符串的地方用，比如镜头的底色。 */
+export const CSS = Object.freeze({ ...table });
+
 /** 半透明的墨色，画影子用。 */
 export const SHADOW = hex('#1f2a2c', 46);

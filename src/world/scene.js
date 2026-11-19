@@ -4,6 +4,7 @@ import Phaser from 'phaser';
 import { MAPS, walkable, farmable, waterSource, actAt } from '../content/maps/index.js';
 import { PEOPLE } from '../content/people.js';
 import { variantAt } from '../art/index.js';
+import { CSS } from '../art/palette.js';
 import { buildTextures } from './textures.js';
 import { Walker, Villager } from './actors.js';
 import { createEffects } from './effects.js';
@@ -16,8 +17,12 @@ import { tapAt } from './tap.js';
 import { leaveByRoad } from './travel.js';
 import { createAmbient } from './ambient.js';
 import { createPerformer } from './perform.js';
+import { showEmote } from './emotes.js';
+import { AFTER } from '../content/resident-work.js';
 import { safely } from './safety.js';
-import { TILE, facing, dirTo, COMMAND_OF, skyTint } from './logic.js';
+import { TILE, facing, dirTo, COMMAND_OF, skyTint, fitView } from './logic.js';
+
+const VOID = CSS.paper1; // 屋子外头留白，和 art/interior.js 里屋外的纸色一样
 
 // 规则里的事落到画面上：哪种事实，在那一格放哪个动效、出哪个声。
 const FEEDBACK = {
@@ -57,14 +62,16 @@ export class VillageScene extends Phaser.Scene {
     this.anchors = anchors;
     this.groundImage = this.add.image(0, 0, 'ground').setOrigin(0).setDepth(-1000);
     this.scenery = [];
-    for (const [kind, x, y] of map.objects) {
+    for (const [kind, x, y, data] of map.objects) {
       const key = `obj:${kind}:${variantAt(x, y)}`;
-      const a = anchors[key];
+      // 地图数据可以指定换一副样子（屋里的木方桌、门洞），见 art/index.js 的 OBJECT_LOOKS
+      const look = data?.look || null;
+      const a = anchors[look ? key + '@' + look : key];
       const sprite = this.add
-        .image(x * TILE + 8, (y + 1) * TILE, key)
+        .image(x * TILE + 8, (y + 1) * TILE, look ? key + '@' + look : key)
         .setOrigin(a.ox, a.oy)
         .setDepth((y + 1) * TILE);
-      this.scenery.push({ sprite, key, kind, look: null, x, y });
+      this.scenery.push({ sprite, key, kind, look, x, y });
     }
     this.plots = new Map();
     this.cursor = this.add.image(0, 0, 'cursor:ok').setOrigin(0).setDepth(-800).setVisible(false);
@@ -81,7 +88,8 @@ export class VillageScene extends Phaser.Scene {
     this.performer = createPerformer(this);
 
     const camera = this.cameras.main;
-    camera.setBounds(0, 0, map.width * TILE, map.height * TILE);
+    // 屋里看得比屋子大时，四周留白，像画在纸上的一间屋
+    if (map.indoor) camera.setBackgroundColor(VOID);
     // 稳稳跟着人走：带缓动的跟随再按整像素取整，走路时整个世界会一抖一抖
     camera.startFollow(this.player.sprite, true, 1, 1, 0, 10);
     camera.setRoundPixels(true);
@@ -118,14 +126,11 @@ export class VillageScene extends Phaser.Scene {
     }
   }
 
-  /** 按窗口大小挑一个整数倍的放大倍数：横向至少看得到 17 格，纵向至少 10 格。 */
+  /** 按窗口大小定放大倍数和镜头能走到哪儿（见 logic.js 的 fitView）。 */
   fit() {
     const { width, height } = this.scale.gameSize;
-    const zoom = Math.max(
-      2,
-      Math.min(6, Math.floor(Math.min(width / (17 * TILE), height / (10 * TILE)))),
-    );
-    this.cameras.main.setZoom(zoom);
+    const { zoom, bounds } = fitView(width, height, this.map);
+    this.cameras.main.setZoom(zoom).setBounds(...bounds);
   }
 
   blocked(px, py) {
@@ -178,7 +183,7 @@ export class VillageScene extends Phaser.Scene {
     const here = this.player.tile;
     const t = facing(here.x, here.y, this.player.dir);
     const person = this.villagers.find(
-      v => v.sprite.visible && Math.abs(v.tile.x - t.x) + Math.abs(v.tile.y - t.y) === 0,
+      v => v.present && Math.abs(v.tile.x - t.x) + Math.abs(v.tile.y - t.y) === 0,
     );
     if (person) return { kind: 'person', person, ...t };
     const thing = actAt(this.map, t.x, t.y);
@@ -299,11 +304,16 @@ export class VillageScene extends Phaser.Scene {
         this.effects[effect](d.x, d.y, d.crop);
         platform.audio.play(sound);
         platform.haptic();
-        if (f.type === 'plot.sown') {
-          const stone = this.villagers.find(v => v.id === 'shi');
-          stone?.work.inspectSowing(d, this.deps.game.ask('clock').day);
-        }
+        const day = this.deps.game.ask('clock').day;
+        for (const v of this.villagers) v.work.notice(f.type, d, day);
         plots = true;
+      } else if (f.type === 'gift.given' || f.type === 'person.talked') {
+        // 收下喜欢的东西、聊得熟了一层，头上冒个心；平常收下东西冒个音符
+        const v = this.villagers.find(p => p.id === d.to && p.present);
+        const gift = f.type === 'gift.given';
+        const liked = d.liked || d.favorite;
+        const kind = gift ? (liked ? AFTER.liked : AFTER.plain) : d.gained && AFTER.closer;
+        if (v) showEmote(this, v, kind);
       } else if (f.type === 'can.refilled') {
         this.effects.refilled(d.x * TILE + 8, d.y * TILE + 8);
         platform.audio.play('refill');
@@ -334,7 +344,8 @@ export class VillageScene extends Phaser.Scene {
 
   /** 时间变了：天色、村民的去向、炊烟。 */
   retime(jump) {
-    const { minute, season } = this.deps.game.ask('clock');
+    const { minute, season, day } = this.deps.game.ask('clock');
+    this.today = day;
     this.weather = this.deps.game.ask('weather');
     this.ambient.setTime(minute, season, this.weather.tags);
     // 换季才换贴图：每十分钟一次的走时也把上百个物件的贴图重设一遍，手机上会顿一下

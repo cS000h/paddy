@@ -1,6 +1,7 @@
 // 世界里不依赖画面的算法：寻路、面前是哪一格、点一下该做什么。
 // 这个文件不引用 Phaser，也不碰浏览器，所以能在 Node 里直接测试。
 import { TOOLS, SOIL, isRipe } from '../content/items.js';
+import { routeTo } from '../content/maps/index.js';
 
 export const TILE = 16;
 export const STEP = Object.freeze({
@@ -115,6 +116,28 @@ export const COMMAND_OF = Object.freeze({
 export const toolName = id => TOOLS.find(t => t.id === id)?.name || id;
 export const toolVerb = id => TOOLS.find(t => t.id === id)?.verb || id;
 
+/**
+ * 镜头放大几倍、能在世界里走到哪一块。一屏横着至少看 22 格、竖着至少 13 格，进到一个地方
+ * 一眼看得出它的样子（以前 17×10，屋外只看得见人周围一小圈，地图显得空）。
+ * 屋外的地图不让镜头看出地图的边，不够就放大一档；屋里小，看得比屋子大时屋子摆在正中，四周留白。
+ * @param {number} width 画面宽（像素）
+ * @param {number} height 画面高
+ * @param {{width: number, height: number, indoor?: boolean}} map
+ * @returns {{zoom: number, bounds: [number, number, number, number]}} bounds 是镜头的边界 x, y, w, h
+ */
+export function fitView(width, height, map) {
+  const fits = Math.floor(Math.min(width / (22 * TILE), height / (13 * TILE)));
+  let zoom = Math.max(2, Math.min(6, fits));
+  const mw = map.width * TILE;
+  const mh = map.height * TILE;
+  if (!map.indoor) zoom = Math.max(zoom, Math.ceil(width / mw), Math.ceil(height / mh));
+  const vw = Math.ceil(width / zoom);
+  const vh = Math.ceil(height / zoom);
+  const x = Math.min(0, Math.floor((mw - vw) / 2));
+  const y = Math.min(0, Math.floor((mh - vh) / 2));
+  return { zoom, bounds: [x, y, Math.max(mw, vw), Math.max(mh, vh)] };
+}
+
 /** 一天里某一分钟的天色（正片叠底盖在画面上）。清晨偏暖，白天不染，傍晚橘，入夜青蓝。 */
 export function skyTint(minute) {
   const stops = [
@@ -139,4 +162,26 @@ export function skyTint(minute) {
       .padStart(2, '0'),
   );
   return '#' + hex.join('');
+}
+
+/**
+ * 村民离开这张图时往哪儿走（从别处来时反过来，从这儿走进来）：
+ * 去得到的地方，走到路上第一块路牌或门口；回家（to 为 null），有自家的门就走到门口，
+ * 没有就走到离 near 最近的路牌。这张图上一个出口都没有时是 null。
+ * @param {{id: string, objects: any[]}} map
+ * @param {string|null} to 要去（或来自）哪张图
+ * @param {string} who 这个人的 id，找自家的门用
+ * @param {{x: number, y: number}} near
+ */
+export function exitToward(map, to, who, near) {
+  const legs = to && to !== map.id ? routeTo(map.id, to) : null;
+  if (legs?.length) return { x: legs[0].door.x, y: legs[0].door.y };
+  let best = null;
+  for (const [kind, x, y, data] of map.objects) {
+    if (kind === 'house.' + who) return { x, y: y + 1 };
+    if (kind !== 'route' || !data?.to) continue;
+    const d = Math.abs(x - near.x) + Math.abs(y - near.y);
+    if (!best || d < best.d) best = { x, y, d };
+  }
+  return best && { x: best.x, y: best.y };
 }

@@ -15,8 +15,11 @@ export function fieldActions({ game, shell, run, here, world }) {
     },
     field() {
       const t = world.scene().target();
-      if (!game.ask('farm.detail', t.x, t.y))
+      if (!game.ask('farm.detail', t.x, t.y)) {
+        // 从“菜单”里点进来的：菜单收起来，人才看得见提示里说的那格地
+        if (shell.get().modal?.kind === 'menu') shell.set({ modal: null });
         return shell.toast('走到锄过的地边，面朝那格地再查看。');
+      }
       shell.set({ modal: { kind: 'field', x: t.x, y: t.y } });
     },
     fieldCare({ kind }) {

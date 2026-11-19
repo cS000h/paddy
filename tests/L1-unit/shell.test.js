@@ -11,6 +11,8 @@ import {
   dirTo,
   tileOf,
   skyTint,
+  exitToward,
+  fitView,
 } from '../../src/world/logic.js';
 import { MAPS, walkable } from '../../src/content/maps/index.js';
 import { newGame, must } from '../helpers.js';
@@ -137,6 +139,49 @@ test('小工具：格子换算、朝向、天色', () => {
   assert.equal(skyTint(12 * 60), '#ffffff');
   assert.notEqual(skyTint(6 * 60), '#ffffff');
   assert.match(skyTint(23 * 60), /^#[0-9a-f]{6}$/);
+});
+
+test('镜头：一屏看得见一个地方的样子；屋外看不出地图边，屋里小就摆正中', () => {
+  const sees = (w, h, map) => {
+    const { zoom } = fitView(w, h, map);
+    return [w / zoom / 16, h / zoom / 16];
+  };
+  // 桌面 1280×720：二十多格宽、十五格高（原来只有 20×11）
+  const [w, h] = sees(1280, 720, MAPS.tea);
+  assert.ok(w >= 22 && h >= 13, `${w}×${h}`);
+  // 屋外：不管窗口多宽，看到的都不超出地图
+  for (const [sw, sh] of [
+    [1280, 720],
+    [1024, 768],
+    [844, 390],
+    [3440, 1440],
+    [1920, 970],
+  ])
+    for (const map of Object.values(MAPS).filter(m => !m.indoor)) {
+      const { bounds } = fitView(sw, sh, map);
+      assert.deepEqual(bounds, [0, 0, map.width * 16, map.height * 16], `${map.id} ${sw}×${sh}`);
+    }
+  // 屋里：看得比屋子宽时，屋子在正中，两边留的一样多
+  const room = MAPS.cottage;
+  const { zoom, bounds } = fitView(1280, 720, room);
+  const view = Math.ceil(1280 / zoom);
+  assert.ok(view > room.width * 16);
+  assert.equal(bounds[0], Math.floor((room.width * 16 - view) / 2));
+  assert.equal(bounds[2], view);
+});
+
+test('村民进出：去别处走到路上第一块路牌，回家走回自家门口，没处可去时是最近的路牌', () => {
+  // 阿满从小院去茶摊：走到通往茶摊的那块路牌
+  const toTea = exitToward(MAPS.yard, 'tea', 'aman', { x: 20, y: 20 });
+  assert.deepEqual(toTea, { x: 42, y: 14 });
+  assert.ok(walkable(MAPS.yard, toTea.x, toTea.y), '路牌那一格走得到');
+  // 桂嫂回家：小院里有她家的门，走到门口
+  assert.deepEqual(exitToward(MAPS.yard, null, 'gui', { x: 30, y: 12 }), { x: 30, y: 10 });
+  // 茶摊上没有阿满的家：走到最近的路牌；每张图上的出口都是走得到的格子
+  for (const map of Object.values(MAPS)) {
+    const out = exitToward(map, null, 'aman', { x: 10, y: 10 });
+    assert.ok(out && walkable(map, out.x, out.y), map.id);
+  }
 });
 
 test('外壳共用的话：体力价钱、地里要不要照料、按设备说怎么做', async () => {

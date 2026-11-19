@@ -9,6 +9,7 @@ import { ITEMS } from '../../src/content/items.js';
 import { RECIPES, QUALITY } from '../../src/content/recipes.js';
 import { COOKED_ITEMS } from '../../src/art/cooked-food.js';
 import { createHash } from 'node:crypto';
+import { readFileSync, readdirSync } from 'node:fs';
 
 const palette = new Set([...Object.values(P), SHADOW]);
 const tiles = MAPS.yard.ground.map(row => [...row].map(ch => GROUND[ch].id));
@@ -161,4 +162,41 @@ test('小屋与村路的每张地面都能画出来且只用调色板', () => {
     assert.equal(grid.h, map.height * 16);
     assert.deepEqual(offPalette(grid), [], map.id);
   }
+});
+
+test('调色板：名字不重名；素材和画面里写到的每个颜色名都在调色板里', () => {
+  // 对象字面量里重名时，后写的会悄悄盖掉前面的：湿土 m0–m2 曾被草地的 m0–m2 盖掉，浇过的地画成了浅草色
+  const source = readFileSync(new URL('../../src/art/palette.js', import.meta.url), 'utf8');
+  const start = source.indexOf('const table = {');
+  const names = [...source.slice(start, source.indexOf('};', start)).matchAll(/(\w+):\s*'#/g)];
+  assert.ok(names.length > 100, '读到了调色板里的颜色');
+  const seen = new Set();
+  const twice = names.map(m => m[1]).filter(n => seen.has(n) || !seen.add(n));
+  assert.deepEqual(twice, []);
+  // 写错或改了名的颜色是 undefined，画出来是一个透明的洞，别的测试不一定看得出来
+  const missing = new Set();
+  for (const dir of ['../../src/art/', '../../src/world/']) {
+    for (const file of readdirSync(new URL(dir, import.meta.url)).filter(f => f.endsWith('.js'))) {
+      const code = readFileSync(new URL(dir + file, import.meta.url), 'utf8');
+      for (const [, name] of code.matchAll(/\bP\.([A-Za-z]\w*)/g))
+        if (!Object.hasOwn(P, name)) missing.add(`${file}: P.${name}`);
+    }
+  }
+  assert.deepEqual([...missing], []);
+});
+
+test('头顶的记号：每种都画得出来，只用调色板，彼此不一样；走到跟前和说话后用到的都有', async () => {
+  const { GREET, AFTER } = await import('../../src/content/resident-work.js');
+  const seen = new Set();
+  for (const kind of art.EMOTES) {
+    const g = art.emote(kind);
+    assert.equal(g.w, 13);
+    assert.equal(g.h, 12);
+    assert.deepEqual(offPalette(g), [], kind);
+    const hash = createHash('sha256').update(g.bytes()).digest('hex');
+    assert.ok(!seen.has(hash), kind);
+    seen.add(hash);
+  }
+  for (const kind of [...Object.values(GREET), ...Object.values(AFTER)])
+    assert.ok(art.EMOTES.includes(kind), kind);
 });

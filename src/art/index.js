@@ -1,6 +1,6 @@
 // 素材总表：名字 → 小图。画面只按名字取图，所以以后把某张程序画的图换成手绘的图，
 // 只要在这里换掉它的来源，别处不用动。
-import { indoors } from './indoors.js';
+import { indoors, indoorLooks } from './indoors.js';
 import { Grid } from './pixel.js';
 import { P, SHADOW } from './palette.js';
 import { house } from './house.js';
@@ -87,7 +87,7 @@ const VARIANTS = 4;
 export const OBJECT_KINDS = Object.keys(OBJECT_MAKERS);
 
 // 有的物件随规则里的状态换一副样子（鸡窝：还没搭、养了鸡）。世界按状态来挑，没有就用平常的样子。
-const OBJECT_LOOKS = { ...wildLooks };
+const OBJECT_LOOKS = { ...wildLooks, ...indoorLooks };
 
 /** 某种物件除了平常的样子，还有哪几副样子。 */
 export const objectLooks = kind => Object.keys(OBJECT_LOOKS[kind] || {});
@@ -105,8 +105,20 @@ const NO_OUTLINE = new Set([
   'fern',
 ]);
 
-function outlined({ grid, ax, ay }) {
-  const g = new Grid(grid.w + 2, grid.h + 2).blit(grid, 1, 1).outline(P.o0);
+// 屋里的家什用淡墨描边：屋里要清淡，深色的边一圈圈压下来，整间屋子就沉了。
+const SOFT_LINE = new Set([
+  'bed',
+  'rug',
+  'roomWindow',
+  'scroll',
+  'hangings',
+  'bookshelf',
+  'table@wood',
+  'route@door',
+]);
+
+function outlined({ grid, ax, ay }, line = P.o0) {
+  const g = new Grid(grid.w + 2, grid.h + 2).blit(grid, 1, 1).outline(line);
   return { grid: g, ax: ax + 1, ay: ay + 1 };
 }
 
@@ -115,7 +127,8 @@ export function objectSprite(kind, variant = 0, look = null) {
   const make = look ? OBJECT_LOOKS[kind]?.[look] : OBJECT_MAKERS[kind];
   if (!make) throw new Error('没有这种物件的画法：' + kind + (look ? '@' + look : ''));
   const sprite = make(101 + (variant % VARIANTS) * 37 + kind.length);
-  return NO_OUTLINE.has(kind) ? sprite : outlined(sprite);
+  if (NO_OUTLINE.has(kind)) return sprite;
+  return outlined(sprite, SOFT_LINE.has(look ? kind + '@' + look : kind) ? P.ink3 : P.o0);
 }
 
 /** 一个物件在地图上用第几个样子（由位置决定，所以每次都一样）。 */
@@ -152,6 +165,7 @@ export function personShadow() {
 }
 
 export { ACTS, actFrame, actSheet } from './acts.js';
+export { EMOTES, emote } from './emotes.js';
 export { farmFrame } from './farm-frame.js';
 export { hen } from './acts-yard.js';
 export { seasonGrid } from './seasons.js';

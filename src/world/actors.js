@@ -1,6 +1,8 @@
 // 会走路的人：玩家操控的人和按作息走动的村民，用的是同一套走路、朝向和动画。
-import { TILE, tileOf, dirTo, findPath } from './logic.js';
+import { TILE, tileOf, dirTo, findPath, exitToward } from './logic.js';
 import { ResidentWork } from './resident-work.js';
+import { showEmote } from './emotes.js';
+import { GREET } from '../content/resident-work.js';
 import { frameOf } from './textures.js';
 import { walkable } from '../content/maps/index.js';
 
@@ -36,6 +38,7 @@ export class Walker {
     const y = Math.round(this.py);
     this.sprite.setPosition(x, y).setDepth(this.py);
     this.shadow.setPosition(x, y).setDepth(this.py - 0.5);
+    this.emote?.setPosition(x, y - 31);
   }
 
   setVisible(visible) {
@@ -138,7 +141,10 @@ export class Walker {
   }
 }
 
-/** 村民：按作息表去该去的位置，到了就面朝规定的方向；“回家了”就从画面上消失。 */
+/**
+ * 村民：按作息表去该去的位置，到了就面朝规定的方向。换到别处去，是沿路走到那边的路口才不见；
+ * 从别处来，是从来路的路口走进来；回家的人走回自家门口。刚进这张图、刚睡醒时直接摆到位。
+ */
 export class Villager extends Walker {
   constructor(scene, map, id, look, first) {
     super(scene, look, first.x, first.y, first.dir);
@@ -148,7 +154,13 @@ export class Villager extends Walker {
     this.speed = 30;
     this.plan = first;
     this.doing = first.doing;
+    this.leaving = false;
     this.setVisible(first.visible && first.map === map.id);
+  }
+
+  /** 此刻在这张图上、点得着、说得上话（正往路口走、要走了的人不算）。 */
+  get present() {
+    return this.sprite.visible && !this.leaving;
   }
 
   /** 时间变了：看看是不是该换地方了。 */
@@ -164,31 +176,49 @@ export class Villager extends Walker {
     this.work.reset(plan, wet);
     this.plan = plan;
     this.doing = plan.doing;
-    const goal = plan;
-    const offstage = !plan.visible || plan.map !== this.map.id;
-    if (offstage) {
-      this.stop();
-      this.setVisible(false);
+    this.leaving = false;
+    const walk = (x, y) => walkable(this.map, x, y);
+    const away = p => (p.visible ? p.map : null);
+    if (!plan.visible || plan.map !== this.map.id) {
+      const door =
+        !jump && this.sprite.visible && exitToward(this.map, away(plan), this.id, this.tile);
+      const path = door && findPath(walk, this.tile, door);
+      if (!path) {
+        this.stop();
+        this.setVisible(false);
+        return;
+      }
+      this.leaving = true;
+      this.walk(path, () => this.setVisible(false));
       return;
     }
+    // 从别处来：先站到来路的那个路口，再走过去
+    if (!jump && !this.sprite.visible) {
+      const door = exitToward(this.map, away(old), this.id, plan);
+      if (door && walk(door.x, door.y)) {
+        this.place(door);
+        this.setVisible(true);
+      }
+    }
     const settle = () => {
-      this.face(goal.dir);
-      this.setVisible(!offstage);
+      this.face(plan.dir);
+      this.setVisible(true);
     };
-    const path =
-      jump || !this.sprite.visible
-        ? null
-        : findPath((x, y) => walkable(this.map, x, y), this.tile, goal);
+    const path = jump || !this.sprite.visible ? null : findPath(walk, this.tile, plan);
     if (!path) {
-      this.px = goal.x * TILE + 8;
-      this.py = goal.y * TILE + FOOT_Y;
+      this.place(plan);
       this.stop();
-      this.sync();
       settle();
       return;
     }
-    this.setVisible(true);
     this.walk(path, settle);
+  }
+
+  /** 直接摆到某一格。 */
+  place(at) {
+    this.px = at.x * TILE + 8;
+    this.py = at.y * TILE + FOOT_Y;
+    this.sync();
   }
 
   tick(dt, waiting) {
@@ -200,7 +230,26 @@ export class Villager extends Walker {
       this.animate(false);
       return;
     }
-    if (!this.follow(dt)) this.work.update(dt);
+    if (this.follow(dt)) return;
+    const near = Math.max(Math.abs(this.tile.x - hero.x), Math.abs(this.tile.y - hero.y)) <= 2;
+    if (near && this.present) this.greet();
+    this.work.update(dt);
+  }
+
+  /**
+   * 今天头一回走到跟前：放下手里的活，转过身看你一眼，头顶冒个记号
+   * （content/resident-work.js 的 GREET）。一天一回，换了地图也记得（记在 registry 里）。
+   */
+  greet() {
+    const scene = this.scene;
+    const key = this.id + ':' + scene.today;
+    const seen = scene.registry.get('greeted') || new Set();
+    if (seen.has(key)) return;
+    scene.registry.set('greeted', seen.add(key));
+    const bond = scene.deps.game.ask('bonds').find(b => b.id === this.id);
+    this.turnTo(scene.player);
+    this.work.wait = 1.8;
+    showEmote(scene, this, bond?.tier === 0 ? GREET.stranger : GREET[bond?.mood]);
   }
 
   /** 转过身来对着某个人（说话的时候）。 */

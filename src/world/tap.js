@@ -13,7 +13,7 @@ export function tapAt(scene, wx, wy) {
   const walk = (x, y) => walkable(scene.map, x, y);
   const from = scene.player.tile;
   const person = scene.villagers.find(
-    v => v.sprite.visible && Math.abs(v.px - wx) < 9 && wy < v.py + 3 && wy > v.py - 28,
+    v => v.present && Math.abs(v.px - wx) < 9 && wy < v.py + 3 && wy > v.py - 28,
   );
   const tile = person ? person.tile : tileOf(wx, wy);
   const thing = !person && actAt(scene.map, tile.x, tile.y);
@@ -33,7 +33,7 @@ export function tapAt(scene, wx, wy) {
     scene.player.face(stand.dir);
     // 赴约、换班可能在路上发生。只跟点中的人说话，不能误碰他原来站着的地。
     if (person) {
-      if (person.sprite.visible && person.tile.x === tile.x && person.tile.y === tile.y)
+      if (person.present && person.tile.x === tile.x && person.tile.y === tile.y)
         return scene.talk(person);
       return;
     }

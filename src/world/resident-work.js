@@ -19,17 +19,17 @@ export class ResidentWork {
     this.act = (wet && this.job?.rain) || this.job?.act;
     this.inspectDir = null;
     this.stopIndex = 0;
-    this.wait = p.id === 'aman' ? 2.1 : 0.6;
+    this.wait = this.job?.delay ?? 0.6;
   }
 
-  // 在田里看见落籽，走到新种的那格旁看看。同一天在场时只看一回，地和种子仍归玩家照料。
-  inspectSowing(plot, day) {
+  // 看见工位表里登记过的事（比如在他眼前落籽），走到那一格旁边看看。同一天只看一回；
+  // 看归看，地和种子仍归玩家照料。谁会看、看什么，写在 content/resident-work.js。
+  notice(type, plot, day) {
     const p = this.actor;
     if (
-      p.id !== 'shi' ||
-      p.plan.place !== 'field' ||
+      this.job?.notice?.[type] !== 'inspect' ||
       p.map.id !== plot.map ||
-      !p.sprite.visible ||
+      !p.present ||
       this.visitDay === day
     )
       return;

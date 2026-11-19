@@ -3,7 +3,9 @@
 // 地面字符。walk = 能走；farm = 能锄地；water = 能在旁边打水；drink = 能喝（喝的是哪种水）。
 export const GROUND = Object.freeze({
   o: { id: 'boards', walk: true },
+  q: { id: 'flags', walk: true }, // 屋里灶边铺的青石板
   v: { id: 'wall', walk: false },
+  x: { id: 'void', walk: false }, // 屋子外头，留白
   '.': { id: 'grass', walk: true },
   p: { id: 'earth', walk: true },
   s: { id: 'stone', walk: true },
@@ -21,6 +23,8 @@ export const GROUND = Object.freeze({
 export const OBJECTS = Object.freeze({
   bed: { foot: [-1, -1, 1, 0], act: 'sleep' },
   roomWindow: {},
+  scroll: {}, // 后墙上挂的字画
+  hangings: {}, // 后墙上挂的干辣椒、玉米
   rug: {},
   boat: {},
   route: { act: 'travel' },
