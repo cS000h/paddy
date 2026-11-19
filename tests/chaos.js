@@ -13,6 +13,7 @@ import { TEA_DEEDS } from '../src/content/market.js';
 import { ORIGINS } from '../src/content/growth.js';
 import { ON_MAP } from '../src/content/people.js';
 import { CUTS, METHODS } from '../src/content/recipes.js';
+import { COATS, HAIR } from '../src/content/wardrobe.js';
 
 export function rng(seed) {
   let a = seed >>> 0;
@@ -66,6 +67,7 @@ const JUNK = [
 ];
 const KEYS = ['x', 'y', 'item', 'n', 'id', 'to', 'kind', 'shop', 'items', 'spices', 'method'];
 const MORE_KEYS = ['cut', 'heat', 'value', 'minutes', 'route', 'reply', 'seed', 'dish', 'dir'];
+const WEAR_KEYS = ['coat', 'hair'];
 
 /**
  * 开一局乱玩的游戏。
@@ -238,6 +240,19 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
 
   const tea = at => send('tea.do', { kind: pick(Object.keys(TEA_DEEDS)), at });
 
+  // 布摊：挑一样买（钱不够、已经有了，规则会拒绝）
+  function cloth(at) {
+    const ware = pick(game.ask('wardrobe', at).stall.wares);
+    if (ware) send('wardrobe.buy', { kind: ware.kind, id: ware.id, at });
+  }
+
+  // 衣镜：多半换衣箱里有的，偶尔试一样还没有的
+  function dress(at) {
+    const box = game.ask('wardrobe');
+    const one = kind => pick(chance(0.8) ? box[kind].filter(p => p.owned) : box[kind]).id;
+    send('wardrobe.wear', { coat: one('coat'), hair: one('hair'), at });
+  }
+
   function useThing() {
     const things = layout(hero().map).things.filter(t => !t.to);
     if (!things.length) return;
@@ -250,6 +265,8 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     else if (t.act === 'basket') basket(at);
     else if (t.act === 'market') market(t.shop, at);
     else if (t.act === 'tea') tea(at);
+    else if (t.act === 'cloth') cloth(at);
+    else if (t.act === 'wardrobe') dress(at);
     else if (t.act === 'water') send(pick(['drink', 'farm.refill']), { x: t.x, y: t.y, at });
     else if (t.act === 'sleep') send('sleep', { at });
     else send('person.place', at);
@@ -340,9 +357,8 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   }
 
   function wander() {
-    if (hero().map === 'cottage')
-      send('person.dress', { at: { x: 8, y: 5 }, coat: 'tea', hair: 'braid' });
-    else send('person.dress', { coat: 'plain', hair: 'plain' });
+    if (hero().map === 'cottage') dress({ x: 8, y: 5, dir: 'up' });
+    else send('wardrobe.wear', { coat: 'plain', hair: 'plain' });
     const p = pick(layout(hero().map).stand);
     send('person.place', { x: p.x, y: p.y, dir: pick(DIRS) });
   }
@@ -359,7 +375,9 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     item: () => pick(Object.keys(ITEMS)),
     to: () => pick(ON_MAP),
     id: () => pick([...Object.keys(OUTDOOR), ...Object.keys(HOMEWORK), 1, 2]),
-    kind: () => pick([...CARE, ...Object.keys(TEA_DEEDS)]),
+    kind: () => pick([...CARE, ...Object.keys(TEA_DEEDS), 'coat', 'hair']),
+    coat: () => pick(Object.keys(COATS)),
+    hair: () => pick(Object.keys(HAIR)),
     shop: () => pick(['market', 'tea']),
     method: () => pick(Object.keys(METHODS)),
     cut: () => pick(Object.keys(CUTS)),
@@ -371,7 +389,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   };
   function rough() {
     const input = {};
-    for (const key of [...KEYS, ...MORE_KEYS])
+    for (const key of [...KEYS, ...MORE_KEYS, ...WEAR_KEYS])
       if (chance(0.35)) input[key] = chance(0.5) || !VALID[key] ? pick(JUNK) : VALID[key]();
     if (chance(0.7))
       input.at = pick([undefined, null, {}, { x: -1, y: 0 }, { x: 1e9, y: 1 }, { x: 'a' }, here()]);

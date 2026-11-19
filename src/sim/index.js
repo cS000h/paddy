@@ -36,6 +36,7 @@ import { visits } from './plugins/visits.js';
 import { modifiers } from './plugins/modifiers.js';
 import { events } from './plugins/events.js';
 import { visitors } from './plugins/visitors.js';
+import { wardrobe } from './plugins/wardrobe.js';
 
 export { SAVE_VERSION };
 // 顺序有讲究：后面的插件建自己的数据时，可以读前面的（比如身体和行囊按“户里有谁”来建）。
@@ -68,6 +69,7 @@ export const PLUGINS = Object.freeze([
   modifiers,
   events,
   visitors,
+  wardrobe,
 ]);
 
 /**

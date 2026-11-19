@@ -300,7 +300,7 @@ export class VillageScene extends Phaser.Scene {
         changeMap(this, MAPS[d.to]);
         return;
       }
-      if (f.type === 'person.dressed') {
+      if (f.type === 'wardrobe.worn') {
         const p = this.player;
         p.look = this.deps.game.ask('hero').look;
         ensurePerson(this, p.look);

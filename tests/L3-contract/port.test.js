@@ -29,7 +29,6 @@ const COMMANDS = [
   'origin.choose',
   'pack.put',
   'pack.take',
-  'person.dress',
   'person.place',
   'sip',
   'sky.look',
@@ -47,6 +46,8 @@ const COMMANDS = [
   'event.choose',
   'visitor.talk',
   'visitor.fulfill',
+  'wardrobe.wear',
+  'wardrobe.buy',
 ];
 const QUERIES = [
   'residents',
@@ -80,6 +81,7 @@ const QUERIES = [
   'modifiers',
   'events',
   'visitors',
+  'wardrobe',
 ];
 
 test('端口对外只有这几样', () => {

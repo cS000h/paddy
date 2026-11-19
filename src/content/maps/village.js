@@ -205,7 +205,7 @@ export const tea = village(
 );
 
 // 村口杂货铺：铺子门前一片青石集场，挂着灯笼；路南一排摊棚，赶集的日子最热闹；
-// 场边一口井、一辆板车、几垛草。
+// 柜台右手边一架布摊，挂着成衣；场边一口井、一辆板车、几垛草。
 export const market = village(
   'market',
   '村口杂货铺',
@@ -219,7 +219,7 @@ export const market = village(
     route(26, 14, 'tea', 'south', '去樟树茶摊'),
     ['house.gui', 14, 8, { text: '杂货铺的门开着。要买卖东西，到门前柜台看看。' }],
     ['marketCounter', 14, 10, { shop: 'market', label: '小乔照看的柜台' }],
-    ['rack', 19, 10],
+    ['clothRack', 19, 10, { label: '布摊：成衣和头绳' }],
     ['jars', 10, 11],
     ['haystack', 22, 12],
     ['lantern', 6, 9],

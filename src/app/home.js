@@ -25,9 +25,12 @@ export function homeActions({ game, shell, run, here, world }) {
     packTake({ item, n }) {
       run('pack.take', { item, n, ...at() });
     },
-    // 喝水、打水：成了就合上小窗，人在水边弯腰舀一瓢
     fittingTab({ tab }) {
-      shell.set({ modal: { ...shell.get().modal, tab } });
+      shell.set({ modal: { ...shell.get().modal, tab, showMissing: false } });
+    },
+    fittingMissing() {
+      const modal = shell.get().modal;
+      shell.set({ modal: { ...modal, showMissing: !modal.showMissing } });
     },
     fittingPick({ id }) {
       const m = shell.get().modal;
@@ -35,8 +38,10 @@ export function homeActions({ game, shell, run, here, world }) {
     },
     fittingWear() {
       const m = shell.get().modal;
-      const hero = game.ask('hero');
-      if (run('person.dress', { ...at(), coat: m.coat ?? hero.coat, hair: m.hair ?? hero.hair }).ok)
+      const { worn } = game.ask('wardrobe');
+      if (
+        run('wardrobe.wear', { ...at(), coat: m.coat ?? worn.coat, hair: m.hair ?? worn.hair }).ok
+      )
         shell.set({ modal: null });
     },
     drink() {

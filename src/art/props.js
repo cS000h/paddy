@@ -2,6 +2,7 @@
 // 每个函数返回 {grid, ax, ay}；ax、ay 是“脚下那一格的底边中点”在图里的位置。
 import { Grid, rng, hash2, fromText } from './pixel.js';
 import { P, SHADOW } from './palette.js';
+import { coats } from './garments.js';
 
 const made = (grid, ax, ay) => ({ grid, ax, ay });
 
@@ -156,6 +157,26 @@ export function rack() {
     for (let x = 9; x < 14; x += 2) if ((x + y) % 4 === 1) g.set(x, y, P.l0);
   g.rect(17, 8, 6, 15, P.l0).vline(22, 8, 22, P.l2).hline(17, 22, 22, P.l2);
   g.rect(25, 8, 4, 9, P.c0).vline(28, 8, 16, P.c1);
+  return made(g, 10, 32);
+}
+
+// 集上的布摊：同样的竹架子，横竿上挂着四件成衣，颜色取自衣橱里的几件（art/garments.js）。
+export function clothRack() {
+  const g = new Grid(36, 32);
+  g.hline(4, 33, 30, SHADOW).hline(6, 31, 31, SHADOW);
+  for (const x of [5, 30]) g.line(x - 3, 30, x + 2, 3, P.b2).line(x + 3, 30, x - 2, 3, P.b3);
+  g.hline(2, 33, 6, P.b1).hline(2, 33, 7, P.b3);
+  ['tea', 'lotus', 'harvest', 'ink'].forEach((id, i) => {
+    const [cloth, shade, trim] = coats[id];
+    const x = 4 + i * 7;
+    g.set(x + 3, 7, P.ink2); // 挂钩
+    const hem = [19, 24, 21, 17][i];
+    g.line(x + 1, 10, x + 3, 8, P.b2).line(x + 3, 8, x + 5, 10, P.b2);
+    g.rect(x, 11, 7, 3, cloth).rect(x + 1, 13, 5, hem - 12, cloth);
+    g.vline(x + 5, 12, hem, shade).hline(x + 1, x + 5, hem, shade);
+    if (id === 'lotus') g.rect(x, 16, 7, 8, trim).vline(x + 5, 17, 23, cloth);
+    else g.line(x + 1, 11, x + 4, 14, trim).set(x + 2, hem - 2, shade);
+  });
   return made(g, 10, 32);
 }
 

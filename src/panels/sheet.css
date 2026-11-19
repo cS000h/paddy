@@ -646,22 +646,31 @@
   color: var(--qing) !important;
 }
 
-.achievement-seal {
+/* 册子里的成就：得了的是一束金黄的稻子，没得的只留一道淡影。 */
+.achievement-mark {
   flex: none;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border: 1px dashed var(--mist-2);
-  border-radius: 3px;
-  color: var(--ink-3);
+  width: 34px;
+  height: 34px;
+  border: 2px dashed var(--frame-2);
+  border-radius: 6px;
 }
 
-.achievement-seal.earned {
-  border: 0;
-  background: var(--cinnabar);
-  color: #f4ead6;
-  transform: rotate(-8deg);
+.achievement-mark img {
+  opacity: 0.3;
+  filter: grayscale(1);
+}
+
+.achievement-mark.earned {
+  border-style: solid;
+  border-color: var(--sage-line);
+  background: var(--sage);
+}
+
+.achievement-mark.earned img {
+  opacity: 1;
+  filter: none;
 }
 
 .body-line {

@@ -4,6 +4,7 @@
 import '../panels/style.css';
 import '../panels/play-hud.css';
 import '../panels/book.css';
+import '../panels/wardrobe.css';
 import { createGame } from '../port/game.js';
 import { createWebPlatform } from '../platform/web.js';
 import { createIntents } from '../shell/intents.js';

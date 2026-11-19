@@ -10,7 +10,6 @@
 import { is, check } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { PEOPLE, HERO, ON_MAP } from '../../content/people.js';
-import { COATS, HAIR, outfitLook } from '../../content/wardrobe.js';
 import { ENERGY_MAX } from '../../content/items.js';
 import { ACTIONS } from '../../content/actions.js';
 import {
@@ -41,8 +40,6 @@ export const people = {
         const all = { [HERO]: { energy: ENERGY_MAX, map: START_MAP, ...start } };
         for (const id of ON_MAP)
           all[id] = { energy: ENERGY_MAX, map: START_MAP, x: 0, y: 0, dir: 'down' };
-        for (const person of Object.values(all))
-          Object.assign(person, { coat: 'plain', hair: 'plain' });
         return all;
       },
       validate: all =>
@@ -51,10 +48,6 @@ export const people = {
           [
             Object.values(all).every(
               p =>
-                typeof p.coat === 'string' &&
-                typeof p.hair === 'string' &&
-                Object.hasOwn(COATS, p.coat) &&
-                Object.hasOwn(HAIR, p.hair) &&
                 is.int(p.energy, 0, ENERGY_MAX) &&
                 Object.hasOwn(MAPS, p.map) &&
                 is.int(p.x, 0, 999) &&
@@ -148,23 +141,6 @@ export const people = {
       core.log(w, id, 'energy', p.energy - before, why);
     });
 
-    commands.register('person.dress', ({ draft, input, fact }) => {
-      const w = draft.world;
-      const p = place(w, input.at);
-      if (
-        typeof input.coat !== 'string' ||
-        typeof input.hair !== 'string' ||
-        !Object.hasOwn(COATS, input.coat) ||
-        !Object.hasOwn(HAIR, input.hair)
-      )
-        refuse('衣镜里没有这一款');
-      const mirror = MAPS[p.map].objects.find(([kind]) => kind === 'dresser');
-      if (!mirror || !near(p, { x: mirror[1], y: mirror[2] })) refuse('到小屋的衣镜跟前再换');
-      p.coat = input.coat;
-      p.hair = input.hair;
-      fact('person.dressed', { who: who(w) });
-    });
-
     commands.register('travel', ({ draft, input, fact }) => {
       const w = draft.world,
         p = place(w, input.at),
@@ -242,7 +218,12 @@ export const people = {
       id: who(w),
       ...PEOPLE[who(w)],
       ...me(w),
-      look: outfitLook(PEOPLE[who(w)].look, me(w).coat, me(w).hair),
+      // 穿戴是另一个插件的事（sim/plugins/wardrobe.js），它接在这条管道上；没装它就是人物底子的样子
+      look: compute.run(
+        'person.look',
+        { w, who: who(w) },
+        { value: PEOPLE[who(w)].look, parts: [] },
+      ).value,
       energyMax: ENERGY_MAX,
       atHome: atHome(w, who(w), at || null),
     }));

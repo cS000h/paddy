@@ -2,7 +2,6 @@
 // （world 的 work / perform），做完冒一句话；钓鱼先甩竿，浮漂在水里时底下一条看时机的横条。
 import { timingValue } from '../shell/timing.js';
 
-const lineOf = (facts, ...types) => facts.find(f => types.includes(f.type))?.data.line || '';
 const spotOf = m => (m && m.x !== undefined ? { x: m.x, y: m.y } : null);
 
 export function activityActions({ shell, run, here, world }) {
@@ -24,7 +23,10 @@ export function activityActions({ shell, run, here, world }) {
     shell.set({ modal: null });
     const out = run('fish.reel', { value, at: here() });
     const caught = out.ok && out.facts.some(f => f.type === 'fish.caught');
-    const line = out.ok ? lineOf(out.facts, 'fish.caught', 'fish.missed') : '';
+    const line =
+      out.ok &&
+      (out.facts.find(f => f.type === 'wardrobe.got')?.data.line ??
+        out.facts.find(f => f.type === 'fish.caught' || f.type === 'fish.missed')?.data.line);
     world.perform(caught ? 'reel' : 'miss', {
       target: fishingAt,
       water: true,

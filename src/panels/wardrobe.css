@@ -1,0 +1,130 @@
+/* 衣镜旁边留出挑衣服的位置；窄屏仍能同时看见选项和穿上后的样子。 */
+#ui {
+  --cloth-width: min(640px, 74%);
+}
+#ui .frame.side:is([data-kind='wardrobe'], [data-kind='cloth']) {
+  width: var(--cloth-width);
+}
+#ui:has(.frame:is([data-kind='wardrobe'], [data-kind='cloth'])) .captions {
+  z-index: 19;
+}
+.fitting-body {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.78fr) minmax(0, 1.22fr);
+  align-items: start;
+  gap: 16px;
+}
+.fitting-preview {
+  position: sticky;
+  top: 56px;
+  margin: 0;
+  padding: 12px 6px 9px;
+  border: 1px solid var(--sage-line);
+  background: linear-gradient(to bottom, #e1e7d9, #eef0df 60%, #ddd2b8 60%, #eae1cd 69%);
+  text-align: center;
+}
+.fitting-preview > div {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 4px;
+}
+.fitting-preview img {
+  width: 32px;
+  height: 64px;
+}
+.fitting-preview img:nth-child(2) {
+  width: 48px;
+  height: 96px;
+}
+.fitting-preview figcaption {
+  margin-top: 8px;
+  font-weight: 600;
+}
+.fitting-preview small,
+.fitting-hints small {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.cloth-tabs {
+  display: flex;
+  gap: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.sheet .cloth-tabs button {
+  flex: 1;
+  min-width: 0;
+  padding-inline: 4px;
+}
+.cloth-tabs .chosen,
+.fitting-choices .chosen {
+  background: var(--sage);
+  border-color: var(--qing);
+}
+.fitting-choices,
+.fitting-hints,
+.frame[data-kind='cloth'] .items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 108px), 1fr));
+  gap: 6px;
+  margin: 10px 0;
+}
+.sheet .fitting-more {
+  border: 0;
+  padding-inline: 0;
+  color: var(--qing);
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.fitting-hints {
+  list-style: none;
+  padding: 0;
+}
+.fitting-hints li {
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+}
+.fitting-hints b {
+  font-size: 14px;
+  font-weight: 600;
+}
+.frame[data-kind='cloth'] .items {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 205px), 1fr));
+  gap: 0 16px;
+}
+.frame[data-kind='cloth'] li {
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.ware-pic {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-height: 46px;
+  background: var(--sage);
+}
+.items .ware-pic img {
+  width: 32px;
+  height: auto;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+}
+.narrow .fitting-body {
+  gap: 8px;
+}
+.narrow .fitting-preview img:not(:nth-child(2)) {
+  width: min(22%, 32px);
+  height: auto;
+}
+#ui[data-place='side']:has(.frame[data-kind='cloth']) .award {
+  left: calc((100% - var(--cloth-width)) / 2);
+  max-width: calc(100% - var(--cloth-width) - 20px);
+  padding-inline: 5px;
+  white-space: normal;
+}

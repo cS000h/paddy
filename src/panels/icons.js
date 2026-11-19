@@ -31,6 +31,10 @@ export const uiIconUrl = id => cached('ui:' + id, () => uiIcon(id));
 export const uiIconImg = (id, size = 20) =>
   `<img class="pixel ui-ico" width="${size}" height="${size}" src="${uiIconUrl(id)}" alt="" />`;
 
+/** 衣镜和布摊共用站立全身像，看得见衣摆、裤脚和发式。 */
+export const standingUrl = (look, dir = 'down') =>
+  cached('stand:' + dir + ':' + look, () => personFrame(look, dir, 'stand'));
+
 /** 人物上半身像素小像：截站立正面的头和肩（16×18），册子里按 4 倍整数放大，像素不糊。 */
 export const heroPortraitUrl = look =>
   cached('bust:' + look, () => {

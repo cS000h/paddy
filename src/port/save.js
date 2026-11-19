@@ -8,6 +8,30 @@ export const SAVE_FORMAT = 'dao.save';
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
 const MIGRATIONS = {
+  13(state) {
+    // 衣装和发式成了单独的插件（sim/plugins/wardrobe.js）：身上穿的从人身上挪进 wardrobe.worn；
+    // 衣箱里放开局那几样，再加上身上正穿着的，原先的样子不丢。
+    const w = state.world;
+    w.meta.version = 14;
+    const worn = {};
+    for (const [id, p] of Object.entries(w.people)) {
+      worn[id] = { coat: p.coat || 'plain', hair: p.hair || 'plain' };
+      delete p.coat;
+      delete p.hair;
+    }
+    const owned = {};
+    for (const [id, home] of Object.entries(w.households)) {
+      const coat = ['plain', 'field'];
+      const hair = ['plain', 'short', 'tail', 'loose'];
+      for (const m of home.members) {
+        if (worn[m] && !coat.includes(worn[m].coat)) coat.push(worn[m].coat);
+        if (worn[m] && !hair.includes(worn[m].hair)) hair.push(worn[m].hair);
+      }
+      owned[id] = { coat, hair };
+    }
+    w.wardrobe = { worn, owned };
+    return state;
+  },
   12(state) {
     // M9 进世界：过客带外观与实景坐标，随机小事带发生地坐标
     const w = state.world;

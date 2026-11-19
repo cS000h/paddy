@@ -131,9 +131,15 @@
   background: #f5edddda;
   box-shadow: none;
 }
-.touch .award-stamp {
-  right: calc(108px + var(--safe-r));
-  top: calc(57px + var(--safe-t));
+/* 矮屏上右边的小窗宽一些；宽的那几种（做饭、橱柜……）左边没剩多少，纸条就落在正中 */
+.compact #ui[data-place='side'] .award {
+  left: calc((100% - min(500px, 64%)) / 2);
+}
+.compact #ui[data-place='side']:has(.frame.wide) .award {
+  left: 50%;
+}
+.compact .award b {
+  font-size: 15.5px;
 }
 .touch .stick:not(.live) {
   top: auto;
@@ -315,7 +321,7 @@
 }
 #ui[data-morning='true'] .left,
 #ui[data-morning='true'] .captions,
-#ui[data-morning='true'] .award-stamp {
+#ui[data-morning='true'] .award {
   visibility: hidden;
 }
 .morning-list {
@@ -351,28 +357,4 @@
 .sheet .morning-note p {
   font-size: 14px;
   line-height: 1.55;
-}
-
-/* 手记开着时，成就印落在它左边，不压住分页和第一行 */
-#ui .journal:not([hidden]) ~ .award-stamp {
-  right: calc(min(285px, 90%) + 24px + var(--safe-r));
-}
-
-.fitting-preview {
-  display: flex;
-  justify-content: center;
-  align-items: end;
-  gap: 15px;
-  padding: 8px;
-  background: #e9e1c8;
-  border-bottom: 2px solid #beaa86;
-}
-.fitting-choices {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px;
-  padding: 6px 0;
-}
-.fitting-choices button {
-  min-height: 40px;
 }

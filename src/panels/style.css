@@ -735,55 +735,90 @@ button:focus-visible {
   }
 }
 
-/* 成就印靠屏幕边缘，留出人物和工具的落点。 */
-.award-stamp {
+/* 得了成就、新衣时落下的纸条（panels/award.js）：和小窗一样的纸和边，左边一张像素小图，
+   名字底下扫出一笔淡青。在上沿正中；右边开着小窗时挪到左边空着的那半，不压住小窗。 */
+.award {
   position: absolute;
-  top: calc(52px + var(--safe-t));
-  right: calc(12px + var(--safe-r));
+  top: calc(58px + var(--safe-t));
+  left: 50%;
   z-index: 35;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 20px 10px 10px;
-  border: 2px solid var(--cinnabar);
-  border-radius: var(--r-card);
+  gap: 10px;
+  padding: 6px 18px 6px 8px;
   background: var(--moon);
-  box-shadow: var(--shadow);
-  color: var(--cinnabar);
-  transform: rotate(-3deg);
-  animation: stamp-in 3.2s both;
+  border: 2px solid var(--frame);
+  border-radius: 4px;
+  box-shadow:
+    0 2px 0 rgba(54, 50, 43, 0.16),
+    0 8px 18px rgba(36, 40, 42, 0.16);
+  color: var(--ink);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: award-in 3.2s both;
   pointer-events: none !important;
 }
 
-.award-stamp span {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 3px;
-  background: var(--cinnabar);
-  color: #f4ead6;
-  font-size: 21px;
+.award img {
+  flex: none;
+  image-rendering: pixelated;
 }
 
-.award-stamp b {
-  font-size: 18px;
+.award small {
+  display: block;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+}
+
+.award b {
+  display: block;
+  font-size: 17px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
 }
 
-@keyframes stamp-in {
+.award b::after {
+  content: '';
+  display: block;
+  height: 3px;
+  margin-top: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(109, 147, 91, 0.7), rgba(109, 147, 91, 0.08));
+  transform-origin: left;
+  animation: award-brush 0.6s 0.3s ease-out both;
+}
+
+#ui[data-place='side'] .award {
+  left: calc((100% - min(470px, 62%)) / 2);
+}
+
+#ui[data-place='side']:has(.frame.wide) .award {
+  left: calc((100% - min(800px, 88%)) / 2);
+}
+
+@keyframes award-in {
   0% {
     opacity: 0;
-    scale: 1.5;
+    translate: 0 -12px;
   }
-  12%,
-  80% {
+  9%,
+  84% {
     opacity: 1;
-    scale: 1;
+    translate: 0 0;
   }
   100% {
     opacity: 0;
+    translate: 0 -6px;
+  }
+}
+
+@keyframes award-brush {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
   }
 }
 

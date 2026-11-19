@@ -306,7 +306,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.locator('[data-do="bookTab"][data-tab="traits"]').click();
       assert.match(await p.locator('.sheet').textContent(), /慢热/);
       await p.locator('[data-do="bookTab"][data-tab="achievements"]').click();
-      assert.ok((await p.locator('.achievement-seal.earned').count()) > 0);
+      assert.ok((await p.locator('.achievement-mark.earned').count()) > 0);
       await p.waitForTimeout(250);
       await shot(p, session === desk ? 'm4-book-desktop.png' : 'm4-book-phone.png');
       await p.locator('[data-do="bookPage"]').last().click();
@@ -364,14 +364,18 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await shot(p, session === desk ? 'cottage-desktop.png' : 'cottage-phone.png');
       await tap(p, 8, 4);
       await frames(p, 400);
-      await p.locator('[data-do="fittingPick"][data-id="winter"]').click();
+      // 可穿的衣服直接可选，未取得的衣服另列出处。
+      await p.locator('[data-do="fittingMissing"]').click();
+      assert.match(await p.locator('.fitting-hints').textContent(), /渡口钓鱼/);
+      await p.locator('[data-do="fittingMissing"]').click();
+      await p.locator('[data-do="fittingPick"][data-id="field"]').click();
       await p.locator('[data-do="fittingTab"][data-tab="hair"]').click();
-      await p.locator('[data-do="fittingPick"][data-id="braid"]').click();
+      await p.locator('[data-do="fittingPick"][data-id="loose"]').click();
       await shot(p, session === desk ? 'wardrobe-desktop.png' : 'wardrobe-phone.png');
       await p.locator('[data-do="fittingWear"]').click();
       assert.equal(
         await p.evaluate(() => window.__dao.world.scene().player.look),
-        'hero/winter/braid/3',
+        'hero/field/loose/3',
       );
       // 走向工位时腿要持续迈步；中途用方向打断，当帧归还人物和路径。
       const handoff = await p.evaluate(() => {
@@ -406,6 +410,23 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.waitForTimeout(250);
       await shot(p, session === desk ? 'market-desktop.png' : 'market-phone.png');
       await p.locator('[data-do="close"]').click();
+      await performed(p);
+      await tap(p, 19, 10);
+      await frames(p, 450);
+      await p.locator('[data-do="clothTab"][data-tab="hair"]').click();
+      const coins = await p.evaluate(() => window.__dao.game.ask('home').coins);
+      const pony = p.locator('[data-do="clothBuy"][data-id="pony"]');
+      await pony.click();
+      assert.equal(await p.evaluate(() => window.__dao.game.ask('home').coins), coins - 12);
+      assert.ok(await pony.isDisabled());
+      await p.locator('.award').filter({ hasText: '高马尾' }).waitFor();
+      await p.waitForTimeout(350);
+      const slip = await p.locator('.award').boundingBox();
+      const paper = await p.locator('.frame[data-kind="cloth"]').boundingBox();
+      assert.ok(slip.x >= 0 && slip.x + slip.width <= paper.x, '纸条留在布摊旁边的空处');
+      await shot(p, session === desk ? 'cloth-desktop.png' : 'cloth-phone.png');
+      await p.locator('[data-do="close"]').click();
+      await performed(p);
       await go(26, 14, 'tea');
       await tap(p, 17, 10);
       await frames(p, 400);
@@ -425,6 +446,11 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await go(12, 20, 'creek');
       await go(1, 14, 'yard');
       await go(8, 9, 'cottage');
+      await tap(p, 8, 4);
+      await frames(p, 400);
+      await p.locator('[data-do="fittingTab"][data-tab="hair"]').click();
+      await p.locator('[data-do="fittingPick"][data-id="pony"]').click();
+      await p.locator('[data-do="fittingWear"]').click();
       // 新标签页自己的自动存档；重载应还在屋里，没有覆盖用户浏览器进度。
       await p.waitForTimeout(500);
       await p.reload();
@@ -432,7 +458,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       assert.equal(await p.evaluate(() => window.__dao.game.ask('hero').map), 'cottage');
       assert.equal(
         await p.evaluate(() => window.__dao.world.scene().player.look),
-        'hero/winter/braid/3',
+        'hero/field/pony/3',
       );
       assert.deepEqual(session.errors, []);
     }

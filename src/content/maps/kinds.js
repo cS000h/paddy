@@ -56,6 +56,7 @@ export const OBJECTS = Object.freeze({
   table: { foot: [0, 0, 1, 0], act: 'housework' },
   haystack: { foot: [0, 0, 1, 0] },
   rack: { foot: [0, 0, 1, 0] },
+  clothRack: { foot: [0, 0, 1, 0], act: 'cloth' }, // 集上的布摊：晾衣架上挂着成衣
   jars: { foot: [0, 0, 0, 0] },
   trellis: {
     parts: [

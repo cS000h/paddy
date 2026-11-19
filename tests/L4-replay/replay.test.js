@@ -60,7 +60,7 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '9941f391' }; // 第十三版存档：过客与随机小事落到世界实景坐标
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '0f369fc6' }; // 第十四版存档：衣装发式拆成单独的插件，野外做活会碰上衣裳
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};

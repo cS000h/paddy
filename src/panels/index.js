@@ -1,13 +1,14 @@
 // 界面面板：日期、身体、工具栏、提示、手记、各种小窗、触屏的摇杆圈和那枚“做”的印、冒出来的字。
 // 面板不改世界：要做事就发意图或调用 actions（由 app 提供），要显示就问端口。
 // 这个文件只管接线；常驻的几块在 hud.js，手记在 journal.js，小窗在 modals.js，
-// 摇杆圈在 stick.js，冒出来的字在 captions.js。
+// 摇杆圈在 stick.js，冒出来的字在 captions.js，得了成就、新衣时落下的纸条在 award.js。
 import { animateTiming } from './timing.js';
 import { modalView, brokenSheet, closesOnBackdrop, placementOf } from './modals.js';
 import { HUD_HTML, renderHud, syncToolbar, syncStamp } from './hud.js';
 import { journalView, nextStepView } from './journal.js';
 import { bindStick } from './stick.js';
 import { createCaptions, typeOut } from './captions.js';
+import { createAwards, slipOf } from './award.js';
 import { esc } from './html.js';
 
 // 不必飘出来的流水：干活花的体力（印上和提示条上已经写了）、在行囊和橱柜之间挪东西。
@@ -55,6 +56,7 @@ export function createPanels({
   );
   const veil = document.getElementById('veil');
   const captions = createCaptions(root, spot);
+  const awards = createAwards(root);
   const small = profile => profile.narrow || profile.compact;
   const touch = () => platform.device.profile().touch;
   let journalOpen = false;
@@ -113,13 +115,16 @@ export function createPanels({
       return void (el.modal.innerHTML = '');
     }
     if (modal === shownModal && !force) return;
-    const sameLine = shownModal?.kind === modal.kind && shownModal?.line === modal.line;
+    const sameKind = shownModal?.kind === modal.kind;
+    const sameLine = sameKind && shownModal?.line === modal.line;
     shownModal = modal;
     const scroller = el.modal.querySelector('.sheet');
     const keep = force && scroller ? scroller.scrollTop : 0;
     try {
       el.modal.className = 'modal ' + placementOf(modal);
       el.modal.innerHTML = modalView(modal, game, here());
+      // 同一张纸上换衣、翻页或买东西时，保留纸的位置，只在打开时演入场。
+      if (sameKind) el.modal.firstElementChild.style.animation = 'none';
     } catch (error) {
       el.modal.innerHTML = brokenSheet();
       report(error, 'panels:' + modal.kind);
@@ -255,13 +260,9 @@ export function createPanels({
     bindStick(el.stick, intents),
     // 世界变了：重画常驻的面板、飘出新的流水；开着的小窗也跟着重画（里面的数可能变了）
     game.onCommit(facts => {
-      for (const f of facts.filter(f => f.type === 'achievement.earned')) {
-        const stamp = document.createElement('div');
-        root.querySelector('.award-stamp')?.remove();
-        stamp.className = 'award-stamp';
-        stamp.innerHTML = `<span>印</span><b>${esc(f.data.name)}</b>`;
-        root.append(stamp);
-        setTimeout(() => stamp.remove(), 3200);
+      for (const f of facts) {
+        const slip = slipOf(f, game);
+        if (slip) awards.show(slip);
       }
       renderAll();
       renderFeed();
@@ -294,6 +295,7 @@ export function createPanels({
     refresh: renderAll,
     destroy() {
       offs.forEach(off => off());
+      awards.stop();
       captions.destroy();
       root.innerHTML = '';
     },

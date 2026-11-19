@@ -49,6 +49,7 @@ const OBJECT_MAKERS = {
   table: () => props.table(),
   haystack: seed => props.haystack(seed),
   rack: () => props.rack(),
+  clothRack: () => props.clothRack(),
   jars: () => props.jars(),
   scarecrow: () => props.scarecrow(),
   trellis: seed => village.trellis(seed),

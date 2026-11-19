@@ -180,6 +180,23 @@ const MAKERS = {
     g.vline(8, 5, 8, P.c1).set(8, 10, P.c1);
     return g;
   },
+
+  // — 得了一项成就：一束压弯了的稻子（原先是一枚朱砂方印，用户嫌方正的印难看） —
+  award_rice() {
+    const g = blank();
+    g.line(4, 15, 7, 5, P.g5).line(5, 11, 2, 8, P.g4).set(1, 7, P.g3);
+    const grains = [
+      [7, 3],
+      [9, 2],
+      [11, 3],
+      [12, 5],
+      [12, 7],
+      [12, 9],
+      [11, 11],
+    ];
+    grains.forEach(([x, y], i) => g.rect(x, y, 2, 2, i % 2 ? P.y2 : P.y1));
+    return g;
+  },
 };
 
 export const UI_ICONS = Object.freeze(Object.keys(MAKERS));

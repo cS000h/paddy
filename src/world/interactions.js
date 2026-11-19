@@ -23,6 +23,7 @@ export const ACT_HINT = {
   kitchen: '生火做饭',
   book: '翻一翻册子',
   wardrobe: '照衣镜',
+  cloth: '看看布摊上的衣裳',
 };
 
 // 印上刻的字：一到两个字，竖着排，一眼看出按下去做什么
@@ -40,6 +41,7 @@ const STAMP = {
   kitchen: '做饭',
   book: '翻册',
   wardrobe: '换装',
+  cloth: '布摊',
 };
 const STATION_STAMP = {
   forage: '找菜',
@@ -134,6 +136,7 @@ export function touchThing(scene, thing) {
     water: 'water',
     store: 'store',
     wardrobe: 'wardrobe',
+    cloth: 'cloth',
     basket: 'basket',
     kitchen: 'kitchen',
     book: 'book',
@@ -158,7 +161,9 @@ export function work(scene, group, id, target) {
   const { game, shell } = scene.deps;
   const out = game.dispatch(group === 'outing' ? 'gather' : 'homestead', { id, at: scene.at() });
   if (!out.ok) return scene.refuse(out.reason);
-  const line = out.facts.find(f => ['forage.finished', 'home.worked'].includes(f.type))?.data.line;
+  const line =
+    out.facts.find(f => f.type === 'wardrobe.got')?.data.line ??
+    out.facts.find(f => ['forage.finished', 'home.worked'].includes(f.type))?.data.line;
   scene.performer.play(id, {
     target: target ? { x: target.x, y: target.y } : null,
     then: () => line && shell.toast(line),

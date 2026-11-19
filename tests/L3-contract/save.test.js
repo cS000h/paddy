@@ -81,17 +81,29 @@ test('第4日的初版存档升级后仍停在第4日，钱、种下的菜和乡
   assert.equal(JSON.stringify(old), before, '迁移不改调用者持有的原档');
 });
 
-test('衣镜换装独立搭配，拒绝无效选项，读档保留人物外观', () => {
+test('衣镜只换得上衣箱里有的，拒绝无效选项，读档保留人物外观', () => {
   const g = newGame();
-  const wear = { coat: 'winter', hair: 'braid', at: { x: 8, y: 5 } };
-  assert.equal(g.dispatch('person.dress', wear).ok, false);
+  const wear = { coat: 'field', hair: 'loose', at: { x: 8, y: 5 } };
+  assert.equal(g.dispatch('wardrobe.wear', wear).ok, false);
   must(g, 'travel.to', { to: 'cottage' });
-  must(g, 'person.dress', wear);
+  must(g, 'wardrobe.wear', wear);
   const saved = JSON.stringify(g.save());
-  assert.equal(g.dispatch('person.dress', { ...wear, hair: '未知' }).ok, false);
+  assert.equal(g.dispatch('wardrobe.wear', { ...wear, hair: '未知' }).ok, false);
+  assert.equal(g.dispatch('wardrobe.wear', { ...wear, coat: 'winter' }).ok, false);
   assert.equal(JSON.stringify(g.save()), saved);
   const back = createGame({ saved: JSON.parse(saved) });
-  assert.equal(back.ask('hero').look, 'hero/winter/braid/3');
-  must(back, 'person.dress', { ...wear, coat: 'plain' });
-  assert.equal(back.ask('hero').look, 'hero/plain/braid/3');
+  assert.equal(back.ask('hero').look, 'hero/field/loose/3');
+  must(back, 'wardrobe.wear', { ...wear, coat: 'plain' });
+  assert.equal(back.ask('hero').look, 'hero/plain/loose/3');
+});
+
+test('衣装拆成插件以前的旧档：身上穿的进了衣箱，样子不变，没穿过的照旧要买要找', () => {
+  const old = JSON.parse(readFileSync(path.join(fixtures, 'save-v13.json'), 'utf8'));
+  Object.assign(old.state.world.people.hero, { coat: 'winter', hair: 'braid' });
+  const g = createGame({ saved: old });
+  assert.equal(g.ask('hero').look, 'hero/winter/braid/3');
+  const box = g.ask('wardrobe');
+  assert.equal(box.coat.find(p => p.id === 'winter').owned, true);
+  assert.equal(box.hair.find(p => p.id === 'braid').owned, true);
+  assert.equal(box.coat.find(p => p.id === 'hoodie').owned, false);
 });

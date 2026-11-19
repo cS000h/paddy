@@ -75,7 +75,7 @@ const achievementRow = a => {
       ? '等村里的节日开张'
       : `${a.count} / ${a.goal}`;
   return (
-    `<li><span class="achievement-seal ${a.day ? 'earned' : ''}">${a.day ? '印' : '○'}</span>` +
+    `<li><span class="achievement-mark ${a.day ? 'earned' : ''}">${uiIconImg('award_rice', 24)}</span>` +
     `<span class="what"><b>${esc(a.name)}</b><small>${state}</small></span></li>`
   );
 };
