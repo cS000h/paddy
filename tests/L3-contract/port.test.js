@@ -50,6 +50,7 @@ const COMMANDS = [
   'wardrobe.buy',
 ];
 const QUERIES = [
+  'persona',
   'resident.greeting',
   'interaction.options',
   'residents',

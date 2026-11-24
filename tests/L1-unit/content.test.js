@@ -21,8 +21,10 @@ import {
   DOING,
   LINES,
   RETURN_GIFT,
+  PERSONA,
   mapOfPlace,
 } from '../../src/content/people.js';
+import { VISITOR_LINES, ROLE_IDS } from '../../src/content/visitors.js';
 import { SKILLS, LEVELS, ORIGINS } from '../../src/content/growth.js';
 import {
   ATTRS,
@@ -37,7 +39,6 @@ import {
   INNATE,
   COPING,
   OLD_TRAITS,
-  FILL_TEMPERS,
   DEFAULT_LINE,
 } from '../../src/content/traits.js';
 import { CROPS, ITEMS, TOOLS, cropStage, isRipe } from '../../src/content/items.js';
@@ -346,6 +347,18 @@ test('特质表：八对性情各两个、方向相反，加减只落在六项�
     assert.ok(
       to.temper ? Object.hasOwn(TEMPERS, to.temper) : Object.hasOwn(LINES_OF_ORIGIN, to.line),
     );
-  assert.ok(FILL_TEMPERS.every(id => Object.hasOwn(TEMPERS, id)));
   assert.ok(Object.hasOwn(LINES_OF_ORIGIN, DEFAULT_LINE));
+  // 村民的档案：三个性情各占一对，出身线和级、根骨都在表里；过客每种身份都写了出身线（可以空着）
+  assert.deepEqual(Object.keys(PERSONA).sort(), [...ON_MAP].sort());
+  for (const [id, p] of Object.entries(PERSONA)) {
+    assert.equal(new Set(p.tempers.map(t => TEMPERS[t].pair)).size, 3, id);
+    assert.ok(Object.hasOwn(LINES_OF_ORIGIN, p.line[0]) && p.line[1] >= 1 && p.line[1] <= 4, id);
+    assert.ok(
+      p.innate.every(i => Object.hasOwn(INNATE, i)),
+      id,
+    );
+  }
+  assert.deepEqual(Object.keys(VISITOR_LINES).sort(), [...ROLE_IDS].sort());
+  for (const line of Object.values(VISITOR_LINES))
+    assert.ok(line === null || (Object.hasOwn(LINES_OF_ORIGIN, line[0]) && line[1] >= 1));
 });

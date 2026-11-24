@@ -27,6 +27,7 @@ import { weather } from './plugins/weather.js';
 import { gathering } from './plugins/gathering.js';
 import { homestead } from './plugins/homestead.js';
 import { growth } from './plugins/growth.js';
+import { persona } from './plugins/persona.js';
 import { growthPerks } from './plugins/growth-perks.js';
 import { achievements } from './plugins/achievements.js';
 import { residents } from './plugins/residents.js';
@@ -59,6 +60,7 @@ export const PLUGINS = Object.freeze([
   moods,
   social,
   basket,
+  persona,
   growth,
   growthPerks,
   achievements,

@@ -156,7 +156,7 @@ export const OLD_TRAITS = Object.freeze({
   solitary: { temper: 'shy' },
   curious: { line: 'scholar' },
 });
-/** 换过来凑不满三个性情时，照这个次序补，跳过已经占了的那一对。 */
-export const FILL_TEMPERS = Object.freeze(['honest', 'calm', 'diligent', 'gregarious']);
+// 换过来不满三个性情也不补：补出来的性情会被当成玩家选过的旧特质，白得好处；
+// 开局草案二里性情本来就是头半个月做出来的。
 /** 没从旧特质里换出出身线时给的那一条。 */
 export const DEFAULT_LINE = 'farmer';

@@ -8,6 +8,52 @@ export const SAVE_FORMAT = 'dao.save';
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
 const MIGRATIONS = {
+  15(state) {
+    // 人物档案（sim/plugins/persona.js）：主角开局两选给的旧特质换成性情和出身线，从成长里拿掉；
+    // 做出来的六个历练留在成长里。村民的档案照 2026-11-23 定的写进来。
+    const w = state.world;
+    w.meta.version = 16;
+    const OLD = {
+      easygoing: ['content', null],
+      handy: ['diligent', null],
+      slowwarm: ['calm', null],
+      lively: ['gregarious', null],
+      solitary: ['shy', null],
+      curious: [null, 'scholar'],
+    };
+    const PAIR = {
+      content: 'want',
+      diligent: 'work',
+      calm: 'temper',
+      gregarious: 'social',
+      shy: 'social',
+    };
+    const SKILL_OF = { scholar: 'sky', farmer: 'farm' };
+    const skillLevel = xp => [0, 4, 10, 18, 30, 45].filter(n => xp >= n).length - 1;
+    const lineLevel = lv => 1 + [2, 4, 5].filter(n => lv >= n).length;
+    const one = (tempers, line, innate = []) => ({ tempers, line, innate, coping: [], stress: 0 });
+    w.persona = {
+      hero: one([], null),
+      shi: one(['diligent', 'honest', 'stingy'], { id: 'farmer', lv: 3 }),
+      gui: one(['gregarious', 'generous', 'ambitious'], { id: 'cook', lv: 3 }, ['gourmet']),
+      aman: one(['gregarious', 'honest', 'hasty'], { id: 'peddler', lv: 2 }),
+      qiao: one(['gregarious', 'sly', 'ambitious'], { id: 'teahouse', lv: 2 }),
+      zhou: one(['calm', 'content', 'trusting'], { id: 'boatman', lv: 4 }, ['steady']),
+      yun: one(['diligent', 'shy', 'paranoid'], { id: 'herbalist', lv: 2 }),
+    };
+    for (const [id, g] of Object.entries(w.growth)) {
+      const p = (w.persona[id] ??= one([], null));
+      for (const t of g.traits.filter(t => OLD[t])) {
+        const [temper, line] = OLD[t];
+        if (line) p.line = { id: line, lv: 1 };
+        else if (!p.tempers.some(x => PAIR[x] === PAIR[temper])) p.tempers.push(temper);
+      }
+      g.traits = g.traits.filter(t => !OLD[t]);
+      if (g.origin) p.line ??= { id: 'farmer', lv: 1 };
+      if (p.line) p.line.lv = lineLevel(skillLevel(g.xp[SKILL_OF[p.line.id]] || 0));
+    }
+    return state;
+  },
   14(state) {
     state.world.meta.version = 15;
     state.world.basket.receipt = null;

@@ -28,7 +28,8 @@ export const ACHIEVEMENTS = [
   { id: 'talk10', name: '街坊旧识', event: 'person.talked', where: { gained: true }, goal: 10 },
   { id: 'days7', name: '住熟了', event: 'day.started', goal: 7 },
   { id: 'level5', name: '手上有分寸', event: 'skill.leveled', goal: 5 },
-  { id: 'trait4', name: '渐渐成了自己', event: 'trait.gained', goal: 4 },
+  // 开局给的性情记在人物档案里，不再算「得了特质」；剩下做出来的六个历练，得两个就算（原先是开局两个加做出来两个）
+  { id: 'trait4', name: '渐渐成了自己', event: 'trait.gained', goal: 2 },
   { id: 'festival1', name: '赶上一回好日子', event: 'festival.finished', goal: 1, future: true },
   { id: 'festival4', name: '四时相聚', event: 'festival.finished', goal: 4, future: true },
 ];

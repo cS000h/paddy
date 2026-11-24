@@ -104,3 +104,13 @@ export const VISITOR_TRAITS = Object.freeze([
   '重义',
 ]);
 export const ROLE_IDS = Object.freeze(Object.keys(VISITOR_ROLES));
+
+// 过客的出身线和级（人物档案，见 sim/plugins/persona.js）。特质表里还没有手艺人的出身线，木工先空着。
+export const VISITOR_LINES = Object.freeze({
+  peddler: ['peddler', 2],
+  healer: ['herbalist', 3],
+  scholar: ['scholar', 2],
+  grocer: ['farmer', 2],
+  carpenter: null,
+  matchmaker: ['broker', 3],
+});

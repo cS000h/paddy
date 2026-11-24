@@ -108,6 +108,34 @@ test('衣装拆成插件以前的旧档：身上穿的进了衣箱，样子不�
   assert.equal(box.coat.find(p => p.id === 'hoodie').owned, false);
 });
 
+test('v15 升级：开局两选的旧特质换成性情和出身线，历练留在成长里，村民有了档案', () => {
+  const saved = JSON.parse(
+    readFileSync(new URL('../fixtures/save-v15.json', import.meta.url), 'utf8'),
+  );
+  const hero = saved.state.world.growth.hero;
+  hero.origin = { route: 'later', reply: 'ask' };
+  hero.traits = ['earlybird', 'slowwarm', 'curious'];
+  hero.xp.sky = 10;
+  const g = createGame({ saved, debug: true });
+  const world = g.save().state.world;
+  assert.deepEqual(world.growth.hero.traits, ['earlybird']);
+  assert.deepEqual(world.persona.hero.tempers, ['calm']);
+  assert.deepEqual(world.persona.hero.line, { id: 'scholar', lv: 2 });
+  const p = g.ask('persona');
+  assert.deepEqual(
+    p.tempers.map(t => [t.name, t.oppositeName]),
+    [['沉稳', '急躁']],
+  );
+  assert.equal(p.line.title, '识字书生');
+  const traits = g
+    .ask('growth')
+    .traits.filter(t => t.owned)
+    .map(t => t.id)
+    .sort();
+  assert.deepEqual(traits, ['curious', 'earlybird', 'slowwarm']);
+  assert.deepEqual(world.persona.yun.tempers, ['diligent', 'shy', 'paranoid']);
+});
+
 test('v14 升级保留筐中的货和订单，从下一次清晨才记收据', () => {
   const saved = JSON.parse(
     readFileSync(new URL('../fixtures/save-v14.json', import.meta.url), 'utf8'),

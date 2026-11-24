@@ -2,6 +2,7 @@ import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { SKILLS, TRAITS, LEVELS, LEVEL_NAMES, ORIGINS } from '../../content/growth.js';
 import { CALENDAR } from '../../content/calendar.js';
+import { OLD_TRAITS } from '../../content/traits.js';
 export const level = xp => LEVELS.reduce((lv, need, i) => (xp >= need ? i : lv), 0);
 export const growth = {
   id: 'sim.growth',
@@ -16,10 +17,11 @@ export const growth = {
     'people',
     'body',
     'weather',
+    'persona',
   ],
   writes: ['growth'],
   install(ctx) {
-    const { schema, commands, queries, reactions, compute, core, people, body, weather } =
+    const { schema, commands, queries, reactions, compute, core, people, body, weather, persona } =
       ctx.services;
     schema.slice('growth', {
       initial: (env, w) =>
@@ -42,7 +44,7 @@ export const growth = {
               Object.keys(SKILLS).every(k => is.int(g.xp[k])) &&
               is.arr(g.traits, 12) &&
               new Set(g.traits).size === g.traits.length &&
-              g.traits.every(k => Object.hasOwn(TRAITS, k)) &&
+              g.traits.every(k => Object.hasOwn(TRAITS, k) && !Object.hasOwn(OLD_TRAITS, k)) &&
               is.obj(g.counters) &&
               ['wetOut', 'cold', 'hot', 'dawn', 'meals'].every(k => is.int(g.counters[k])) &&
               (g.origin === null ||
@@ -54,7 +56,11 @@ export const growth = {
     });
     const mine = (w, id = people.who(w)) => w.growth[id];
     const lv = (w, k, id = people.who(w)) => level(mine(w, id)?.xp[k] || 0);
-    const has = (w, t, id = people.who(w)) => mine(w, id)?.traits.includes(t) || false;
+    // 开局两选的六个旧特质搬进了人物档案（换成性情或出身线），问它们就去问档案；做出来的六个还记在这里。
+    const has = (w, t, id = people.who(w)) =>
+      Object.hasOwn(OLD_TRAITS, t)
+        ? persona.hasOld(w, id, t)
+        : mine(w, id)?.traits.includes(t) || false;
     const gain = (w, id, emit, skill, n, source) => {
       const g = mine(w, id);
       if (!g) return;
@@ -87,8 +93,7 @@ export const growth = {
         b = ORIGINS.reply.find(o => o.id === input.reply);
       if (!a || !b) refuse('想好两件小事，再开始这段日子');
       g.origin = { route: a.id, reply: b.id };
-      grant(w, id, fact, a.trait);
-      grant(w, id, fact, b.trait);
+      persona.fromOrigin(w, id, [a.trait, b.trait], g.xp);
       if (a.id === 'borrow') gain(w, id, fact, 'cook', Math.max(0, 4 - g.xp.cook), 'origin');
       fact('origin.chosen', { who: id });
     });

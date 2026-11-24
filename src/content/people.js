@@ -30,6 +30,18 @@ export const FESTIVE = Object.freeze(['zongzi', 'mooncake', 'niangao']);
 // 住在村里、会在地图上走动的人。
 export const ON_MAP = Object.freeze(['shi', 'gui', 'aman', 'qiao', 'zhou', 'yun']);
 
+// 村民的人物档案（执行方案「已定的事」第 11 条）：三个性情、出身线和级、根骨天资。
+// 主角的在开局时定；过客的照身份推出来（sim/plugins/persona.js）。性情和出身的名字见 content/traits.js。
+// prettier-ignore
+export const PERSONA = Object.freeze({
+  shi:  { tempers: ['diligent', 'honest', 'stingy'], line: ['farmer', 3], innate: [] },
+  gui:  { tempers: ['gregarious', 'generous', 'ambitious'], line: ['cook', 3], innate: ['gourmet'] },
+  aman: { tempers: ['gregarious', 'honest', 'hasty'], line: ['peddler', 2], innate: [] },
+  qiao: { tempers: ['gregarious', 'sly', 'ambitious'], line: ['teahouse', 2], innate: [] },
+  zhou: { tempers: ['calm', 'content', 'trusting'], line: ['boatman', 4], innate: ['steady'] },
+  yun:  { tempers: ['diligent', 'shy', 'paranoid'], line: ['herbalist', 2], innate: [] },
+});
+
 // 作息（沿用 0.12）。白天按开始的钟点分四段：06、09、12、15 点；到 `home` 点钟，
 // 除了 `stay` 里的人都回家，从画面上消失。
 export const ROUTINE_DAY = Object.freeze({

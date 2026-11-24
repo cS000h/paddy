@@ -97,3 +97,27 @@ test('慢热歇息的加成、好问看天的经验、独行采集额外经验',
   must(solo, 'gather', { id: 'forage', at: { x: 35, y: 17 } });
   assert.equal(skill(solo, 'forage').xp, 3);
 });
+
+test('人物档案：两选换成性情和出身线、不硬凑满三个；村民照定下的；过客按编号推、再查一样；对口本事升级出身线跟着升', () => {
+  const g = newGame();
+  assert.deepEqual(g.ask('persona').tempers, []);
+  must(g, 'origin.choose', { route: 'later', reply: 'quiet' });
+  const me = g.ask('persona');
+  assert.deepEqual(
+    me.tempers.map(t => t.id),
+    ['calm', 'shy'],
+  );
+  assert.deepEqual([me.line.id, me.line.lv, me.line.title], ['farmer', 1, '笨手庄户']);
+  assert.ok(traits(g).includes('slowwarm') && traits(g).includes('solitary'));
+  assert.deepEqual(
+    g.ask('persona', 'shi').tempers.map(t => t.name),
+    ['勤勉', '厚道', '抠门'],
+  );
+  const v = g.ask('visitors').active[0];
+  const vp = g.ask('persona', v.id);
+  assert.equal(new Set(vp.tempers.map(t => t.id)).size, 3);
+  assert.deepEqual(g.ask('persona', v.id), vp);
+  for (let x = 6; x < 12; x++) must(g, 'farm.till', { x, y: 19, at: { x, y: 18 } });
+  assert.ok(skill(g, 'farm').level >= 2);
+  assert.equal(g.ask('persona').line.lv, 2);
+});
