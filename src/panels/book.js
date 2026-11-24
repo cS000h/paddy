@@ -1,5 +1,6 @@
 // 开局的两个选择，和实体书签式「稻乡小册」（人物三层、本事、性情、成就、只读熟人册）。
 import { ORIGINS, TRAITS } from '../content/growth.js';
+import { OLD_TRAITS } from '../content/traits.js';
 import { uiIconImg, heroPortraitUrl } from './icons.js';
 import { button, actions, close, title, para, esc, paged } from './html.js';
 
@@ -24,14 +25,6 @@ export function originView(m) {
     ${para('这两个选择只决定起初的性情，往后的日子由你自己过。', 'aside')}`;
 }
 
-const STAT_ICON = {
-  farm: 'stat_farm',
-  cook: 'stat_cook',
-  craft: 'stat_craft',
-  social: 'stat_social',
-  insight: 'stat_insight',
-};
-
 const TRAIT_ICON = {
   easygoing: 'trait_tea',
   lively: 'trait_tea',
@@ -46,6 +39,13 @@ const TRAIT_ICON = {
   coldproof: 'trait_sickle',
   heatproof: 'trait_sickle',
 };
+
+// 性情先借旧特质的图标（随和、爱热闹换成了知足、热络……），A-02c 的性情图标画好再换。
+const TEMPER_ICON = Object.fromEntries(
+  Object.entries(OLD_TRAITS)
+    .filter(([, to]) => to.temper)
+    .map(([id, to]) => [to.temper, TRAIT_ICON[id]]),
+);
 
 function modIcon(item) {
   if (item.kind === 'bad') return 'mod_cloud';
@@ -85,7 +85,18 @@ function personaBody(m, game) {
   const body = game.ask('body');
   const clock = game.ask('clock');
   const modsData = game.ask('modifiers');
-  const owned = game.ask('growth').traits.filter(t => t.owned);
+  const me = game.ask('persona');
+  const attrs = me.attrs;
+  // 性情从人物档案来；做出来的历练还记在本事那边，旧的开局特质已经换成了性情，不再列
+  const earned = game.ask('growth').traits.filter(t => t.owned && !Object.hasOwn(OLD_TRAITS, t.id));
+  const owned = [
+    ...me.tempers.map(t => ({
+      name: t.name,
+      tip: t.desc,
+      ico: TEMPER_ICON[t.id] || 'trait_spark',
+    })),
+    ...earned.map(t => ({ name: t.name, tip: t.effect, ico: TRAIT_ICON[t.id] || 'trait_spark' })),
+  ];
 
   // 顶部人物像 + 清爽平涂像素分格「心境」条
   const filled = Math.max(0, Math.min(8, Math.round((body.mood / 100) * 8)));
@@ -101,12 +112,15 @@ function personaBody(m, game) {
     </div>
   </div>`;
 
-  // 中排：五维属性平涂像素图标条
-  const stats = `<div class="stat-strip">${modsData.stats
+  // 中排：六项，一项一个图标；指上去看是哪几样加减的（人物页的样子等 A-03 照二稿重做）
+  const signed = n => (n > 0 ? '+' + n : '−' + -n);
+  const why = a =>
+    a.parts.map((p, i) => (i ? `${p.label} ${signed(p.delta)}` : `${p.label} ${p.delta}`));
+  const stats = `<div class="stat-strip">${attrs
     .map(
-      s =>
-        `<div class="stat-item" title="${esc(s.desc)}">${uiIconImg(STAT_ICON[s.id] || 'stat_farm', 32)}` +
-        `<span>${esc(s.name)}</span><b>${s.value}</b></div>`,
+      a =>
+        `<div class="stat-item" title="${esc(why(a).join('，'))}">${uiIconImg('attr_' + a.id, 32)}` +
+        `<span>${esc(a.name)}</span><b>${a.value}</b></div>`,
     )
     .join('')}</div>`;
 
@@ -115,9 +129,8 @@ function personaBody(m, game) {
     ? owned
         .slice(0, 4)
         .map(t => {
-          const ico = TRAIT_ICON[t.id] || 'trait_spark';
-          const cls = ico === 'trait_spark' ? 'trait-card spark' : 'trait-card';
-          return `<div class="${cls}" title="${esc(t.effect)}">${uiIconImg(ico, 32)}<span>${esc(t.name)}</span></div>`;
+          const cls = t.ico === 'trait_spark' ? 'trait-card spark' : 'trait-card';
+          return `<div class="${cls}" title="${esc(t.tip)}">${uiIconImg(t.ico, 32)}<span>${esc(t.name)}</span></div>`;
         })
         .join('')
     : '<p class="aside">还没有立下性情印记，过几天自然会显出来。</p>';

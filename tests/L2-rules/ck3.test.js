@@ -1,21 +1,40 @@
-// L2 规则：人物五维属性、时限修正池、落到具体地点的小事与村中实景过客。一律通过端口发命令。
+// L2 规则：六项属性、时限修正池、落到具体地点的小事与村中实景过客。一律通过端口发命令。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newGame, must, refused } from '../helpers.js';
 import { MAPS, walkable, farmable } from '../../src/content/maps/index.js';
+import { ATTRS, TEMPERS, LINES_OF_ORIGIN, OLD_TRAITS } from '../../src/content/traits.js';
+import { TRAITS } from '../../src/content/growth.js';
+import { EVENTS, checkChance } from '../../src/content/events.js';
 
-test('人物五维属性汇总基础值与特质加成，吃拿手热饭获得时限修正并按天过期', () => {
+const parts = a => a.parts.map(p => [p.label, p.delta]);
+
+test('六项从底子 4 起，加上性情、出身线和身边风物，每项带明细；拿手饭的修正按天过期', () => {
   const g = newGame(7);
-  const before = g.ask('modifiers');
-  assert.equal(before.stats.length, 5);
-  assert.deepEqual(before.list, []);
-  const socialBefore = before.stats.find(s => s.id === 'social').value;
-  must(g, 'origin.choose', { route: 'stay', reply: 'join' });
-  const after = g.ask('modifiers');
-  assert.ok(
-    after.stats.find(s => s.id === 'social').value >= socialBefore + 4,
-    '随和与爱热闹同时提升交际',
+  const attr = id => g.ask('persona').attrs.find(a => a.id === id);
+  const before = g.ask('persona').attrs;
+  assert.deepEqual(
+    before.map(a => a.id),
+    Object.keys(ATTRS),
   );
+  assert.ok(
+    before.every(a => a.value === 4 && a.parts.length === 1),
+    '开局两选之前只有底子',
+  );
+  assert.deepEqual(g.ask('modifiers').list, []);
+  // 随和换成知足（人情 +1），爱热闹换成热络（人情 +2），出身先给农桑庄户一级（持家 +2）
+  must(g, 'origin.choose', { route: 'stay', reply: 'join' });
+  assert.deepEqual(parts(attr('renqing')), [
+    ['底子', 4],
+    ['知足', 1],
+    ['热络', 2],
+  ]);
+  assert.equal(attr('renqing').value, 7);
+  assert.deepEqual(parts(attr('chijia')), [
+    ['底子', 4],
+    ['农桑庄户一级', 2],
+  ]);
+  assert.equal(attr('danliang').value, 4, '知足 −1、热络 +1 抵平');
   const cooked = g.dispatch('cook', {
     items: ['rice', 'egg'],
     spices: [],
@@ -32,12 +51,33 @@ test('人物五维属性汇总基础值与特质加成，吃拿手热饭获得�
     mods.some(m => m.id === 'good_meal' && m.left >= 2),
     '拿手饭给时限好饭提劲',
   );
+  assert.equal(attr('chijia').value, 7, '好饭提劲：持家 +1');
+  assert.ok(attr('tige').parts.some(p => p.id === 'mod.good_meal' && p.delta === 1));
   for (let i = 0; i < 3; i++) must(g, 'sleep');
   assert.equal(
     g.ask('modifiers').list.some(m => m.id === 'good_meal'),
     false,
     '到期后清早自动清理',
   );
+  assert.ok(!attr('chijia').parts.some(p => p.id === 'mod.good_meal'), '过期了六项也跟着回去');
+});
+
+test('村民的六项照档案算：石伯持家 13，阅历只有 2；过客也有六项', () => {
+  const g = newGame(7);
+  const shi = g.ask('persona', 'shi');
+  const attr = id => shi.attrs.find(a => a.id === id);
+  assert.deepEqual(parts(attr('chijia')), [
+    ['底子', 4],
+    ['勤勉', 1],
+    ['抠门', 2],
+    ['农桑庄户三级', 6],
+  ]);
+  assert.equal(attr('chijia').value, 13);
+  assert.equal(attr('yueli').value, 2, '厚道的人不精明：阅历 −2');
+  const v = g.ask('visitors').active[0];
+  const va = g.ask('persona', v.id).attrs;
+  assert.equal(va.length, 6);
+  assert.ok(va.every(a => Number.isInteger(a.value) && a.value >= 0));
 });
 
 test('小事落在具体地方：不在跟前被拒绝，走过去才能在底部对话条处理', () => {
@@ -50,6 +90,28 @@ test('小事落在具体地方：不在跟前被拒绝，走过去才能在底�
   }
   assert.ok(active && active.map && Number.isInteger(active.x) && Number.isInteger(active.y));
   assert.ok(active.hint && active.place, '带发生地与自然去处提示');
+  // 要检定的选项写着六项里哪一项、现在几点、几成把握，和人物档案算的对得上
+  const now = g.ask('persona').attrs;
+  assert.ok(
+    active.choices.some(x => x.check),
+    '每件小事都有一个要检定的做法',
+  );
+  // 只给某种人的做法：开局的旧特质已经换成性情或出身线，报换过去的名字；做出来的历练照旧
+  for (const c of active.choices.filter(x => x.reqTrait)) {
+    const to = OLD_TRAITS[c.reqTrait];
+    const name = !to
+      ? TRAITS[c.reqTrait].name
+      : to.temper
+        ? TEMPERS[to.temper].name
+        : LINES_OF_ORIGIN[to.line].name;
+    assert.equal(c.traitName, name);
+  }
+  for (const c of active.choices.filter(x => x.check)) {
+    const a = now.find(x => x.id === c.check.attr);
+    assert.equal(c.check.attrName, ATTRS[a.id]);
+    assert.equal(c.check.attrValue, a.value);
+    assert.equal(c.check.chance, checkChance(a.value, EVENTS[active.id].choices[c.index].check.dc));
+  }
   // 故意离远或换到别的地图，应被拒绝
   const farMap = active.map === 'tea' ? 'yard' : 'tea';
   must(g, 'travel.to', { to: farMap });

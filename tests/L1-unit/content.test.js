@@ -366,3 +366,32 @@ test('特质表：八对性情各两个、方向相反，加减只落在六项�
   for (const line of Object.values(VISITOR_LINES))
     assert.ok(line === null || (Object.hasOwn(LINES_OF_ORIGIN, line[0]) && line[1] >= 1));
 });
+
+test('六项接得上：小事的检定、身边风物和历练的加减都落在六项上，风物的说明写对了数', async () => {
+  const { EVENTS } = await import('../../src/content/events.js');
+  const { MODIFIERS, EARNED_ATTRS } = await import('../../src/content/modifiers.js');
+  const { TRAITS } = await import('../../src/content/growth.js');
+  const attrsOk = a =>
+    Object.entries(a || {}).every(([k, n]) => Object.hasOwn(ATTRS, k) && Number.isInteger(n) && n);
+  const checks = Object.values(EVENTS).flatMap(ev =>
+    (ev.choices || []).filter(c => c.check).map(c => [ev.id, c.check]),
+  );
+  for (const [id, c] of checks) {
+    assert.ok(Object.hasOwn(ATTRS, c.attr), id);
+    assert.ok(Number.isInteger(c.dc) && c.dc >= 3 && c.dc <= 8, id);
+  }
+  assert.equal(new Set(checks.map(([, c]) => c.attr)).size, 6, '六项每一项都有小事要检定');
+  const signed = n => (n > 0 ? '+' : '−') + Math.abs(n);
+  for (const [id, m] of Object.entries(MODIFIERS)) {
+    assert.ok(attrsOk(m.attrs), id);
+    for (const [k, n] of Object.entries(m.attrs || {}))
+      assert.ok(
+        m.desc.includes(`${ATTRS[k]} ${signed(n)}`),
+        `${id} 的说明里没写「${ATTRS[k]} ${signed(n)}」`,
+      );
+  }
+  for (const [id, a] of Object.entries(EARNED_ATTRS)) {
+    assert.ok(Object.hasOwn(TRAITS, id) && !Object.hasOwn(OLD_TRAITS, id), id);
+    assert.ok(attrsOk(a), id);
+  }
+});

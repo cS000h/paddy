@@ -19,7 +19,7 @@ export const SKILLS = {
   },
   social: {
     grow: '跟村里人越处越熟，说话也自在了',
-    name: '人情',
+    name: '交际',
     perks: { 2: '你的好事传得更快', 3: '聊天时关系多涨1点' },
   },
   sky: {

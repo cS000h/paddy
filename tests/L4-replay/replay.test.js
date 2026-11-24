@@ -60,7 +60,7 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: 'c617edc1' }; // 第十六版存档：人物档案，开局两选的旧特质换成性情和出身线
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '625ea339' }; // 六项取代五维：小事的检定改问六项，难度各加 2
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};

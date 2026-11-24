@@ -2,9 +2,12 @@ import { SCENE_MAP } from './events-scene.js';
 // 随机事件配置表：晨起小事、场景遇事、过几天后续。
 // 每件小事落在具体地点（spot），玩家走到跟前在底部对话条里处理。
 
-/** 检定成功率（15%–95%）：面板显示与规则结算共用同一套公式。 */
-export const checkChance = (statValue, dc) =>
-  Math.max(15, Math.min(95, 50 + (statValue - dc) * 12));
+/**
+ * 检定成功率（15%–95%）：六项里那一项的值对难度，差一点差 12%。面板显示与规则结算共用这一个公式。
+ * 难度多是 5：六项从底子 4 起，刚来的人五五开上下，对口的出身线和历练把它抬上去。
+ */
+export const checkChance = (/** @type {number} */ value, /** @type {number} */ dc) =>
+  Math.max(15, Math.min(95, 50 + (value - dc) * 12));
 
 export const EVENTS = Object.freeze({
   // — 晨起小事（6 个，各自落在院里或屋里的具体位置） —
@@ -18,7 +21,7 @@ export const EVENTS = Object.freeze({
       { label: '留个清静', mood: 3, line: '你轻手轻脚走开，心里觉得院子热闹了些。' },
       {
         label: '搭木板挡雨',
-        check: { stat: 'craft', dc: 3 },
+        check: { attr: 'chijia', dc: 5 },
         onOk: {
           mod: 'kind_heart',
           delay: { id: 'delay_swallow', days: 3 },
@@ -27,7 +30,7 @@ export const EVENTS = Object.freeze({
         onFail: { mod: 'spring_tired', line: '木凳有点晃，忙活半天出一身汗，总算挂住了。' },
       },
       {
-        label: '「早起的人」细看动静',
+        label: '细看动静',
         reqTrait: 'earlybird',
         mod: 'keen_eye',
         mood: 4,
@@ -50,7 +53,7 @@ export const EVENTS = Object.freeze({
       },
       {
         label: '生火烤干缸身',
-        check: { stat: 'cook', dc: 3 },
+        check: { attr: 'chijia', dc: 5 },
         onOk: {
           mod: 'hearth_warm',
           give: { item: 'rice', n: 1 },
@@ -59,7 +62,7 @@ export const EVENTS = Object.freeze({
         onFail: { mod: 'burnt_hand', line: '缸沿烤得太烫，不小心沾了一下手背。' },
       },
       {
-        label: '「自己动手」顺手理柜',
+        label: '顺手理柜',
         reqTrait: 'handy',
         mod: 'craft_spark',
         give: { item: 'salt', n: 1 },
@@ -77,7 +80,7 @@ export const EVENTS = Object.freeze({
       { label: '先轻手打水', mood: 1, line: '放慢手劲打了一桶水，记着回头再换新绳。' },
       {
         label: '拆开重新拧紧',
-        check: { stat: 'craft', dc: 3 },
+        check: { attr: 'chijia', dc: 5 },
         onOk: {
           mod: 'craft_spark',
           delay: { id: 'delay_well_thanks', days: 3 },
@@ -86,11 +89,10 @@ export const EVENTS = Object.freeze({
         onFail: { mod: 'spring_tired', line: '绳子缠得有点别扭，费了好大劲才理顺。' },
       },
       {
-        label: '「随和」喊街坊搭手',
+        label: '凑合着先用',
         reqTrait: 'easygoing',
-        mod: 'tea_fame',
         mood: 4,
-        line: '两三句话就有人过来搭手，一会儿就把井绳理好了。',
+        line: '绳子还使得，你慢慢打了一桶水，等下回赶集再换新的也不迟。',
       },
     ],
   },
@@ -104,12 +106,12 @@ export const EVENTS = Object.freeze({
       { label: '记在心里', mood: 2, line: '心里先有了准备，做事不慌不忙。' },
       {
         label: '顺沟看水路',
-        check: { stat: 'farm', dc: 3 },
+        check: { attr: 'xuewen', dc: 5 },
         onOk: { mod: 'good_harvest', line: '把堵住的土块扒开，菜地透气不少。' },
         onFail: { mod: 'rain_damp', line: '脚下一滑踩进湿泥里，裤脚沾了不少水气。' },
       },
       {
-        label: '「好问」看云记一笔',
+        label: '看云记一笔',
         reqTrait: 'curious',
         mod: 'keen_eye',
         give: { item: 'herb', n: 1 },
@@ -127,7 +129,7 @@ export const EVENTS = Object.freeze({
       { label: '摸摸脑袋', mood: 4, line: '花猫眯着眼睛蹭了蹭你的手，心情轻快起来。' },
       {
         label: '拿点吃食逗它',
-        check: { stat: 'social', dc: 2 },
+        check: { attr: 'renqing', dc: 4 },
         onOk: {
           mod: 'kind_heart',
           give: { item: 'egg', n: 1 },
@@ -136,7 +138,7 @@ export const EVENTS = Object.freeze({
         onFail: { mod: 'awkward_talk', line: '花猫闻了闻转身就走，留你站在门口有点好笑。' },
       },
       {
-        label: '「慢热」安静陪会儿',
+        label: '安静陪会儿',
         reqTrait: 'slowwarm',
         energy: 8,
         mood: 5,
@@ -154,7 +156,7 @@ export const EVENTS = Object.freeze({
       { label: '收好纸条', coins: 4, line: '折好纸条收起来，还拾到几文零钱。' },
       {
         label: '算准菜价搭话',
-        check: { stat: 'insight', dc: 3 },
+        check: { attr: 'yueli', dc: 5 },
         onOk: {
           coins: 10,
           mod: 'visitor_word',
@@ -164,7 +166,7 @@ export const EVENTS = Object.freeze({
         onFail: { mod: 'awkward_talk', line: '一时没算准份量，说得不太顺口，只好作罢。' },
       },
       {
-        label: '「爱热闹」去村口看看',
+        label: '去村口看看',
         reqTrait: 'lively',
         mod: 'tea_fame',
         coins: 6,

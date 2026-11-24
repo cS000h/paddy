@@ -1,8 +1,9 @@
-// 时限修正与五维属性的合算。
-// 每次读五维属性时动态把「技能换算 + 十二个长期特质 + 未过期的时限修正」加总；
-// 时限修正同时接入 compute 计算管道（体力、收成、关系、经验、歇息）。
+// 时限修正（册子里叫「身边风物」）：加、查、按天过期。
+// 修正和历练对六项的加减接进 compute 'attr'（六项由人物档案 sim.persona 合算）；
+// 时限修正同时接入别的计算管道（体力、收成、关系、经验、歇息）。
 import { is, check } from '../../kernel/schema.js';
-import { STATS, TRAIT_STATS, MODIFIERS } from '../../content/modifiers.js';
+import { EARNED_ATTRS, MODIFIERS } from '../../content/modifiers.js';
+import { TRAITS } from '../../content/growth.js';
 import { WORK_KINDS } from '../../content/actions.js';
 
 const MAX_MODS = 12;
@@ -59,36 +60,18 @@ export const modifiers = {
       return true;
     });
 
-    /** 动态合算五维属性：底子值（2 + 技能等级）+ 特质加成 + 未过期时限修正。 */
-    function stats(w, who = people.who(w)) {
-      const values = {};
-      const detail = {};
-      const mods = active(w, who);
-      for (const [k, def] of Object.entries(STATS)) {
-        const primary = growth.level(w, def.skill, who);
-        const alt = 'alt' in def ? growth.level(w, def.alt, who) : 0;
-        const base = 2 + Math.max(primary, alt);
-        let traitSum = 0;
-        for (const [t, map] of Object.entries(TRAIT_STATS))
-          if (growth.has(w, t, who) && map[k]) traitSum += map[k];
-        let modSum = 0;
-        for (const m of mods) {
-          const d = MODIFIERS[m.id].stats?.[k] || 0;
-          modSum += d;
-        }
-        values[k] = Math.max(1, base + traitSum + modSum);
-        detail[k] = {
-          id: k,
-          name: def.name,
-          desc: def.desc,
-          value: values[k],
-          base,
-          traitSum,
-          modSum,
-        };
-      }
-      return { values, detail };
-    }
+    // 六项里的两样：做出来的历练，和还没过期的身边风物。
+    compute.tap(
+      'attr',
+      (r, { w, who = people.who(w), attr }) => {
+        for (const [t, map] of Object.entries(EARNED_ATTRS))
+          if (map[attr] && growth.has(w, t, who))
+            compute.part(r, 'earned.' + t, TRAITS[t].name, map[attr]);
+        for (const m of active(w, who))
+          compute.part(r, 'mod.' + m.id, MODIFIERS[m.id].name, MODIFIERS[m.id].attrs?.[attr] || 0);
+      },
+      { priority: 60 },
+    );
 
     // 每天清早清掉已经到期的修正。
     reactions.on(
@@ -176,9 +159,7 @@ export const modifiers = {
 
     queries.define('modifiers', w => {
       const who = people.who(w);
-      const s = stats(w, who);
       return {
-        stats: Object.values(s.detail),
         list: active(w, who).map(m => {
           const def = MODIFIERS[m.id];
           return {
@@ -193,6 +174,6 @@ export const modifiers = {
       };
     });
 
-    ctx.provide('modifiers', Object.freeze({ add, has, active, stats }));
+    ctx.provide('modifiers', Object.freeze({ add, has, active }));
   },
 };

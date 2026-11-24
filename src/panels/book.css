@@ -176,10 +176,10 @@
   border-color: #66806a;
 }
 
-/* — 五维：一条带图标的格子 — */
+/* — 六项：一条带图标的格子 — */
 .stat-strip {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 4px;
   margin-bottom: 12px;
   padding: 10px 6px 8px;

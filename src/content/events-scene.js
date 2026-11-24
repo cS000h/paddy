@@ -13,7 +13,7 @@ export const SCENE_MAP = Object.freeze({
       {
         label: '添壶茶细问',
         cost: { coins: 4 },
-        check: { stat: 'social', dc: 3 },
+        check: { attr: 'renqing', dc: 5 },
         onOk: {
           mod: 'tea_fame',
           give: { item: 'seed.qingcai', n: 2 },
@@ -23,7 +23,7 @@ export const SCENE_MAP = Object.freeze({
         onFail: { mod: 'awkward_talk', line: '货客只管喝茶赶路，没多说什么。' },
       },
       {
-        label: '「熟面孔」托人搭话',
+        label: '托人搭话',
         reqTrait: 'familiar',
         mod: 'visitor_word',
         coins: 8,
@@ -41,7 +41,7 @@ export const SCENE_MAP = Object.freeze({
       { label: '顺手采一点', give: { item: 'herb', n: 1 }, line: '拣最嫩的摘了一把，清香扑鼻。' },
       {
         label: '往深处细找',
-        check: { stat: 'insight', dc: 3 },
+        check: { attr: 'danliang', dc: 5 },
         onOk: {
           mod: 'keen_eye',
           give: { item: 'herb', n: 2 },
@@ -50,7 +50,7 @@ export const SCENE_MAP = Object.freeze({
         onFail: { mod: 'rain_damp', line: '草露水太重，走了一圈鞋脚全湿，只好先退回来。' },
       },
       {
-        label: '「独行」慢慢寻',
+        label: '慢慢寻',
         reqTrait: 'solitary',
         mod: 'keen_eye',
         mood: 4,
@@ -69,12 +69,12 @@ export const SCENE_MAP = Object.freeze({
       { label: '笑着招呼一声', mood: 3, line: '饭菜出锅颜色正，自己闻着都开心。' },
       {
         label: '再收一把火候',
-        check: { stat: 'cook', dc: 3 },
+        check: { attr: 'chijia', dc: 5 },
         onOk: { mod: 'hearth_warm', mood: 5, line: '最后一把火收得真漂亮，院里满是香味。' },
         onFail: { mod: 'burnt_hand', line: '锅边太热，端锅时不小心烫了一下指尖。' },
       },
       {
-        label: '「灶边人」盛勺尝鲜',
+        label: '盛勺尝鲜',
         reqTrait: 'hearth',
         mod: 'tea_fame',
         mood: 5,
@@ -92,7 +92,7 @@ export const SCENE_MAP = Object.freeze({
       { label: '擦净收好', coins: 6, line: '洗去泥土，平白多了 6 文零钱。' },
       {
         label: '把肥土翻匀',
-        check: { stat: 'farm', dc: 3 },
+        check: { attr: 'tige', dc: 5 },
         onOk: {
           mod: 'good_harvest',
           coins: 5,
@@ -101,7 +101,7 @@ export const SCENE_MAP = Object.freeze({
         onFail: { mod: 'spring_tired', line: '土块太板结，翻完觉得胳膊有点发酸。' },
       },
       {
-        label: '「雨中行者」理两畦',
+        label: '理两畦',
         reqTrait: 'rainwalker',
         mod: 'good_harvest',
         mood: 3,
@@ -119,7 +119,7 @@ export const SCENE_MAP = Object.freeze({
       { label: '挑一份稳的', give: { item: 'bean', n: 1 }, line: '挑了一把饱满豆子，划算又实在。' },
       {
         label: '掂量成色讲价',
-        check: { stat: 'social', dc: 3 },
+        check: { attr: 'yueli', dc: 5 },
         onOk: {
           coins: 8,
           mod: 'visitor_word',
@@ -128,7 +128,7 @@ export const SCENE_MAP = Object.freeze({
         onFail: { mod: 'awkward_talk', line: '价钱没说拢，只好摆摆手走开。' },
       },
       {
-        label: '「自己动手」挑好料',
+        label: '挑好料',
         reqTrait: 'handy',
         mod: 'craft_spark',
         give: { item: 'wood', n: 2 },
@@ -146,7 +146,7 @@ export const SCENE_MAP = Object.freeze({
       { label: '一起歇口气', energy: 6, line: '在亭子里站了一会儿，风势小了不少。' },
       {
         label: '指条近路',
-        check: { stat: 'insight', dc: 3 },
+        check: { attr: 'yueli', dc: 5 },
         onOk: {
           mod: 'kind_heart',
           coins: 7,
@@ -155,7 +155,7 @@ export const SCENE_MAP = Object.freeze({
         onFail: { mod: 'awkward_talk', line: '话说岔了路口，两人比划半天才明白过来。' },
       },
       {
-        label: '「耐寒」迎风回村',
+        label: '迎风回村',
         reqTrait: 'coldproof',
         mod: 'good_harvest',
         mood: 4,

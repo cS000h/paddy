@@ -7,7 +7,7 @@ export function eventView(m, game) {
   if (!ev) return `${para('这会儿已经没什么动静了。')}${actions(close('好'))}`;
   const choices = ev.choices.map(c => {
     const tags = [];
-    if (c.check) tags.push(`${c.check.statName} ${c.check.statValue} · ${c.check.chance}%`);
+    if (c.check) tags.push(`${c.check.attrName} ${c.check.attrValue} · ${c.check.chance}%`);
     if (c.costCoins) tags.push(`${c.costCoins}文`);
     if (c.reason) tags.push(c.reason);
     const meta = tags.length ? ` <small>${esc(tags.join(' · '))}</small>` : '';
@@ -15,7 +15,7 @@ export function eventView(m, game) {
       data: { choice: c.index },
       disabled: c.disabled,
       cls: c.reqTrait ? 'trait-choice' : '',
-      html: `${esc(c.label)}${meta}`,
+      html: `${c.traitName ? esc(`「${c.traitName}」`) : ''}${esc(c.label)}${meta}`,
     });
   });
   return `<div class="speaker"><span class="name-seal">事</span>

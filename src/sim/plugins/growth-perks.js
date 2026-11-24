@@ -112,7 +112,7 @@ export const growthPerks = {
       'relation.gain',
       (r, { w, who, source }) => {
         if (source.startsWith('talk') && lv(w, 'social', who) >= 3)
-          K.part(r, 'skill.social', '人情在行', 1);
+          K.part(r, 'skill.social', '交际在行', 1);
         if (source === 'talk.life' && has(w, 'easygoing', who))
           K.part(r, 'trait.easygoing', '随和', 1);
       },
@@ -121,7 +121,7 @@ export const growthPerks = {
     K.tap(
       'gossip.chance',
       (r, { w, who = people.who(w) }) => {
-        if (lv(w, 'social', who) >= 2) K.part(r, 'skill.social', '人情熟手', 0.15);
+        if (lv(w, 'social', who) >= 2) K.part(r, 'skill.social', '交际熟手', 0.15);
       },
       { priority: 40 },
     );

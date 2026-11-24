@@ -78,7 +78,7 @@ test('柜台当面买卖、钱货一起结算，库存不能靠重进或读档�
   assert.match(refused(g, 'market.sell', { shop, item: 'lambLeg', at }), /羊腿/);
   assert.equal(JSON.stringify(g.save()), before);
 });
-test('茶摊喝茶补水，听闲话每天一次；集日有肉摊，下棋长人情', () => {
+test('茶摊喝茶补水，听闲话每天一次；集日有肉摊，下棋长交际', () => {
   const g = newGame();
   travel(g, 'tea');
   const at = { x: 17, y: 11 };

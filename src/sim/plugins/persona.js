@@ -1,14 +1,17 @@
-// 人物档案：每个人的性情、出身线和级、根骨天资、解闷毛病、心烦。
+// 人物档案：每个人的性情、出身线和级、根骨天资、解闷毛病、心烦，和由这些合算出来的六项。
 // 主角和村民存在存档里；过客照编号和身份推出来（同一个人再来还是那副性子），等过客也要攒心烦时再存。
 // 主角的性情可以不满三个：开局草案二里，性情是头半个月做出来的（见执行方案 M10）。
-//   服务 persona.get(w, id)、persona.hasOld(w, id, 旧特质)、persona.fromOrigin(w, id, 旧特质们)
-//   查询 persona(id?) → 给画面看的档案
+//   服务 persona.get(w, id)、persona.hasOld(w, id, 旧特质)、persona.fromOrigin(w, id, 旧特质们)、
+//        persona.attrs(w, id?) → { values, detail }
+//   查询 persona(id?) → 给画面看的档案，六项带明细
 import { is } from '../../kernel/schema.js';
 import {
+  ATTRS,
   TEMPERS,
   TEMPER_DESC,
   PAIRS,
   LINES_OF_ORIGIN,
+  LINE_BONUS,
   LINE_UP_AT,
   INNATE,
   COPING,
@@ -31,6 +34,29 @@ const fromContent = (/** @type {any} */ p) => ({
 export const lineLevel = (/** @type {number} */ skillLevel) =>
   1 + LINE_UP_AT.filter(n => skillLevel >= n).length;
 const skillLevel = (/** @type {number} */ xp) => LEVELS.filter(n => xp >= n).length - 1;
+
+// 六项每人从底子 4 起，加档案里的几样；历练和身边风物由 sim.modifiers 接进 compute 'attr'。
+const BASE = 4;
+const LV = ['一', '二', '三', '四'];
+/** 档案自己带的加减：底子、性情、出身线、根骨天资、毛病，一样一条，画面照着列明细。 */
+function ownParts(/** @type {any} */ p, /** @type {string} */ k) {
+  const parts = [{ id: 'base', label: '底子', delta: BASE }];
+  const add = (/** @type {string} */ id, /** @type {string} */ label, /** @type {any} */ n) => {
+    if (n) parts.push({ id, label, delta: n });
+  };
+  if (!p) return parts;
+  for (const t of p.tempers) add('temper.' + t, TEMPERS[t].name, TEMPERS[t].attrs[k]);
+  if (p.line) {
+    const l = LINES_OF_ORIGIN[p.line.id],
+      b = LINE_BONUS[l.kind],
+      i = p.line.lv - 1;
+    const n = l.main === k ? b.main[i] : l.sub === k ? b.sub[i] : 0;
+    add('line.' + p.line.id, l.name + LV[i] + '级', n);
+  }
+  for (const x of p.innate) add('innate.' + x, INNATE[x].name, INNATE[x].attrs?.[k]);
+  for (const c of p.coping) add('coping.' + c, COPING[c].name, COPING[c].attrs?.[k]);
+  return parts;
+}
 
 function recordOk(/** @type {any} */ r) {
   if (!is.obj(r) || !is.arr(r.tempers, 3) || !is.arr(r.innate, 4) || !is.arr(r.coping, 6))
@@ -70,10 +96,10 @@ function visitorPersona(/** @type {any} */ w, /** @type {string} */ id) {
 export const persona = {
   id: 'sim.persona',
   provides: ['persona'],
-  requires: ['schema', 'queries', 'reactions', 'people'],
+  requires: ['schema', 'queries', 'reactions', 'compute', 'people'],
   writes: ['persona'],
   install(ctx) {
-    const { schema, queries, reactions, people } = ctx.services;
+    const { schema, queries, reactions, compute, people } = ctx.services;
     schema.slice('persona', {
       initial: () =>
         Object.fromEntries(
@@ -84,6 +110,21 @@ export const persona = {
     });
 
     const get = (w, id) => w.persona[id] || visitorPersona(w, id);
+
+    /** 六项：档案里的几样先算好，再走 compute 'attr' 让别的插件接上历练和身边风物。最低是 0。 */
+    function attrs(w, id = people.who(w)) {
+      const p = get(w, id);
+      const values = {},
+        detail = {};
+      for (const [k, name] of Object.entries(ATTRS)) {
+        const own = ownParts(p, k);
+        const start = { value: own.reduce((n, x) => n + x.delta, 0), parts: own };
+        const r = compute.run('attr', { w, who: id, attr: k }, start);
+        values[k] = Math.max(0, r.value);
+        detail[k] = { id: k, name, value: values[k], parts: r.parts };
+      }
+      return { values, detail };
+    }
 
     /** 旧特质（开局两选的六个）问到这里：换成了哪个性情或哪条出身线，有就算有。 */
     function hasOld(w, id, trait) {
@@ -141,9 +182,10 @@ export const persona = {
         innate: p.innate.map(i => ({ id: i, name: INNATE[i].name })),
         coping: p.coping.map(c => ({ id: c, name: COPING[c].name })),
         stress: p.stress,
+        attrs: Object.values(attrs(w, who).detail),
       };
     });
 
-    ctx.provide('persona', Object.freeze({ get, hasOld, fromOrigin: ctx.own(fromOrigin) }));
+    ctx.provide('persona', Object.freeze({ get, hasOld, fromOrigin: ctx.own(fromOrigin), attrs }));
   },
 };

@@ -4,10 +4,18 @@
 import { is, check } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { EVENTS, MORNING_EVENTS, SCENE_EVENTS, checkChance } from '../../content/events.js';
-import { STATS, MODIFIERS } from '../../content/modifiers.js';
+import { MODIFIERS } from '../../content/modifiers.js';
+import { ATTRS, TEMPERS, LINES_OF_ORIGIN, OLD_TRAITS } from '../../content/traits.js';
 import { TRAITS } from '../../content/growth.js';
 import { MAPS, walkable, farmable, actAt } from '../../content/maps/index.js';
 import { near } from './people.js';
+
+/** 做法要的那一样叫什么：开局的旧特质已经换成性情或出身线，报换过去的名字；做出来的历练照旧。 */
+const needName = t => {
+  const to = OLD_TRAITS[t];
+  if (!to) return TRAITS[t].name;
+  return to.temper ? TEMPERS[to.temper].name : LINES_OF_ORIGIN[to.line].name;
+};
 
 const MAX_DELAYED = 16;
 // 就地遇事落在主角身边哪一格：先左右上下，再斜角。面前那一格留给手上正干的活。
@@ -38,12 +46,13 @@ export const events = {
     'body',
     'growth',
     'modifiers',
+    'persona',
   ],
   writes: ['pulse'],
   install(ctx) {
     const { schema, commands, queries, reactions, core, people, store, pack, body, growth } =
       ctx.services;
-    const { modifiers } = ctx.services;
+    const { modifiers, persona } = ctx.services;
 
     const activeOk = a =>
       a === null ||
@@ -174,13 +183,13 @@ export const events = {
       const choice = ev.choices[idx];
       const who = people.who(w);
       if (choice.reqTrait && !growth.has(w, choice.reqTrait, who))
-        refuse(`需要「${TRAITS[choice.reqTrait].name}」特质`);
+        refuse(`需要「${needName(choice.reqTrait)}」`);
       if (choice.cost?.coins) store.pay(w, choice.cost.coins, ev.title);
 
       let success = true;
       let outcome = choice;
       if (choice.check) {
-        const val = modifiers.stats(w, who).values[choice.check.stat] || 2;
+        const val = persona.attrs(w, who).values[choice.check.attr];
         const pct = checkChance(val, choice.check.dc);
         success = core.random(w) * 100 < pct;
         outcome = success ? choice.onOk : choice.onFail;
@@ -206,7 +215,7 @@ export const events = {
       const cur = w.pulse.active;
       if (!cur) return { active: null, delayed: w.pulse.delayed.length };
       const ev = EVENTS[cur.id];
-      const statValues = modifiers.stats(w, who).values;
+      const attrs = persona.attrs(w, who).values;
       const coins = w.households.home.coins;
       return {
         delayed: w.pulse.delayed.length,
@@ -221,15 +230,15 @@ export const events = {
           title: ev.title,
           text: ev.text,
           choices: ev.choices.map((c, index) => {
-            const needTrait = c.reqTrait ? TRAITS[c.reqTrait].name : null;
+            const needTrait = c.reqTrait ? needName(c.reqTrait) : null;
             const hasTrait = !c.reqTrait || growth.has(w, c.reqTrait, who);
             const hasCoins = !c.cost?.coins || coins >= c.cost.coins;
             const checkInfo = c.check
               ? {
-                  stat: c.check.stat,
-                  statName: STATS[c.check.stat].name,
-                  statValue: statValues[c.check.stat],
-                  chance: checkChance(statValues[c.check.stat], c.check.dc),
+                  attr: c.check.attr,
+                  attrName: ATTRS[c.check.attr],
+                  attrValue: attrs[c.check.attr],
+                  chance: checkChance(attrs[c.check.attr], c.check.dc),
                 }
               : null;
             return {
