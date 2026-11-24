@@ -113,7 +113,7 @@ export function touchThing(scene, thing) {
     const { game } = scene.deps;
     const query = thing.act === 'outing' ? 'outings' : 'homestead';
     const options = game.ask(query, thing.station, scene.at()).options;
-    if (options.length === 1 && options[0].id !== 'fish') {
+    if (!thing.dining && options.length === 1 && options[0].id !== 'fish') {
       if (options[0].reason) return scene.refuse(options[0].reason);
       return work(scene, thing.act, options[0].id, thing);
     }
@@ -123,6 +123,7 @@ export function touchThing(scene, thing) {
         station: thing.station,
         label: thing.label,
         group: thing.act,
+        dining: thing.dining,
         x: thing.x,
         y: thing.y,
       },

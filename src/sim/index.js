@@ -16,6 +16,7 @@ import { body } from './plugins/body.js';
 import { pack } from './plugins/pack.js';
 import { water } from './plugins/water.js';
 import { land } from './plugins/land.js';
+import { interactions } from './plugins/interactions.js';
 import { social } from './plugins/social.js';
 import { basket } from './plugins/basket.js';
 import { cooking } from './plugins/cooking.js';
@@ -70,6 +71,7 @@ export const PLUGINS = Object.freeze([
   events,
   visitors,
   wardrobe,
+  interactions,
 ]);
 
 /**

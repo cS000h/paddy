@@ -4,6 +4,8 @@
 //   wardrobe.buy {kind, id, at}     在集上布摊买一件成衣、学一种发式          → wardrobe.got {how: 'buy'}
 //   到野外找菜、捡柴、劈篾、采菌、采茶、钓鱼时，有几成碰上一样还没有的   → wardrobe.got {how: 'find'}
 // 哪一样怎么得到、几文钱、几成碰上，都写在 content/wardrobe.js 的 GET 里。
+import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
+import { registerResidentOptions } from '../resident-options.js';
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { PEOPLE } from '../../content/people.js';
@@ -23,11 +25,26 @@ const OUTINGS = {
   'fish.missed': () => 'fish',
 };
 
+function clothOptions({ ask, person, at }) {
+  if (person.place !== 'market') return [];
+  const cloth = ask('wardrobe', at).stall.wares.filter(i => !i.owned);
+  return cloth.length
+    ? [
+        {
+          key: 'cloth',
+          label: '布摊今天挂着什么？',
+          line: words.cloth(cloth.slice(0, 3).map(i => i.name + ' ' + i.price + '文')),
+        },
+      ]
+    : [];
+}
+
 export const wardrobe = {
   id: 'sim.wardrobe',
   requires: ['schema', 'commands', 'reactions', 'compute', 'queries', 'core', 'people', 'store'],
   writes: ['wardrobe'],
   install(ctx) {
+    registerResidentOptions(ctx, 'qiao', clothOptions);
     const { schema, commands, reactions, compute, queries, core, people, store } = ctx.services;
     schema.slice('wardrobe', {
       initial: (env, w) => ({

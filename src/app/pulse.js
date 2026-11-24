@@ -8,19 +8,6 @@ export function pulseActions({ shell, run, here }) {
       shell.set({ modal: null });
       if (f?.line) shell.toast(f.line);
     },
-    visitorTalk({ id }) {
-      const out = run('visitor.talk', { id, at: here() });
-      if (!out.ok) return;
-      const f = out.facts.find(x => x.type === 'visitor.talked')?.data;
-      shell.set({ modal: { kind: 'visitor', id, line: f?.line || '' } });
-    },
-    visitorFulfill({ id, dish }) {
-      const input = dish ? { id, dish: Number(dish), at: here() } : { id, at: here() };
-      const out = run('visitor.fulfill', input);
-      if (!out.ok) return;
-      const f = out.facts.find(x => x.type === 'visitor.fulfilled')?.data;
-      shell.set({ modal: { kind: 'visitor', id, line: f?.line || '' } });
-    },
   };
 }
 

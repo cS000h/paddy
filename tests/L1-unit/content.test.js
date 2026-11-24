@@ -173,12 +173,21 @@ test('身体的数值和花体力的事：工具都登记了价钱，喝水的�
   assert.ok(BODY.hungerEvery > 0 && BODY.slotMinutes % BODY.hungerEvery === 0);
 });
 
-test('地图：自家院子在篱笆里，橱柜在院里；井、缸、溪水能喝，水田不能', () => {
+test('院里用火用水，屋里收纳起居，两边的家什各有去处', () => {
   const map = MAPS.yard;
   assert.ok(isHome(map, 8, 11) && !isHome(map, 8, 15) && !isHome(map, 6, 18));
-  const cupboard = map.objects.find(([kind]) => kind === 'cupboard');
-  assert.ok(isHome(map, cupboard[1], cupboard[2]));
-  assert.equal(actAt(map, cupboard[1], cupboard[2]).act, 'store');
+  const room = MAPS.cottage;
+  for (const [kind, belongs, other] of [
+    ['cupboard', room, map],
+    ['bookshelf', room, map],
+    ['stove', map, room],
+    ['vat', map, room],
+    ['workbench', map, room],
+  ]) {
+    const [, x, y] = belongs.objects.find(([k]) => k === kind);
+    assert.ok(isHome(belongs, x, y) && actAt(belongs, x, y));
+    assert.ok(!other.objects.some(([k]) => k === kind));
+  }
   assert.deepEqual(
     [drinkSource(map, 18, 18), drinkSource(map, 12, 10), drinkSource(map, 38, 14)],
     ['well', 'vat', 'creek'],

@@ -1,6 +1,9 @@
 // 灶台：做饭、端走、放回、吃。饭菜存到户里；端走交给个人行囊。菜谱也属于这一户。
 //   cook {items, spices, method, cut, heat, at} → meal.cooked {…这道菜, first, ids, line}
 //   dish.pack / dish.store / dish.eat {id, at}
+import { ITEMS } from '../../content/items.js';
+import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
+import { registerResidentOptions } from '../resident-options.js';
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { MAPS } from '../../content/maps/index.js';
@@ -21,12 +24,34 @@ function cookedLine(dish, first) {
   );
 }
 
+function gui({ ask, at }) {
+  const bag = ask('goods', at).filter(i => i.carried > 0);
+  const recipes = ask('kitchen', at).recipes.filter(
+    r =>
+      r.method === 'stew' && r.items.length <= 3 && r.items.some(id => bag.some(i => i.id === id)),
+  );
+  return recipes.slice(0, 4).map(r => {
+    const missing = [...r.items, ...r.spices].filter(id => !bag.some(i => i.id === id));
+    return {
+      key: 'recipe.' + r.name,
+      group: '请教炖菜',
+      label: r.name,
+      line: words.recipe(
+        r.name,
+        [...r.items, ...r.spices].map(id => ITEMS[id].name),
+        missing.map(id => ITEMS[id].name),
+      ),
+    };
+  });
+}
+
 export const cooking = {
   id: 'sim.cooking',
   provides: ['kitchen'],
   requires: ['schema', 'commands', 'queries', 'core', 'people', 'store', 'pack', 'body', 'compute'],
   writes: ['kitchens'],
   install(ctx) {
+    registerResidentOptions(ctx, 'gui', gui);
     const { schema, commands, queries, core, people, store, pack, body, compute } = ctx.services;
     schema.slice('kitchens', {
       initial: (env, w) =>

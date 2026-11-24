@@ -17,12 +17,16 @@ function travel(g, to) {
   must(g, 'travel', { x, y, at: { x: x + dx, y: y + dy, dir: 'up' } });
   assert.equal(g.ask('hero').map, to);
 }
-test('小屋能进出，室内做饭存取睡觉；存档留在屋里，出门行囊不丢', () => {
+test('檐下做饭，进屋收纳睡觉；存档留在屋里，出门饭菜不丢', () => {
   const g = newGame();
   assert.match(refused(g, 'travel', { x: 8, y: 9, at: { x: 20, y: 15 } }), /门边/);
+  must(g, 'cook', { items: ['rice'], method: 'stew', at: { x: 10, y: 11 } });
   travel(g, 'cottage');
   must(g, 'pack.put', { item: 'rice', at: { x: 12, y: 7 } });
-  must(g, 'cook', { items: ['rice'], method: 'stew', at: { x: 15, y: 8 } });
+  assert.match(
+    refused(g, 'cook', { items: ['rice'], method: 'stew', at: { x: 15, y: 8 } }),
+    /檐下灶台/,
+  );
   must(g, 'sleep');
   const loaded = createGame({ saved: JSON.parse(JSON.stringify(g.save())), debug: true });
   assert.equal(loaded.ask('hero').map, 'cottage');

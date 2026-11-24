@@ -67,7 +67,10 @@ export const visits = {
       'resident.positions',
       (r, { w, slot }) => {
         const a = w.visits?.active;
-        if (a && a.day === w.clock.day && slot === a.slot) r.value[a.npc] = PLACE;
+        if (a && a.day === w.clock.day && slot === a.slot) {
+          r.value[a.npc] = PLACE;
+          r.waiting = a.npc;
+        }
       },
       { priority: 80 },
     );

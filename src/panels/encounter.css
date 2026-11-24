@@ -1,0 +1,112 @@
+/* 气泡留在说话的人上方，操作靠惯用的右下角。物品多时只滚动物品区。 */
+.modal.encounter {
+  display: block;
+  container-type: size;
+  background: transparent;
+}
+.frame.encounter,
+.sheet.encounter {
+  display: contents;
+}
+.npc-bubble {
+  position: absolute;
+  width: min(264px, 46%);
+  box-sizing: border-box;
+  left: clamp(8px, calc(var(--npc-x) - 62px), calc(100% - min(264px, 46%) - 8px));
+  bottom: clamp(34%, calc(100% - var(--npc-y)), calc(100% - 116px));
+  padding: 8px 12px;
+  background: var(--moon);
+  border: 2px solid var(--frame);
+  border-radius: 8px;
+  color: var(--ink);
+  box-shadow: 2px 3px 0 #40382138;
+}
+.npc-bubble::after {
+  content: '';
+  position: absolute;
+  left: 48px;
+  bottom: -7px;
+  width: 10px;
+  height: 10px;
+  background: var(--moon);
+  transform: rotate(45deg);
+  border-right: 2px solid var(--frame);
+  border-bottom: 2px solid var(--frame);
+}
+.npc-bubble b {
+  color: var(--qing);
+  font-size: 14px;
+}
+.npc-bubble .say {
+  margin: 2px 0;
+  max-height: min(34cqh, 190px);
+  overflow-y: auto;
+  font-size: 16px;
+  line-height: 1.35;
+}
+.npc-actions {
+  position: absolute;
+  bottom: calc(8px + var(--safe-b));
+  right: calc(10px + var(--safe-r));
+  max-width: min(490px, 75%);
+  max-height: 32%;
+  overflow: auto;
+}
+.npc-actions .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 3px;
+}
+.sheet.encounter .npc-actions button {
+  min-height: 44px;
+  border: 2px solid var(--frame);
+  border-radius: 8px;
+  padding: 4px 10px;
+  background: var(--moon);
+  color: var(--ink);
+}
+.sheet.encounter .npc-actions button.main {
+  background: var(--sage);
+  color: var(--ink);
+}
+.npc-actions img {
+  vertical-align: middle;
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.field-caption {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  max-width: 68%;
+  background: var(--moon);
+  color: var(--ink);
+  border: 2px solid var(--frame);
+  border-radius: 6px;
+}
+.sheet.encounter .crop-pick {
+  position: absolute;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border: 1px dashed #ffedac;
+  border-radius: 2px;
+  box-shadow: none;
+}
+.sheet.encounter .crop-pick:is(:focus-visible, [aria-pressed='true']) {
+  border: 3px solid #ffde78;
+  background: #fff4ab24;
+}
+
+#ui:has(.field-caption) .date {
+  visibility: hidden;
+}

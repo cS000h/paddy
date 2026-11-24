@@ -5,6 +5,9 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
+import { createGame } from '../../src/port/game.js';
+import { daylight } from '../../src/art/daylight.js';
+import { KEY } from '../../src/platform/storage.js';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const file = path.join(root, '发布', '稻-手机版.html');
 const url = pathToFileURL(file).href + '?debug';
@@ -156,6 +159,265 @@ test('单文件离线运行：手机做饭、导出导入、旧档升级、坏�
     await p.locator('[data-do="exportSave"]').tap();
     assert.match((await downloading).suggestedFilename(), /进度.json/);
     await denied.close();
+  } finally {
+    await browser.close();
+  }
+});
+
+test('离线小屋读档即呈雨夜，早雾散去时室内曝光逐步改变', async () => {
+  const game = createGame({ seed: 1 });
+  game.dispatch('origin.choose', { route: 'later', reply: 'quiet' });
+  assert.ok(game.dispatch('travel', { x: 8, y: 9, at: { x: 8, y: 10, dir: 'up' } }).ok);
+  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  try {
+    for (const [minute, weather] of [
+      [1320, 'rain'],
+      [530, 'fog'],
+    ]) {
+      const saved = structuredClone(game.save());
+      saved.state.world.clock.minute = minute;
+      saved.state.world.weather.now = weather;
+      const ctx = await browser.newContext({
+        viewport: { width: 844, height: 390 },
+        offline: true,
+      });
+      await ctx.addInitScript(
+        ([key, data]) => localStorage.setItem(key, JSON.stringify(data)),
+        [KEY, saved],
+      );
+      const p = await ctx.newPage();
+      await p.goto(url);
+      await ready(p);
+      const view = await p.evaluate(() => {
+        const d = window.__dao,
+          scene = d.world.scene();
+        const tex = scene.textures.get('light:exposure:cottage');
+        const sample = () => {
+          const [r, g, b] = tex.context.getImageData(0, 0, 1, 1).data;
+          return (r << 16) + (g << 8) + b;
+        };
+        const colors = [sample()];
+        // 从实际渲染帧取样，慢机器上也不依赖固定毫秒的截图时机。
+        scene.game.events.on('postrender', () => {
+          const c = sample();
+          if (c !== colors.at(-1)) colors.push(c);
+        });
+        window.roomSamples = colors;
+        return {
+          map: scene.map.id,
+          tint: colors[0],
+          flame: scene.children.list.find(o => o.texture?.key === 'lamp:flame').alpha,
+        };
+      });
+      const model = daylight(minute, weather, true);
+      assert.equal(view.map, 'cottage');
+      assert.equal(view.tint, parseInt(model.tint.slice(1), 16));
+      assert.equal(view.flame, model.lamp);
+      if (weather === 'fog') {
+        const code = await p.evaluate(() => {
+          const g = window.__dao.game;
+          g.dispatch('clock.advance', { minutes: 10 });
+          return g.ask('weather').code;
+        });
+        assert.equal(code, 'sunny');
+        const end = parseInt(daylight(540, code, true).tint.slice(1), 16);
+        await p.waitForFunction(rgb => window.roomSamples.at(-1) === rgb, end);
+        const colors = await p.evaluate(() => window.roomSamples);
+        assert.ok(
+          colors.some(c => c > view.tint && c < end),
+          '窗外放晴时屋里要经过中间亮度',
+        );
+      }
+      assert.deepEqual(await p.evaluate(() => window.__dao.problems.list()), []);
+      await ctx.close();
+    }
+  } finally {
+    await browser.close();
+  }
+});
+
+test('点阿满预览不涨关系；订种先确认再扣款，成交收据可原地查看', async () => {
+  const game = createGame({ seed: 1 });
+  game.dispatch('origin.choose', { route: 'later', reply: 'quiet' });
+  assert.ok(game.dispatch('basket.put', { item: 'cake', n: 1 }).ok);
+  assert.ok(game.dispatch('sleep', {}).ok);
+  const saved = game.save();
+  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  try {
+    for (const [width, height, hasTouch] of [
+      [844, 390, true],
+      [1280, 720, false],
+    ]) {
+      const ctx = await browser.newContext({
+        viewport: { width, height },
+        hasTouch,
+        isMobile: hasTouch,
+        offline: true,
+      });
+      const page = await ctx.newPage();
+      const errors = [];
+      page.on('pageerror', e => errors.push(e.message));
+      await ctx.addInitScript(
+        ([key, save]) => localStorage.setItem(key, JSON.stringify(save)),
+        [KEY, saved],
+      );
+      await page.goto(url);
+      await ready(page);
+      await page.evaluate(() => {
+        const s = window.__dao.world.scene(),
+          p = s.villagers.find(v => v.id === 'aman');
+        s.tap(p.px, p.py - 12);
+      });
+      await frames(page, 900);
+      const click = async selector => {
+        if (hasTouch) await page.locator(selector).tap();
+        else await page.locator(selector).click();
+      };
+      await click('[data-do="encounterMenu"]');
+      assert.equal(
+        await page.evaluate(() => window.__dao.game.ask('bonds').find(b => b.id === 'aman').known),
+        0,
+      );
+      await click('[data-key^="bill."]');
+      assert.match(await page.locator('.say').textContent(), /米糕.*文/);
+      await page.locator('.npc-bubble .unsaid').waitFor({ state: 'detached' });
+      await page.screenshot({ path: path.join(root, '.cache', 'npc-receipt-' + width + '.png') });
+      await click('[data-group="托他捎货"]');
+      await click('[data-key*=".seed.qingcai."]');
+      const coins = () => page.evaluate(() => window.__dao.game.ask('home').coins);
+      const before = await coins();
+      await click('[data-do="encounterMenu"][data-group="托他捎货"]');
+      assert.equal(await coins(), before);
+      await click('[data-key*=".seed.qingcai."]');
+      await click('[data-confirm="yes"]');
+      assert.equal(await coins(), before - 2);
+      assert.match(await page.locator('.say').textContent(), /明早/);
+      assert.deepEqual(errors, []);
+      await ctx.close();
+    }
+  } finally {
+    await browser.close();
+  }
+});
+
+test('石伯田间指认：点作物能换畦，旋转手机仍指向正确的地', async () => {
+  const g = createGame({ seed: 1 });
+  g.dispatch('origin.choose', { route: 'later', reply: 'quiet' });
+  for (const x of [6, 7]) {
+    const spot = { x, y: 19, at: { x, y: 18, dir: 'down' } };
+    for (const type of ['farm.till', 'farm.sow', ...(x === 7 ? ['farm.water'] : [])])
+      assert.ok(g.dispatch(type, spot).ok);
+  }
+  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  try {
+    for (const [width, height] of [
+      [844, 390],
+      [390, 844],
+      [1280, 720],
+    ]) {
+      const touch = width !== 1280;
+      const page = await browser.newPage({
+        viewport: { width, height },
+        hasTouch: touch,
+        isMobile: touch,
+        offline: true,
+      });
+      await page.addInitScript(
+        ([k, s]) => localStorage.setItem(k, JSON.stringify(s)),
+        [KEY, g.save()],
+      );
+      await page.goto(url);
+      await ready(page);
+      await page.evaluate(() => {
+        const s = window.__dao.world.scene(),
+          p = s.villagers.find(v => v.id === 'shi');
+        s.tap(p.px, p.py - 12);
+      });
+      await frames(page, 900);
+      const pick = async selector =>
+        touch ? page.locator(selector).tap() : page.locator(selector).click();
+      const limit = await page
+        .locator('.npc-bubble .say')
+        .evaluate(el => parseFloat(getComputedStyle(el).maxHeight));
+      assert.ok(Math.abs(limit - Math.min(190, 0.34 * Math.min(width, height))) < 1);
+      await pick('[data-do="encounterMenu"]');
+      await pick('[data-picker="field"]');
+      for (const [x, expected] of [
+        [6, /缺水/],
+        [7, /水分够/],
+      ]) {
+        const selector = '[data-key="plot.' + x + '.19"]';
+        await page.locator(selector).waitFor();
+        const hit = await page.locator(selector).evaluate(el => {
+          const d = window.__dao,
+            b = el.getBoundingClientRect();
+          const p = d.platform.viewport.toLocal(b.x + b.width / 2, b.y + b.height / 2);
+          const w = d.world.scene().cameras.main.getWorldPoint(p.x, p.y);
+          return [Math.floor(w.x / 16), Math.floor(w.y / 16)];
+        });
+        assert.deepEqual(hit, [x, 19]);
+        await pick(selector);
+        assert.match(await page.locator('.field-caption').textContent(), expected);
+        assert.equal(await page.locator('[aria-pressed="true"].crop-pick').count(), 1);
+      }
+      if (width === 844)
+        await page.screenshot({ path: path.join(root, '.cache', 'shi-field-review.png') });
+      await pick('[data-do="encounterMenu"]');
+      assert.equal(await page.locator('.crop-pick').count(), 0);
+      await pick('[data-do="close"]');
+      await frames(page, 10);
+      assert.ok(
+        await page.evaluate(() => {
+          const s = window.__dao.world.scene();
+          return s.cameras.main._follow === s.player.sprite;
+        }),
+      );
+      await page.close();
+    }
+  } finally {
+    await browser.close();
+  }
+});
+
+test('带着已订的约定读档，在茶摊从接话菜单赴约', async () => {
+  const game = createGame({ seed: 1 });
+  for (const [name, input] of [
+    ['origin.choose', { route: 'later', reply: 'quiet' }],
+    ['talk', { to: 'shi' }],
+    ['invite', { to: 'shi' }],
+    ['sleep', {}],
+    ['clock.advance', { minutes: 120 }],
+    ['clock.advance', { minutes: 70 }],
+    ['travel.to', { to: 'tea' }],
+  ])
+    assert.ok(game.dispatch(name, input).ok, name);
+  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  try {
+    const page = await browser.newPage({
+      viewport: { width: 844, height: 390 },
+      hasTouch: true,
+      isMobile: true,
+      offline: true,
+    });
+    await page.addInitScript(
+      ([k, s]) => localStorage.setItem(k, JSON.stringify(s)),
+      [KEY, game.save()],
+    );
+    await page.goto(url);
+    await ready(page);
+    await page.evaluate(() => {
+      const s = window.__dao.world.scene(),
+        who = s.villagers.find(p => p.id === 'shi');
+      s.tap(who.px, who.py - 12);
+    });
+    await frames(page, 900);
+    await page.getByRole('button', { name: '接话', exact: true }).tap();
+    await page.getByRole('button', { name: '坐下赴约', exact: true }).tap();
+    assert.equal(await page.evaluate(() => window.__dao.game.ask('visits').active), null);
+    assert.equal(
+      await page.evaluate(() => window.__dao.game.ask('bonds').find(p => p.id === 'shi').known),
+      3,
+    );
   } finally {
     await browser.close();
   }

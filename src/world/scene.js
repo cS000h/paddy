@@ -13,6 +13,7 @@ import { buildTextures, ensurePerson } from './textures.js';
 import { Walker, Villager } from './actors.js';
 import { createEffects } from './effects.js';
 import { weatherEffects } from './weather.js';
+import { fieldInspection } from './field-inspection.js';
 import { refreshPlots } from './plots.js';
 import { bindKeyboard, bindPointer } from './input.js';
 import { hintFor, touchThing, poke } from './interactions.js';
@@ -107,6 +108,7 @@ export class VillageScene extends Phaser.Scene {
     const fit = () => this.fit();
     this.scale.on('resize', fit);
     this.fit();
+    this.inspectField = fieldInspection(this);
     this.cleanups = [
       () => this.scale.off('resize', fit),
       bindKeyboard(this, intents),
@@ -161,6 +163,7 @@ export class VillageScene extends Phaser.Scene {
     this.guard(() => this.frame(time, delta));
   }
   frame(time, delta) {
+    this.inspectField();
     this.ambient.update(time, delta);
     this.weatherFx.update(time, this.map.indoor ? 'sunny' : this.weather.code);
     const dt = Math.min(0.05, delta / 1000);
@@ -213,12 +216,12 @@ export class VillageScene extends Phaser.Scene {
   }
 
   /** 操控的人头顶在画面上的哪一点（画面坐标，像素）：面板把冒出来的字摆在那儿。 */
-  headOnScreen() {
+  headOnScreen(actor = this.player) {
     const camera = this.cameras.main;
     const view = camera.worldView;
     return {
-      x: (this.player.px - view.x) * camera.zoom,
-      y: (this.player.py - 30 - view.y) * camera.zoom,
+      x: (actor.px - view.x) * camera.zoom,
+      y: (actor.py - 30 - view.y) * camera.zoom,
     };
   }
 
@@ -263,18 +266,16 @@ export class VillageScene extends Phaser.Scene {
     const { game, shell, platform } = this.deps;
     person.turnTo(this.player);
     this.player.face(dirTo(this.player.tile, person.tile));
-    const out = game.dispatch('talk', { to: person.id, at: this.at() });
-    if (!out.ok) return this.refuse(out.reason);
+    const line = game.ask('resident.greeting', person.id, person.commuting);
+    if (!line) return;
     platform.audio.play('talk');
-    const said = out.facts.find(f => f.type === 'person.talked').data;
-    return shell.set({
+    shell.set({
       modal: {
         kind: 'talk',
         who: person.id,
-        line: said.line,
-        doing: person.doing,
-        gain: said.gain,
-        favorite: said.favorite,
+        line,
+        walking: person.commuting,
+        anchor: this.headOnScreen(person),
       },
     });
   }

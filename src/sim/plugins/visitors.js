@@ -2,6 +2,7 @@
 // 玩家走到跟前才能聊闲话、办托付（规则校验站位 at）。满意后记入熟人册，下回优先再来。
 //   visitor.talk    {id, at}        → visitor.talked {id, name, line, known}
 //   visitor.fulfill {id, dish?, at} → visitor.fulfilled {id, name, coins, item, line}
+import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
 import { is, check } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import {
@@ -279,6 +280,7 @@ export const visitors = {
           spot: role.spot,
           spotName: role.spotName,
           talkLine: role.talkLine,
+          greeting: v.done ? words.visitorDone : words.visitorNeed(role.need.text),
           traits: v.traits,
           rel: v.rel,
           left: Math.max(1, v.until - w.clock.day + 1),

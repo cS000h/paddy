@@ -2,6 +2,9 @@
 //   gather {id, at}        → forage.finished {id, item, n, line}
 //   fish.cast {at}         → fish.cast          下竿时就定好这一竿的运气
 //   fish.reel {value, at}  → fish.caught {n, timing, line} | fish.missed {timing, line}
+import { MAPS } from '../../content/maps/index.js';
+import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
+import { registerResidentOptions } from '../resident-options.js';
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { OUTDOOR, FISH_BITE, FISH_TIMING, FORAGE_FINDS } from '../../content/activities.js';
@@ -25,6 +28,22 @@ function foundLine(a, item, n) {
   return fill(story, { n }) + fill(STOWED, { item: ITEMS[item].name, n });
 }
 
+function outing({ ask, person }, place, id, label) {
+  if (person.place !== place) return [];
+  const station = MAPS[person.map].objects.find(o => o[3]?.station === id);
+  if (!station) return [];
+  const activity = ask('outings', id, { x: station[1], y: station[2] }).options.find(
+    a => a.id === id,
+  );
+  return [
+    {
+      key: 'outing.' + id,
+      label,
+      line: activity.reason || words.outing(id, activity.left),
+    },
+  ];
+}
+
 export const gathering = {
   id: 'sim.gathering',
   provides: ['outings'],
@@ -42,6 +61,8 @@ export const gathering = {
   ],
   writes: ['outings'],
   install(ctx) {
+    registerResidentOptions(ctx, 'zhou', c => outing(c, 'river', 'fish', '今天还能下几竿？'));
+    registerResidentOptions(ctx, 'yun', c => outing(c, 'hill', 'tea', '茶垄今天能采吗？'));
     const { schema, commands, queries, reactions, people, pack, body, core, compute, weather } =
       ctx.services;
     schema.slice('outings', {

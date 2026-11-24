@@ -101,7 +101,7 @@ export const pack = {
       const mine = Math.min(n, count(w, id, item));
       const rest = n - mine;
       const name = ITEMS[item]?.name || '东西';
-      if (rest > 0 && !people.atHome(w, id)) refuse(`身上没带${name}。家里有的话，回院里的橱柜拿`);
+      if (rest > 0 && !people.atHome(w, id)) refuse(`身上没带${name}。家里有的话，回小屋的橱柜拿`);
       if (rest > 0 && store.count(w, item) < rest) refuse(`${name}不够了`);
       if (mine) take(w, id, item, mine, why);
       if (rest) store.take(w, item, rest, why);
@@ -151,7 +151,7 @@ export const pack = {
     const tidy = (input, w) => {
       people.place(w, input.at);
       if (!Object.hasOwn(ITEMS, input.item)) refuse('没有这样东西');
-      if (!people.atHome(w)) refuse('回院里的橱柜边才能收拾行囊');
+      if (!people.atHome(w)) refuse('回到自家院里或小屋才能收拾行囊');
       return people.who(w);
     };
 

@@ -17,6 +17,7 @@ import { MAPS } from '../content/maps/index.js';
 import { createProblems } from './problems.js';
 import { showFallback } from './fallback.js';
 import { saveActions } from './saves.js';
+import { encounterActions } from './encounter.js';
 import { homeActions } from './home.js';
 import { marketActions } from './market.js';
 import { fieldActions } from './field.js';
@@ -108,6 +109,7 @@ function start() {
   const actions = {
     ...saveActions({ ...deps, loadProblem, stopSaving, problems }),
     ...homeActions(deps),
+    ...encounterActions(deps),
     ...marketActions(deps),
     ...fieldActions(deps),
     ...growthActions(deps),

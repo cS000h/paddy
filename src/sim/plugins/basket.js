@@ -3,9 +3,46 @@
 //   basket.put   {item, n, at}  → basket.filled
 //   basket.order {item, n, at}  → basket.ordered      （先付钱）
 //   day.started  → basket.sold {coins, goods}, basket.delivered {item, n}，各留一张便条
+import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
+import { registerResidentOptions } from '../resident-options.js';
 import { is, check } from '../../kernel/schema.js';
+import { near } from './people.js';
 import { ITEMS } from '../../content/items.js';
 import { BASKET_WARES, basketTakes } from '../../content/pantry.js';
+
+function aman({ ask, day, at, person }) {
+  const basket = ask('basket');
+  const choices = [];
+  const r = basket.receipt;
+  if (r) {
+    const goods = Object.entries(r.goods)
+      .map(([id, n]) => ITEMS[id].name + ' ' + n + '份')
+      .join('、');
+    choices.push({
+      key: 'bill.' + r.day,
+      label: '上回那筐卖了多少？',
+      line: words.receipt(r.day, goods, r.coins),
+    });
+  }
+  if (!near(at, person)) return choices;
+  const coins = ask('home').coins;
+  for (const ware of basket.wares) {
+    const before = basket.order.find(x => x.id === ware.id)?.n || 0;
+    choices.push({
+      key: ['order', day, ware.id, before].join('.'),
+      group: '托他捎货',
+      label: ware.name + ' ×' + ware.qty + ' · ' + ware.buy + '文',
+      icon: ware.id,
+      reason: coins < ware.buy ? '钱不够' : '',
+      confirm: '付' + ware.buy + '文，明早捎' + ware.qty + '份' + ware.name,
+      command: 'basket.order',
+      input: { to: 'aman', item: ware.id, n: 1, day, before },
+      result: 'basket.ordered',
+      line: words.ordered(ware.name),
+    });
+  }
+  return choices;
+}
 
 export const basket = {
   id: 'sim.basket',
@@ -20,9 +57,11 @@ export const basket = {
     'store',
     'pack',
     'compute',
+    'residents',
   ],
   writes: ['basket'],
   install(ctx) {
+    registerResidentOptions(ctx, 'aman', aman);
     const { schema, commands, reactions, queries, core, people, store, pack, compute } =
       ctx.services;
 
@@ -31,11 +70,20 @@ export const basket = {
       Object.entries(g).every(([k, n]) => Object.hasOwn(ITEMS, k) && is.int(n, 1, 999));
 
     schema.slice('basket', {
-      initial: () => ({ goods: {}, order: {} }),
+      initial: () => ({ goods: {}, order: {}, receipt: null }),
       validate: b =>
         check([
           [goodsOk(b.goods), 'goods'],
           [goodsOk(b.order), 'order'],
+          [
+            b.receipt === null ||
+              (is.obj(b.receipt) &&
+                is.int(b.receipt.day, 1) &&
+                is.int(b.receipt.coins, 0) &&
+                goodsOk(b.receipt.goods) &&
+                Object.keys(b.receipt.goods).length > 0),
+            'receipt',
+          ],
         ]),
     });
 
@@ -53,6 +101,14 @@ export const basket = {
     commands.register('basket.order', ({ draft, input, fact }) => {
       const w = draft.world;
       people.place(w, input.at);
+      if (input.to !== undefined) {
+        const aman = ctx.services.residents.positions(w).find(p => p.id === 'aman');
+        const me = people.me(w);
+        if (input.to !== 'aman' || !aman.visible || aman.map !== me.map || !near(me, aman))
+          return { ok: false, reason: '走到阿满跟前再托他捎货' };
+        if (input.day !== w.clock.day || input.before !== (w.basket.order[input.item] || 0))
+          return { ok: false, reason: '这张单子变过了，重新看一眼' };
+      }
       const def = ITEMS[input.item];
       if (!BASKET_WARES.includes(input.item) || !is.int(input.n, 1, 99))
         return { ok: false, reason: '阿满捎不了这个' };
@@ -85,6 +141,7 @@ export const basket = {
             title: '阿满来过了',
             text: `筐里的${what}被收走了，筐底压着 ${coins} 文钱，还有半截没哼完的小调。`,
           });
+          w.basket.receipt = { day: w.clock.day, coins, goods: { ...w.basket.goods } };
           emit('basket.sold', { coins, goods: w.basket.goods });
           w.basket.goods = {};
         }
@@ -106,6 +163,7 @@ export const basket = {
     );
 
     queries.define('basket', w => ({
+      receipt: w.basket.receipt,
       goods: Object.entries(w.basket.goods).map(([id, n]) => ({ ...ITEMS[id], n })),
       order: Object.entries(w.basket.order).map(([id, n]) => ({ ...ITEMS[id], n })),
       wares: BASKET_WARES.map(id => ITEMS[id]),

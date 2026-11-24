@@ -1,3 +1,4 @@
+import { FIELD_ADVICE } from '../content/encounters.js';
 import { CROPS, SOIL, isRipe } from '../content/items.js';
 import { CALENDAR, dateOf } from '../content/calendar.js';
 import { near } from './plugins/people.js';
@@ -7,6 +8,23 @@ import { refuse } from '../kernel/dispatch.js';
 
 /** 这格地的水最多能到多少：开了沟的存不住那么多水。 */
 const capOf = p => (p.drained ? SOIL.drainedMax : SOIL.waterMax);
+export function fieldAdvice(p) {
+  const c = CROPS[p.crop];
+  return !c
+    ? FIELD_ADVICE.tilled
+    : isRipe(p.crop, p.age)
+      ? FIELD_ADVICE.ripe
+      : p.water > SOIL.soggy
+        ? FIELD_ADVICE.soggy
+        : p.water < (c.thirsty ? SOIL.moist : SOIL.wet)
+          ? FIELD_ADVICE.dry
+          : p.bugs
+            ? FIELD_ADVICE.bugs
+            : p.weeds
+              ? FIELD_ADVICE.weeds
+              : FIELD_ADVICE.watered;
+}
+
 export function installLandCare(ctx, plotAt) {
   const { reactions, queries, commands, core, weather, compute, people, store } = ctx.services;
   const careWhy = (w, p, kind) => {
@@ -54,6 +72,7 @@ export function installLandCare(ctx, plotAt) {
     const c = p.crop ? CROPS[p.crop] : null;
     return {
       ...p,
+      advice: fieldAdvice(p),
       name: c?.name || '空地',
       days: c?.days || 0,
       options: ['weed', 'bugs', 'drain', 'manure'].map(kind => ({

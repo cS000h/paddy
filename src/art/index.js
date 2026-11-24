@@ -91,6 +91,7 @@ export const OBJECT_KINDS = Object.keys(OBJECT_MAKERS);
 const OBJECT_LOOKS = {
   ...wildLooks,
   ...indoorLooks,
+  table: { ...indoorLooks.table, bench: () => village.bench() },
   trellis: {
     rear: seed => village.trellis(seed, 'rear'),
     front: seed => village.trellis(seed, 'front'),

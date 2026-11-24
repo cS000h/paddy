@@ -159,6 +159,7 @@ export class Villager extends Walker {
     this.speed = 30;
     this.plan = first;
     this.doing = first.doing;
+    this.commuting = false;
     this.leaving = false;
     this.setVisible(first.visible && first.map === map.id);
   }
@@ -181,6 +182,7 @@ export class Villager extends Walker {
     this.work.reset(plan, wet);
     this.plan = plan;
     this.doing = plan.doing;
+    this.commuting = false;
     this.leaving = false;
     const walk = (x, y) => walkable(this.map, x, y);
     const away = p => (p.visible ? p.map : null);
@@ -206,6 +208,7 @@ export class Villager extends Walker {
       }
     }
     const settle = () => {
+      this.commuting = false;
       this.face(plan.dir);
       this.setVisible(true);
     };
@@ -216,6 +219,7 @@ export class Villager extends Walker {
       settle();
       return;
     }
+    this.commuting = path.length > 0;
     this.walk(path, settle);
   }
 

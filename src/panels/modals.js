@@ -6,11 +6,12 @@ import { savesView } from './saves.js';
 import { marketView, teaView } from './market.js';
 import { weatherView, seedsView, fieldView } from './field.js';
 import { originView, bookView } from './book.js';
-import { eventView, visitorView } from './pulse.js';
+import { encounterView } from './encounter.js';
+import { eventView } from './pulse.js';
 import { activityView, fishView } from './activities.js';
 import { kitchenView, recipesView, heatView } from './kitchen.js';
 import { bagView, storeView } from './bag.js';
-import { talkView, basketView } from './village.js';
+import { basketView } from './village.js';
 import { mapView } from './map.js';
 import * as n from './notices.js';
 import { actions, close, title, para } from './html.js';
@@ -27,14 +28,14 @@ const VIEWS = {
   origin: originView,
   book: bookView,
   event: eventView,
-  visitor: visitorView,
+  visitor: encounterView,
   activity: activityView,
   fish: fishView,
   kitchen: kitchenView,
   recipes: recipesView,
   heat: heatView,
   water: n.waterView,
-  talk: talkView,
+  talk: encounterView,
   sleep: n.sleepView,
   basket: basketView,
   bag: bagView,
@@ -54,7 +55,7 @@ const VIEWS = {
 //   menu      右上角“更多”底下的一小列；
 //   side      其余的从右边展开成一整幅，高到顶，左边还看得见世界。
 const PLACE = {
-  talk: 'dialogue',
+  talk: 'encounter',
   notes: 'center',
   sign: 'dialogue',
   water: 'dialogue',
@@ -63,7 +64,7 @@ const PLACE = {
   activity: 'dialogue',
   origin: 'center',
   event: 'dialogue',
-  visitor: 'dialogue',
+  visitor: 'encounter',
   confirm: 'center',
   trouble: 'center',
   elsewhere: 'center',

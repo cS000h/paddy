@@ -120,7 +120,14 @@ export function createFieldExtras(scene) {
     actor.face(dirTo(actor.tile, scene.player.tile));
     scene.player.face(dirTo(scene.player.tile, actor.tile));
     platform.audio.play('talk');
-    shell.set({ modal: { kind: 'visitor', id: actor.id, line: actor.visitor.talkLine } });
+    shell.set({
+      modal: {
+        kind: 'visitor',
+        id: actor.id,
+        line: actor.visitor.greeting,
+        anchor: scene.headOnScreen(actor),
+      },
+    });
   }
 
   /** 走到小事跟前：面向该处，打开底部对话条做选择。 */

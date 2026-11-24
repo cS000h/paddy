@@ -187,7 +187,7 @@ test('行囊：一格放一样，一共 6 格；在自家院里才能和橱柜�
   assert.deepEqual([carried(g, 'rice'), stored(g, 'rice')], [0, 3]);
   assert.equal(
     refused(g, 'pack.put', { item: 'rice', at: FIELD.at }),
-    '回院里的橱柜边才能收拾行囊',
+    '回到自家院里或小屋才能收拾行囊',
   );
   assert.equal(g.ask('pack', FIELD.at).atHome, false);
   for (const item of ['rice', 'egg', 'potato', 'herb']) must(g, 'pack.put', { item, at: HOME });

@@ -107,3 +107,11 @@ test('衣装拆成插件以前的旧档：身上穿的进了衣箱，样子不�
   assert.equal(box.hair.find(p => p.id === 'braid').owned, true);
   assert.equal(box.coat.find(p => p.id === 'hoodie').owned, false);
 });
+
+test('v14 升级保留筐中的货和订单，从下一次清晨才记收据', () => {
+  const saved = JSON.parse(
+    readFileSync(new URL('../fixtures/save-v14.json', import.meta.url), 'utf8'),
+  );
+  const g = createGame({ saved, debug: true });
+  assert.deepEqual(g.save().state.world.basket, { ...saved.state.world.basket, receipt: null });
+});

@@ -15,7 +15,9 @@ export class ResidentWork {
     this.hide();
     const p = this.actor;
     this.job =
-      plan.visible && plan.map === p.map.id ? RESIDENT_WORK[p.id + '.' + plan.place] : null;
+      plan.visible && plan.map === p.map.id && !plan.waiting && !plan.atDoor
+        ? RESIDENT_WORK[p.id + '.' + plan.place]
+        : null;
     this.act = (wet && this.job?.rain) || this.job?.act;
     this.inspectDir = null;
     this.stopIndex = 0;

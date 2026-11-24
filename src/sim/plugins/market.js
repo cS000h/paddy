@@ -1,3 +1,5 @@
+import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
+import { registerResidentOptions } from '../resident-options.js';
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { ITEMS } from '../../content/items.js';
@@ -5,6 +7,22 @@ import { dateOf, isFairDay } from '../../content/calendar.js';
 import { MAPS, actAt } from '../../content/maps/index.js';
 import { STAPLES, SOMETIMES, FRESH } from '../../content/market.js';
 import { near } from './people.js';
+function qiao({ ask, person, at }) {
+  if (person.place !== 'market') return [];
+  const market = ask('market', 'market', at);
+  return market.ready
+    ? market.wares
+        .filter(i => i.left > 0)
+        .slice(0, 4)
+        .map(i => ({
+          key: 'stock.' + i.item,
+          group: '看今日货价',
+          label: i.name,
+          line: words.stock(i.name, i.price, i.left),
+        }))
+    : [];
+}
+
 export const market = {
   id: 'sim.market',
   requires: [
@@ -21,6 +39,7 @@ export const market = {
   ],
   writes: ['shops'],
   install(ctx) {
+    registerResidentOptions(ctx, 'qiao', qiao);
     const { schema, commands, queries, reactions, core, people, pack, store, weather, compute } =
       ctx.services;
     schema.slice('shops', {

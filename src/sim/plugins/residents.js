@@ -49,13 +49,17 @@ export const residents = {
           slot === null ? ROUTINE_DAY.stay[id] || null : placeOf(id, situation, slot),
         ]),
       );
-      return compute.run('resident.positions', { w, slot }, { value: places, parts: [] }).value;
+      return compute.run(
+        'resident.positions',
+        { w, slot },
+        { value: places, parts: [], waiting: null },
+      );
     }
 
     /** 一个人今天一天的去处，用他自己的话说：“清晨在田里，午前去樟树茶摊，……”。 */
     function schedule(w, id) {
       return SLOT_WORDS.map((word, slot) => {
-        const place = placesAt(w, slot)[id];
+        const place = placesAt(w, slot).value[id];
         const name = !place
           ? '家里'
           : place === 'yard'
@@ -73,7 +77,7 @@ export const residents = {
       const minute = w.clock.minute;
       const situation = situationOf(w);
       const night = minute >= ROUTINE_DAY.home;
-      const r = { value: placesAt(w, night ? null : slotOf(minute)) };
+      const r = placesAt(w, night ? null : slotOf(minute));
       return ON_MAP.map(id => {
         const place = r.value[id];
         if (!place)
@@ -96,7 +100,16 @@ export const residents = {
           place,
           ...spot(MAPS[map], `${id}.${place}`),
           visible: true,
-          doing: (situation.wet && RAIN_DOING[id]?.[place]) || DOING[id][place],
+          waiting: r.waiting === id,
+          atDoor: night,
+          doing:
+            r.waiting === id
+              ? '在茶桌边等你赴约'
+              : night
+                ? '在自家门内应声'
+                : w.weather.now === 'snow' && RAIN_DOING[id]?.[place]
+                  ? '避着雪，停下来歇脚'
+                  : (situation.wet && RAIN_DOING[id]?.[place]) || DOING[id][place],
         };
       });
     }

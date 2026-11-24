@@ -4,6 +4,15 @@ import { LIFE, NEWS, SKY, PLAN, HEARD, DEEDS, NIGHT_TALK } from '../content/talk
 import { GESTURE, SKY_SKILL } from '../content/talk.js';
 import { FAVORITE_HINT } from '../content/gift-lines.js';
 import { WEATHER_TYPES, WEATHER_FREQ } from '../content/weather.js';
+import { ENCOUNTERS, INTRO, TEA_DATE, ON_THE_WAY, SNOW } from '../content/encounters.js';
+const WORKPLACE = {
+  shi: 'field',
+  gui: 'yard',
+  aman: 'field',
+  qiao: 'market',
+  zhou: 'river',
+  yun: 'hill',
+};
 
 /** 固定挑一句：key 相同挑出来的就相同。 */
 export const stable = (list, key) => list[Math.abs(key | 0) % list.length];
@@ -16,8 +25,27 @@ export const withGesture = (id, band, text, key) =>
   text.startsWith('“') ? stable(GESTURE[id][band], key) + text : text;
 
 /** 聊日常：LIFE 里从上往下，头一个条件成立的那组挑一句；夜里有隔墙话的先说隔墙话。 */
-export function lifeLine(id, c, key) {
-  if (c.night && NIGHT_TALK[id]) return stable(NIGHT_TALK[id], key);
+export function lifeLine(id, c, key, first = false) {
+  const speak = words => '“' + (first ? INTRO[id] : '') + words + '”';
+  if (c.walking) return speak(ON_THE_WAY[id]);
+  if (c.night && NIGHT_TALK[id]) {
+    const night = stable(NIGHT_TALK[id], key);
+    return first ? speak(night.slice(1, -1)) : night;
+  }
+  if (c.waiting) return '“' + TEA_DATE[id] + '”';
+  const scene = ENCOUNTERS[id][c.place];
+  if (scene) {
+    let local = scene[c.band];
+    if (c.wet && c.wx !== 'snow' && scene.rain) local = scene.rain;
+    else if (c.wx === 'snow') local = SNOW[id];
+    if (!local && (first || Math.abs(key) % 3 === 1)) {
+      if (c.slot === 0) local = scene.early;
+      if (c.slot === 3) local = scene.late;
+    }
+    // 本行当里偶尔聊农时、身体、交情等旧话；到了别处优先说眼前的事。
+    if (local || first || c.place !== WORKPLACE[id] || Math.abs(key) % 3 !== 0)
+      return speak(local || stable(scene.lines, key));
+  }
   for (const [when, lines] of LIFE[id]) if (when(c)) return stable(lines, key);
   return '';
 }

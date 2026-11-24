@@ -6,6 +6,7 @@ import { FISH_TIMING } from '../content/activities.js';
 import { costText } from '../shell/words.js';
 import { button, actions, close, title, para, esc } from './html.js';
 import { timingBar } from './timing.js';
+import { servedImg } from './stove-picture.js';
 
 function pick(a) {
   const note =
@@ -25,14 +26,27 @@ export function activityView(m, game, here) {
     !outing && m.station === 'coop'
       ? `${data.coop ? '鸡窝搭好了' : '先用三根柴搭窝'} · ${data.hens}只鸡 · ${data.eggs}个蛋`
       : '';
-  const sub = coop || (data.weather ? data.weather.name : '挑一件做');
+  const dishes = m.dining ? game.ask('kitchen', here).carried : [];
+  const supper = dishes
+    .map(d =>
+      button('dishEat', '', {
+        data: { id: d.id },
+        html: servedImg(d) + esc('吃' + d.name),
+      }),
+    )
+    .join('');
+  const sub = m.dining
+    ? supper
+      ? '带来的饭菜'
+      : '可从院灶端一份饭进来吃'
+    : coop || (data.weather ? data.weather.name : '挑一件做');
   const resume =
     outing && data.pending && m.station === 'fish'
       ? button('resumeFish', '浮漂还在水里，接着钓', { main: true })
       : '';
   return `${title(m.label || '院里院外', sub)}
     ${resume ? `<div class="row">${resume}</div>` : ''}
-    <div class="picks">${data.options.map(pick).join('')}</div>
+    <div class="picks">${supper}${data.options.map(pick).join('')}</div>
     ${actions(close('算了', false))}`;
 }
 

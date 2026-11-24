@@ -200,7 +200,10 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     for (const session of [desk, wide]) {
       const p = session.page;
       await p.evaluate(() => window.__dao.shell.set({ modal: null }));
-      await tap(p, 6, 10);
+      await tap(p, 8, 9);
+      await frames(p, 1300);
+      await p.waitForFunction(() => window.__dao.world.scene().map.id === 'cottage');
+      await tap(p, 12, 6);
       await frames(p, 900);
       await p.waitForSelector('button[data-do="packPut"][data-item="rice"]');
       const before = await p.evaluate(() => window.__dao.game.ask('body').hunger);
@@ -213,6 +216,9 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       assert.ok(box.y >= 0 && box.y + box.height <= p.viewportSize().height);
       await shot(p, session === desk ? 'm1-store-desktop.png' : 'm1-store-phone.png');
       await p.locator('button[data-do="close"]').click();
+      await tap(p, 9, 14);
+      await frames(p, 900);
+      await p.waitForFunction(() => window.__dao.world.scene().map.id === 'yard');
       await tap(p, 12, 10);
       await frames(p, 300);
       // 喝上了：小窗合上，人在水缸边舀一瓢（演完才能接着做别的）
@@ -366,7 +372,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await frames(p, 400);
       // 可穿的衣服直接可选，未取得的衣服另列出处。
       await p.locator('[data-do="fittingMissing"]').click();
-      assert.match(await p.locator('.fitting-hints').textContent(), /渡口钓鱼/);
+      assert.match(await p.locator('.fitting-hints').textContent(), /青竹采茶衫.*后山采茶/);
       await p.locator('[data-do="fittingMissing"]').click();
       await p.locator('[data-do="fittingPick"][data-id="field"]').click();
       await p.locator('[data-do="fittingTab"][data-tab="hair"]').click();
@@ -381,7 +387,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       const handoff = await p.evaluate(() => {
         const { world, intents } = window.__dao;
         const s = world.scene();
-        world.perform('drink', { target: { x: 17, y: 8 } });
+        world.perform('rest', { target: { x: 9, y: 9 } });
         let walked = false;
         for (let i = 0; i < 16; i++) {
           s.game.step(performance.now() + i * 16.67, 16.67);
@@ -395,9 +401,12 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       assert.deepEqual(handoff, [true, false, 0, 1]);
       await tap(p, 15, 7);
       await frames(p, 400);
-      await p.locator('[data-do="cookPick"][data-item="potato"]').click();
-      await p.locator('[data-do="cookPlain"]').click();
-      assert.match(await p.locator('.sheet').textContent(), /土豆/);
+      await p.locator('[data-do="bookTab"]').first().waitFor();
+      await p.locator('[data-do="close"]').click();
+      await tap(p, 9, 9);
+      await frames(p, 400);
+      assert.match(await p.locator('.sheet').textContent(), /窗下饭桌/);
+      assert.equal(await p.locator('[data-do="activity"][data-id="stars"]').count(), 0);
       await p.locator('[data-do="close"]').click();
       await go(9, 14, 'yard');
       await go(2, 14, 'market');

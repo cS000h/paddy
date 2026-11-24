@@ -8,16 +8,34 @@
 // 每条命令里的 at 是操控的人此刻站的格子；目标格必须挨着他。
 // 菜种从身上拿（人在院里时家里存的也算），收下来的菜先进行囊。
 // “为什么不行”只写在 why() 一处：命令用它拒绝，画面用同一个它来提示，两边不会说法不一。
+import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
+import { registerResidentOptions } from '../resident-options.js';
 import { is } from '../../kernel/schema.js';
 import { CROPS, CAN_CAPACITY, SOIL, cropStage, isRipe } from '../../content/items.js';
 import { MAPS, farmable, waterSource, isHome } from '../../content/maps/index.js';
 import { dateOf } from '../../content/calendar.js';
-import { installLandCare } from '../land-care.js';
+import { fieldAdvice, installLandCare } from '../land-care.js';
 import { near } from './people.js';
 
 const key = (x, y) => `${x},${y}`;
 const SEED = 'seed.qingcai';
 const cropOf = seed => Object.values(CROPS).find(c => c.seed === seed);
+
+function shi({ ask, person }) {
+  if (person.place !== 'field') return [];
+  return ask('farm.plots', 'yard', true)
+    .filter(p => p.crop)
+    .map(p => {
+      const { x, y } = p;
+      return {
+        key: 'plot.' + x + '.' + y,
+        group: '请他看一畦',
+        label: p.name,
+        plot: { x, y },
+        line: words.crop(p.name, p.advice),
+      };
+    });
+}
 
 export const land = {
   id: 'sim.land',
@@ -36,6 +54,7 @@ export const land = {
   ],
   writes: ['land'],
   install(ctx) {
+    registerResidentOptions(ctx, 'shi', shi);
     const { schema, commands, reactions, queries, people, store, pack, compute, core, weather } =
       ctx.services;
 
@@ -199,7 +218,7 @@ export const land = {
     installLandCare(ctx, plotAt);
 
     // 画地用的：每格的干湿、作物和阶段，以及要不要照料（长草、生虫画在地上，一眼看得出）。
-    queries.define('farm.plots', (w, map) =>
+    queries.define('farm.plots', (w, map, withAdvice = false) =>
       Object.entries(w.land[map].plots).map(([k, p]) => {
         const [x, y] = k.split(',').map(Number);
         return {
@@ -207,6 +226,7 @@ export const land = {
           y,
           wet: p.wet,
           crop: p.crop,
+          ...(withAdvice && p.crop ? { name: CROPS[p.crop].name, advice: fieldAdvice(p) } : {}),
           stage: p.crop ? cropStage(p.crop, p.age) : -1,
           ripe: p.crop ? isRipe(p.crop, p.age) : false,
           weeds: p.weeds,
@@ -216,6 +236,17 @@ export const land = {
     );
     queries.define('farm.why', (w, action, x, y, at, seed) => why(w, action, x, y, at, seed));
 
-    ctx.provide('land', Object.freeze({ plotAt, why }));
+    /** 你那块地（小院）现在的样子：种着没有、长到第几段、最干那格多干、排水沟挖了没有。 */
+    function fieldSummary(w) {
+      const plots = Object.values(w.land.yard.plots).filter(p => p.crop);
+      return {
+        planted: plots.length > 0,
+        growth: Math.max(0, ...plots.map(p => cropStage(p.crop, p.age))),
+        water: plots.length ? Math.min(...plots.map(p => p.water)) : SOIL.waterMax,
+        drained: plots.length > 0 && plots.every(p => p.drained),
+      };
+    }
+
+    ctx.provide('land', Object.freeze({ plotAt, why, fieldSummary }));
   },
 };

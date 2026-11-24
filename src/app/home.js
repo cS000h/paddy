@@ -69,45 +69,6 @@ export function homeActions({ game, shell, run, here, world }) {
       if (notes.length) shell.set({ modal: { kind: 'notes', day, notes, gifts } });
       else shell.toast(`第 ${day} 日的清早。`);
     },
-    /** 在对话里再问一件事（近况、安排、天色）：换上他这回说的话。 */
-    talkTopic({ to, topic }) {
-      const modal = shell.get().modal;
-      const out = run('talk', { to, topic, ...at() });
-      if (!out.ok) return;
-      const said = out.facts.find(f => f.type === 'person.talked').data;
-      shell.set({
-        modal: {
-          ...modal,
-          line: said.line,
-          gain: (modal.gain || 0) + said.gain,
-          favorite: said.favorite,
-        },
-      });
-    },
-    /** 约他明天午前茶摊坐坐：他应下了，那句话写在对话里。 */
-    invite({ to }) {
-      const modal = shell.get().modal;
-      const out = run('invite', { to, ...at() });
-      if (out.ok)
-        shell.set({
-          modal: { ...modal, line: out.facts.find(f => f.type === 'appointment.made').data.line },
-        });
-    },
-    /** 赴约：合上对话，人在茶摊坐下来喝一盏，喝完冒一句这回聊了什么。 */
-    visitMeet() {
-      const out = run('visit.meet', at());
-      if (!out.ok) return;
-      const line = out.facts.find(f => f.type === 'appointment.fulfilled').data.line;
-      shell.set({ modal: null });
-      world.perform('sip', { then: () => shell.toast(line) });
-    },
-    gift({ to, item, dish }) {
-      const modal = shell.get().modal;
-      const out = run('gift', { to, item, dish: dish ? Number(dish) : null, ...at() });
-      if (!out.ok) return;
-      const { line, gain } = out.facts.find(f => f.type === 'gift.given').data;
-      shell.set({ modal: { ...modal, line, gain, gifted: true } });
-    },
     basketPut({ item, n }) {
       if (run('basket.put', { item, n: Number(n), ...at() }).ok)
         shell.set({ modal: { kind: 'basket' } });

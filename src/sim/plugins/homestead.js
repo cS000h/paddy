@@ -90,6 +90,7 @@ export const homestead = {
       if (a.id === 'eggs' && !h.eggs) return '窝里还没有蛋';
       if (a.id === 'bigbasket' && pack.big(w, id)) return '已经有大背篓了';
       if (a.id === 'rest' && people.me(w).energy >= 100) return '精神正足，不用歇';
+      if (a.id === 'stars' && people.me(w).map === 'cottage') return '到屋外坐坐才能看天色';
       if (a.id === 'stars' && (w.clock.minute < CALENDAR.dark || outings.count(w, 'stars') > 0))
         return '天黑以后再来，每夜看一回';
       if (people.me(w).energy < people.quote(w, a.id).value) return '太累了，先歇歇';
@@ -165,7 +166,7 @@ export const homestead = {
     queries.define('homestead', (w, station, at) => ({
       ...home(w),
       options: Object.values(HOMEWORK)
-        .filter(a => a.station === station)
+        .filter(a => a.station === station && !(a.id === 'stars' && people.me(w).map === 'cottage'))
         .map(a => ({
           ...a,
           reason: why(w, a, at),

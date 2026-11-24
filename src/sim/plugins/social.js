@@ -19,15 +19,19 @@ import {
   FESTIVE,
   ROUTINE_DAY,
 } from '../../content/people.js';
+import { GREETING_REPLY } from '../../content/encounters.js';
 import { TOPICS, tierOf } from '../../content/talk.js';
 import { GIFT_DISH, GIFT_ITEM, GIFT_FAVORITE, GIFT_SPOILED } from '../../content/gift-lines.js';
-import { ITEMS, CROPS, SOIL, cropStage } from '../../content/items.js';
+import { ITEMS, CROPS, SOIL } from '../../content/items.js';
 import { dateOf } from '../../content/calendar.js';
 import { giftable } from '../../content/pantry.js';
 import { withGesture, lifeLine, newsLine, skyLine, planLine } from '../talk.js';
 import { favoriteDue, favoriteLine, mark } from '../talk.js';
 
 const homeGrown = item => Object.values(CROPS).some(crop => crop.produce === item);
+// 开场和应答有时只差引号前的动作；同一句话应当只说一次。
+const spoken = line => line.slice(Math.max(0, line.indexOf('“')));
+const sameSpeech = (a, b) => spoken(a) === spoken(b);
 const SPOILED = ['raw', 'burnt'];
 
 export const social = {
@@ -48,6 +52,7 @@ export const social = {
     'weather',
     'moods',
     'residents',
+    'land',
   ],
   writes: ['bonds'],
   install(ctx) {
@@ -92,7 +97,7 @@ export const social = {
       people.place(w, input.at);
       const p = ctx.services.residents.positions(w).find(p => p.id === input.to);
       if (!p.visible || p.map !== people.me(w).map) refuse('这个人不在附近');
-      return w.bonds;
+      return p;
     };
 
     /** 熟悉加 n（经过 relation.gain 管道），对方也跟着高兴一点；返回实际加了多少。 */
@@ -110,23 +115,16 @@ export const social = {
       return gain;
     }
 
-    /** 你那块地（小院）现在的样子：种着没有、长到第几段、最干那格多干、排水沟挖了没有。 */
-    function fieldOf(w) {
-      const plots = Object.values(w.land.yard.plots).filter(p => p.crop);
-      return {
-        planted: plots.length > 0,
-        growth: Math.max(0, ...plots.map(p => cropStage(p.crop, p.age))),
-        water: plots.length ? Math.min(...plots.map(p => p.water)) : SOIL.waterMax,
-        drained: plots.length > 0 && plots.every(p => p.drained),
-      };
-    }
-
     /** 说话那一刻的情形（content/talk-lines.js 开头写着每一样是什么）。 */
-    function context(w, to) {
+    function context(w, to, person, walking) {
       const who = people.who(w);
       const feel = comfort.sense(w, who);
       const v = body.get(w, who);
       return {
+        place: person.place,
+        walking,
+        waiting: person.waiting,
+        band: moods.band(w, to).id,
         wx: w.weather.now,
         wet: weather.has(w, 'wet'),
         hot: ['hot', 'scorching'].includes(feel.id),
@@ -138,7 +136,7 @@ export const social = {
         mood: v.mood,
         chill: feel.chill,
         hungry: v.hunger < 25,
-        field: fieldOf(w),
+        field: ctx.services.land.fieldSummary(w),
         noticed: [],
         flag: () => false,
       };
@@ -148,51 +146,83 @@ export const social = {
     function say(w, to, topic, c) {
       const day = w.clock.day;
       const key = day + c.slot + (c.night ? 4 : 0) + mark(to + topic);
-      const band = moods.band(w, to).id;
+      const band = c.band;
       if (topic === 'plan')
         return { line: planLine(to, ctx.services.residents.schedule(w, to), c) };
       if (topic === 'sky')
         return { line: skyLine(to, day, w.weather.tomorrow, dateOf(day + 1).season) };
       if (topic === 'news') return { line: withGesture(to, band, newsLine(to, c, day), key) };
-      if (favoriteDue(to, c, day, w.bonds.favs[to])) {
+      if (!c.night && !c.walking && !c.waiting && favoriteDue(to, c, day, w.bonds.favs[to])) {
         w.bonds.favs[to] = true;
         return {
           line: withGesture(to, band, favoriteLine(to), key),
           favorite: PEOPLE[to].favorite,
         };
       }
-      return { line: withGesture(to, band, lifeLine(to, c, key), key) };
+      const line = lifeLine(to, c, key);
+      return { line: c.night ? line : withGesture(to, band, line, key) };
     }
+
+    function firstWords(w, to, c) {
+      const atField =
+        to === 'shi' &&
+        !c.walking &&
+        c.field.planted &&
+        c.field.growth === 0 &&
+        c.field.water <= SOIL.soggy &&
+        c.place === 'field';
+      const soil = c.field.water < SOIL.wet ? 'dry' : 'wet';
+      const key = w.clock.day + c.slot + mark(to);
+      const greeting = lifeLine(to, c, key, true);
+      return {
+        line: atField
+          ? SHI_FIRST_FIELD[soil]
+          : c.night
+            ? greeting
+            : withGesture(to, c.band, greeting, key),
+      };
+    }
+
+    function openingLine(w, to, c) {
+      if (!w.bonds.known[to] && w.bonds.talked[to] === undefined) return firstWords(w, to, c).line;
+      if (w.bonds.talked[to] !== w.clock.day && w.bonds.gifted[to] === w.clock.day - 1)
+        return AFTER_RETURN[to];
+      return lifeLine(to, c, w.clock.day + c.slot + mark(to));
+    }
+
+    queries.define('resident.greeting', (w, to, walking = false) => {
+      const person = ctx.services.residents.positions(w).find(p => p.id === to);
+      if (!person?.visible || person.map !== people.me(w).map) return null;
+      const c = context(w, to, person, walking);
+      return openingLine(w, to, c);
+    });
 
     commands.register('talk', ({ draft, input, fact }) => {
       const w = draft.world;
-      const b = target(w, input);
+      const person = target(w, input);
+      const b = w.bonds;
       const to = input.to;
       const topic = input.topic ?? 'life';
       if (!Object.hasOwn(TOPICS, topic)) refuse('没有这个话题');
-      const c = context(w, to);
+      const c = context(w, to, person, input.walking === true);
       if (topic === 'plan' && c.night) refuse('天都黑了，明天的事明天再问吧。');
       const asked = b.asked[to] || [];
       if (topic !== 'life' && asked.includes(topic)) refuse('这个话题今天已经聊过了，明天再问吧。');
       const first = b.known[to] === 0 && b.talked[to] === undefined;
+      const opening = input.reply === true && topic === 'life' ? openingLine(w, to, c) : null;
       const gained = b.talked[to] !== w.clock.day;
       const gain = gained ? relate(w, to, 1, topic === 'life' ? 'talk.life' : 'talk') : 0;
       b.talked[to] = w.clock.day;
       if (topic !== 'life') b.asked[to] = [...asked, topic];
       // 照 0.12：挑哪句话看的是这回说话之前熟到哪一层
       let said;
-      if (first && topic === 'life') {
-        const atField =
-          to === 'shi' &&
-          c.field.planted &&
-          c.field.growth === 0 &&
-          c.field.water <= SOIL.soggy &&
-          ctx.services.residents.positions(w).find(p => p.id === to)?.place === 'field';
-        const soil = c.field.water < SOIL.wet ? 'dry' : 'wet';
-        said = { line: atField ? SHI_FIRST_FIELD[soil] : LINES[to].first };
-      } else if (gained && topic === 'life' && b.gifted[to] === w.clock.day - 1) {
+      if (first && topic === 'life') said = firstWords(w, to, c);
+      else if (gained && topic === 'life' && b.gifted[to] === w.clock.day - 1) {
         said = { line: AFTER_RETURN[to] };
       } else said = say(w, to, topic, c);
+      if (opening && sameSpeech(opening, said.line)) {
+        said = { line: GREETING_REPLY[to][first ? 0 : 1] };
+      }
       fact('person.talked', {
         who: people.who(w),
         to,
@@ -207,7 +237,8 @@ export const social = {
 
     commands.register('gift', ({ draft, input, fact }) => {
       const w = draft.world;
-      const b = target(w, input);
+      target(w, input);
+      const b = w.bonds;
       const to = input.to;
       const person = PEOPLE[to];
       if (!input.dish && !giftable(input.item)) return { ok: false, reason: '这个不好拿去送人' };

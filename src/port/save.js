@@ -8,6 +8,11 @@ export const SAVE_FORMAT = 'dao.save';
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
 const MIGRATIONS = {
+  14(state) {
+    state.world.meta.version = 15;
+    state.world.basket.receipt = null;
+    return state;
+  },
   13(state) {
     // 衣装和发式成了单独的插件（sim/plugins/wardrobe.js）：身上穿的从人身上挪进 wardrobe.worn；
     // 衣箱里放开局那几样，再加上身上正穿着的，原先的样子不丢。

@@ -2,6 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newGame, must, refused, growOne, carried, FIELD } from '../helpers.js';
+import { createGame } from '../../src/port/game.js';
+import { lifeLine } from '../../src/sim/talk.js';
 
 test('时间一小段一小段地过，到半夜停住不催人，睡一觉到第二天清早', () => {
   const g = newGame();
@@ -42,6 +44,33 @@ test('在田边初见石伯，他认得刚种下的地有没有浇过', () => {
     const greeting = g.dispatch('talk', { to: 'shi' }).facts.find(f => f.type === 'person.talked');
     assert.match(greeting.data.line, wet ? /水吃进土/ : /籽旁边还是干的/);
   }
+});
+
+test('初见阿满跟着他的早班和午前作息；再问不重复涨熟悉', () => {
+  const meet = g => g.dispatch('talk', { to: 'aman' }).facts[0].data;
+  const morning = newGame();
+  assert.match(meet(morning).line, /叶尖/);
+  const tea = newGame();
+  for (const minutes of [120, 60]) must(tea, 'clock.advance', { minutes });
+  must(tea, 'travel.to', { to: 'tea' });
+  const first = meet(tea);
+  assert.ok(first.first);
+  assert.match(first.line, /剥/);
+  assert.equal(meet(tea).gain, 0);
+  const walking = newGame();
+  assert.match(
+    walking.dispatch('talk', { to: 'aman', walking: true }).facts[0].data.line,
+    /边走边说/,
+  );
+});
+
+test('同一茶摊按说话者的心情和天气选词，赶路和赴约优先', () => {
+  const c = { place: 'tea', slot: 3, band: 'low', wx: 'sunny' };
+  assert.match(lifeLine('aman', c, 1), /过不去/);
+  assert.match(lifeLine('aman', { ...c, band: 'ok' }, 1), /几趟路/);
+  assert.match(lifeLine('aman', { ...c, wx: 'rain', wet: true }, 1), /袖口/);
+  assert.match(lifeLine('aman', { ...c, waiting: true }, 1), /位子/);
+  assert.match(lifeLine('aman', { ...c, waiting: true, walking: true }, 1), /边走边说/);
 });
 
 test('送一把菜：对方记着，第二天早上留下回礼和便条', () => {
@@ -170,7 +199,9 @@ test('约定：熟人才约，约好的那天午前他在茶摊等，去了熟�
   must(g, 'clock.advance', { minutes: 70 }); // 九点过，午前
   const shi = g.ask('residents').find(r => r.id === 'shi');
   assert.equal(shi.map, 'tea', '有约的那天午前，他在茶摊');
+  assert.match(shi.doing, /等你赴约/);
   must(g, 'travel.to', { to: 'tea' });
+  assert.match(g.dispatch('talk', { to: 'shi' }).facts[0].data.line, /茶正好入口/);
   const before = g.ask('bonds').find(b => b.id === 'shi').known;
   const met = g.dispatch('visit.meet', { at: { x: shi.x, y: shi.y + 1, dir: 'up' } });
   assert.ok(met.ok, met.reason);
@@ -184,4 +215,113 @@ test('约定：熟人才约，约好的那天午前他在茶摊等，去了熟�
   for (let i = 0; i < 4; i++) must(g, 'clock.advance', { minutes: 120 });
   assert.equal(g.ask('visits').active, null);
   assert.ok(g.ask('visits').history.at(-1).includes('没赶上'));
+});
+
+test('查账、确认订货和隔天收货：预览不留痕，重复旧订单不扣钱', () => {
+  const g = newGame();
+  const at = { x: 20, y: 19 };
+  const options = () => g.ask('interaction.options', 'aman', at);
+  const before = JSON.stringify(g.save());
+  assert.ok(g.ask('resident.greeting', 'aman'));
+  assert.ok(!options().some(c => c.key.startsWith('bill.')));
+  const order = options().find(
+    c => c.input?.item === 'seed.qingcai' && c.command === 'basket.order',
+  );
+  assert.ok(order.confirm);
+  assert.equal(JSON.stringify(g.save()), before);
+  must(g, order.command, { ...order.input, at });
+  const paid = g.ask('home').coins;
+  assert.match(refused(g, order.command, { ...order.input, at }), /单子变过/);
+  assert.equal(g.ask('home').coins, paid);
+  must(g, 'basket.put', { item: 'cake', n: 1, at: { x: 8, y: 11 } });
+  assert.ok(must(g, 'sleep').includes('basket.delivered'));
+  const receipt = g.ask('basket').receipt;
+  assert.deepEqual(receipt.goods, { cake: 1 });
+  assert.ok(receipt.coins > 0);
+  const line = options().find(c => c.key === 'bill.' + receipt.day).line;
+  assert.match(line, /^第 2 日/);
+  assert.ok(line.includes('米糕') && line.includes(receipt.coins + '文'));
+  const loaded = createGame({ saved: g.save(), debug: true });
+  assert.deepEqual(loaded.ask('basket').receipt, receipt);
+  assert.equal(
+    loaded.ask('interaction.options', 'aman', at).find(c => c.key === 'bill.' + receipt.day).line,
+    line,
+  );
+  assert.equal(loaded.ask('bonds').find(b => b.id === 'aman').known, 0);
+});
+test('石伯读指定田块；过客交付选项和实际交付共用库存', () => {
+  const g = newGame();
+  must(g, 'farm.till', FIELD);
+  must(g, 'farm.sow', FIELD);
+  const plots = () =>
+    g.ask('interaction.options', 'shi', FIELD.at).find(c => c.key === 'plot.6.19');
+  assert.match(plots().line, /缺水/);
+  must(g, 'farm.water', FIELD);
+  assert.match(plots().line, /水分够/);
+  must(g, 'cook', { items: ['rice'], method: 'stew', at: { x: 10, y: 11 } });
+  const dish = g.ask('kitchen', { x: 10, y: 11 }).dishes[0];
+  must(g, 'dish.pack', { id: dish.id, at: { x: 10, y: 11 } });
+  const v = g.ask('visitors').active[0];
+  must(g, 'travel.to', { to: v.map });
+  const at = { x: v.x, y: v.y };
+  const rows = () => g.ask('interaction.options', v.id, at);
+  assert.match(v.greeting, /想/);
+  const offer = rows().find(c => c.input?.dish === dish.id);
+  assert.ok(offer.confirm);
+  must(g, offer.command, { ...offer.input, at });
+  assert.ok(!rows().some(c => c.command === 'visitor.fulfill'));
+  assert.match(g.ask('visitors').active.find(p => p.id === v.id).greeting, /已经收到/);
+  assert.equal(g.ask('pack').dishes.length, 0);
+  assert.match(refused(g, offer.command, { ...offer.input, at }), /帮完了/);
+});
+
+test('六位乡邻按各自的工位读家当、菜畦、店货和采集次数', () => {
+  const g = newGame();
+  must(g, 'farm.till', FIELD);
+  must(g, 'farm.sow', FIELD);
+  must(g, 'pack.put', { item: 'rice', n: 1, at: { x: 8, y: 11 } });
+  for (const [id, key] of [
+    ['aman', 'order.'],
+    ['shi', 'plot.'],
+    ['gui', 'recipe.'],
+    ['qiao', 'cloth'],
+    ['zhou', 'outing.fish'],
+    ['yun', 'outing.tea'],
+  ]) {
+    const pos = g.ask('residents').find(v => v.id === id);
+    if (pos.map !== g.ask('hero').map) must(g, 'travel.to', { to: pos.map });
+    const before = g.save();
+    const rows = g.ask('interaction.options', id, { x: pos.x, y: pos.y });
+    assert.ok(
+      rows.some(r => r.key.startsWith(key)),
+      id,
+    );
+    assert.deepEqual(g.save(), before);
+    assert.ok(
+      !g.ask('interaction.options', id, pos, true).some(r => r.key.startsWith(key)),
+      id + ' 赶路',
+    );
+  }
+});
+
+test('夜里初见桂嫂报姓名，连续两周的主动寒暄都有独立回应', () => {
+  const night = newGame();
+  for (let i = 0; i < 7; i++) must(night, 'clock.advance', { minutes: 120 });
+  assert.match(night.ask('resident.greeting', 'gui'), /桂嫂/);
+  const game = newGame();
+  for (let day = 0; day < 14; day++) {
+    const strip = line => line.slice(line.indexOf('“') + 1).replace(/”$/, '');
+    for (const resident of game.ask('residents').filter(p => p.visible)) {
+      if (game.ask('hero').map !== resident.map) must(game, 'travel.to', { to: resident.map });
+      const line = game.ask('resident.greeting', resident.id);
+      const choice = game
+        .ask('interaction.options', resident.id, resident)
+        .find(o => o.key === 'talk');
+      const fact = game
+        .dispatch(choice.command, choice.input)
+        .facts.find(f => f.type === 'person.talked');
+      assert.notEqual(strip(line), strip(fact.data.line), resident.name);
+    }
+    must(game, 'sleep');
+  }
 });
