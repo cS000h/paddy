@@ -309,6 +309,7 @@ test('夜里初见桂嫂报姓名，连续两周的主动寒暄都有独立回�
   for (let i = 0; i < 7; i++) must(night, 'clock.advance', { minutes: 120 });
   assert.match(night.ask('resident.greeting', 'gui'), /桂嫂/);
   const game = newGame();
+  const replies = {};
   for (let day = 0; day < 14; day++) {
     const strip = line => line.slice(line.indexOf('“') + 1).replace(/”$/, '');
     for (const resident of game.ask('residents').filter(p => p.visible)) {
@@ -321,7 +322,14 @@ test('夜里初见桂嫂报姓名，连续两周的主动寒暄都有独立回�
         .dispatch(choice.command, choice.input)
         .facts.find(f => f.type === 'person.talked');
       assert.notEqual(strip(line), strip(fact.data.line), resident.name);
+      (replies[resident.name] ||= []).push(strip(fact.data.line));
     }
     must(game, 'sleep');
+  }
+  // 工位上的开场常常天天一样，招呼过后的回应却不能也天天是同一句。
+  for (const [name, lines] of Object.entries(replies)) {
+    const count = {};
+    for (const line of lines) count[line] = (count[line] || 0) + 1;
+    assert.ok(Math.max(...Object.values(count)) * 2 <= lines.length, name);
   }
 });

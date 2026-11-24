@@ -25,7 +25,7 @@ import { GIFT_DISH, GIFT_ITEM, GIFT_FAVORITE, GIFT_SPOILED } from '../../content
 import { ITEMS, CROPS, SOIL } from '../../content/items.js';
 import { dateOf } from '../../content/calendar.js';
 import { giftable } from '../../content/pantry.js';
-import { withGesture, lifeLine, newsLine, skyLine, planLine } from '../talk.js';
+import { withGesture, lifeLine, chatLine, newsLine, skyLine, planLine } from '../talk.js';
 import { favoriteDue, favoriteLine, mark } from '../talk.js';
 
 const homeGrown = item => Object.values(CROPS).some(crop => crop.produce === item);
@@ -190,6 +190,20 @@ export const social = {
       return lifeLine(to, c, w.clock.day + c.slot + mark(to));
     }
 
+    /**
+     * 招呼过后对方接的话，不复述开场。开场常是工位上那一句固定的话，只用一句回应动作的话
+     * 天天一样；所以白天先拣一句 0.12 的家常话接着聊，接不上再用回应动作。
+     * 头一回见面和夜里隔着墙，只用回应。
+     */
+    function replyTo(w, to, c, opening, first) {
+      if (!first && !c.night) {
+        const key = w.clock.day + c.slot + mark(to + 'reply');
+        const chat = chatLine(to, c, key);
+        if (chat && !sameSpeech(opening, chat)) return withGesture(to, c.band, chat, key);
+      }
+      return GREETING_REPLY[to][first ? 0 : 1];
+    }
+
     queries.define('resident.greeting', (w, to, walking = false) => {
       const person = ctx.services.residents.positions(w).find(p => p.id === to);
       if (!person?.visible || person.map !== people.me(w).map) return null;
@@ -220,9 +234,8 @@ export const social = {
       else if (gained && topic === 'life' && b.gifted[to] === w.clock.day - 1) {
         said = { line: AFTER_RETURN[to] };
       } else said = say(w, to, topic, c);
-      if (opening && sameSpeech(opening, said.line)) {
-        said = { line: GREETING_REPLY[to][first ? 0 : 1] };
-      }
+      if (opening && sameSpeech(opening, said.line))
+        said = { line: replyTo(w, to, c, opening, first) };
       fact('person.talked', {
         who: people.who(w),
         to,

@@ -24,7 +24,10 @@ export const mark = text => [...text].reduce((h, ch) => (h * 31 + ch.charCodeAt(
 export const withGesture = (id, band, text, key) =>
   text.startsWith('“') ? stable(GESTURE[id][band], key) + text : text;
 
-/** 聊日常：LIFE 里从上往下，头一个条件成立的那组挑一句；夜里有隔墙话的先说隔墙话。 */
+/**
+ * 见面那一句：赶路、夜里隔着墙、赴约各有说法；平常看在哪儿、心情和天气，
+ * 偶尔说回 0.12 的家常话（chatLine）。头一回见面在前面加上报姓名。
+ */
 export function lifeLine(id, c, key, first = false) {
   const speak = words => '“' + (first ? INTRO[id] : '') + words + '”';
   if (c.walking) return speak(ON_THE_WAY[id]);
@@ -46,6 +49,11 @@ export function lifeLine(id, c, key, first = false) {
     if (local || first || c.place !== WORKPLACE[id] || Math.abs(key) % 3 !== 0)
       return speak(local || stable(scene.lines, key));
   }
+  return chatLine(id, c, key);
+}
+
+/** 0.12 的家常话：LIFE 里从上往下，头一个条件成立的那组挑一句。招呼过后接着聊也用它。 */
+export function chatLine(id, c, key) {
   for (const [when, lines] of LIFE[id]) if (when(c)) return stable(lines, key);
   return '';
 }
