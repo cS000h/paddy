@@ -23,7 +23,7 @@ import { GREETING_REPLY } from '../../content/encounters.js';
 import { TOPICS, tierOf, tierWord } from '../../content/talk.js';
 import { TIER_OPINION } from '../../content/opinion.js';
 import { GIFT_DISH, GIFT_ITEM, GIFT_FAVORITE, GIFT_SPOILED } from '../../content/gift-lines.js';
-import { ITEMS, CROPS, SOIL } from '../../content/items.js';
+import { ITEMS, CROPS, SOIL, plainOf } from '../../content/items.js';
 import { dateOf } from '../../content/calendar.js';
 import { giftable } from '../../content/pantry.js';
 import { withGesture, lifeLine, chatLine, newsLine, skyLine, planLine } from '../talk.js';
@@ -264,6 +264,7 @@ export const social = {
       const key = w.clock.day + mark(to + (dish?.base || input.item));
       let liked,
         favorite = false,
+        fine = false,
         value,
         line;
       if (dish) {
@@ -281,13 +282,16 @@ export const social = {
           b.favs[to] = true;
         }
       } else {
-        // 合心意的东西和过节的吃食，对方格外高兴；自家地里长的，有它自己的一句话
-        liked = person.treats.includes(input.item) || FESTIVE.includes(input.item);
-        value = liked ? 3 : 2;
+        // 合心意的东西和过节的吃食，对方格外高兴；自家地里长的，有它自己的一句话。
+        // 极品照原来那样看合不合心意，再多算一点情分
+        const plain = plainOf(input.item);
+        fine = plain !== input.item;
+        liked = person.treats.includes(plain) || FESTIVE.includes(plain);
+        value = (liked ? 3 : 2) + (fine ? 1 : 0);
         const name = ITEMS[input.item].name;
         line = liked
           ? GIFT_ITEM[to].yes(name)
-          : homeGrown(input.item)
+          : homeGrown(plain)
             ? LINES[to].gift.replace('{n}', name)
             : GIFT_ITEM[to].no(name);
         line = withGesture(to, band, line, key);
@@ -302,6 +306,7 @@ export const social = {
         who: people.who(w),
         liked,
         favorite,
+        fine,
         gain,
         line,
       });

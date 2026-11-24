@@ -21,6 +21,7 @@ export const WHY = Object.freeze({
   gift:      { label: '送过东西',       n: 5,   days: 30,   stack: 3 },
   liked:     { label: '送的东西合心意', n: 8,   days: 40,   stack: 2 },
   favorite:  { label: '送了最爱吃的',   n: 15,  days: 60,   stack: 1 },
+  fine:      { label: '送的是极品',     n: 5,   days: 40,   stack: 2 },
   chat:      { label: '常来说说话',     n: 2,   days: 10,   stack: 5 },
   met:       { label: '赴过约',         n: 8,   days: 30,   stack: 2 },
   missed:    { label: '约了没来',       n: -12, days: 20,   stack: 2 },

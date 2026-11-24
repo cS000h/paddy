@@ -10,6 +10,7 @@ import { bindStick } from './stick.js';
 import { createCaptions, typeOut } from './captions.js';
 import { createAwards, slipOf } from './award.js';
 import { esc } from './html.js';
+import { ITEMS } from '../content/items.js';
 
 // 不必飘出来的流水：干活花的体力（印上和提示条上已经写了）、在行囊和橱柜之间挪东西。
 const MOVES = new Set(['装进行囊', '从行囊里拿出来']);
@@ -96,7 +97,13 @@ export function createPanels({
     if (!fresh.length) return;
     seenLedger = fresh.at(-1).seq;
     const said = fresh.filter(worthSaying).slice(-3);
-    captions.float(said.map(e => ({ text: e.text, up: e.d > 0 || e.k.startsWith('buff:') })));
+    captions.float(
+      said.map(e => ({
+        text: e.text,
+        up: e.d > 0 || e.k.startsWith('buff:'),
+        fine: e.d > 0 && !!ITEMS[e.k.split(':')[1]]?.fine,
+      })),
+    );
   }
 
   function renderModal(state, force = false) {

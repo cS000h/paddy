@@ -174,6 +174,22 @@ export function itemIcon(id) {
   return new Grid(16, 16).blit(make(), 0, 0).outline(P.ink1);
 }
 
+// 极品的那颗小星：十字形，中间最亮，摆在右上角；只画在空处和金边上，不压住东西本身。
+const STAR = [
+  [14, 0, 'y1'],
+  [13, 1, 'y1'],
+  [14, 1, 'y0'],
+  [15, 1, 'y1'],
+  [14, 2, 'y1'],
+];
+
+/** 极品的图标：照寻常那样画（id 是寻常那样的编号），墨线外再描一圈金，右上角一颗小星。 */
+export function fineItemIcon(id) {
+  const g = itemIcon(id).outline(P.y2);
+  for (const [x, y, c] of STAR) if (!g.opaque(x, y) || g.get(x, y) === P.y2) g.set(x, y, P[c]);
+  return g;
+}
+
 /** 人脚下的一小片影子。 */
 export function personShadow() {
   return new Grid(14, 6).ellipse(7, 3, 6, 2, SHADOW);

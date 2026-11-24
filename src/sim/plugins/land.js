@@ -2,7 +2,7 @@
 //   farm.till    {x, y, at} → plot.tilled
 //   farm.sow     {x, y, at, seed} → plot.sown
 //   farm.water   {x, y, at} → plot.watered
-//   farm.harvest {x, y, at} → crop.harvested
+//   farm.harvest {x, y, at} → crop.harvested {item, n, fine, line}   收到的可能是极品（见 quality 插件）
 //   farm.refill  {x, y, at} → can.refilled      （挨着水缸、水井、水沟或溪水）
 //   day.started  → 浇过水的作物长一天，然后土干掉
 // 每条命令里的 at 是操控的人此刻站的格子；目标格必须挨着他。
@@ -11,7 +11,9 @@
 import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
 import { registerResidentOptions } from '../resident-options.js';
 import { is } from '../../kernel/schema.js';
-import { CROPS, CAN_CAPACITY, SOIL, cropStage, isRipe } from '../../content/items.js';
+import { CROPS, ITEMS, CAN_CAPACITY, SOIL, cropStage, isRipe } from '../../content/items.js';
+import { FIRST_FINE, fineId } from '../../content/quality.js';
+import { fill } from '../../content/text.js';
 import { MAPS, farmable, waterSource, isHome } from '../../content/maps/index.js';
 import { dateOf } from '../../content/calendar.js';
 import { fieldAdvice, installLandCare } from '../land-care.js';
@@ -51,11 +53,12 @@ export const land = {
     'compute',
     'core',
     'weather',
+    'quality',
   ],
   writes: ['land'],
   install(ctx) {
     registerResidentOptions(ctx, 'shi', shi);
-    const { schema, commands, reactions, queries, people, store, pack, compute, core, weather } =
+    const { schema, commands, reactions, queries, people, store, pack, compute, quality } =
       ctx.services;
 
     schema.slice('land', {
@@ -124,7 +127,10 @@ export const land = {
       if (action === 'hand') {
         if (!plot.crop) return '这一格还没种东西';
         if (!isRipe(plot.crop, plot.age)) return `${CROPS[plot.crop].name}还没长成`;
-        return home || pack.fits(w, id, CROPS[plot.crop].produce) ? null : '行囊满了，先回家放一放';
+        // 收下来可能是极品（另占一格），两样都放得下才收
+        const produce = CROPS[plot.crop].produce;
+        const fits = [produce, fineId(produce)].every(k => !ITEMS[k] || pack.fits(w, id, k));
+        return home || fits ? null : '行囊满了，先回家放一放';
       }
       return '不知道要做什么';
     }
@@ -193,8 +199,20 @@ export const land = {
           { w, who: id, action: { id: 'harvest', kind: 'farm', plot } },
           { value: def.yield, parts: [] },
         ).value;
-        pack.receive(w, id, def.produce, n, '地里收的');
-        fact('crop.harvested', { map, x, y, crop: def.id, item: def.produce, n });
+        // 抽一下是不是极品；头一回收到极品，借这一回说说它有什么用
+        const got = quality.roll(w, id, 'farm', { plot }, def.produce);
+        pack.receive(w, id, got.item, n, '地里收的');
+        const line = got.first ? fill(FIRST_FINE, { name: ITEMS[got.item].name }) : null;
+        fact('crop.harvested', {
+          map,
+          x,
+          y,
+          crop: def.id,
+          item: got.item,
+          n,
+          fine: got.fine,
+          line,
+        });
         plot.fert = Math.max(0, plot.fert - (plot.last === plot.crop && !def.regrow ? 3 : 2));
         plot.bugs = false;
         if (def.regrow) plot.age = def.regrow;

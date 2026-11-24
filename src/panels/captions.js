@@ -59,18 +59,21 @@ export function createCaptions(root, spot) {
       layer.append(node);
       later(node, Math.max(3400, text.length * 150));
     },
-    /** 一串数的变化，从头顶往上飘。entries: [{text, up}]，up 为 true 是变多了。 */
+    /** 一串数的变化，从头顶往上飘。entries: [{text, up, fine}]，up 为 true 是变多了，fine 是收到了极品。 */
     float(entries) {
       const head = spot();
       if (!head || !entries.length) return;
       const at = clampTo(root, head, 40);
       entries.forEach((entry, i) => {
-        const node = make('float ' + (entry.up ? 'up' : 'down'), entry.text);
+        const node = make(
+          'float ' + (entry.up ? 'up' : 'down') + (entry.fine ? ' fine' : ''),
+          entry.text,
+        );
         node.style.left = at.x + 'px';
         node.style.top = at.y - 18 - i * 17 + 'px';
         node.style.animationDelay = i * 110 + 'ms';
         layer.append(node);
-        later(node, 1900 + i * 110);
+        later(node, (entry.fine ? 2500 : 1900) + i * 110);
       });
     },
     destroy() {

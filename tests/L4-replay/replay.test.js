@@ -60,7 +60,7 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: 'b7d38d24' }; // 人物档案要问熟到哪一层，装在乡邻后面：存档里各块的先后变了，内容没变
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '0c39ef55' }; // 收菜时抽一下是不是极品：多用一回随机数，往后的天气、货价都跟着变
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};

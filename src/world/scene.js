@@ -310,9 +310,11 @@ export class VillageScene extends Phaser.Scene {
       }
       if (FEEDBACK[f.type]) {
         const [effect, sound] = FEEDBACK[f.type];
-        this.effects[effect](d.x, d.y, d.crop);
-        platform.audio.play(sound);
-        platform.haptic();
+        // 收到极品：菜蹦得高、冒金星，换一串往上走的响；头一回还在底下说说它有什么用
+        this.effects[effect](d.x, d.y, d.crop, d.fine);
+        platform.audio.play(d.fine ? 'fine' : sound);
+        platform.haptic(d.fine ? [14, 60, 24] : undefined);
+        if (d.line) this.deps.shell.toast(d.line);
         const day = this.deps.game.ask('clock').day;
         for (const v of this.villagers) v.work.notice(f.type, d, day);
         plots = true;

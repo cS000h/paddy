@@ -9,6 +9,7 @@
 // price 是 0.12 的基准价。这里一格地只收一棵菜，所以卖价按 3 倍、买价按 4 倍折算；种子照原价。
 // 数值都是游戏尺度，不是营养建议。
 import { PEOPLE } from './people.js';
+import { FINE_ITEMS, FINE_PRICE, fineId } from './quality.js';
 
 const food = (name, price, full, nature, tags, more = {}) => ({
   name,
@@ -124,6 +125,7 @@ const finish = ([id, d]) => {
       snack: null,
       keep: 0,
       text: '',
+      fine: null,
       ...d,
       tags: Object.freeze([...(d.tags || [])]),
       buy: buyable ? (d.kind === 'seed' ? d.price : d.price * 4) : 0,
@@ -132,7 +134,19 @@ const finish = ([id, d]) => {
   ];
 };
 
-export const ITEMS = Object.freeze(Object.fromEntries(Object.entries(RAW).map(finish)));
+// 极品（见 content/quality.js）：样样照着寻常的那份，名字前加「极品」，价钱翻倍，买不到；fine 记着原来是哪样。
+const FINE = FINE_ITEMS.map(id => {
+  const d = RAW[id];
+  const fine = { ...d, name: '极品' + d.name, short: '极品' + (d.short || d.name), fine: id };
+  return [fineId(id), { ...fine, price: d.price * FINE_PRICE, buy: false }];
+});
+
+export const ITEMS = Object.freeze(
+  Object.fromEntries([...Object.entries(RAW), ...FINE].map(finish)),
+);
+
+/** 极品认作原来那样（下锅配菜名、送人看合不合心意）；寻常的原样返回。 */
+export const plainOf = id => ITEMS[id]?.fine || id;
 
 /** 这样东西此刻当不当季：有时令、而且现在正是。 */
 export const seasonal = (id, season) => !!ITEMS[id].season && ITEMS[id].season.includes(season);

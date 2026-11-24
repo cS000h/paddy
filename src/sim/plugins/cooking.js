@@ -101,7 +101,8 @@ export const cooking = {
         k.fires++;
         if (k.fires % 3 === 0) store.add(w, 'ash', 1, '掏灶膛');
       }
-      for (const item of [...p.ingredients, ...p.spices]) pack.use(w, id, item, 1, '做' + p.base);
+      // 用掉的是挑的那几样（可能是极品）；菜里记的是原来那样，配菜名、画菜都照它
+      for (const item of [...input.items, ...p.spices]) pack.use(w, id, item, 1, '做' + p.base);
       const ids = [];
       for (let i = 0; i < p.servings; i++) {
         const dish = { ...p, id: core.nextId(w), day: w.clock.day };

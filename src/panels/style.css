@@ -722,6 +722,41 @@ button:focus-visible {
   color: #8b2e22;
 }
 
+/* 收到极品：金字，大一号，先弹一下再往上飘，停得久一点 */
+.float.fine {
+  color: #9a6510;
+  font-size: 16px;
+  font-weight: bold;
+  text-shadow:
+    0 0 2px #fff,
+    0 0 3px #fff,
+    0 0 6px #fff4cf;
+  animation: float-fine 2.4s ease-out both;
+}
+
+@keyframes float-fine {
+  0% {
+    opacity: 0;
+    scale: 0.6;
+    translate: 0 6px;
+  }
+  12% {
+    opacity: 1;
+    scale: 1.2;
+  }
+  22% {
+    scale: 1;
+    translate: 0 0;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -30px;
+  }
+}
+
 @keyframes float-up {
   0% {
     opacity: 0;

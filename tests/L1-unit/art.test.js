@@ -21,7 +21,7 @@ test('每样食材有熟料，每道菜的成品可分，锅中有动作', () =>
   assert.deepEqual(
     [...COOKED_ITEMS].sort(),
     Object.keys(ITEMS)
-      .filter(k => ITEMS[k].cook)
+      .filter(k => ITEMS[k].cook && !ITEMS[k].fine)
       .sort(),
   );
   const plates = new Map();
@@ -109,7 +109,9 @@ test('人物：地图上的人都有外观；每张图 6 列 4 行，每帧都�
 });
 
 test('物品图标：每样物品都有一张，16×16，只用调色板的颜色，没有两张是一样的', () => {
-  assert.deepEqual([...art.ITEM_ICONS].sort(), Object.keys(ITEMS).sort());
+  // 极品不另画：照寻常那样画，再描金点星（面板在 panels/icons.js 里换过去）
+  const plain = Object.keys(ITEMS).filter(k => !ITEMS[k].fine);
+  assert.deepEqual([...art.ITEM_ICONS].sort(), plain.sort());
   const seen = new Map();
   for (const id of art.ITEM_ICONS) {
     const g = art.itemIcon(id);
@@ -121,6 +123,13 @@ test('物品图标：每样物品都有一张，16×16，只用调色板的颜�
     seen.set(key, id);
   }
   assert.throws(() => art.itemIcon('nothing'), /没有这样物品的图标/);
+  for (const [id, item] of Object.entries(ITEMS).filter(([, i]) => i.fine)) {
+    const g = art.fineItemIcon(item.fine);
+    assert.deepEqual([g.w, g.h], [16, 16]);
+    assert.deepEqual(offPalette(g), [], `${id} 用了调色板以外的颜色`);
+    assert.ok(!seen.has(g.data.join(',')), `${id} 跟别的图标一模一样`);
+    assert.ok(g.data.includes(P.y2), `${id} 没描金边`);
+  }
 });
 
 test('地块和图标：32 张土、4 个作物阶段、5 个图标、草和虫两种记号，都是 16×16', () => {

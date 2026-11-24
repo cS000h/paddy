@@ -1,14 +1,30 @@
-// 技能与特质的好处都在管道中，不把判断塞回种田、做饭等插件。
-import { LEVEL_NAMES } from '../../content/growth.js';
+// 技能与特质的好处都在管道中，不把判断塞回种田、做饭等插件。六项给收成出彩的加减也在这里。
+import { LEVEL_NAMES, SKILLS } from '../../content/growth.js';
 import { CALENDAR } from '../../content/calendar.js';
+import { ATTRS } from '../../content/traits.js';
+import { SKILL_ODDS, ATTR_ODDS } from '../../content/quality.js';
 export const growthPerks = {
   id: 'sim.growthPerks',
-  requires: ['growth', 'compute', 'people', 'body'],
+  requires: ['growth', 'compute', 'people', 'body', 'persona'],
   writes: [],
   install(ctx) {
-    const { growth: g, compute: K, people, body } = ctx.services;
+    const { growth: g, compute: K, people, body, persona } = ctx.services;
     const lv = (w, k, who) => g.level(w, k, who),
       has = (w, t, who) => g.has(w, t, who);
+    // 出极品的机会：这样活认的本事每一级加一点，认的那一项比底子高多少加多少
+    K.tap(
+      'quality.chance',
+      (r, { w, who, kind }) => {
+        const s = SKILL_ODDS[kind];
+        const l = s ? lv(w, s.skill, who) : 0;
+        if (l) K.part(r, 'skill.' + s.skill, SKILLS[s.skill].name + LEVEL_NAMES[l], l * s.n);
+        const a = ATTR_ODDS[kind];
+        if (!a) return;
+        const v = persona.attrs(w, who).values[a.attr];
+        K.part(r, 'attr.' + a.attr, ATTRS[a.attr] + v, (v - a.from) * a.n);
+      },
+      { priority: 40 },
+    );
     K.tap(
       'xp.gain',
       (r, { w, who, skill, source }) => {

@@ -15,6 +15,7 @@ import { household } from './plugins/household.js';
 import { body } from './plugins/body.js';
 import { pack } from './plugins/pack.js';
 import { water } from './plugins/water.js';
+import { quality } from './plugins/quality.js';
 import { land } from './plugins/land.js';
 import { interactions } from './plugins/interactions.js';
 import { social } from './plugins/social.js';
@@ -57,6 +58,7 @@ export const PLUGINS = Object.freeze([
   homestead,
   cooking,
   foodEffects,
+  quality,
   land,
   moods,
   social,

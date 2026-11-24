@@ -137,7 +137,7 @@ test('作物和物品：种子、作物、收成互相指得上', () => {
 });
 
 test('物品总表：每样东西字段齐全，买卖价按基准价折算，开局的东西和能托捎的货都登记过', () => {
-  assert.equal(Object.keys(ITEMS).length, 63);
+  assert.equal(Object.keys(ITEMS).length, 70, '63 样寻常的，加 7 样极品（见 L1 收成出彩）');
   const KINDS = ['food', 'whole', 'spice', 'snack', 'seed', 'material', 'craft', 'tool'];
   for (const [id, item] of Object.entries(ITEMS)) {
     assert.equal(item.id, id);

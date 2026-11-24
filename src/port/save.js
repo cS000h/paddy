@@ -8,6 +8,14 @@ export const SAVE_FORMAT = 'dao.save';
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
 const MIGRATIONS = {
+  17(state) {
+    // 收成出彩（sim/plugins/quality.js）：每个有行囊的人记着连着几回没出极品、收到过哪几样极品。
+    // 以前收的菜都是寻常的，从零记起。
+    const w = state.world;
+    w.meta.version = 18;
+    w.quality = Object.fromEntries(Object.keys(w.packs).map(id => [id, { miss: {}, found: {} }]));
+    return state;
+  },
   16(state) {
     // 好感（sim/plugins/opinion.js）：一条条来由存进存档。村民之间开局就有的几条交情照 2026-11-24 定的写进来；
     // 以前送过的东西、说过的话没留来由，从这一版起记。

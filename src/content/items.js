@@ -1,6 +1,6 @@
 // 作物和工具的数据，以及物品总表的出口。只有数据，没有规则；数值都是游戏尺度，不是农事建议。
 // 物品在 pantry.js；花多少体力在 actions.js。
-export { ITEMS } from './pantry.js';
+export { ITEMS, plainOf } from './pantry.js';
 
 // 一格地的产量沿用像素版尺度；季节、成熟时间、留根再生来自0.12。
 export const CROPS = Object.freeze({

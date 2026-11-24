@@ -56,6 +56,16 @@ const CARE = { weed: '拔草', bugs: '捉虫', drain: '开排水沟', manure: '�
 /** 这格地的干湿，和规则用同一份界限（content/items.js 的 SOIL）。 */
 const moisture = water => (water < SOIL.wet ? '干了' : water > SOIL.soggy ? '积水' : '湿润');
 
+/** 照现在的样子收，出极品的把握有多大；底下一行小字写是哪几样加减的（数由规则算好）。 */
+function oddsView(odds) {
+  if (!odds) return '';
+  const sign = d => (d > 0 ? '+' : '−') + Math.abs(d);
+  const parts = odds.parts.map(p => `${p.label} ${p.id === 'base' ? p.delta : sign(p.delta)}`);
+  const sum = odds.parts.reduce((n, p) => n + p.delta, 0);
+  const edge = sum > odds.value ? '，到顶了' : sum < odds.value ? '，最少也有这些' : '';
+  return `${para(`收下来是极品的把握：${odds.value}%${edge}`)}${para(parts.join('　'), 'aside')}`;
+}
+
 export function fieldView(m, game) {
   const p = game.ask('farm.detail', m.x, m.y);
   if (!p) return `${para('还没有锄过的地。走到菜地边，先锄一格。')}${actions(close())}`;
@@ -74,6 +84,7 @@ export function fieldView(m, game) {
   return `${title(p.name, p.crop ? `已长 ${p.age}/${p.days} 日` : '等你下种')}
     ${para(`水分 ${p.water}/${SOIL.waterMax}（${moisture(p.water)}） · 地力 ${p.fert}/${SOIL.fertMax}`)}
     ${para(state)}
+    ${oddsView(p.odds)}
     ${itemList(rows, '')}
     ${actions(close('继续忙', false))}`;
 }

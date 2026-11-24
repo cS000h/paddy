@@ -58,6 +58,26 @@ export function createEffects(scene, map) {
     gravityY: 200,
     lifespan: 420,
   });
+  // 收到极品时四下迸开的金星，和一圈一闪就散的金环
+  const sparkle = burst('fx:coin', {
+    speed: { min: 50, max: 95 },
+    angle: { min: 0, max: 360 },
+    gravityY: 70,
+    lifespan: { min: 420, max: 640 },
+    alpha: { start: 1, end: 0 },
+    scale: { start: 1.4, end: 0.3 },
+  });
+  const ring = (px, py, depth) => {
+    const r = scene.add.circle(px, py, 6).setStrokeStyle(1.5, 0xeacb6e).setDepth(depth);
+    scene.tweens.add({
+      targets: r,
+      scale: 3.4,
+      alpha: { from: 1, to: 0 },
+      duration: 460,
+      ease: 'Cubic.easeOut',
+      onComplete: () => r.destroy(),
+    });
+  };
 
   const centre = (x, y) => [x * TILE + 8, y * TILE + 9];
 
@@ -138,18 +158,37 @@ export function createEffects(scene, map) {
       drops(9, px, py - 10, py);
       scene.time.delayedCall(180, () => splash(6, px, py));
     },
-    harvested(x, y, crop) {
+    harvested(x, y, crop, fine = false) {
       const [px, py] = centre(x, y);
       leaves(6, px, py - 2, py);
       const veg = scene.add.image(px, py - 4, 'crop:' + crop + ':3').setDepth(py + 1);
-      scene.tweens.add({
+      if (!fine) {
+        scene.tweens.add({
+          targets: veg,
+          y: py - 26,
+          alpha: { from: 1, to: 0 },
+          duration: 520,
+          ease: 'Cubic.easeOut',
+          onComplete: () => veg.destroy(),
+        });
+        return;
+      }
+      // 极品：蹦得更高，放大一下，在半空停一停，四下冒金星，再淡掉
+      veg.setDepth(py + 2);
+      scene.tweens.chain({
         targets: veg,
-        y: py - 26,
-        alpha: { from: 1, to: 0 },
-        duration: 520,
-        ease: 'Cubic.easeOut',
+        tweens: [
+          { y: py - 34, scale: 1.35, duration: 300, ease: 'Back.easeOut' },
+          { scale: 1.2, duration: 160, ease: 'Sine.easeInOut' },
+          { y: py - 44, alpha: 0, duration: 380, delay: 360, ease: 'Cubic.easeIn' },
+        ],
         onComplete: () => veg.destroy(),
       });
+      scene.time.delayedCall(240, () => {
+        ring(px, py - 34, py + 3);
+        sparkle(12, px, py - 34, py + 3);
+      });
+      scene.time.delayedCall(560, () => sparkle(6, px, py - 36, py + 3));
     },
     /** 拍了拍草垛、稻草人、芦苇：扑起一阵草屑。 */
     straw(px, py) {

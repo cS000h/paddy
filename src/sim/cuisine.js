@@ -1,5 +1,6 @@
 // 做饭预览和出锅共用这一条计算路径，避免面板承诺与实际结果不一致。
-import { ITEMS, seasonal, inSeason } from '../content/pantry.js';
+import { ITEMS, seasonal, inSeason, plainOf } from '../content/pantry.js';
+import { FINE_HEAT } from '../content/quality.js';
 import { METHODS, QUALITY, HEAT, CUTS } from '../content/recipes.js';
 import { BUFFS, buffUses } from '../content/body.js';
 import { dateOf } from '../content/calendar.js';
@@ -7,13 +8,15 @@ import { dishName, quality } from './cuisine-name.js';
 import { buffOf, tasteOf } from './cuisine-taste.js';
 import { refuse } from '../kernel/dispatch.js';
 export function previewMeal(w, input, compute, who) {
-  const { items = [], method = 'stew', spices = [], heat = null, cut = null } = input;
+  const { items: picked = [], method = 'stew', spices = [], heat = null, cut = null } = input;
+  // 极品照原来那样配菜名、算味道；用了几样极品，火候就宽几截
+  const items = Array.isArray(picked) ? picked.map(plainOf) : [];
   if (
-    !Array.isArray(items) ||
+    !Array.isArray(picked) ||
     items.length < 1 ||
     items.length > 3 ||
     new Set(items).size !== items.length ||
-    !items.every(k => ITEMS[k]?.cook) ||
+    !picked.every(k => ITEMS[k]?.cook) ||
     !METHODS[method]
   )
     refuse('选1到3种不同的食材，再选一种做法');
@@ -83,9 +86,14 @@ export function previewMeal(w, input, compute, who) {
         : `${CUTS[cut].name}：${CUTS[cut].tip}，火候更难拿捏`,
     );
   if (wineBonus) r.notes.push('黄酒去腥：火候好拿捏些');
+  const fine = picked.filter(k => ITEMS[k].fine);
+  if (fine.length) r.notes.push(`${fine.map(k => ITEMS[k].name).join('、')}：火候好拿捏些`);
   if (cut === 'shred') r.notes.push('切丝费些工夫：体力多用一点，厨艺经验多一点');
   const bonus =
-    compute.run('cook.heat', { w, who }, { value: 0, parts: [] }).value + cutBonus + wineBonus;
+    compute.run('cook.heat', { w, who }, { value: 0, parts: [] }).value +
+    cutBonus +
+    wineBonus +
+    fine.length * FINE_HEAT;
   r.heat = method === 'mix' ? null : { ...HEAT[method], half: HEAT[method].half + bonus };
   const q = quality(method, heat, bonus);
   r.quality = q;

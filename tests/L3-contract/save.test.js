@@ -126,6 +126,15 @@ test('v16 升级：村民之间开局的几条交情记进好感，主角这边�
   );
 });
 
+test('v17 升级：收成出彩从零记起，以前收的菜都算寻常的', () => {
+  const saved = JSON.parse(
+    readFileSync(new URL('../fixtures/save-v17.json', import.meta.url), 'utf8'),
+  );
+  const w = createGame({ saved, debug: true }).save().state.world;
+  assert.deepEqual(Object.keys(w.quality).sort(), Object.keys(w.packs).sort());
+  for (const q of Object.values(w.quality)) assert.deepEqual(q, { miss: {}, found: {} });
+});
+
 test('v15 升级：开局两选的旧特质换成性情和出身线，历练留在成长里，村民有了档案', () => {
   const saved = JSON.parse(
     readFileSync(new URL('../fixtures/save-v15.json', import.meta.url), 'utf8'),

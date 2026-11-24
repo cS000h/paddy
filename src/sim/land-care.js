@@ -1,5 +1,6 @@
 import { FIELD_ADVICE } from '../content/encounters.js';
 import { CROPS, SOIL, isRipe } from '../content/items.js';
+import { FIELD_ODDS } from '../content/quality.js';
 import { CALENDAR, dateOf } from '../content/calendar.js';
 import { near } from './plugins/people.js';
 import { refuse } from '../kernel/dispatch.js';
@@ -26,7 +27,8 @@ export function fieldAdvice(p) {
 }
 
 export function installLandCare(ctx, plotAt) {
-  const { reactions, queries, commands, core, weather, compute, people, store } = ctx.services;
+  const { reactions, queries, commands, core, weather, compute, people, store, quality } =
+    ctx.services;
   const careWhy = (w, p, kind) => {
     if (!p) return '先锄松一格地';
     if (kind === 'weed') return p.weeds ? null : '没有杂草';
@@ -75,6 +77,8 @@ export function installLandCare(ctx, plotAt) {
       advice: fieldAdvice(p),
       name: c?.name || '空地',
       days: c?.days || 0,
+      // 照现在的样子收，出极品的机会多大、哪几样加减的
+      odds: c ? quality.chance(w, people.who(w), 'farm', { plot: p }) : null,
       options: ['weed', 'bugs', 'drain', 'manure'].map(kind => ({
         kind,
         reason: careWhy(w, p, kind),
@@ -91,6 +95,21 @@ export function installLandCare(ctx, plotAt) {
       if (p.fert <= SOIL.fertPoor) compute.part(r, 'field.poor', '地乏了', -1);
       if (p.bugs) compute.part(r, 'field.bugs', '虫子啃了', -1);
       r.value = Math.max(1, r.value);
+    },
+    { priority: 30 },
+  );
+  // 出极品的机会：地力比 5 高多少、土润不润、有没有草和虫（数在 content/quality.js）
+  compute.tap(
+    'quality.chance',
+    (r, { kind, plot: p }) => {
+      if (kind !== 'farm' || !p) return;
+      const { fert, moist, dry, weeds, bugs } = FIELD_ODDS;
+      compute.part(r, 'field.fert', '地力' + p.fert, (p.fert - 5) * fert);
+      if (p.water >= SOIL.moist && p.water <= SOIL.soggy)
+        compute.part(r, 'field.moist', '土润着', moist);
+      if (p.water < SOIL.wet) compute.part(r, 'field.dry', '土干了', dry);
+      if (p.weeds) compute.part(r, 'field.weeds', '长了草', weeds);
+      if (p.bugs) compute.part(r, 'field.bugs', '生了虫', bugs);
     },
     { priority: 30 },
   );

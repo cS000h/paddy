@@ -96,17 +96,20 @@ function audio() {
     if (ctx?.state === 'suspended') ctx.resume();
     return ctx;
   };
-  const tone = (freq, to, time, type, gain) => {
+  // after：晚多少秒再响（一串音按先后排）
+  const tone = (freq, to, time, type, gain, after = 0) => {
     const osc = ctx.createOscillator();
     const amp = ctx.createGain();
+    const at = ctx.currentTime + after;
     osc.type = type;
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(to, ctx.currentTime + time);
-    amp.gain.setValueAtTime(gain, ctx.currentTime);
-    amp.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + time);
+    osc.frequency.setValueAtTime(freq, at);
+    osc.frequency.exponentialRampToValueAtTime(to, at + time);
+    amp.gain.setValueAtTime(0.0001, ctx.currentTime);
+    amp.gain.setValueAtTime(gain, at);
+    amp.gain.exponentialRampToValueAtTime(0.001, at + time);
     osc.connect(amp).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + time);
+    osc.start(at);
+    osc.stop(at + time);
   };
   const hiss = (time, gain, cutoff) => {
     const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * time), ctx.sampleRate);
@@ -127,6 +130,13 @@ function audio() {
     seed: () => tone(700, 420, 0.07, 'sine', 0.12),
     water: () => hiss(0.32, 0.16, 2600),
     harvest: () => (tone(520, 780, 0.09, 'sine', 0.16), tone(780, 1040, 0.12, 'sine', 0.1)),
+    // 收到极品：三个音一个比一个高，末了一点亮音，像碰响一串铜铃
+    fine: () => (
+      tone(659, 659, 0.16, 'triangle', 0.16),
+      tone(784, 784, 0.16, 'triangle', 0.16, 0.09),
+      tone(1047, 1047, 0.34, 'triangle', 0.15, 0.18),
+      tone(2093, 2093, 0.3, 'sine', 0.04, 0.2)
+    ),
     refill: () => (hiss(0.4, 0.14, 1400), tone(300, 520, 0.3, 'sine', 0.06)),
     talk: () => tone(440, 520, 0.06, 'sine', 0.08),
     no: () => tone(180, 140, 0.1, 'square', 0.05),
@@ -180,8 +190,9 @@ export function createWebPlatform(root) {
     files,
     viewport: view,
     device: input,
-    haptic() {
-      if (input.profile().touch && !quiet.matches) navigator.vibrate?.(12);
+    /** 手机上轻轻震一下；pattern 照 navigator.vibrate 的写法（收到极品是两段）。 */
+    haptic(pattern = 12) {
+      if (input.profile().touch && !quiet.matches) navigator.vibrate?.(pattern);
     },
     audio: audio(),
     fullscreen: fullscreen(view),
