@@ -2,8 +2,8 @@
 // 主角和村民存在存档里；过客照编号和身份推出来（同一个人再来还是那副性子），等过客也要攒心烦时再存。
 // 主角的性情可以不满三个：开局草案二里，性情是头半个月做出来的（见执行方案 M10）。
 //   服务 persona.get(w, id)、persona.hasOld(w, id, 旧特质)、persona.fromOrigin(w, id, 旧特质们)、
-//        persona.attrs(w, id?) → { values, detail }
-//   查询 persona(id?) → 给画面看的档案，六项带明细
+//        persona.attrs(w, id?) → { values, detail }、persona.visible(w, id) → 玩家看得出他哪几个性情
+//   查询 persona(id?) → 给画面看的档案，六项带明细。别人的档案只给看你知道的（见 seen）
 import { is } from '../../kernel/schema.js';
 import {
   ATTRS,
@@ -21,6 +21,7 @@ import {
 import { PEOPLE, PERSONA } from '../../content/people.js';
 import { VISITOR_LINES } from '../../content/visitors.js';
 import { LEVELS } from '../../content/growth.js';
+import { tierOf } from '../../content/talk.js';
 
 const blank = () => ({ tempers: [], line: null, innate: [], coping: [], stress: 0 });
 const fromContent = (/** @type {any} */ p) => ({
@@ -96,10 +97,10 @@ function visitorPersona(/** @type {any} */ w, /** @type {string} */ id) {
 export const persona = {
   id: 'sim.persona',
   provides: ['persona'],
-  requires: ['schema', 'queries', 'reactions', 'compute', 'people'],
+  requires: ['schema', 'queries', 'reactions', 'compute', 'people', 'social'],
   writes: ['persona'],
   install(ctx) {
-    const { schema, queries, reactions, compute, people } = ctx.services;
+    const { schema, queries, reactions, compute, people, social } = ctx.services;
     schema.slice('persona', {
       initial: () =>
         Object.fromEntries(
@@ -155,14 +156,39 @@ export const persona = {
       p.line.lv = Math.max(p.line.lv, lineLevel(e.data.level));
     });
 
+    // 别人的档案只给看你知道的：熟到哪一层看得出几个性情（还不认识 0、点头之交 1、熟络 2、亲近起 3），
+    // 熟络起看得出根骨天资，亲近起看得出毛病，心烦只看自己的。过客照过面就看得出一个性情。
+    // 六项的数照给，明细里没看出来的那几样并成一条「还看不出的」，免得从明细里漏出性情。
+    const SEEN = [0, 1, 2, 3, 3];
+    function seen(w, who) {
+      if (who === people.who(w)) return { tempers: 3, innate: true, coping: true, stress: true };
+      const known = social.familiar(w, who);
+      const met = w.visitors?.book.some(b => b.id === who);
+      const tier = known === null ? (met ? 1 : 0) : tierOf(known);
+      return { tempers: SEEN[tier], innate: tier >= 2, coping: tier >= 3, stress: false };
+    }
+    function maskParts(parts, hidden) {
+      const shown = parts.filter(p => !hidden.has(p.id));
+      const n = parts.filter(p => hidden.has(p.id)).reduce((s, p) => s + p.delta, 0);
+      return n ? [...shown, { id: 'unseen', label: '还看不出的', delta: n }] : shown;
+    }
+
     queries.define('persona', (w, id) => {
       const who = id ?? people.who(w),
         p = get(w, who);
       if (!p) return null;
       const line = p.line && LINES_OF_ORIGIN[p.line.id];
+      const see = seen(w, who);
+      const hidden = new Set([
+        ...p.tempers.slice(see.tempers).map(t => 'temper.' + t),
+        ...(see.innate ? [] : p.innate.map(i => 'innate.' + i)),
+        ...(see.coping ? [] : p.coping.map(c => 'coping.' + c)),
+      ]);
+      const six = Object.values(attrs(w, who).detail);
       return {
         id: who,
-        tempers: p.tempers.map(t => {
+        unseen: Math.max(0, p.tempers.length - see.tempers),
+        tempers: p.tempers.slice(0, see.tempers).map(t => {
           const opposite = PAIRS[TEMPERS[t].pair].find(x => x !== t);
           const name = TEMPERS[t].name;
           return {
@@ -179,13 +205,19 @@ export const persona = {
           name: line.name,
           title: line.titles[p.line.lv - 1],
         },
-        innate: p.innate.map(i => ({ id: i, name: INNATE[i].name })),
-        coping: p.coping.map(c => ({ id: c, name: COPING[c].name })),
-        stress: p.stress,
-        attrs: Object.values(attrs(w, who).detail),
+        innate: see.innate ? p.innate.map(i => ({ id: i, name: INNATE[i].name })) : null,
+        coping: see.coping ? p.coping.map(c => ({ id: c, name: COPING[c].name })) : null,
+        stress: see.stress ? p.stress : null,
+        attrs: six.map(a => ({ ...a, parts: maskParts(a.parts, hidden) })),
       };
     });
 
-    ctx.provide('persona', Object.freeze({ get, hasOld, fromOrigin: ctx.own(fromOrigin), attrs }));
+    /** 玩家看得出这个人的哪几个性情（自己的全看得出）。 */
+    const visible = (w, id) => new Set((get(w, id)?.tempers || []).slice(0, seen(w, id).tempers));
+
+    ctx.provide(
+      'persona',
+      Object.freeze({ get, hasOld, fromOrigin: ctx.own(fromOrigin), attrs, visible }),
+    );
   },
 };

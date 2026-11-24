@@ -66,11 +66,11 @@ test('村民的六项照档案算：石伯持家 13，阅历只有 2；过客也
   const g = newGame(7);
   const shi = g.ask('persona', 'shi');
   const attr = id => shi.attrs.find(a => a.id === id);
+  // 还不认识石伯，明细里他的性情并成「还看不出的」（勤勉 +1、抠门 +2）
   assert.deepEqual(parts(attr('chijia')), [
     ['底子', 4],
-    ['勤勉', 1],
-    ['抠门', 2],
     ['农桑庄户三级', 6],
+    ['还看不出的', 3],
   ]);
   assert.equal(attr('chijia').value, 13);
   assert.equal(attr('yueli').value, 2, '厚道的人不精明：阅历 −2');

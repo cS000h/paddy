@@ -109,15 +109,49 @@ test('人物档案：两选换成性情和出身线、不硬凑满三个；村�
   );
   assert.deepEqual([me.line.id, me.line.lv, me.line.title], ['farmer', 1, '笨手庄户']);
   assert.ok(traits(g).includes('slowwarm') && traits(g).includes('solitary'));
-  assert.deepEqual(
-    g.ask('persona', 'shi').tempers.map(t => t.name),
-    ['勤勉', '厚道', '抠门'],
-  );
+  // 村民和过客的性情照定下的或按编号推，只是还不认识，一个也看不出（下一条测试）
+  assert.deepEqual([g.ask('persona', 'shi').tempers, g.ask('persona', 'shi').unseen], [[], 3]);
   const v = g.ask('visitors').active[0];
   const vp = g.ask('persona', v.id);
-  assert.equal(new Set(vp.tempers.map(t => t.id)).size, 3);
+  assert.equal(vp.unseen, 3);
   assert.deepEqual(g.ask('persona', v.id), vp);
   for (let x = 6; x < 12; x++) must(g, 'farm.till', { x, y: 19, at: { x, y: 18 } });
   assert.ok(skill(g, 'farm').level >= 2);
   assert.equal(g.ask('persona').line.lv, 2);
+});
+
+test('别人的档案只给看你知道的：熟一层看出一个性情，熟络看出根骨，心烦只看自己的；六项明细不漏', () => {
+  const g = newGame();
+  const shi = () => g.ask('persona', 'shi');
+  const chijia = () => shi().attrs.find(a => a.id === 'chijia');
+  assert.deepEqual([shi().tempers, shi().unseen, shi().innate, shi().stress], [[], 3, null, null]);
+  assert.equal(chijia().value, 13, '数照给');
+  assert.deepEqual(
+    chijia().parts.map(p => [p.label, p.delta]),
+    [
+      ['底子', 4],
+      ['农桑庄户三级', 6],
+      ['还看不出的', 3],
+    ],
+    '明细里没看出来的性情并成一条',
+  );
+  const names = () => shi().tempers.map(t => t.name);
+  const seen = [];
+  for (let day = 0; day < 6; day++) {
+    must(g, 'talk', { to: 'shi' });
+    seen.push(names().join('、'));
+    must(g, 'sleep');
+  }
+  // 熟悉 1 点头之交，3 熟络，6 亲近
+  assert.deepEqual(seen, [
+    '勤勉',
+    '勤勉',
+    '勤勉、厚道',
+    '勤勉、厚道',
+    '勤勉、厚道',
+    '勤勉、厚道、抠门',
+  ]);
+  assert.deepEqual([shi().unseen, shi().innate, shi().stress], [0, [], null]);
+  assert.ok(chijia().parts.every(p => p.id !== 'unseen'));
+  assert.equal(g.ask('persona').stress, 0, '自己的心烦看得见');
 });

@@ -2,7 +2,8 @@
 // + 别的插件接进 compute 'opinion' 的（村民看主角时，乡邻插件加熟悉的层次）。
 // 主角做的几件事，村民记一条：送东西、说话、赴约、约了没来、约了又推。村民之间开局就有几条交情。
 //   服务 opinion.of(w, 谁, 对谁) → { value, parts }、opinion.note(w, 谁, 对谁, 来由, n?)
-//   查询 opinion(谁, 对谁?) → 谁对谁（不写就是对主角）的好感和明细；明细按分量大的在前
+//   查询 opinion(谁, 对谁?) → 谁对谁（不写就是对主角）的好感和明细；明细按分量大的在前。
+//        相性里牵到玩家还没看出来的性情的，并成一条「莫名投缘」或「莫名别扭」（见 persona.visible）
 import { is } from '../../kernel/schema.js';
 import { PEOPLE } from '../../content/people.js';
 import { TEMPERS, PAIRS } from '../../content/traits.js';
@@ -121,7 +122,19 @@ export const opinion = {
 
     queries.define('opinion', (w, from, to = people.who(w)) => {
       if (!persona.get(w, from) || !persona.get(w, to) || from === to) return null;
-      return { from, to, ...of(w, from, to) };
+      const o = of(w, from, to);
+      const [a, b] = [persona.visible(w, from), persona.visible(w, to)];
+      const hidden = p => {
+        const m = /^(same|clash).(.+)$/.exec(p.id);
+        if (!m) return false;
+        const other = m[1] === 'same' ? m[2] : PAIRS[TEMPERS[m[2]].pair].find(x => x !== m[2]);
+        return !a.has(m[2]) || !b.has(other);
+      };
+      const parts = o.parts.filter(p => !hidden(p));
+      const n = o.parts.filter(hidden).reduce((s, p) => s + p.delta, 0);
+      if (n) parts.push({ id: 'unseen', label: n > 0 ? '莫名投缘' : '莫名别扭', delta: n });
+      parts.sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta));
+      return { from, to, value: o.value, parts };
     });
 
     ctx.provide('opinion', Object.freeze({ of, note: ctx.own(note) }));

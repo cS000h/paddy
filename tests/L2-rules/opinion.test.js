@@ -6,24 +6,30 @@ import { newGame, must, growOne, FIELD } from '../helpers.js';
 const why = (o, id) => o.parts.find(p => p.id === 'why.' + id);
 const labels = o => o.parts.map(p => [p.label, p.delta]);
 
-test('相性看性情：同一个 +10，反着的 −10；村民之间开局就记着几条交情', () => {
+test('相性看性情：同一个 +10、反着的 −10，还没看出来的说不上为什么；村民之间开局记着几条交情', () => {
   const g = newGame();
+  // 还不认识石伯和桂嫂：看得出他俩不大对付，说不上为什么
+  assert.deepEqual(labels(g.ask('opinion', 'shi', 'gui')), [['莫名别扭', -10]]);
+  // 桂嫂和小乔都热络、都要强（还看不出来），又是看着她长大的
+  const guiQiao = g.ask('opinion', 'gui', 'qiao');
+  assert.equal(guiQiao.value, 28);
+  assert.deepEqual(labels(guiQiao), [
+    ['莫名投缘', 20],
+    ['看着长大的', 8],
+  ]);
+  assert.deepEqual(labels(g.ask('opinion', 'aman', 'zhou')).sort(), [
+    ['常给他送菜', 10],
+    ['莫名别扭', -10],
+  ]);
+  // 跟石伯、桂嫂都处到亲近，看出了他抠门、她大方
+  for (let day = 0; day < 6; day++) {
+    must(g, 'talk', { to: 'shi' });
+    must(g, 'talk', { to: 'gui' });
+    must(g, 'sleep');
+  }
   const shiGui = g.ask('opinion', 'shi', 'gui');
   assert.deepEqual(labels(shiGui), [['抠门碰上大方', -10]]);
   assert.equal(shiGui.value, -10);
-  // 桂嫂和小乔都热络、都要强，又是看着她长大的
-  const guiQiao = g.ask('opinion', 'gui', 'qiao');
-  assert.equal(guiQiao.value, 28);
-  assert.deepEqual(labels(guiQiao).sort(), [
-    ['看着长大的', 8],
-    ['都热络', 10],
-    ['都要强', 10],
-  ]);
-  // 阿满急躁、老周沉稳，合不来；可阿满天天给他送菜
-  assert.deepEqual(labels(g.ask('opinion', 'aman', 'zhou')).sort(), [
-    ['常给他送菜', 10],
-    ['急躁碰上沉稳', -10],
-  ]);
   assert.equal(g.ask('opinion', 'shi', 'shi'), null);
   assert.equal(g.ask('opinion', 'nobody', 'shi'), null);
   // 过客也能问（相性照他的档案算），只是还没有来由

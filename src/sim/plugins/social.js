@@ -353,6 +353,8 @@ export const social = {
     ctx.provide(
       'social',
       Object.freeze({
+        /** 跟这个村民熟到什么程度（熟悉的点数）；不是村民给 null。 */
+        familiar: (w, id) => (ON_MAP.includes(id) ? w.bonds.known[id] : null),
         relate: ctx.own((w, to, n, source) => {
           const gain = relate(w, to, n, 'talk');
           core.log(w, people.who(w), 'relation:' + to, gain, source);
