@@ -1,5 +1,6 @@
 // 同一份只读选项给按钮和点击时的复核使用。各条命令仍由原玩法在自己的事务里结算。
 import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
+import { TOPICS } from '../../content/talk.js';
 import { near } from './people.js';
 
 function forVisitor(v, ask, at) {
@@ -54,7 +55,8 @@ function forResident(person, ask, at, walking, compute) {
   const options = walking
     ? []
     : compute.run('resident.options', { person, ask, at, day: ask('clock').day }, []);
-  const visit = ask('visits').active;
+  const visits = ask('visits'),
+    visit = visits.active;
   if (visit?.due && visit.npc === to && person.waiting && !walking)
     options.unshift({
       key: 'meet.' + visit.day,
@@ -71,6 +73,27 @@ function forResident(person, ask, at, walking, compute) {
       input: { to, walking, reply: true },
       result: 'person.talked',
     });
+  else {
+    // 照原来的说话纸：招呼过了才往下问；近况、安排、天色各一天一回，天黑不问安排，熟了才约。
+    for (const topic of ['news', 'plan', 'sky'])
+      if (!bond.asked.includes(topic) && !(topic === 'plan' && person.atDoor))
+        options.push({
+          key: 'topic.' + topic,
+          group: '聊聊',
+          label: TOPICS[topic],
+          command: 'talk',
+          input: { to, topic, walking },
+          result: 'person.talked',
+        });
+    if (visits.canInvite && bond.known >= 1 && !person.atDoor)
+      options.push({
+        key: 'invite.' + to,
+        label: '约明天午前茶摊坐坐',
+        command: 'invite',
+        input: { to },
+        result: 'appointment.made',
+      });
+  }
   if (bond.giftedToday) return options;
   for (const i of ask('goods', at).filter(i => i.gift && i.carried > 0))
     options.push({

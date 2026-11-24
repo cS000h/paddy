@@ -333,3 +333,31 @@ test('夜里初见桂嫂报姓名，连续两周的主动寒暄都有独立回�
     assert.ok(Math.max(...Object.values(count)) * 2 <= lines.length, name);
   }
 });
+
+test('招呼过后接话里能问近况、安排、天色，熟了能约茶摊；问过的收起，天黑不问安排', () => {
+  const g = newGame();
+  const gui = () => g.ask('residents').find(p => p.id === 'gui');
+  const rows = () => g.ask('interaction.options', 'gui', gui());
+  const pick = key => {
+    const row = rows().find(o => o.key === key);
+    assert.ok(row, key);
+    return g.dispatch(row.command, { ...row.input, at: gui() });
+  };
+  assert.ok(!rows().some(o => o.group === '聊聊' || o.command === 'invite'));
+  assert.ok(pick('talk').ok);
+  assert.deepEqual(
+    rows()
+      .filter(o => o.group === '聊聊')
+      .map(o => o.key),
+    ['topic.news', 'topic.plan', 'topic.sky'],
+  );
+  assert.ok(pick('topic.news').facts.find(f => f.type === 'person.talked').data.line);
+  assert.ok(!rows().some(o => o.key === 'topic.news'));
+  const made = pick('invite.gui').facts.find(f => f.type === 'appointment.made');
+  assert.match(made.data.line, /茶摊/);
+  assert.ok(!rows().some(o => o.command === 'invite'));
+  for (let i = 0; i < 7; i++) must(g, 'clock.advance', { minutes: 120 });
+  assert.ok(gui().atDoor);
+  const night = rows().map(o => o.key);
+  assert.ok(night.includes('topic.sky') && !night.includes('topic.plan'));
+});
