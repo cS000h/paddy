@@ -40,13 +40,6 @@ const TRAIT_ICON = {
   heatproof: 'trait_sickle',
 };
 
-// 性情先借旧特质的图标（随和、爱热闹换成了知足、热络……），A-02c 的性情图标画好再换。
-const TEMPER_ICON = Object.fromEntries(
-  Object.entries(OLD_TRAITS)
-    .filter(([, to]) => to.temper)
-    .map(([id, to]) => [to.temper, TRAIT_ICON[id]]),
-);
-
 function modIcon(item) {
   if (item.kind === 'bad') return 'mod_cloud';
   if (['tea_fame', 'kind_heart', 'visitor_word'].includes(item.id)) return 'mod_tea';
@@ -93,7 +86,7 @@ function personaBody(m, game) {
     ...me.tempers.map(t => ({
       name: t.name,
       tip: t.desc,
-      ico: TEMPER_ICON[t.id] || 'trait_spark',
+      ico: 'temper_' + t.id,
     })),
     ...earned.map(t => ({ name: t.name, tip: t.effect, ico: TRAIT_ICON[t.id] || 'trait_spark' })),
   ];
