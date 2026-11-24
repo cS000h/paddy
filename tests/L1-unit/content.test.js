@@ -23,6 +23,23 @@ import {
   RETURN_GIFT,
   mapOfPlace,
 } from '../../src/content/people.js';
+import { SKILLS, LEVELS, ORIGINS } from '../../src/content/growth.js';
+import {
+  ATTRS,
+  MAIN_ATTRS,
+  TAGS,
+  AI_KEYS,
+  TEMPERS,
+  PAIRS,
+  LINES_OF_ORIGIN,
+  LINE_BONUS,
+  LINE_UP_AT,
+  INNATE,
+  COPING,
+  OLD_TRAITS,
+  FILL_TEMPERS,
+  DEFAULT_LINE,
+} from '../../src/content/traits.js';
 import { CROPS, ITEMS, TOOLS, cropStage, isRipe } from '../../src/content/items.js';
 import { CALENDAR, dateOf, timeOf } from '../../src/content/calendar.js';
 import {
@@ -279,4 +296,56 @@ test('过客站位和小事的默认地点能站人、能走到跟前，不和�
     const visitor = (VISITOR_SPOTS[map] || []).some(s => s.x === x && s.y === y);
     assert.ok(!visitor, `${ev.id} 的默认地点压在过客站位上，过客在时点不中`);
   }
+});
+
+test('特质表：八对性情各两个、方向相反，加减只落在六项上；出身线、根骨、毛病和旧特质的换法都指得上', () => {
+  const attrsOk = a =>
+    Object.entries(a || {}).every(([k, n]) => Object.hasOwn(ATTRS, k) && Number.isInteger(n) && n);
+  assert.deepEqual(MAIN_ATTRS.length, 5);
+  assert.ok(MAIN_ATTRS.every(k => Object.hasOwn(ATTRS, k)) && !MAIN_ATTRS.includes('tige'));
+  assert.equal(Object.keys(PAIRS).length, 8);
+  assert.equal(new Set(Object.values(TEMPERS).map(t => t.name)).size, 16);
+  for (const [id, t] of Object.entries(TEMPERS)) {
+    assert.ok(attrsOk(t.attrs), id);
+    assert.ok(
+      [...t.likes, ...t.dislikes].every(tag => Object.hasOwn(TAGS, tag)),
+      id,
+    );
+    assert.ok(!t.likes.some(tag => t.dislikes.includes(tag)), id);
+    assert.ok(
+      Object.entries(t.ai).every(([k, v]) => AI_KEYS.includes(k) && v >= -100 && v <= 100),
+      id,
+    );
+  }
+  // 一对里的两个性情，至少有一样打分值方向相反，不然在村里看不出两种人
+  for (const [a, b] of Object.values(PAIRS)) {
+    const ai = id => TEMPERS[id].ai;
+    assert.ok(
+      AI_KEYS.some(k => (ai(a)[k] || 0) * (ai(b)[k] || 0) < 0),
+      `${a}/${b}`,
+    );
+  }
+  assert.equal(Object.keys(LINES_OF_ORIGIN).length, 10);
+  for (const [id, l] of Object.entries(LINES_OF_ORIGIN)) {
+    assert.ok(Object.hasOwn(LINE_BONUS, l.kind) && Object.hasOwn(ATTRS, l.main), id);
+    assert.equal(l.kind === 'dual', Object.hasOwn(ATTRS, l.sub || '') && l.sub !== l.main, id);
+    assert.ok(l.titles.length === 4 && Object.hasOwn(SKILLS, l.skill), id);
+  }
+  assert.ok(LINE_UP_AT.every((n, i) => n < LEVELS.length && (i === 0 || n > LINE_UP_AT[i - 1])));
+  const levels = {};
+  for (const [id, t] of Object.entries(INNATE)) {
+    assert.ok(attrsOk(t.attrs), id);
+    if (!t.line) continue;
+    assert.ok(!levels[t.line + t.lv], `${t.line} 里 ${t.lv} 级重复`);
+    levels[t.line + t.lv] = id;
+  }
+  for (const [id, c] of Object.entries(COPING)) assert.ok(attrsOk(c.attrs) && c.relief, id);
+  const opening = [...ORIGINS.route, ...ORIGINS.reply].map(o => o.trait).sort();
+  assert.deepEqual(Object.keys(OLD_TRAITS).sort(), opening);
+  for (const to of Object.values(OLD_TRAITS))
+    assert.ok(
+      to.temper ? Object.hasOwn(TEMPERS, to.temper) : Object.hasOwn(LINES_OF_ORIGIN, to.line),
+    );
+  assert.ok(FILL_TEMPERS.every(id => Object.hasOwn(TEMPERS, id)));
+  assert.ok(Object.hasOwn(LINES_OF_ORIGIN, DEFAULT_LINE));
 });
