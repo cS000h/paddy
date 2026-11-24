@@ -295,6 +295,63 @@ test('点阿满预览不涨关系；订种先确认再扣款，成交收据可�
       assert.deepEqual(errors, []);
       await ctx.close();
     }
+    const morning = createGame({ seed: 1 });
+    morning.dispatch('origin.choose', { route: 'later', reply: 'quiet' });
+    for (const [width, height] of [
+      [1280, 720],
+      [844, 390],
+      [390, 844],
+    ]) {
+      const touch = width !== 1280;
+      const page = await browser.newPage({
+        viewport: { width, height },
+        hasTouch: touch,
+        isMobile: touch,
+        offline: true,
+      });
+      await page.addInitScript(
+        ([k, s]) => localStorage.setItem(k, JSON.stringify(s)),
+        [KEY, morning.save()],
+      );
+      await page.goto(url);
+      await ready(page);
+      await page.evaluate(() => {
+        const scene = window.__dao.world.scene();
+        const gui = scene.villagers.find(v => v.id === 'gui');
+        scene.tap(gui.px, gui.py - 12);
+      });
+      await frames(page, 900);
+      for (const selector of [
+        '[data-do="encounterMenu"]',
+        '[data-key="talk"]',
+        '[data-group="聊聊"]',
+        '[data-key="topic.news"]',
+      ]) {
+        const button = page.locator(selector).first();
+        if (touch) await button.tap();
+        else await button.click();
+      }
+      await page.locator('.npc-bubble .unsaid').waitFor({ state: 'detached' });
+      await page.evaluate(() => document.fonts.ready.then(() => true));
+      assert.match(await page.locator('.npc-bubble .say').textContent(), /小乔/);
+      const bubble = await page.locator('.npc-bubble').boundingBox();
+      const buttons = await page.locator('.npc-actions').boundingBox();
+      assert.ok(
+        bubble.x >= 0 &&
+          bubble.y >= 0 &&
+          bubble.x + bubble.width <= width &&
+          bubble.y + bubble.height <= height,
+      );
+      assert.ok(
+        bubble.y + bubble.height <= buttons.y ||
+          bubble.x >= buttons.x + buttons.width ||
+          bubble.x + bubble.width <= buttons.x,
+      );
+      await page.screenshot({
+        path: path.join(root, '.cache', 'gui-news-' + width + 'x' + height + '.png'),
+      });
+      await page.context().close();
+    }
   } finally {
     await browser.close();
   }
