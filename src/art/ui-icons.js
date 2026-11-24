@@ -105,6 +105,14 @@ const TEMPER_MAKERS = {
 const MAKERS = {
   ...TEMPER_MAKERS,
   // — 左侧书签页签图标 —
+  tab_ledger() {
+    return blank()
+      .rect(3, 2, 10, 12, P.t2)
+      .rect(5, 3, 7, 10, P.paper1)
+      .vline(6, 4, 11, P.c2)
+      .hline(8, 10, 5, P.ink2)
+      .hline(8, 10, 8, P.ink2);
+  },
   tab_persona() {
     const g = blank();
     g.rect(3, 2, 10, 12, P.g3).hline(4, 11, 2, P.g4).vline(3, 2, 13, P.g5);

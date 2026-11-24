@@ -1,7 +1,7 @@
 // 开局的两个选择，和实体书签式「稻乡小册」（人物三层、本事、性情、成就、只读熟人册）。
 import { ORIGINS, TRAITS } from '../content/growth.js';
-import { OLD_TRAITS } from '../content/traits.js';
-import { uiIconImg, heroPortraitUrl } from './icons.js';
+import { personaBody, ledgerBody } from './person.js';
+import { uiIconImg } from './icons.js';
 import { button, actions, close, title, para, esc, paged } from './html.js';
 
 const ORIGIN_STEPS = {
@@ -24,21 +24,6 @@ export function originView(m) {
     <div class="origin-choices">${choices.join('')}</div>
     ${para('这两个选择只决定起初的性情，往后的日子由你自己过。', 'aside')}`;
 }
-
-const TRAIT_ICON = {
-  easygoing: 'trait_tea',
-  lively: 'trait_tea',
-  familiar: 'trait_tea',
-  slowwarm: 'trait_stone',
-  solitary: 'trait_stone',
-  curious: 'trait_spark',
-  handy: 'trait_spark',
-  hearth: 'trait_spark',
-  earlybird: 'trait_sickle',
-  rainwalker: 'trait_sickle',
-  coldproof: 'trait_sickle',
-  heatproof: 'trait_sickle',
-};
 
 function modIcon(item) {
   if (item.kind === 'bad') return 'mod_cloud';
@@ -73,63 +58,8 @@ const achievementRow = a => {
   );
 };
 
-function personaBody(m, game) {
-  const hero = game.ask('hero');
-  const body = game.ask('body');
-  const clock = game.ask('clock');
-  const modsData = game.ask('modifiers');
-  const me = game.ask('persona');
-  const attrs = me.attrs;
-  // 性情从人物档案来；做出来的历练还记在本事那边，旧的开局特质已经换成了性情，不再列
-  const earned = game.ask('growth').traits.filter(t => t.owned && !Object.hasOwn(OLD_TRAITS, t.id));
-  const owned = [
-    ...me.tempers.map(t => ({
-      name: t.name,
-      tip: t.desc,
-      ico: 'temper_' + t.id,
-    })),
-    ...earned.map(t => ({ name: t.name, tip: t.effect, ico: TRAIT_ICON[t.id] || 'trait_spark' })),
-  ];
-
-  // 顶部人物像 + 清爽平涂像素分格「心境」条
-  const filled = Math.max(0, Math.min(8, Math.round((body.mood / 100) * 8)));
-  const segs = Array.from(
-    { length: 8 },
-    (_, i) => `<i class="mood-seg ${i < filled ? 'on' : ''}"></i>`,
-  ).join('');
-  const header = `<div class="hero-head">
-    <div class="hero-pic"><img class="pixel" width="64" height="72" src="${heroPortraitUrl(hero.look)}" alt="" /></div>
-    <div class="hero-meta">
-      <div class="hero-name"><b>${esc(hero.name)}</b><span class="hero-tag">${esc(clock.seasonName)} · 第${clock.day}日</span></div>
-      <div class="mood-row"><span>心境</span><span class="mood-bar" title="${esc(body.moodWord)} ${body.mood}">${segs}</span>${uiIconImg('trait_tea', 24)}</div>
-    </div>
-  </div>`;
-
-  // 中排：六项，一项一个图标；指上去看是哪几样加减的（人物页的样子等 A-03 照二稿重做）
-  const signed = n => (n > 0 ? '+' + n : '−' + -n);
-  const why = a =>
-    a.parts.map((p, i) => (i ? `${p.label} ${signed(p.delta)}` : `${p.label} ${p.delta}`));
-  const stats = `<div class="stat-strip">${attrs
-    .map(
-      a =>
-        `<div class="stat-item" title="${esc(why(a).join('，'))}">${uiIconImg('attr_' + a.id, 32)}` +
-        `<span>${esc(a.name)}</span><b>${a.value}</b></div>`,
-    )
-    .join('')}</div>`;
-
-  // 性情物象卡片
-  const traitCards = owned.length
-    ? owned
-        .slice(0, 4)
-        .map(t => {
-          const cls = t.ico === 'trait_spark' ? 'trait-card spark' : 'trait-card';
-          return `<div class="${cls}" title="${esc(t.tip)}">${uiIconImg(t.ico, 32)}<span>${esc(t.name)}</span></div>`;
-        })
-        .join('')
-    : '<p class="aside">还没有立下性情印记，过几天自然会显出来。</p>';
-
-  // 身边风物（左格右文并排）
-  const list = modsData.list;
+function modifiers(m, game) {
+  const list = game.ask('modifiers').list;
   const activeMod = list.find(x => x.id === m.mod) || list[0] || null;
   const tiles = list.length
     ? list
@@ -151,9 +81,7 @@ function personaBody(m, game) {
         <p>吃顿拿手热饭，或在村里办好小事、结交过客后，留下的余味和名声都会记在这里。</p>
       </div>`;
 
-  return `${header}${stats}
-    <h3 class="sec-hd">性情</h3><div class="trait-cards">${traitCards}</div>
-    <h3 class="sec-hd">身边风物</h3><div class="mod-split"><div class="mod-tiles">${tiles}</div>${detail}</div>`;
+  return `<details class="folio-mods" ${m.mod ? 'open' : ''}><summary>身边风物 · ${list.length}</summary><div class="mod-split"><div class="mod-tiles">${tiles}</div>${detail}</div></details>`;
 }
 
 // 熟人册（只读）：只看谁在村里落脚、认识过哪些回头客，要说话得亲自走过去。
@@ -179,6 +107,7 @@ function folkRows(game) {
 
 const TABS = [
   ['persona', '人物', 'tab_persona'],
+  ['ledger', '人情账', 'tab_ledger'],
   ['skills', '本事', 'tab_skills'],
   ['traits', '性情', 'tab_traits'],
   ['achievements', '成就', 'tab_achievements'],
@@ -204,8 +133,11 @@ export function bookView(m, game) {
   const origin = game.ask('growth').origin ? '' : button('origin', '补记初来时的两件小事');
   let body;
   let foot;
-  if (tab === 'persona') {
-    body = personaBody(m, game);
+  if (tab === 'persona' || tab === 'ledger') {
+    body =
+      tab === 'ledger'
+        ? ledgerBody(m, game)
+        : personaBody(m, game, !m.who ? modifiers(m, game) : '');
     foot = actions(close('合上册子', false));
   } else {
     const book = paged(rowsOf(tab, game), m.page || 0, 4, 'bookPage');

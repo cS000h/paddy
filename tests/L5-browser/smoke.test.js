@@ -309,6 +309,23 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
         await p.locator('[data-do="menu"]').click();
         await p.locator('.modal [data-do="book"]').click();
       }
+      assert.equal(await p.locator('.folio-stat').count(), 6);
+      const household = p.locator('[data-attr="chijia"]');
+      await household.click();
+      assert.match(await p.locator('.folio-detail').textContent(), /底子/);
+      if (session === desk) await shot(p, 'a03a-person-desktop.png');
+      await household.click();
+      assert.equal(await p.locator('.folio-detail').count(), 0);
+      if (session === wide) await shot(p, 'a03a-person-phone.png');
+      await p.locator('.folio-picker summary').click();
+      await p.locator('[data-do="bookWho"][data-who="shi"]').click();
+      assert.match(await p.locator('.folio-traits').textContent(), /还看不出/);
+      assert.equal(await p.locator('.folio-stress').count(), 0);
+      if (session === desk) await shot(p, 'a03a-shi.png');
+      await p.locator('[data-tab="ledger"]').click();
+      await p.locator('[data-do="ledgerWho"][data-who="shi"]').click();
+      assert.match(await p.locator('.folio-score').textContent(), /好感/);
+      if (session === wide) await shot(p, 'a03a-ledger-phone.png');
       await p.locator('[data-do="bookTab"][data-tab="traits"]').click();
       assert.match(await p.locator('.sheet').textContent(), /慢热/);
       await p.locator('[data-do="bookTab"][data-tab="achievements"]').click();

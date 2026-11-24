@@ -1,0 +1,90 @@
+import { PEOPLE } from '../content/people.js';
+import { OLD_TRAITS } from '../content/traits.js';
+import { tierWord } from '../content/talk.js';
+import { esc } from './html.js';
+import { standingUrl, uiIconImg } from './icons.js';
+
+const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
+const names = list => (list === null ? '未记' : list.map(x => esc(x.name)).join('、') || '无');
+const portrait = look => `<img class="pixel folio-person" src="${standingUrl(look)}" alt="">`;
+const stamp = label => `<strong class="folio-stamp">${label}</strong>`;
+const part = p => esc(p.label) + ' ' + signed(p.delta);
+
+function attributes(profile, selected) {
+  const detail = profile.attrs.find(a => a.id === selected);
+  const rows = profile.attrs
+    .map(
+      a =>
+        `<button class="folio-stat" data-do="bookAttr" data-attr="${esc(a.id)}" aria-expanded="${a === detail}">
+      ${uiIconImg('attr_' + a.id, 24)}<span>${esc(a.name)}</span><b>${a.value}</b>
+      <i><em style="width:${Math.min(100, Math.max(0, a.value * 5))}%"></em></i></button>`,
+    )
+    .join('');
+  return (
+    rows +
+    (detail
+      ? `<div class="folio-detail"><b>${esc(detail.name)}明细</b><div>
+    ${detail.parts.map(p => (p.id === 'base' ? esc(p.label) + ' ' + p.delta : part(p))).join('　')}　= ${detail.value}</div></div>`
+      : '')
+  );
+}
+
+export function personaBody(m, game, mods) {
+  const bonds = game.ask('bonds');
+  const other = bonds.find(b => b.id === m.who);
+  const profile = game.ask('persona', other?.id);
+  const person = other || game.ask('hero');
+  const options = [{ id: '', name: '你' }, ...bonds]
+    .map(b => `<button data-do="bookWho" data-who="${esc(b.id)}">${esc(b.name)}</button>`)
+    .join('');
+  const traits = profile.tempers.map(
+    t =>
+      `<div>${uiIconImg('temper_' + t.id, 32)}<b>${esc(t.name)}</b><small>${esc(t.desc)}</small></div>`,
+  );
+  for (let i = 0; i < (other ? profile.unseen : 3 - profile.tempers.length); i++)
+    traits.push(
+      `<div><i class="folio-blank"></i><small>${other ? '还看不出' : '还没定下'}</small></div>`,
+    );
+  const line = profile.line;
+  const level = line ? ['一级', '二级', '三级', '四级'][line.lv - 1] : '';
+  const earned = other
+    ? ''
+    : '　历练 ' +
+      names(game.ask('growth').traits.filter(t => t.owned && !Object.hasOwn(OLD_TRAITS, t.id)));
+  const n = profile.stress;
+  const bowl = n < 40 ? 'low' : n < 70 ? 'mid' : 'high';
+  return `<div class="folio"><section><header>${stamp('人物')}<details class="folio-picker"><summary>看谁 · ${esc(person.name)}</summary>
+    <div>${options}</div></details></header>
+    <div class="folio-identity">${portrait(other ? PEOPLE[other.id].look : person.look)}<div><h2>${esc(person.name)}</h2>
+    ${line ? esc(line.name) + '<br>' + level + ' · ' + esc(line.title) : '出身未记'}</div></div>
+    <div class="folio-traits">${traits.join('')}</div><small>根骨天资 ${names(profile.innate)}　毛病 ${names(profile.coping)}${earned}</small>
+    ${n === null ? '' : `<div class="folio-stress">${uiIconImg('stress_' + bowl, 28)}心烦　${n} / 100</div>`}</section>
+    <section><header>${stamp('六项')}<small>二十为满</small></header>${attributes(profile, m.attr)}${mods}</section></div>`;
+}
+
+export function ledgerBody(m, game) {
+  const bonds = game.ask('bonds');
+  const person = bonds.find(b => b.id === m.ledgerWho) || bonds[0];
+  const opinion = game.ask('opinion', person.id);
+  const group = (title, rows) =>
+    `<div class="folio-entry"><span>${title}</span><div>${rows.join('<br>') || '无'}</div></div>`;
+  const affinity = opinion.parts.filter(
+    p => p.id.startsWith('same.') || p.id.startsWith('clash.') || p.id === 'unseen',
+  );
+  const reasons = opinion.parts.filter(p => p.id.startsWith('why.'));
+  const lines = reasons
+    .slice(0, 3)
+    .map(p => part(p) + ' · ' + (p.left == null ? '一直记着' : '余 ' + p.left + ' 天'));
+  if (reasons.length > 3) lines.push('还有 ' + (reasons.length - 3) + ' 条');
+  const roster = bonds
+    .map(
+      b => `<button data-do="ledgerWho" data-who="${esc(b.id)}" aria-pressed="${b === person}">
+    ${esc(b.name)}<small>${b.known ? esc(tierWord(b.known)) : '还没说过话'}</small></button>`,
+    )
+    .join('');
+  return `<div class="folio folio-ledger"><section><header>${stamp('乡邻')}</header><nav>${roster}</nav></section>
+    <section><header>${stamp('人情账')}</header><div class="folio-identity">${portrait(PEOPLE[person.id].look)}
+    <div><h2>${esc(person.name)}</h2>${esc(person.role)}</div><b class="folio-score">好感 ${signed(opinion.value)}</b></div>
+    ${group('相投相冲', affinity.map(part))}${group('好感来由', lines)}
+    ${group('熟悉', opinion.parts.filter(p => p.id === 'known').map(part))}</section></div>`;
+}
