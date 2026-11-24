@@ -13,7 +13,12 @@
   width: min(264px, 46%);
   box-sizing: border-box;
   left: clamp(8px, calc(var(--npc-x) - 62px), calc(100% - min(264px, 46%) - 8px));
-  bottom: clamp(34%, calc(100% - var(--npc-y)), calc(100% - 116px));
+  /* 用旋转前的本地高度给名字、正文和右下按钮各留出位置。 */
+  --foot: clamp(calc(32cqh + 18px + var(--safe-b)), calc(100cqh - var(--npc-y)), 100cqh - 124px);
+  bottom: var(--foot);
+  max-height: calc(100cqh - var(--foot) - 8px - var(--safe-t));
+  display: flex;
+  flex-direction: column;
   padding: 8px 12px;
   background: var(--moon);
   border: 2px solid var(--frame);
@@ -37,10 +42,12 @@
   color: var(--qing);
   font-size: 14px;
 }
-.npc-bubble .say {
+.sheet.encounter .npc-bubble .say {
   margin: 2px 0;
   max-height: min(34cqh, 190px);
   overflow-y: auto;
+  min-height: 0;
+  touch-action: pan-y;
   font-size: 16px;
   line-height: 1.35;
 }
