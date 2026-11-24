@@ -145,7 +145,7 @@ writeFileSync(path.join(out, 'items.png'), gridToPng(enlarge(icons, 5)));
     ledger.map(art.uiIcon),
   ];
   const cell = 24;
-  const plate = new Grid(7 * cell + 8, 4 * cell + 11);
+  const plate = new Grid(8 * cell + 16, 6 * cell + 15);
   plate.data.fill(P.paper1);
   rows.forEach((row, r) => {
     row.forEach((sprite, col) => {
@@ -154,6 +154,14 @@ writeFileSync(path.join(out, 'items.png'), gridToPng(enlarge(icons, 5)));
       plate.rect(x, y, cell - 1, cell - 1, [P.m1, P.e1, P.paper0, P.paper0][r]);
       over(plate, sprite, x + ((cell - sprite.w) >> 1), y + ((cell - sprite.h) >> 1));
     });
+  });
+  const tempers = art.UI_ICONS.filter(id => id.startsWith('temper_'));
+  tempers.forEach((id, i) => {
+    const pair = Math.floor((i % 8) / 2);
+    const x = 4 + (i % 8) * cell + pair * 3;
+    const y = 106 + Math.floor(i / 8) * 25;
+    plate.rect(x, y, cell, cell - 1, pair % 2 ? P.g0 : P.paper0);
+    over(plate, art.uiIcon(id), x + 4, y + 4);
   });
   writeFileSync(path.join(out, 'renxin.png'), gridToPng(enlarge(plate, 3)));
 

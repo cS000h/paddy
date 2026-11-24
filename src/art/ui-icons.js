@@ -31,7 +31,79 @@ function debtCoin(outgoing) {
   return g.hline(tail, tip, 8, ink).line(wing, 5, tip, 8, ink).line(tip, 8, wing, 11, ink);
 }
 
+// prettier-ignore
+const TEMPER_MAKERS = {
+  temper_diligent() {
+    return blank().line(3, 13, 11, 3, P.t2).line(4, 13, 12, 3, P.t0)
+      .line(8, 3, 13, 7, P.s4).rect(11, 6, 3, 3, P.s2).hline(11, 13, 9, P.ink2);
+  },
+  temper_lazy() {
+    return blank().line(2, 3, 5, 9, P.b2).line(3, 3, 6, 9, P.h1)
+      .hline(5, 13, 9, P.b3).hline(6, 13, 10, P.h2).line(6, 10, 4, 13, P.t2)
+      .line(10, 10, 12, 13, P.t2);
+  },
+  temper_generous() {
+    return blank().ellipse(5, 9, 3, 4, P.i1).ellipse(5, 6, 3, 1, P.i3)
+      .ellipse(10, 4, 2, 2, P.y2).set(10, 4, P.t4).ellipse(13, 9, 1, 1, P.y1);
+  },
+  temper_stingy() {
+    return blank().ellipse(8, 10, 4, 3, P.i2).rect(6, 3, 4, 4, P.i1)
+      .hline(5, 10, 6, P.c1).line(10, 6, 12, 9, P.c2).vline(6, 9, 11, P.i0);
+  },
+  temper_gregarious() {
+    return blank().rect(2, 3, 7, 5, P.g3).rect(4, 8, 2, 2, P.g3)
+      .rect(8, 7, 6, 5, P.c0).set(11, 12, P.c1).hline(4, 7, 5, P.g7).hline(9, 12, 9, P.c2);
+  },
+  temper_shy() {
+    return blank().rect(3, 3, 10, 10, P.t3).rect(4, 4, 8, 8, P.i3)
+      .rect(4, 4, 5, 8, P.i1).vline(6, 4, 11, P.i2).set(10, 8, P.k0);
+  },
+  temper_honest() {
+    const g = blank().vline(8, 2, 12, P.t3).hline(5, 11, 13, P.t2).hline(2, 13, 4, P.h2);
+    for (const x of [3,12]) g.vline(x, 5, 8, P.t1).hline(x-2,x+2,9,P.y2).hline(x-1,x+1,10,P.h3);
+    return g;
+  },
+  temper_sly() {
+    return blank().vline(8, 3, 12, P.t3).hline(5, 11, 13, P.t2).line(2, 7, 13, 3, P.h2)
+      .vline(3, 7, 10, P.t1).hline(1, 5, 11, P.y2).vline(12, 4, 6, P.t1).hline(10, 14, 7, P.h3);
+  },
+  temper_calm() {
+    return blank().ellipse(8, 9, 5, 3, P.n2).ellipse(7, 8, 4, 2, P.s2)
+      .hline(2, 13, 13, P.w4).hline(6, 9, 7, P.s0);
+  },
+  temper_hasty() {
+    return blank().line(8, 2, 10, 4, P.i1).ellipse(11, 6, 2, 2, P.s3)
+      .line(2, 7, 5, 11, P.w4).line(5, 11, 8, 8, P.w5).line(8, 8, 10, 11, P.w3)
+      .line(10, 11, 14, 7, P.w4).hline(4, 12, 13, P.w5);
+  },
+  temper_brave() {
+    return blank().vline(4, 2, 13, P.t3).rect(5, 3, 6, 5, P.c1)
+      .hline(9, 14, 4, P.c0).hline(10, 13, 6, P.c2).hline(5, 7, 4, P.y0);
+  },
+  temper_craven() {
+    return blank().line(2, 8, 8, 3, P.t2).line(8, 3, 14, 8, P.t2)
+      .rect(4, 8, 8, 5, P.paper2).rect(7, 9, 4, 4, P.t4).vline(8, 9, 12, P.c2);
+  },
+  temper_content() {
+    return blank().ellipse(8, 8, 5, 2, P.paper0).hline(2, 13, 9, P.i1)
+      .rect(4, 10, 8, 2, P.i0).hline(6, 9, 12, P.i3).hline(5, 7, 7, P.e1);
+  },
+  temper_ambitious() {
+    return blank().rect(2, 10, 4, 3, P.g4).rect(6, 7, 4, 6, P.g5)
+      .rect(10, 5, 4, 8, P.g6).vline(11, 1, 5, P.t3).hline(12, 14, 2, P.c1);
+  },
+  temper_trusting() {
+    return blank().rect(3, 3, 9, 10, P.t4).rect(4, 4, 7, 8, P.paper1)
+      .line(8, 5, 13, 3, P.t2).rect(9, 5, 5, 7, P.t0).line(8, 12, 13, 10, P.t2).set(10, 8, P.t4);
+  },
+  temper_paranoid() {
+    return blank().ellipse(8, 6, 3, 4, P.s4).ellipse(8, 6, 1, 2, 0)
+      .rect(3, 7, 10, 6, P.h2).hline(4, 11, 8, P.y0).rect(7, 9, 2, 2, P.t4).set(8, 11, P.t4);
+  },
+};
+
 const MAKERS = {
+  ...TEMPER_MAKERS,
   // — 左侧书签页签图标 —
   tab_persona() {
     const g = blank();
