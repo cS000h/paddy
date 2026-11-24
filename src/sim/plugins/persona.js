@@ -6,6 +6,7 @@
 import { is } from '../../kernel/schema.js';
 import {
   TEMPERS,
+  TEMPER_DESC,
   PAIRS,
   LINES_OF_ORIGIN,
   LINE_UP_AT,
@@ -122,7 +123,14 @@ export const persona = {
         id: who,
         tempers: p.tempers.map(t => {
           const opposite = PAIRS[TEMPERS[t].pair].find(x => x !== t);
-          return { id: t, name: TEMPERS[t].name, opposite, oppositeName: TEMPERS[opposite].name };
+          const name = TEMPERS[t].name;
+          return {
+            id: t,
+            name,
+            desc: TEMPER_DESC[t],
+            opposite,
+            oppositeName: TEMPERS[opposite].name,
+          };
         }),
         line: line && {
           id: p.line.id,

@@ -218,7 +218,7 @@ export const DOING = {
     tea: '坐着剥茶叶蛋',
     market: '在铺子里核对菜账',
     yard: '在门口歇脚',
-    river: '骑着三轮车给老周送菜',
+    river: '推着板车给老周送菜',
   },
   gui: {
     yard: '隔着墙在晾衣裳',

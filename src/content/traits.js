@@ -69,6 +69,19 @@ export const TEMPERS = Object.freeze({
   paranoid:   { name: '多心', pair: 'trust', attrs: { yueli: 3, renqing: -1 }, likes: ['doubt', 'expose'], dislikes: ['trust', 'unknown'], gain: 1.5, ai: { trust: -50, vengeful: 10 } },
 });
 
+/** 性情的一句话：人物页上性情图标底下的小字。照上面的 likes、dislikes 写，改了标签记得一起改。 */
+// prettier-ignore
+export const TEMPER_DESC = Object.freeze({
+  diligent: '闲不住，干完农活心里才踏实', lazy: '能歇就歇，赶工最烦心',
+  generous: '爱送礼请客，压价推辞心里难受', stingy: '钱攥得紧，赶集压价最舒坦',
+  gregarious: '爱扎堆说话，几天没人聊就闷', shy: '一个人待着自在，见生人发怵',
+  honest: '爱帮人说公道话，占便宜撒谎不安', sly: '会说话会议价，最怕吃亏得罪人',
+  calm: '下棋钓鱼煮茶，遇事不慌', hasty: '风风火火，干等最难熬',
+  brave: '敢冒险爱出头，退缩心里憋屈', craven: '能躲就躲，在家最安稳',
+  content: '一顿家常饭就开心，不争不抢', ambitious: '事事想拔头筹，认输最难受',
+  trusting: '信人好结交，疑人反倒难受', paranoid: '凡事留一手，识破猫腻才踏实',
+});
+
 /** 八对，每对两个性情：前一个、后一个。 */
 export const PAIRS = Object.freeze(
   Object.entries(TEMPERS).reduce((all, [id, t]) => {

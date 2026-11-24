@@ -32,6 +32,7 @@ import {
   TAGS,
   AI_KEYS,
   TEMPERS,
+  TEMPER_DESC,
   PAIRS,
   LINES_OF_ORIGIN,
   LINE_BONUS,
@@ -306,6 +307,9 @@ test('特质表：八对性情各两个、方向相反，加减只落在六项�
   assert.ok(MAIN_ATTRS.every(k => Object.hasOwn(ATTRS, k)) && !MAIN_ATTRS.includes('tige'));
   assert.equal(Object.keys(PAIRS).length, 8);
   assert.equal(new Set(Object.values(TEMPERS).map(t => t.name)).size, 16);
+  // 人物页上性情图标底下那一句小字：每个都有，不超过 16 个字
+  assert.deepEqual(Object.keys(TEMPER_DESC).sort(), Object.keys(TEMPERS).sort());
+  assert.ok(Object.values(TEMPER_DESC).every(d => d && [...d].length <= 16));
   for (const [id, t] of Object.entries(TEMPERS)) {
     assert.ok(attrsOk(t.attrs), id);
     assert.ok(
