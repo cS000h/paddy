@@ -19,6 +19,7 @@ import * as props from './props.js';
 import * as landmarks from './landmarks.js';
 import * as waterside from './waterside.js';
 import * as village from './props-village.js';
+import * as traces from './traces.js';
 import { critters } from './critters.js';
 import { soilTile, cropFrames, cursor, icon } from './tiles.js';
 import { personFrame, personSheet, LOOK_NAMES, FRAME_W, FRAME_H, POSES, DIRS } from './people.js';
@@ -31,7 +32,7 @@ export { FRAME_W, FRAME_H, POSES, DIRS, LOOK_NAMES };
 export { Grid };
 
 // 物件的画法。同一种物件有几个样子的（树、石头、花），按位置换种子，画出来各不相同。
-const OBJECT_MAKERS = {
+const MAP_MAKERS = {
   ...indoors,
   ...wildProps,
   'house.hero': () => house('hero', 11),
@@ -85,10 +86,14 @@ const OBJECT_MAKERS = {
 };
 const VARIANTS = 4;
 
-export const OBJECT_KINDS = Object.keys(OBJECT_MAKERS);
+// 地图物件的名单跟地图约定一致。院门的小物件也能按名字取图，等规则需要时再加入地图名单。
+export const OBJECT_KINDS = Object.keys(MAP_MAKERS);
+const OBJECT_MAKERS = { ...MAP_MAKERS, ...traces };
 
 // 有的物件随规则里的状态换一副样子（鸡窝：还没搭、养了鸡）。世界按状态来挑，没有就用平常的样子。
 const OBJECT_LOOKS = {
+  iou: { crossed: () => traces.iou('crossed') },
+  cashBox: { closed: () => traces.cashBox('closed'), open: () => traces.cashBox('open') },
   ...wildLooks,
   ...indoorLooks,
   table: { ...indoorLooks.table, bench: () => village.bench() },
@@ -104,6 +109,7 @@ export const objectLooks = kind => Object.keys(OBJECT_LOOKS[kind] || {});
 // 照「场景与物件参考」里的样子，物件外沿描一道深色的边，放在地上才立得住。
 // 细碎的花草、浮在水面贴着地的、网眼镂空的不描，描了反而发闷。
 const NO_OUTLINE = new Set([
+  ...Object.keys(traces),
   'flowers',
   'reeds',
   'lotus',

@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as art from '../src/art/index.js';
+import { P } from '../src/art/palette.js';
 import { MAPS, GROUND } from '../src/content/maps/index.js';
 import { gridToPng, enlarge } from './png.mjs';
 
@@ -122,4 +123,45 @@ art.ITEM_ICONS.forEach((id, i) =>
   over(icons, art.itemIcon(id), 4 + (i % perRow) * 20, 4 + Math.floor(i / perRow) * 20),
 );
 writeFileSync(path.join(out, 'items.png'), gridToPng(enlarge(icons, 5)));
+
+// 人心：先看七个记号，再看痕迹（欠条和钱匣各并排两种），最后两行是六项、心烦与人情账。
+{
+  const marks = ['borrow', 'repay', 'dun', 'shrug', 'basket', 'whisper', 'sneak'];
+  const traces = [
+    ['iou'],
+    ['iou', 'crossed'],
+    ['doorBasket'],
+    ['coinString'],
+    ['cashBox', 'closed'],
+    ['cashBox', 'open'],
+    ['footprints'],
+  ];
+  const stats = ['renqing', 'chijia', 'danliang', 'yueli', 'xuewen', 'tige'];
+  const ledger = ['stress_low', 'stress_mid', 'stress_high', 'debt_owe', 'debt_owed', 'heard'];
+  const rows = [
+    marks.map(art.emote),
+    traces.map(([kind, look]) => art.objectSprite(kind, 0, look).grid),
+    stats.map(id => art.uiIcon('attr_' + id)),
+    ledger.map(art.uiIcon),
+  ];
+  const cell = 24;
+  const plate = new Grid(7 * cell + 8, 4 * cell + 11);
+  plate.data.fill(P.paper1);
+  rows.forEach((row, r) => {
+    row.forEach((sprite, col) => {
+      const x = 4 + col * cell;
+      const y = 4 + r * (cell + 1);
+      plate.rect(x, y, cell - 1, cell - 1, [P.m1, P.e1, P.paper0, P.paper0][r]);
+      over(plate, sprite, x + ((cell - sprite.w) >> 1), y + ((cell - sprite.h) >> 1));
+    });
+  });
+  writeFileSync(path.join(out, 'renxin.png'), gridToPng(enlarge(plate, 3)));
+
+  const strip = new Grid(art.EMOTES.length * 19 + 8, 20);
+  strip.data.fill(P.m1);
+  art.EMOTES.forEach((id, i) => over(strip, art.emote(id), 4 + i * 19, 4));
+  const split = art.EMOTES.indexOf('borrow') * 19;
+  strip.vline(split, 3, 16, P.g6);
+  writeFileSync(path.join(out, 'renxin-emotes.png'), gridToPng(enlarge(strip, 4)));
+}
 console.log('写好了：', out);
