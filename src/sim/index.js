@@ -35,6 +35,7 @@ import { teahouse } from './plugins/teahouse.js';
 import { market } from './plugins/market.js';
 import { guide } from './plugins/guide.js';
 import { visits } from './plugins/visits.js';
+import { opinion } from './plugins/opinion.js';
 import { modifiers } from './plugins/modifiers.js';
 import { events } from './plugins/events.js';
 import { visitors } from './plugins/visitors.js';
@@ -69,6 +70,7 @@ export const PLUGINS = Object.freeze([
   teahouse,
   guide,
   visits,
+  opinion,
   modifiers,
   events,
   visitors,

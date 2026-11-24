@@ -20,7 +20,8 @@ import {
   ROUTINE_DAY,
 } from '../../content/people.js';
 import { GREETING_REPLY } from '../../content/encounters.js';
-import { TOPICS, tierOf } from '../../content/talk.js';
+import { TOPICS, tierOf, tierWord } from '../../content/talk.js';
+import { TIER_OPINION } from '../../content/opinion.js';
 import { GIFT_DISH, GIFT_ITEM, GIFT_FAVORITE, GIFT_SPOILED } from '../../content/gift-lines.js';
 import { ITEMS, CROPS, SOIL } from '../../content/items.js';
 import { dateOf } from '../../content/calendar.js';
@@ -322,6 +323,13 @@ export const social = {
       },
       { priority: 40 },
     );
+
+    // 好感（sim/plugins/opinion.js）：村民看主角，熟到哪一层加多少。
+    compute.tap('opinion', (r, { w, from, to }) => {
+      if (to !== people.who(w) || !ON_MAP.includes(from)) return;
+      const n = w.bonds.known[from];
+      compute.part(r, 'known', '熟悉：' + tierWord(n), TIER_OPINION[tierOf(n)]);
+    });
 
     queries.define('bonds', w =>
       ON_MAP.map(id => {

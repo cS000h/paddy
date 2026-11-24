@@ -60,7 +60,7 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '625ea339' }; // 六项取代五维：小事的检定改问六项，难度各加 2
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '27ee33e4' }; // 第十七版存档：好感的来由存进存档，说话、送东西、赴约都记一条
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};

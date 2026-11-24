@@ -395,3 +395,21 @@ test('六项接得上：小事的检定、身边风物和历练的加减都落�
     assert.ok(attrsOk(a), id);
   }
 });
+
+test('好感的表：来由写全了，开局的交情指得上村民、一直记着，熟悉的每一层都写了加多少', async () => {
+  const { COMPAT, TIER_OPINION, OPINION_RANGE, WHY, STANDING } =
+    await import('../../src/content/opinion.js');
+  const { tierOf } = await import('../../src/content/talk.js');
+  assert.ok(COMPAT.same > 0 && COMPAT.clash < 0);
+  assert.equal(TIER_OPINION.length, tierOf(1e9) + 1);
+  assert.ok(TIER_OPINION.every((n, i) => Number.isInteger(n) && (!i || n >= TIER_OPINION[i - 1])));
+  for (const [id, d] of Object.entries(WHY)) {
+    assert.ok(d.label && Number.isInteger(d.n) && d.n && Math.abs(d.n) <= OPINION_RANGE[1], id);
+    assert.ok(d.days === null || (Number.isInteger(d.days) && d.days > 0), id);
+    assert.ok(Number.isInteger(d.stack) && d.stack >= 1, id);
+  }
+  for (const [from, to, why] of STANDING) {
+    assert.ok(ON_MAP.includes(from) && ON_MAP.includes(to) && from !== to, from + to);
+    assert.equal(WHY[why]?.days, null, why);
+  }
+});

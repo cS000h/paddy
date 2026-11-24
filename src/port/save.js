@@ -8,6 +8,23 @@ export const SAVE_FORMAT = 'dao.save';
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
 const MIGRATIONS = {
+  16(state) {
+    // 好感（sim/plugins/opinion.js）：一条条来由存进存档。村民之间开局就有的几条交情照 2026-11-24 定的写进来；
+    // 以前送过的东西、说过的话没留来由，从这一版起记。
+    const w = state.world;
+    w.meta.version = 17;
+    const old = (from, to, why, n) => ({ from, to, why, n, until: null });
+    w.opinion = {
+      notes: [
+        old('aman', 'zhou', 'veggies', 10),
+        old('zhou', 'aman', 'fed', 10),
+        old('aman', 'gui', 'pickles', 8),
+        old('gui', 'qiao', 'raised', 8),
+        old('yun', 'qiao', 'uphill', 8),
+      ],
+    };
+    return state;
+  },
   15(state) {
     // 人物档案（sim/plugins/persona.js）：主角开局两选给的旧特质换成性情和出身线，从成长里拿掉；
     // 做出来的六个历练留在成长里。村民的档案照 2026-11-23 定的写进来。

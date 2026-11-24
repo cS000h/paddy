@@ -108,6 +108,24 @@ test('衣装拆成插件以前的旧档：身上穿的进了衣箱，样子不�
   assert.equal(box.coat.find(p => p.id === 'hoodie').owned, false);
 });
 
+test('v16 升级：村民之间开局的几条交情记进好感，主角这边从这一版起记', () => {
+  const saved = JSON.parse(
+    readFileSync(new URL('../fixtures/save-v16.json', import.meta.url), 'utf8'),
+  );
+  const g = createGame({ saved, debug: true });
+  const notes = g.save().state.world.opinion.notes;
+  assert.equal(notes.length, 5);
+  assert.ok(notes.every(x => x.until === null && x.to !== 'hero'));
+  assert.equal(g.ask('opinion', 'gui', 'qiao').value, 28);
+  assert.deepEqual(
+    g
+      .ask('opinion', 'zhou', 'aman')
+      .parts.map(p => p.label)
+      .sort(),
+    ['天天吃他送的菜', '沉稳碰上急躁'].sort(),
+  );
+});
+
 test('v15 升级：开局两选的旧特质换成性情和出身线，历练留在成长里，村民有了档案', () => {
   const saved = JSON.parse(
     readFileSync(new URL('../fixtures/save-v15.json', import.meta.url), 'utf8'),

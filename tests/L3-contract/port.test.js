@@ -51,6 +51,7 @@ const COMMANDS = [
 ];
 const QUERIES = [
   'persona',
+  'opinion',
   'resident.greeting',
   'interaction.options',
   'residents',

@@ -17,10 +17,17 @@ export function journalView(game, touch, tab) {
     return `<li class="${g.done ? 'done' : ''}"><span>${esc(g.text)}${hint}</span></li>`;
   });
   const packRows = pack.items.map(i => `<li><span>${esc(i.name)}</span><span>${i.n}</span></li>`);
+  // 乡邻那页：熟到哪一层，和他待你的好感；指上去看好感是哪几样加减的（人情账的样子等 A-03）
+  const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + Math.abs(n);
   const bondRows = game.ask('bonds').map(b => {
     const known = b.known ? tierWord(b.known) : '还没说过话';
     const liked = b.favorite ? `爱吃${b.favorite}` : b.role;
-    return `<li><span>${esc(b.name)}<small>${esc(liked)}</small></span><span>${known}</span></li>`;
+    const o = game.ask('opinion', b.id);
+    const why = o.parts.map(p => `${p.label} ${signed(p.delta)}`).join('，') || '还没什么来由';
+    return (
+      `<li title="${esc(why)}"><span>${esc(b.name)}<small>${esc(liked)}</small></span>` +
+      `<span>${known}<small>好感 ${signed(o.value)}</small></span></li>`
+    );
   });
   const date = game.ask('visits').active;
   const day = game.ask('clock').day;
