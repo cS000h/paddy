@@ -1,52 +1,126 @@
-/* 钓鱼小窗的临时样子（A-05 重做）：一条水面，浮漂在中间；遛鱼时两根条。 */
-.sheet .fish-water {
-  position: relative;
-  height: 72px;
-  margin: 8px 0;
+/* 钓鱼小窗：上面一幅水面（Astra 画的横幅，按原始像素放大），下面是按钮；拉上来弹一张鱼的大图。 */
+.fishing-water {
+  display: block;
+  width: min(480px, 100%);
+  height: auto;
+  image-rendering: pixelated;
+}
+.tight .fishing-water {
+  width: min(360px, 100%);
+}
+.sheet .fish-scene {
+  box-sizing: border-box;
+  margin: 6px auto 8px;
+  width: min(484px, 100%);
   border: 2px solid var(--line, #7b593a);
-  background: linear-gradient(#d0e6e0, #93bfc0);
-  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
 }
-.sheet .fish-float {
-  position: absolute;
-  left: calc(50% - 5px);
-  top: 22px;
-  width: 10px;
-  height: 22px;
-  border-radius: 5px;
-  background: linear-gradient(#d1604a 45%, #fcf9f1 45%);
-  box-shadow: 0 0 0 2px #34423f;
+.compact .sheet .fish-scene {
+  width: min(364px, 100%);
 }
-.sheet .fish-bars {
-  display: grid;
-  gap: 8px;
-  margin: 10px 0;
+.tight .sheet .fish-scene {
+  width: min(300px, 100%);
 }
-.sheet .fish-bars label {
-  display: grid;
-  grid-template-columns: 4em 1fr;
-  align-items: center;
-  gap: 8px;
-}
-.sheet .fish-bars b {
-  display: block;
-  height: 14px;
-  border: 2px solid #7b593a;
-  background: #ece4d0;
-}
-.sheet .fish-bars i {
-  display: block;
-  height: 100%;
-  width: 0;
-  background: #547a4a;
-}
-.sheet .fish-bars i.tight {
-  background: #d1604a;
-}
-.sheet .fish-bars.running b {
-  border-color: #d1604a;
+.sheet .fish-scene .fishing-water {
+  width: 100%;
 }
 .sheet .fish-hold {
   touch-action: none;
   user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 结果页：桌面上水面在上、话在下；矮屏上并排，「再下一竿」不被挤到下面去 */
+.compact .sheet .fish-result {
+  display: grid;
+  grid-template-columns: minmax(0, 46%) 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.compact .sheet .fish-result .fish-scene {
+  width: 100%;
+  margin: 0;
+}
+.compact .sheet .fish-result p {
+  margin: 2px 0;
+}
+.compact .sheet .fish-big {
+  width: 48px;
+  height: 48px;
+}
+.compact .sheet .grade-huge .fish-big {
+  width: 64px;
+  height: 64px;
+}
+.sheet .fish-aside {
+  color: var(--ink-soft, #55635d);
+}
+
+/* 拉上来的那条：图放大四倍，名字和几寸在右边，下面几个记号 */
+.sheet .fish-catch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 6px;
+}
+.sheet .fish-big {
+  width: 64px;
+  height: 64px;
+  image-rendering: pixelated;
+  animation: fish-pop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.sheet .grade-huge .fish-big {
+  width: 96px;
+  height: 96px;
+}
+.sheet .fish-says p {
+  margin: 0;
+}
+.sheet .fish-name {
+  font-size: 1.25em;
+}
+.sheet .fish-name small {
+  margin-left: 0.6em;
+  font-size: 0.75em;
+  color: var(--ink-soft, #55635d);
+}
+.sheet .fish-marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.sheet .fish-mark {
+  padding: 0 6px;
+  border: 1px solid var(--ink-soft, #55635d);
+  font-weight: normal;
+  font-size: 0.85em;
+}
+.sheet .fish-mark.gold {
+  border-color: #d0a646;
+  color: #a0844a;
+  background: #f7e6a8;
+}
+.sheet .fish-mark.big {
+  border-color: #34423f;
+  background: #34423f;
+  color: #fcf9f1;
+}
+.sheet .fish-cheer {
+  margin-top: 2px;
+  padding-left: 8px;
+  border-left: 2px solid #d0a646;
+}
+@keyframes fish-pop {
+  from {
+    transform: translateY(14px) scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }

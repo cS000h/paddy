@@ -1,5 +1,6 @@
 // 采集点和院里干家务的按钮：挑了一件活就合上小窗，人走过去在世界里做给你看（world 的 work / perform），
-// 做完冒一句话。钓鱼另有一个小窗（panels/fishing.js）：挑饵下竿 → 看漂 → 遛鱼，规则见 sim/plugins/fishing.js。
+// 做完冒一句话。钓鱼另有一个小窗（panels/fishing.js）：挑饵下竿 → 看漂 → 遛鱼 → 出鱼，
+// 这一竿完了小窗不关，换成结果（拉上来的鱼、跑了、没钓着），可以接着再下一竿。规则见 sim/plugins/fishing.js。
 
 const spotOf = m => (m && m.x !== undefined ? { x: m.x, y: m.y } : null);
 
@@ -22,30 +23,34 @@ export function activityActions({ game, shell, run, here, world }) {
     });
   });
 
-  /** 这一竿完了：合上小窗，人收竿，冒一句话。 */
+  /** 这一竿完了：人收竿；小窗换成结果。衣装这类顺带碰上的事照旧冒一句话。 */
   function finish(out) {
     waiting = false;
     clearTimeout(timer);
-    shell.set({ modal: null });
-    const caught = out.ok && out.facts.some(f => f.type === 'fish.caught');
-    const line =
-      out.ok &&
-      (out.facts.find(f => f.type === 'wardrobe.got')?.data.line ??
-        out.facts.find(f => f.type.startsWith('fish.') && f.data.line)?.data.line);
-    world.perform(caught ? 'reel' : 'miss', {
-      target: fishingAt,
-      water: true,
-      then: () => line && shell.toast(line),
+    const m = modal();
+    if (!out.ok) return void shell.set({ modal: null });
+    const caught = out.facts.find(f => f.type === 'fish.caught')?.data;
+    const lost = out.facts.find(f => f.type === 'fish.lost')?.data;
+    const other = out.facts.find(f => f.type.startsWith('fish.') && f.data.line)?.data.line;
+    const aside = out.facts.find(f => f.type === 'wardrobe.got')?.data.line || null;
+    world.perform(caught ? 'reel' : 'miss', { target: fishingAt, water: true });
+    if (m?.kind !== 'fishing') return void (aside && shell.toast(aside));
+    const next = { ...m, started: performance.now(), events: null, aside };
+    if (caught) return void shell.set({ modal: { ...next, phase: 'caught', catch: caught } });
+    shell.set({
+      modal: { ...next, phase: lost ? 'lost' : 'missed', why: lost?.why || null, line: other },
     });
   }
 
   function hook(t) {
     clearTimeout(timer);
     const out = run('fish.hook', { at: here(), t });
-    if (!out.ok) return finish(out);
-    if (!out.facts.some(f => f.type === 'fish.hooked')) return finish(out);
+    const hooked = out.ok && out.facts.find(f => f.type === 'fish.hooked');
+    if (!hooked) return finish(out);
     presses = [];
-    shell.set({ modal: { ...modal(), phase: 'fight', started: performance.now() } });
+    shell.set({
+      modal: { ...modal(), phase: 'fight', started: performance.now(), size: hooked.data.size },
+    });
     return undefined;
   }
 
@@ -61,10 +66,20 @@ export function activityActions({ game, shell, run, here, world }) {
       if (!out.ok) return;
       fishingAt = spotOf(m) || fishingAt;
       world.perform('cast', { target: fishingAt, water: true });
-      const { bout } = game.ask('fishing', here());
+      const { bout, spot } = game.ask('fishing', here());
       waiting = true;
       shell.set({
-        modal: { ...m, phase: 'float', started: performance.now(), events: bout.float.events },
+        modal: {
+          ...m,
+          phase: 'float',
+          spot: spot?.id || 'yard',
+          bait: bait || null,
+          started: performance.now(),
+          events: bout.float.events,
+          catch: null,
+          line: null,
+          aside: null,
+        },
       });
       // 到头了还没提竿：这一竿就算没提
       clearTimeout(timer);
@@ -89,9 +104,13 @@ export function activityActions({ game, shell, run, here, world }) {
     fishLand() {
       finish(run('fish.land', { at: here(), log: presses }));
     },
+    /** 看漂、遛鱼时收竿：这一竿不要了，小窗关上。 */
     fishQuit() {
-      if (!game.ask('fishing', here()).bout) return void shell.set({ modal: null });
-      finish(run('fish.quit', { at: here() }));
+      waiting = false;
+      clearTimeout(timer);
+      if (game.ask('fishing', here()).bout) run('fish.quit', { at: here() });
+      shell.set({ modal: null });
+      world.perform('miss', { target: fishingAt, water: true });
     },
   };
 }

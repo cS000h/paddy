@@ -284,7 +284,7 @@ export function createPanels({
 
   const offs = [
     animateTiming(root, shell),
-    animateFishing(root, shell, actions),
+    animateFishing(root, shell, actions, platform),
     offAct,
     offCancel,
     bindStick(el.stick, intents),

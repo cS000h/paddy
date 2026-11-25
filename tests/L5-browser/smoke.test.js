@@ -362,8 +362,13 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
         else await p.locator('[data-do="fishHook"]').tap();
         await p.waitForTimeout(150);
       }
-      if (await p.evaluate(() => window.__dao.shell.get().modal?.kind === 'fishing'))
-        await p.locator('[data-do="fishQuit"]').click();
+      // 还在看漂、遛鱼就收竿；已经有了结果（拉上来、跑了、没钓着），小窗换成结果页，按「收竿」关上
+      const phase = await p.evaluate(() => window.__dao.shell.get().modal?.phase ?? null);
+      if (phase === 'float' || phase === 'fight') await p.locator('[data-do="fishQuit"]').click();
+      else if (phase) {
+        await shot(p, session === desk ? 'm3-fish-result-desktop.png' : 'm3-fish-result-phone.png');
+        await p.locator('[data-do="close"]').first().click();
+      }
       await performed(p);
       assert.equal(await p.evaluate(() => window.__dao.game.ask('fishing').bout), null);
       assert.equal(await p.evaluate(() => window.__dao.shell.get().modal), null);

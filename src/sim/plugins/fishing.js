@@ -3,7 +3,8 @@
 //       下竿。这一竿钓到什么鱼、多长、浮漂怎么动、遛的时候冲几回，当场就定好了。
 //   fish.hook {at, t}     → fish.hooked {who, size} | fish.spooked {who, line} | fish.missed {who, line}
 //       看漂时第 t 毫秒提竿；t 为 -1 是一直没提。
-//   fish.land {at, log}   → fish.caught {who, item, fish, name, len, lenText, n, fine, record, first, line}
+//   fish.land {at, log}   → fish.caught {who, item, fish, name, len, lenText, grade, gradeWord, n, fine,
+//                                          record, first, line, cheer}
 //                         | fish.lost {who, why, line}
 //       遛鱼：照按下、松开的记录 [[毫秒, 1 按着 | 0 松开]] 结算。
 //   fish.quit {at}        → fish.missed（看漂时）| fish.lost（遛鱼时）
@@ -26,7 +27,11 @@ import {
   FISH_LINES,
   WORM_ODDS,
   ZHOU_FISH_LINES,
+  FISH_GRADES,
+  FISH_CHEERS,
+  CHEER_REACH,
 } from '../../content/fishing.js';
+import { PEOPLE } from '../../content/people.js';
 import { atStation } from '../stations.js';
 import { lenText, sizeOf, wellLog, simulate, personOk, noise } from '../fishing-fight.js';
 import { registerResidentOptions } from '../resident-options.js';
@@ -47,12 +52,33 @@ export const fishing = {
     'pack',
     'weather',
     'quality',
+    'residents',
   ],
   writes: ['fishing'],
   install(ctx) {
     const { schema, commands, queries, reactions, compute, core, clock, people, body, pack } =
       ctx.services;
-    const { weather, quality } = ctx.services;
+    const { weather, quality, residents } = ctx.services;
+
+    /** 这条鱼在它那一种里算哪一档。 */
+    const gradeOf = (fish, len) => {
+      const [lo, hi] = FISH[fish].len;
+      const k = hi > lo ? (len - lo) / (hi - lo) : 0;
+      return FISH_GRADES.reduce((g, x) => (k >= x.from ? x : g), FISH_GRADES[0]);
+    };
+
+    /** 钓上大个儿、破了纪录：身边看得见的村民里，离得最近、有话说的那一位说一句。 */
+    function cheerFor(w, fish) {
+      const lines = FISH_CHEERS[fish] || {};
+      const me = people.me(w);
+      const far = p => Math.abs(p.x - me.x) + Math.abs(p.y - me.y);
+      const near = residents
+        .positions(w)
+        .filter(p => p.visible && p.map === me.map && Object.hasOwn(lines, p.id))
+        .filter(p => far(p) <= CHEER_REACH)
+        .sort((a, b) => far(a) - far(b))[0];
+      return near ? { who: near.id, line: PEOPLE[near.id].name + lines[near.id] } : null;
+    }
     schema.slice('fishing', {
       initial: (env, w) =>
         Object.fromEntries(
@@ -254,6 +280,8 @@ export const fishing = {
         : fill(FISH_LINES.caught, { name, len: text });
       if (record) line += fill(FISH_LINES.record, { name: f.name });
       if (got.first) line += fill(FIRST_FINE, { name });
+      const grade = gradeOf(b.fish, b.len);
+      const proud = record || grade.id === 'big' || grade.id === 'huge';
       fact('fish.caught', {
         who: id,
         item: got.item,
@@ -261,11 +289,14 @@ export const fishing = {
         name,
         len: b.len,
         lenText: text,
+        grade: grade.id,
+        gradeWord: grade.word,
         n,
         fine: got.fine,
         record,
         first,
         line,
+        cheer: proud ? cheerFor(w, b.fish) : null,
       });
     });
 

@@ -231,6 +231,20 @@ export const FISH_CHEERS = Object.freeze({
   },
 });
 
+/**
+ * 同一种鱼按长短分四档（这一种鱼最短到最长之间排第几成）：小个儿、中不溜、大个儿、大家伙。
+ * 拉上来那一下照档说、照档演；大个儿以上，身边的村民看见了会说一句（FISH_CHEERS）。
+ */
+export const FISH_GRADES = Object.freeze([
+  Object.freeze({ id: 'small', from: 0, word: '小个儿' }),
+  Object.freeze({ id: 'fair', from: 0.35, word: '中不溜' }),
+  Object.freeze({ id: 'big', from: 0.7, word: '大个儿' }),
+  Object.freeze({ id: 'huge', from: 0.9, word: '大家伙' }),
+]);
+
+/** 钓上大个儿时，几格以内的村民看得见、会说一句。 */
+export const CHEER_REACH = 8;
+
 /** 问老周鱼口：按渡口那边的鱼口说。 */
 export const ZHOU_FISH_LINES = Object.freeze({
   good: '“今儿个水色好，渡口这一片鱼口正旺，下竿吧。”',
