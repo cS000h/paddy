@@ -214,11 +214,17 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     // 灶台上的饭端走或吃掉，身上的饭收回灶台或吃掉，否则做一锅
     if (k.dishes.length && roll < 0.5) {
       if (chance(0.4)) return send('dish.eat', { id: pick(k.dishes).id, at });
-      // 行囊满了就先从行囊里拿一样放回家，腾出地方再端饭（汤要两格）
-      const pack = game.ask('pack', at);
-      if (pack.room < 2 && pack.items.length)
-        send('pack.take', { item: pick(pack.items).id, n: 'all', at });
-      return send('dish.pack', { id: pick(k.dishes).id, at });
+      // 行囊满了就先从行囊里拿几样放回家，腾出地方再端饭（汤要两格；竹篮里装着山货时篮子拿不走，拿别的）
+      for (let i = 0; i < 4 && game.ask('pack', at).room < 2; i++) {
+        const items = game.ask('pack', at).items.filter(x => x.id !== 'basket');
+        if (!items.length) break;
+        send('pack.take', { item: pick(items).id, n: 'all', at });
+      }
+      const id = pick(k.dishes).id;
+      const out = send('dish.pack', { id, at });
+      // 端错了一份，又放回灶台
+      if (out.ok && chance(0.2)) send('dish.store', { id, at });
+      return out;
     }
     // 身上的饭多半收回灶台（路上饿了还会吃掉，收回的机会本来就少）
     if (k.carried.length && roll < 0.75)

@@ -216,6 +216,41 @@ const WANTED = new Set(
 export const giftable = id =>
   !!ITEMS[id] && (['food', 'snack', 'craft'].includes(ITEMS[id].kind) || WANTED.has(id));
 
+/**
+ * 带着竹篮出门时装进篮里的东西：路边翻到、采集点采到的野货，和鸡蛋（极品照原来那样算）。
+ * 篮子里的连篮子只占行囊一格，跟鱼篓一个道理；没带篮子照旧一样占一格。竹篮在工作台上用竹篾编。
+ */
+export const BASKET_GOODS = Object.freeze([
+  'herb',
+  'shepherd',
+  'shoot',
+  'mushroom',
+  'chestnut',
+  'tea',
+  'leaf',
+  'egg',
+  'wildPeach',
+  'peachGum',
+  'camphorWood',
+  'pinecone',
+  'pineNeedles',
+  'willowTwig',
+  'mugwort',
+  'malan',
+  'berry',
+  'brake',
+  'snail',
+  'mussel',
+  'cicadaShell',
+  'lotusPod',
+  'caltrop',
+  'lotusFlower',
+  'pebble',
+  'moss',
+  'straw',
+  'earthEar',
+]);
+
 /** 阿满肯收的东西：能卖的吃食和手艺活。 */
 export const basketTakes = id =>
   ['food', 'snack', 'craft'].includes(ITEMS[id]?.kind) && ITEMS[id].sell > 0;
