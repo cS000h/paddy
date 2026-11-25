@@ -23,6 +23,7 @@ import { GREETING_REPLY } from '../../content/encounters.js';
 import { TOPICS, tierOf, tierWord } from '../../content/talk.js';
 import { TIER_OPINION } from '../../content/opinion.js';
 import { GIFT_DISH, GIFT_ITEM, GIFT_FAVORITE, GIFT_SPOILED } from '../../content/gift-lines.js';
+import { FOUND_OWNERS } from '../../content/fish-catch.js';
 import { ITEMS, CROPS, SOIL, kindOf } from '../../content/items.js';
 import { dateOf } from '../../content/calendar.js';
 import { giftable } from '../../content/pantry.js';
@@ -299,6 +300,12 @@ export const social = {
             ? LINES[to].gift.replace('{n}', name)
             : say.no(name);
         line = withGesture(to, band, line, key);
+        // 把人家掉了的东西还给失主：情分照最爱吃的那一道算，说的话也不一样
+        if (FOUND_OWNERS[plain]?.owner === to) {
+          liked = true;
+          value = 4;
+          line = FOUND_OWNERS[plain].line;
+        }
       }
       b.gifted[to] = w.clock.day;
       const gain = relate(w, to, value, 'gift');

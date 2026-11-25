@@ -49,7 +49,13 @@ export function activityActions({ game, shell, run, here, world }) {
     if (!hooked) return finish(out);
     presses = [];
     shell.set({
-      modal: { ...modal(), phase: 'fight', started: performance.now(), size: hooked.data.size },
+      modal: {
+        ...modal(),
+        phase: 'fight',
+        started: performance.now(),
+        size: hooked.data.size,
+        leap: !!hooked.data.leap,
+      },
     });
     return undefined;
   }

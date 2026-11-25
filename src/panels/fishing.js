@@ -1,9 +1,10 @@
 // 钓鱼的小窗：挑饵下竿 → 看漂 → 遛鱼 → 出鱼。水面那一幅是 Astra 画的（art/fishing-water.js）：
 // 浮漂照规则给的时刻点头、下沉；遛鱼时每一帧问规则 fish.fight，鱼影离岸多远、线绷多紧照着画；
-// 拉上来鱼出水，再弹一张鱼的大图（名字、几寸、哪一档、新纪录、极品，身边村民的那句话）。
+// 拉上来鱼出水，再弹一张鱼的大图（按大小的叫法、几寸、头一回、新纪录、极品、大家伙，身边村民的那句话）。
+// 矮屏上水面在左、字和按钮在右，小窗只占下半截，上面还看得见人在钓（照 Gemini G-09 的设计图说明）。
 // 规则怎么判都在 sim/plugins/fishing.js，这里只画和收手上的按下、松开。
 import { fishingFrame } from '../art/fishing-water.js';
-import { plainOf } from '../content/items.js';
+import { ITEMS, plainOf } from '../content/items.js';
 import { costText } from '../shell/words.js';
 import { button, actions, close, title, para, esc } from './html.js';
 import { itemIconUrl } from './icons.js';
@@ -22,34 +23,46 @@ export function fishingCue(platform, cue) {
   if (cue === 'bite') platform.haptic();
 }
 
+const plainName = item => ITEMS[plainOf(item)]?.name || '';
+
 const water = hold =>
   `<div class="fish-scene"${hold ? ' data-fish-hold' : ''}><canvas class="fishing-water" data-fish-canvas></canvas></div>`;
 
 const again = (data, bait) => {
-  const keep = bait && data.bait.some(b => b.item === bait);
-  return button('fishCast', keep ? '挂饵再下一竿' : '再下一竿', {
+  const left = bait ? data.bait.find(b => b.item === bait)?.n || 0 : 0;
+  const keep = left > 0;
+  return button('fishCast', keep ? `挂饵再下一竿（余 ${left}）` : '再下一竿', {
     main: true,
     data: keep ? { bait } : {},
     disabled: !!data.reason,
   });
 };
 
-/** 拉上来的那条：大图、名字、几寸、哪一档，几个记号。 */
+/** 拉上来的那条：大图，按大小的叫法打头（板鲫），下面是哪种鱼、几寸，几个记号。 */
 function catchCard(c) {
   const marks = [
-    c.first ? '<b class="fish-mark">头一回</b>' : '',
-    c.record ? '<b class="fish-mark gold">新纪录</b>' : '',
+    c.first ? '<b class="fish-mark first">头一回</b>' : '',
+    c.record ? '<b class="fish-mark record">新纪录</b>' : '',
     c.fine ? '<b class="fish-mark gold">极品</b>' : '',
     c.grade === 'huge' ? '<b class="fish-mark big">大家伙</b>' : '',
   ].join('');
-  return `<div class="fish-catch grade-${esc(c.grade)}">
+  const kind = c.thing ? '不是鱼' : `${plainName(c.item)} · ${c.lenText}`;
+  const framed = c.fine || c.grade === 'huge' ? ' framed' : '';
+  return `<div class="fish-catch grade-${esc(c.grade || 'thing')}${framed}">
     <img class="fish-big" src="${itemIconUrl(c.item)}" alt="">
     <div class="fish-says">
-      <p class="fish-name">${esc(c.name)}<small>${esc(c.lenText)} · ${esc(c.gradeWord)}</small></p>
+      <p class="fish-name">${esc(c.folk || c.name)}<small>${esc(kind)}</small></p>
       <p class="fish-marks">${marks}</p>
     </div>
   </div>`;
 }
+
+/** 遛鱼时右边两条：鱼离岸多远、线绷多紧（最后一截是要断的地方），和一句眼下该怎么做。 */
+const fightBars = `<div class="fish-bars">
+    <p class="fish-bar"><span>鱼离岸</span><i><b data-fish-dist></b></i></p>
+    <p class="fish-bar line"><span>线绷着</span><i><b data-fish-line></b><em></em></i></p>
+    <p class="fish-state" data-fish-state>按住收线</p>
+  </div>`;
 
 export function fishingView(m, game, here) {
   const data = game.ask('fishing', here);
@@ -57,12 +70,14 @@ export function fishingView(m, game, here) {
   const sub = spot ? `${spot.name} · ${spot.moodWord}` : '';
   const bait = data.bait[0];
   if (m.phase === 'float')
-    return `${title('看漂', sub)}${water(false)}
-      ${para('浮漂轻轻点几下别急，整个沉下去（鲤鱼是拖着走）再提竿；点水面也能提。', 'aside')}
-      ${actions(button('fishQuit', '收竿'), button('fishHook', '提竿', { main: true }))}`;
+    return `${title('看漂', sub)}
+      <div class="fish-play">${water(false)}<div>
+        ${para('轻轻点几下别急；整个沉下去、被拖着走、或者往上一顶，就提竿。点水面也能提。', 'aside')}
+        ${actions(button('fishQuit', '收竿'), button('fishHook', '提竿', { main: true }))}</div></div>`;
   if (m.phase === 'fight')
-    return `${title('遛鱼', '按住收线；鱼一冲（水花大、线发红）就松手')}${water(true)}
-      ${actions(button('fishQuit', '收竿'), '<button class="main fish-hold" data-fish-hold>收线（按住）</button>')}`;
+    return `${title('遛鱼', '按住收线；鱼一冲（水花大、线发红）就松手')}
+      <div class="fish-play">${water(true)}<div>${fightBars}
+        ${actions(button('fishQuit', '收竿'), '<button class="main fish-hold" data-fish-hold>收线（按住）</button>')}</div></div>`;
   // 结果页：水面和说的话并排（矮屏上竖着放不下），顺带碰上的事（捡到件衣裳）也写在这儿，不另冒字
   const aside = m.aside ? para(m.aside, 'fish-aside') : '';
   if (m.phase === 'caught') {
@@ -93,13 +108,27 @@ export function fishingView(m, game, here) {
 
 const KEYS = new Set([' ', 'e', 'enter', 'j']);
 
+/** 遛鱼时每一帧把两条和那句话照规则给的样子改一下。 */
+function showBars(root, s, holding) {
+  const dist = root.querySelector('[data-fish-dist]');
+  const line = root.querySelector('[data-fish-line]');
+  const state = root.querySelector('[data-fish-state]');
+  if (!dist || !line || !state) return;
+  dist.style.width = `${Math.max(0, Math.min(100, s.distance))}%`;
+  line.style.width = `${Math.max(0, Math.min(100, s.tension))}%`;
+  line.parentElement.classList.toggle('danger', s.tension >= 75);
+  const word = s.running ? '鱼在冲，松手！' : holding ? '收线……' : '按住收线';
+  if (state.textContent !== word) state.textContent = word;
+  state.classList.toggle('warn', s.running);
+}
+
 /** 看漂时此刻浮漂在做什么：点头、沉下去、被拖着走，或者静着；progress 是这一下做到几成。 */
 function floatState(events, t) {
   for (const e of events || [])
     if (t >= e.at && t < e.at + e.dur) {
       const progress = (t - e.at) / e.dur;
       if (e.kind === 'nod') return { action: 'nod', progress, edge: e };
-      return { action: e.drag ? 'drag' : 'bite', progress, edge: e };
+      return { action: e.lift ? 'lift' : e.drag ? 'drag' : 'bite', progress, edge: e };
     }
   return { action: 'wait', progress: 0, edge: null };
 }
@@ -165,7 +194,8 @@ export function animateFishing(root, shell, actions, platform) {
         reelAt = now;
         platform.audio.play('reel');
       }
-      paintFishing(canvas, spot, { action: 'fight', ...s, size: m.size });
+      paintFishing(canvas, spot, { action: 'fight', ...s, size: m.size, leap: !!m.leap });
+      showBars(root, s, holding);
       if (s.done) {
         landing = true;
         holding = false;

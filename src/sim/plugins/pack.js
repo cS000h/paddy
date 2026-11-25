@@ -31,7 +31,7 @@ export const pack = {
     const { schema, commands, queries, core, people, store, body } = ctx.services;
 
     // 钓上来的各种鱼都装在一只鱼篓里，合起来只占一格（content 里 kin 为「鱼」的，和老的「鱼」）
-    const inCreel = k => k === 'fish' || ITEMS[k].kin === 'fish';
+    const inCreel = k => k === 'fish' || ITEMS[k].kin === 'fish' || !!ITEMS[k].creel;
     // 带着竹篮，野货和鸡蛋都装进篮里，不另占格（篮子自己占一格）
     const WILD = new Set(BASKET_GOODS);
     const inBasket = (items, k) => (items.basket || 0) > 0 && WILD.has(plainOf(k));

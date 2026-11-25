@@ -27,6 +27,8 @@ const shapes = {
   meatStripe: ['..ccbcc..', '.aabaaab.', 'bbbcbbccc', 'aaabaaac.', '.cccccc..'],
   chicken: ['...aa...', '.aabaa..', 'abbbbabb', '.aabbbbc', '...cccbc'],
   lamb: ['...aaab..', '.abbbaab.', 'abbaabbbc', '.abbbccc.', '..ccc....'],
+  shrimp: ['...aaa..', '.aabbba.', 'ab...bba', 'bc...abc', '.c..abc.', '..ccc...'],
+  crab: ['a.a..a.a', '.abaaba.', 'aabbbbaa', '.bbbbbc.', 'a.cccc.a'],
 };
 
 // prettier-ignore
@@ -52,6 +54,8 @@ const foods = {
   snail: ['chestnut','s1','s3','s5'], mussel: ['slice','k0','e1','u2'],
   lotusPod: ['bean','l0','g0','g3'], caltrop: ['wedge','l0','paper1','c3'],
   earthEar: ['cabbage','g4','g6','g7'],
+  // 钓鱼时拉上来的河鲜（G-09）：煮熟了都发红
+  shrimp: ['shrimp','k1','c0','c2'], crab: ['crab','c0','c1','c3'],
 };
 
 export const COOKED_ITEMS = Object.keys(foods);

@@ -1,7 +1,9 @@
 // 钓鱼的几样纯算法：长短怎么说、遛鱼一步一步怎么算、存档里的钓鱼记录长什么样。
 // 规则插件（plugins/fishing.js）和测试共用；画面不直接用它，问查询 fish.fight。
 import { is } from '../kernel/schema.js';
-import { FISH, FISH_SPOTS, FIGHT } from '../content/fishing.js';
+import { FISH, FISH_SPOTS, FISH_THINGS, FIGHT, FISH_GRADES } from '../content/fishing.js';
+import { FISH_CHEERS, CHEER_REACH } from '../content/fishing.js';
+import { PEOPLE } from '../content/people.js';
 
 export { noise } from './noise.js';
 
@@ -13,6 +15,40 @@ export function lenText(len) {
     cun = len % 10;
   if (!chi) return DIGITS[cun] + '寸';
   return (chi === 2 ? '两' : DIGITS[chi]) + '尺' + (cun ? DIGITS[cun] : '');
+}
+
+/** 这条鱼在它那一种里算哪一档（content/fishing.js 的 FISH_GRADES）。 */
+export const gradeOf = (fish, len) => {
+  const [lo, hi] = FISH[fish].len;
+  const k = hi > lo ? (len - lo) / (hi - lo) : 0;
+  return FISH_GRADES.reduce((g, x) => (k >= x.from ? x : g), FISH_GRADES[0]);
+};
+
+/**
+ * 钓上大个儿、破了纪录：身边看得见的村民里，离得最近、有话说的那一位说一句。
+ * me 是人站在哪儿，positions 是村民此刻在哪儿（residents.positions）。
+ */
+export function cheerFor(fish, me, positions) {
+  const lines = FISH_CHEERS[fish] || {};
+  const far = p => Math.abs(p.x - me.x) + Math.abs(p.y - me.y);
+  const near = positions
+    .filter(p => p.visible && p.map === me.map && Object.hasOwn(lines, p.id))
+    .filter(p => far(p) <= CHEER_REACH)
+    .sort((a, b) => far(a) - far(b))[0];
+  return near ? { who: near.id, line: PEOPLE[near.id].name + lines[near.id] } : null;
+}
+
+/** 遛到第 t 毫秒的样子，给画面看（查询 fish.fight）：鱼离岸多远、线多紧、在不在冲、分没分出结果。 */
+export function fightView(bout, log, t) {
+  const r = simulate(bout, log, Math.min(t, FIGHT.max));
+  return {
+    t: r.t,
+    distance: r.distance,
+    tension: r.tension,
+    running: r.running,
+    holding: r.holding,
+    done: r.done,
+  };
 }
 
 /** 个头：小鱼、中等、大鱼（画面上竿弯多少、水花多大照它来）。 */
@@ -88,7 +124,7 @@ const boutOk = b =>
   b === null ||
   (is.obj(b) &&
     Object.hasOwn(FISH_SPOTS, b.spot) &&
-    Object.hasOwn(FISH, b.fish) &&
+    (Object.hasOwn(FISH, b.fish) || Object.hasOwn(FISH_THINGS, b.fish)) &&
     is.int(b.len, 1, 99) &&
     typeof b.bait === 'boolean' &&
     (b.phase === 'float' || b.phase === 'fight') &&
