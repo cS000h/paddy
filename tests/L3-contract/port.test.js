@@ -65,6 +65,7 @@ const QUERIES = [
   'basket',
   'body',
   'bonds',
+  'catalog',
   'comfort',
   'clock',
   'cook.fire',

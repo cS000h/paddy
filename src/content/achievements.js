@@ -1,5 +1,8 @@
 // 成就登记表：只声明听哪件事、如何计数；规则引擎统一结算，不散落在各玩法中。
 // where是事实字段匹配，amount是累加字段；没有amount时每次记一次。
+/** 图鉴和收集的成就：听图鉴插件发的 catalog.got。 */
+const book = (id, name, where, goal) => ({ id, name, event: 'catalog.got', where, goal });
+
 export const ACHIEVEMENTS = [
   { id: 'soil1', name: '第一锄', event: 'plot.tilled', goal: 1 },
   { id: 'soil20', name: '一方良田', event: 'plot.tilled', goal: 20 },
@@ -44,6 +47,31 @@ export const ACHIEVEMENTS = [
   { id: 'level5', name: '手上有分寸', event: 'skill.leveled', goal: 5 },
   // 开局给的性情记在人物档案里，不再算「得了特质」；剩下做出来的六个历练，得两个就算（原先是开局两个加做出来两个）
   { id: 'trait4', name: '渐渐成了自己', event: 'trait.gained', goal: 2 },
+  // 图鉴和收集（Gemini G-10）：都听图鉴插件发的 catalog.got，只有还东西听 gift.given
+  book('book.fish3', '初识水色', { page: 'fish', first: true }, 3),
+  book('book.fresh1', '鲜货入篓', { river: 'fresh' }, 1),
+  book('book.snag3', '挂底也有趣', { snag: true }, 3),
+  book('book.wild5', '路边有眼', { page: 'wild', first: true }, 5),
+  book('book.rain1', '雨后寻鲜', { rainFind: true }, 1),
+  book('book.fine1', '头一茬极品', { wildFine: true }, 1),
+  book('book.haul8', '满载而归', { haul: true }, 1),
+  book('book.garden1', '一畦金光', { page: 'garden', fine: true }, 1),
+  book('book.fish8', '老主顾了', { page: 'fish', first: true }, 8),
+  book('book.huge1', '大家伙上钩', { grade: 'huge' }, 1),
+  book('book.grades', '大小通吃', { allGrades: true }, 1),
+  book('book.wild18', '山野行家', { page: 'wild', first: true }, 18),
+  book('book.river7', '河底摸宝', { page: 'river', first: true }, 7),
+  book('book.garden7', '七菜齐熟', { page: 'garden', first: true }, 7),
+  book('book.fish13', '鱼谱满册', { page: 'fish', first: true }, 13),
+  book('book.wild25', '四季山货', { page: 'wild', first: true }, 25),
+  book('book.gold7', '金玉满堂', { page: 'garden', fineFirst: true }, 7),
+  {
+    id: 'book.shuttle',
+    name: '拾金不昧',
+    event: 'gift.given',
+    where: { item: 'shuttle', to: 'gui' },
+    goal: 1,
+  },
   { id: 'festival1', name: '赶上一回好日子', event: 'festival.finished', goal: 1, future: true },
   { id: 'festival4', name: '四时相聚', event: 'festival.finished', goal: 4, future: true },
 ];

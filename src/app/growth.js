@@ -20,6 +20,12 @@ export function growthActions({ game, shell, run }) {
     bookPage({ page }) {
       edit({ page: Number(page) });
     },
+    bookShelf({ shelf }) {
+      edit({ shelf, entry: null, page: 0 });
+    },
+    bookEntry({ item }) {
+      edit({ entry: item || null });
+    },
     bookMod({ mod }) {
       edit({ mod });
     },
