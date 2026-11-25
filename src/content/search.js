@@ -188,7 +188,34 @@ export const SEARCH_FINDS = Object.freeze({
   },
 });
 
-/** 翻找的几句话：极品、头一回找到这一样、行囊满了、太累、今天翻过了。 */
+/**
+ * 山货谱：走图翻找才有的新东西（G-08 的 20 样）。头一回找到时说一句，以后图谱里画出来、没找到的留影子。
+ * 柴、竹篾、鸡蛋这些家常的，翻到了不另说。
+ */
+export const SEARCH_BOOK = Object.freeze([
+  'wildPeach',
+  'peachGum',
+  'camphorWood',
+  'pinecone',
+  'pineNeedles',
+  'willowTwig',
+  'mugwort',
+  'malan',
+  'berry',
+  'brake',
+  'snail',
+  'mussel',
+  'cicadaShell',
+  'lotusPod',
+  'caltrop',
+  'lotusFlower',
+  'pebble',
+  'moss',
+  'straw',
+  'earthEar',
+]);
+
+/** 翻找的几句话：极品、头一回找到山货谱里的一样、行囊满了、太累、今天翻过了。 */
 export const SEARCH_LINES = Object.freeze({
   fine: '细看是{name}！',
   first: '头一回找到{name}。',

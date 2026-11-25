@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
 import { MAPS, walkable } from '../../src/content/maps/index.js';
 import { ITEMS, plainOf } from '../../src/content/items.js';
-import { SEARCH, SEARCH_FINDS } from '../../src/content/search.js';
+import { SEARCH, SEARCH_FINDS, SEARCH_BOOK } from '../../src/content/search.js';
 import { dateOf } from '../../src/content/calendar.js';
 import { noise } from '../../src/sim/noise.js';
 import { newGame, must, refused, carried, HOME } from '../helpers.js';
@@ -127,6 +127,10 @@ test('有动静的地方一定翻得出这一类当季的东西，头一回找�
       const def = SEARCH_FINDS[c.kind].finds.find(x => x.item === plainOf(f.data.item));
       assert.ok(def && (!def.seasons || def.seasons.includes(season)), f.data.item);
       assert.ok(f.data.cued);
+      // 头一回找到只说山货谱里的新东西；柴、竹篾这些家常的不另说
+      const book = SEARCH_BOOK.includes(plainOf(f.data.item));
+      if (f.data.first && !f.data.fine && book) assert.match(f.data.line, /头一回找到/);
+      if (!book) assert.doesNotMatch(f.data.line, /头一回找到/);
       found++;
     }
     const book = g.ask('search').found;

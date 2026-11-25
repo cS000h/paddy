@@ -1,7 +1,7 @@
 // 点了世界里的一个位置（鼠标、手指轻点）：避开旁人走过去；那儿有人、过客、小事、物件、地或水，就做该做的事。
 import { walkable, farmable, waterSource, actAt } from '../content/maps/index.js';
 import { tileOf, findPath, standBeside, dirTo } from './logic.js';
-import { decorAt, poke } from './interactions.js';
+import { decorAt, decorOnWater, poke } from './interactions.js';
 import { tileOccupied } from './target.js';
 
 export function tapAt(scene, wx, wy) {
@@ -25,9 +25,12 @@ export function tapAt(scene, wx, wy) {
         : tileOf(wx, wy);
   const thing = !person && !visitor && !pulse && actAt(scene.map, tile.x, tile.y);
   const farm = !person && !visitor && !pulse && !thing && farmable(scene.map, tile.x, tile.y);
-  const water = !person && !visitor && !pulse && !thing && waterSource(scene.map, tile.x, tile.y);
+  const lotus = !person && !visitor && !pulse && !thing && decorOnWater(scene, tile.x, tile.y);
+  const water =
+    !person && !visitor && !pulse && !thing && !lotus && waterSource(scene.map, tile.x, tile.y);
   const decor =
-    !person && !visitor && !pulse && !thing && !farm && !water && decorAt(scene, tile.x, tile.y);
+    lotus ||
+    (!person && !visitor && !pulse && !thing && !farm && !water && decorAt(scene, tile.x, tile.y));
 
   const ignore = person || visitor || null;
   const walk = (x, y) =>

@@ -367,6 +367,13 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await performed(p);
       assert.equal(await p.evaluate(() => window.__dao.game.ask('fishing').bout), null);
       assert.equal(await p.evaluate(() => window.__dao.shell.get().modal), null);
+      // 路边翻一翻：点院里的一丛野花，走过去就翻；行囊满了、太累了只说一句，不出错
+      await tap(p, 13, 13);
+      await frames(p, 1200);
+      const why = await p.evaluate(() =>
+        window.__dao.game.ask('search.why', { x: 13, y: 13 }, window.__dao.world.heroAt()),
+      );
+      assert.ok(['今天翻过了', '行囊满了，腾个地方再翻', '太累了，先歇歇'].includes(why), why);
       assert.deepEqual(session.errors, []);
     }
     // M4：开局选择已在open里点击；册子的三个分页能翻，成就随行动落印。

@@ -19,6 +19,7 @@ import {
   OWN_MAP,
   SEARCH_FINDS,
   SEARCH_LINES,
+  SEARCH_BOOK,
 } from '../../content/search.js';
 import { noise } from '../noise.js';
 import { near } from './people.js';
@@ -235,7 +236,7 @@ export const search = {
         ? fill(FIRST_FINE, { name })
         : got.fine
           ? fill(SEARCH_LINES.fine, { name })
-          : first
+          : first && SEARCH_BOOK.includes(plainOf(got.item))
             ? fill(SEARCH_LINES.first, { name })
             : '';
       const line = f.line + more;

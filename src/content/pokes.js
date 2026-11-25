@@ -38,7 +38,11 @@ export const POKES = Object.freeze({
     hint: '摇一摇松树',
     fx: 'needle',
     birds: true,
-    lines: ['松针落了一地，踩上去软软的。', '一颗松果骨碌碌滚到脚边。', '松脂的香气一下子浓起来。'],
+    lines: [
+      '松针落了一地，踩上去软软的。',
+      '一只松鼠拖着尾巴窜上了树梢。',
+      '松脂的香气一下子浓起来。',
+    ],
   },
   bamboo: {
     verb: '拨竹',
@@ -67,7 +71,7 @@ export const POKES = Object.freeze({
     hint: '拨开芦苇看看',
     fx: 'straw',
     birds: true,
-    lines: ['芦苇里扑棱棱飞出一只水鸟。', '苇叶边上挂着露水。', '苇丛底下藏着一窝小螺。'],
+    lines: ['芦苇里扑棱棱飞出一只水鸟。', '苇叶边上挂着露水。', '苇根底下的水里，小虾一弹一弹的。'],
   },
   bush: {
     verb: '拨开',
@@ -144,6 +148,12 @@ export const POKES = Object.freeze({
     verb: '看看',
     hint: '看看木箱里装的什么',
     lines: ['箱子里码着刚摘的菜，等着拉去赶集。', '木箱边上钉着一块写了字的木牌。'],
+  },
+  lotus: {
+    verb: '拨荷',
+    hint: '拨开荷叶看看',
+    fx: 'leaf',
+    lines: ['荷叶上滚着一颗大水珠，亮晶晶的。', '一尾小鱼从荷叶底下窜了出去。'],
   },
   netRack: {
     verb: '看网',

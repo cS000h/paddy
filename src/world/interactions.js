@@ -3,6 +3,7 @@
 import { BODY } from '../content/body.js';
 import { PEOPLE } from '../content/people.js';
 import { POKES } from '../content/pokes.js';
+import { SEARCH_LINES } from '../content/search.js';
 import { farmable } from '../content/maps/index.js';
 import { costText, careNote } from '../shell/words.js';
 import { dirTo, toolVerb, fieldTool } from './logic.js';
@@ -90,7 +91,14 @@ export function hintFor(scene, t) {
   const { game, shell } = scene.deps;
   if (t.kind === 'decor') {
     const p = POKES[t.decor.kind];
-    return { text: p.hint, verb: p.verb, ok: true };
+    const why = game.ask('search.why', { x: t.decor.x, y: t.decor.y }, scene.at());
+    if (!why) {
+      const cost = costText(game.ask('action.cost', 'search'));
+      return { text: `翻一翻 · ${cost}`, verb: '翻翻', ok: true };
+    }
+    if (why === SEARCH_LINES.done || why === SEARCH_LINES.nothing)
+      return { text: p.hint, verb: p.verb, ok: true };
+    return { text: why, verb: p.verb, ok: true };
   }
   if (t.kind === 'person')
     return { text: `和${PEOPLE[t.person.id].name}说话`, verb: '说话', ok: true };
@@ -204,33 +212,83 @@ export function decorAt(scene, x, y) {
   return scene.scenery.find(s => s.x === x && s.y === y && POKES[s.kind]) || null;
 }
 
+// 长在水面上的东西（荷叶）：对着它、点它，先算它，不算打水
+const ON_WATER = new Set(['lotus']);
+export function decorOnWater(scene, x, y) {
+  const decor = decorAt(scene, x, y);
+  return decor && ON_WATER.has(decor.kind) ? decor : null;
+}
+
+/** 那样东西晃一晃（times 是来回几下）。 */
+function wiggle(scene, decor, times = 3) {
+  const { sprite } = decor;
+  if (decor.shaking) return;
+  decor.shaking = true;
+  const x = sprite.x;
+  scene.tweens.add({
+    targets: sprite,
+    x: x + 1.5,
+    duration: 55,
+    yoyo: true,
+    repeat: times,
+    onComplete: () => {
+      sprite.x = x;
+      decor.shaking = false;
+    },
+  });
+}
+
+let stirIn = 0;
+/**
+ * 有动静的地方（今天还没翻）隔一阵轻轻一晃、落一两片叶子，石头一闪：每一帧调一回，自己数着时候。
+ * 临时的样子，A-06 换成正式的（叶子一晃、草里一闪）。
+ */
+export function stirCues(scene, delta) {
+  stirIn -= delta;
+  if (stirIn > 0 || scene.map.indoor) return;
+  stirIn = 2600;
+  for (const s of scene.deps.game.ask('search.spots', scene.map.id)) {
+    const decor = s.cue && !s.done && decorAt(scene, s.x, s.y);
+    if (!decor || Math.random() < 0.3) continue;
+    wiggle(scene, decor, 1);
+    const p = POKES[decor.kind];
+    const { sprite } = decor;
+    const top = sprite.y - sprite.displayHeight * 0.6;
+    if (SHED[p.fx]) scene.ambient.shed(sprite.x, top, 1, ...SHED[p.fx]);
+    else scene.effects.glint(sprite.x, sprite.y - 6);
+  }
+}
+
 const SHED = { leaf: ['fx:leaf', null], petal: ['fx:petal', null], needle: ['fx:leaf', 0x547a4a] };
 
-/** 碰一碰：那样东西晃一晃，飘下几片叶子或花瓣，有时惊起几只鸟，冒一句话。不改世界。 */
+/**
+ * 碰一碰：那样东西晃一晃，飘下几片叶子或花瓣，有时惊起几只鸟。今天还没翻过就是翻一翻（规则定翻出什么，
+ * 见 sim/plugins/search.js），翻过了只冒一句话。
+ */
 export function poke(scene, decor) {
-  const { shell, platform } = scene.deps;
+  const { game, shell, platform } = scene.deps;
   const p = POKES[decor.kind];
   const { sprite } = decor;
   scene.player.face(dirTo(scene.player.tile, decor));
   platform.audio.play('talk');
-  if (!decor.shaking) {
-    decor.shaking = true;
-    const x = sprite.x;
-    scene.tweens.add({
-      targets: sprite,
-      x: x + 1.5,
-      duration: 55,
-      yoyo: true,
-      repeat: 3,
-      onComplete: () => {
-        sprite.x = x;
-        decor.shaking = false;
-      },
-    });
-  }
+  wiggle(scene, decor);
   const top = sprite.y - sprite.displayHeight * 0.6;
   if (p.fx === 'straw') scene.effects.straw(sprite.x, sprite.y - 6);
   else if (SHED[p.fx]) scene.ambient.shed(sprite.x, top, 5, ...SHED[p.fx]);
   if (p.birds && Math.random() < 0.6) scene.ambient.scare(sprite.x, top);
+  const spot = { x: decor.x, y: decor.y };
+  const why = game.ask('search.why', spot, scene.at());
+  if (!why) {
+    const out = game.dispatch('search', { spot, at: scene.at() });
+    if (!out.ok) return scene.refuse(out.reason);
+    const f = out.facts.find(x => x.type === 'search.found' || x.type === 'search.empty');
+    if (f.type === 'search.found') {
+      scene.effects.found(sprite.x, top, f.data.fine);
+      platform.audio.play(f.data.fine ? 'fine' : 'harvest');
+      if (f.data.fine) platform.haptic([14, 60, 24]);
+    }
+    return shell.toast(f.data.line);
+  }
+  if (why !== SEARCH_LINES.done && why !== SEARCH_LINES.nothing) return shell.toast(why);
   if (p.lines.length) shell.toast(p.lines[Math.floor(Math.random() * p.lines.length)]);
 }

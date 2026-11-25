@@ -190,6 +190,15 @@ export function createEffects(scene, map) {
       });
       scene.time.delayedCall(560, () => sparkle(6, px, py - 36, py + 3));
     },
+    /** 路边翻到东西：那儿闪几点光；极品多冒几颗金星、一圈金环。 */
+    found(px, py, fine = false) {
+      sparkle(fine ? 12 : 5, px, py, py + 3);
+      if (fine) ring(px, py, py + 3);
+    },
+    /** 有动静的石头、花丛：一闪。 */
+    glint(px, py) {
+      sparkle(2, px, py, py + 3);
+    },
     /** 拍了拍草垛、稻草人、芦苇：扑起一阵草屑。 */
     straw(px, py) {
       seeds(9, px, py);

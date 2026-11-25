@@ -3,7 +3,7 @@
 // 2. 防穿身：玩家走路和寻路都会避开站着的村民和过客，且允许从重叠处往外走，绝不会把人卡死。
 import { farmable, waterSource, actAt } from '../content/maps/index.js';
 import { facing } from './logic.js';
-import { decorAt } from './interactions.js';
+import { decorAt, decorOnWater } from './interactions.js';
 
 const SIDE_ORDER = {
   down: [
@@ -55,6 +55,8 @@ function inspectTile(scene, x, y) {
   if (pulse) return asPulse(pulse);
   const thing = actAt(scene.map, x, y);
   if (thing) return { kind: 'thing', thing, x, y, rank: 4 };
+  const lotus = decorOnWater(scene, x, y);
+  if (lotus) return { kind: 'decor', decor: lotus, x, y, rank: 3 };
   if (waterSource(scene.map, x, y)) return { kind: 'water', x, y, rank: 3 };
   const decor = decorAt(scene, x, y);
   if (decor) return { kind: 'decor', decor, x, y, rank: 2 };
