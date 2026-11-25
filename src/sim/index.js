@@ -30,6 +30,7 @@ import { fishing } from './plugins/fishing.js';
 import { search } from './plugins/search.js';
 import { catalog } from './plugins/catalog.js';
 import { ground } from './plugins/ground.js';
+import { dawnNews } from './plugins/dawn-news.js';
 import { homestead } from './plugins/homestead.js';
 import { growth } from './plugins/growth.js';
 import { persona } from './plugins/persona.js';
@@ -63,6 +64,7 @@ export const PLUGINS = Object.freeze([
   search,
   catalog,
   ground,
+  dawnNews,
   homestead,
   cooking,
   foodEffects,

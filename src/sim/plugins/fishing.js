@@ -388,6 +388,9 @@ export const fishing = {
       return fightView(b, log, t);
     });
 
-    ctx.provide('fishing', Object.freeze({ simulate, lenText }));
+    ctx.provide(
+      'fishing',
+      Object.freeze({ simulate, lenText, mood: (w, spot) => moodOf(w, people.who(w), spot).mood }),
+    );
   },
 };
