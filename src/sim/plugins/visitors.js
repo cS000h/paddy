@@ -300,6 +300,9 @@ export const visitors = {
         traits: b.traits,
         rel: b.rel,
         visits: b.visits,
+        // 人物页和乡邻名册要画这个人：同一种来意的过客穿戴一样
+        role: b.role,
+        look: VISITOR_ROLES[b.role].look,
       })),
     }));
 
