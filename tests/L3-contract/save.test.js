@@ -126,6 +126,26 @@ test('v16 升级：村民之间开局的几条交情记进好感，主角这边�
   );
 });
 
+test('v18 升级：旧的钓鱼（下竿时抽好的运气、今天钓过几竿）去掉，钓鱼记录从零记起', () => {
+  const saved = JSON.parse(
+    readFileSync(new URL('../fixtures/save-v18.json', import.meta.url), 'utf8'),
+  );
+  for (const o of Object.values(saved.state.world.outings)) {
+    o.fish = { roll: 0.5, day: 1 };
+    o.counts.fish = 2;
+  }
+  const g = createGame({ saved, debug: true });
+  const w = g.save().state.world;
+  assert.deepEqual(Object.keys(w.fishing).sort(), Object.keys(w.packs).sort());
+  for (const f of Object.values(w.fishing))
+    assert.deepEqual(f, { bout: null, records: {}, spots: {} });
+  for (const o of Object.values(w.outings)) {
+    assert.equal(Object.hasOwn(o, 'fish'), false);
+    assert.equal(Object.hasOwn(o.counts, 'fish'), false);
+  }
+  assert.equal(g.ask('fishing').bout, null);
+});
+
 test('v17 升级：收成出彩从零记起，以前收的菜都算寻常的', () => {
   const saved = JSON.parse(
     readFileSync(new URL('../fixtures/save-v17.json', import.meta.url), 'utf8'),

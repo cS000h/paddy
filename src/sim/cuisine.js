@@ -1,5 +1,5 @@
 // 做饭预览和出锅共用这一条计算路径，避免面板承诺与实际结果不一致。
-import { ITEMS, seasonal, inSeason, plainOf } from '../content/pantry.js';
+import { ITEMS, seasonal, inSeason, kindOf } from '../content/pantry.js';
 import { FINE_HEAT } from '../content/quality.js';
 import { METHODS, QUALITY, HEAT, CUTS } from '../content/recipes.js';
 import { BUFFS, buffUses } from '../content/body.js';
@@ -9,8 +9,8 @@ import { buffOf, tasteOf } from './cuisine-taste.js';
 import { refuse } from '../kernel/dispatch.js';
 export function previewMeal(w, input, compute, who) {
   const { items: picked = [], method = 'stew', spices = [], heat = null, cut = null } = input;
-  // 极品照原来那样配菜名、算味道；用了几样极品，火候就宽几截
-  const items = Array.isArray(picked) ? picked.map(plainOf) : [];
+  // 极品照原来那样配菜名、算味道，各种鱼都算「鱼」；用了几样极品，火候就宽几截
+  const items = Array.isArray(picked) ? picked.map(kindOf) : [];
   if (
     !Array.isArray(picked) ||
     items.length < 1 ||

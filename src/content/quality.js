@@ -2,7 +2,7 @@
 // 机会被什么加减由各插件接进 compute 'quality.chance'：地里的在 sim/land-care.js，本事和六项在
 // sim/plugins/growth-perks.js。数先粗，等 M8 第 10 步的村志工具跑起来再调。
 
-/** 哪几样东西有极品：先是地里收的菜。捡蛋、钓鱼、采集下一步再加。 */
+/** 哪几样东西有极品：地里收的菜，钓上来的鱼。捡蛋、采集下一步再加。 */
 export const FINE_ITEMS = Object.freeze([
   'veg.qingcai',
   'chive',
@@ -11,6 +11,12 @@ export const FINE_ITEMS = Object.freeze([
   'pumpkin',
   'radish',
   'cabbage',
+  'fish.bleak',
+  'fish.crucian',
+  'fish.yellowcat',
+  'fish.carp',
+  'fish.grass',
+  'fish.mandarin',
 ]);
 
 /** 极品的物品编号：原来的编号后面接 .fine。 */
@@ -32,7 +38,10 @@ export const FINE_CHANCE = Object.freeze({ base: 10, min: 2, max: 60, miss: 4 })
 export const FIELD_ODDS = Object.freeze({ fert: 2, moist: 6, dry: -5, weeds: -8, bugs: -8 });
 
 /** 哪样活认哪门本事，每一级加多少。 */
-export const SKILL_ODDS = Object.freeze({ farm: { skill: 'farm', n: 2 } });
+export const SKILL_ODDS = Object.freeze({
+  farm: { skill: 'farm', n: 2 },
+  fish: { skill: 'forage', n: 2 }, // 钓鱼的经验记在采集上
+});
 
 /** 哪样活认六项里的哪一项：比底子 4 每高一点加多少（低了照样减）。持家跟着农事长得快，只加 1。 */
 export const ATTR_ODDS = Object.freeze({ farm: { attr: 'chijia', from: 4, n: 1 } });

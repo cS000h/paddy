@@ -108,12 +108,15 @@ export function touchThing(scene, thing) {
     if (!out.ok) shell.toast(out.reason);
     return;
   }
+  // 钓点：开钓鱼的小窗（挑饵、下竿、看漂、遛鱼，见 panels/fishing.js）
+  if (thing.station === 'fish')
+    return shell.set({ modal: { kind: 'fishing', phase: 'ready', x: thing.x, y: thing.y } });
   if (['outing', 'housework'].includes(thing.act)) {
     // 这儿只有一件活可做（采野菜、采菌子、腌菜……）：不必问，走过去就动手
     const { game } = scene.deps;
     const query = thing.act === 'outing' ? 'outings' : 'homestead';
     const options = game.ask(query, thing.station, scene.at()).options;
-    if (!thing.dining && options.length === 1 && options[0].id !== 'fish') {
+    if (!thing.dining && options.length === 1) {
       if (options[0].reason) return scene.refuse(options[0].reason);
       return work(scene, thing.act, options[0].id, thing);
     }

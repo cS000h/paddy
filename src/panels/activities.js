@@ -1,11 +1,9 @@
-// 采集点、钓点、院里干活的那一条：底下一排“挑哪件活”，挑了就合上，人在世界里去做（见 app/activities.js）。
+// 采集点、院里干活的那一条：底下一排“挑哪件活”，挑了就合上，人在世界里去做（见 app/activities.js）。
 // 每个按钮上是活的名字，底下一行小字是花多少力气、今天还剩几次，做不了的灰着、写着为什么。
-// 钓鱼时看浮漂的那一下也在这里。
+// 钓鱼另有小窗，见 panels/fishing.js。
 import { ACTIVITY_HINTS } from '../content/life-text.js';
-import { FISH_TIMING } from '../content/activities.js';
 import { costText } from '../shell/words.js';
 import { button, actions, close, title, para, esc } from './html.js';
-import { timingBar } from './timing.js';
 import { servedImg } from './stove-picture.js';
 
 function pick(a) {
@@ -40,19 +38,7 @@ export function activityView(m, game, here) {
       ? '带来的饭菜'
       : '可从院灶端一份饭进来吃'
     : coop || (data.weather ? data.weather.name : '挑一件做');
-  const resume =
-    outing && data.pending && m.station === 'fish'
-      ? button('resumeFish', '浮漂还在水里，接着钓', { main: true })
-      : '';
   return `${title(m.label || '院里院外', sub)}
-    ${resume ? `<div class="row">${resume}</div>` : ''}
     <div class="picks">${supper}${data.options.map(pick).join('')}</div>
     ${actions(close('算了', false))}`;
-}
-
-export function fishView() {
-  return `${title('溪湾垂钓', '浮漂沉到青色一段，提竿')}
-    ${para('按空格或点“提竿”。正中更容易钓到两条；错过也要花一次机会。', 'aside')}
-    ${timingBar(FISH_TIMING.center, FISH_TIMING.half)}
-    ${actions(button('fishGiveUp', '收竿回去'), button('fishReel', '提竿', { main: true }))}`;
 }

@@ -285,7 +285,7 @@ test('六位乡邻按各自的工位读家当、菜畦、店货和采集次数',
     ['shi', 'plot.'],
     ['gui', 'recipe.'],
     ['qiao', 'cloth'],
-    ['zhou', 'outing.fish'],
+    ['zhou', 'fishing.mood'],
     ['yun', 'outing.tea'],
   ]) {
     const pos = g.ask('residents').find(v => v.id === id);

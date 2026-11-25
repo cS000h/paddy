@@ -184,6 +184,5 @@ export const ENCOUNTER_WORDS = {
     `${name}要用${ingredients.join('、')}。${missing.length ? '身上还差' + missing.join('、') + '，先去找齐。' : '你身上已经带齐了，回灶边选炖煮就行。'}`,
   stock: (name, price, left) => `${name}一份${price}文，柜上还有${left}份。`,
   cloth: wares => wares.join('、') + '。这几样你还没收进衣箱。',
-  outing: (id, left) =>
-    (id === 'fish' ? '现在可以下竿' : '这一茬现在可以采') + '，你今天还有' + left + '次机会。',
+  outing: (id, left) => '这一茬现在可以采，你今天还有' + left + '次机会。',
 };

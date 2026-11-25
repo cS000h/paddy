@@ -22,7 +22,9 @@ const COMMANDS = [
   'farm.till',
   'farm.water',
   'fish.cast',
-  'fish.reel',
+  'fish.hook',
+  'fish.land',
+  'fish.quit',
   'gather',
   'gift',
   'homestead',
@@ -69,6 +71,9 @@ const QUERIES = [
   'farm.detail',
   'farm.plots',
   'farm.why',
+  'fishing',
+  'fish.fight',
+  'fish.mood',
   'goods',
   'growth',
   'guide',
@@ -158,7 +163,10 @@ test('每条成功的命令通知一次；被拒绝的不通知；可以只听�
   const g = newGame();
   const commits = [];
   const tilled = [];
-  const off = g.onCommit(facts => commits.push(facts.map(f => f.type)));
+  // 锄地有时翻出蚯蚓（看这一格、这一刻），那条事实不算在这里
+  const off = g.onCommit(facts =>
+    commits.push(facts.map(f => f.type).filter(t => t !== 'worm.found')),
+  );
   g.on('plot.tilled', f => tilled.push(f.data));
   must(g, 'farm.till', FIELD);
   g.dispatch('farm.till', FIELD);

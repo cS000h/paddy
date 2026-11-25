@@ -190,7 +190,7 @@ export const RETURN_GIFT = Object.freeze({
     text: '门把手上挂着一小袋豆子，袋子上画了只猫爪印。',
   },
   zhou: {
-    item: 'fish',
+    item: 'fish.crucian',
     n: 2,
     text: '门口的竹篮里躺着两条鲫鱼，鳃还一张一合。篮柄上缠着一截渔线。',
   },

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, wait, stored, carried, growOne, FIELD } from '../helpers.js';
+import { newGame, must, wait, stored, carried, growOne, fishOnce, FIELD } from '../helpers.js';
 import { createGame } from '../../src/port/game.js';
 const at = { x: 35, y: 17 };
 const bench = { x: 5, y: 12 };
@@ -45,24 +45,6 @@ test('林边捡柴、砍木回家劈柴；竹篾编篮；鸡窝按户喂养产�
   assert.ok(g.ask('homestead', 'coop').eggs > 0);
   must(g, 'homestead', { id: 'eggs', at: coop });
   assert.equal(g.ask('homestead', 'coop').eggs, 0);
-});
-test('钓鱼下竿计次且存档保留结果，反复读档不能重抽；收竿不能重复领鱼', () => {
-  const g = newGame(17),
-    spot = { x: 37, y: 20 };
-  must(g, 'fish.cast', { at: spot });
-  const saved = JSON.parse(JSON.stringify(g.save()));
-  const replay = createGame({ saved, debug: true });
-  const a = g.dispatch('fish.reel', { at: spot, value: 60 }),
-    b = replay.dispatch('fish.reel', { at: spot, value: 60 });
-  assert.equal(a.ok, true);
-  assert.deepEqual(a, b);
-  assert.deepEqual(g.save(), replay.save());
-  assert.equal(g.dispatch('fish.reel', { at: spot, value: 60 }).ok, false);
-  must(g, 'fish.cast', { at: spot });
-  must(g, 'fish.reel', { at: spot, value: 0 });
-  must(g, 'fish.cast', { at: spot });
-  must(g, 'fish.reel', { at: spot, value: 0 });
-  assert.equal(g.dispatch('fish.cast', { at: spot }).ok, false);
 });
 test('时令与雨后限制显示在同一份提示里；背篓、夜晚不能重复领取', () => {
   const g = newGame();
@@ -115,12 +97,10 @@ test('做完的事带着给玩家看的那段话：找到什么、劈柴、歇�
   said('gather', { id: 'logs', at: wood }, 'forage.finished');
   assert.match(said('homestead', { id: 'split', at: bench }, 'home.worked'), /咔/);
   assert.match(said('homestead', { id: 'rest', at: { x: 5, y: 13 } }, 'home.worked'), /坐/);
-  const spot = { x: 37, y: 20 };
-  must(g, 'fish.cast', { at: spot });
-  assert.match(
-    said('fish.reel', { at: spot, value: 60 }, 'fish.caught', 'fish.missed'),
-    /浮漂|钩上/,
-  );
+  // 钓鱼：钓没钓上，那段话都在事实里（细的在 L2 钓鱼那一组）
+  const out = fishOnce(g);
+  const fished = out.facts.find(f => f.type.startsWith('fish.')).data.line;
+  assert.match(fished, /鱼|浮漂|钩|饵/);
   const stove = { x: 10, y: 11 };
   const cook = { items: ['rice'], method: 'stew', at: stove };
   assert.match(said('cook', cook, 'meal.cooked'), /份白粥出锅了。/);

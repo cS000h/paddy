@@ -22,6 +22,8 @@ export const ACTIONS = Object.freeze({
   can: { id: 'can', kind: 'farm', energy: 2, outdoor: true, label: '浇水' },
   hand: { id: 'hand', kind: 'farm', energy: 1, outdoor: true, label: '采收' },
   refill: { id: 'refill', kind: 'chore', energy: 0, outdoor: true, label: '打水' },
+  // 钓鱼不限竿数，一竿 2 体力（见 content/fishing.js）
+  fish: { id: 'fish', kind: 'fish', energy: 2, outdoor: true, label: '下竿钓鱼' },
 });
 
 // 出力气的活：渴了、撑了会更费劲，干了会出汗。

@@ -281,17 +281,26 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await performed(p);
       await tap(p, 38, 20);
       await frames(p, 1600);
-      await p.locator('[data-do="activity"][data-id="fish"]').click();
+      // 钓点开钓鱼的小窗：下竿 → 看漂，等到浮漂沉下去那一刻提竿 → 钩上了就收竿
+      await p.locator('[data-do="fishCast"].main').click();
       await p.waitForTimeout(250);
       await shot(p, session === desk ? 'm3-fish-desktop.png' : 'm3-fish-phone.png');
-      if (session === desk) await p.keyboard.press('Space');
-      else await p.locator('[data-do="fishReel"]').tap();
+      const left = await p.evaluate(() => {
+        const m = window.__dao.shell.get().modal;
+        const bite = m.events.find(e => e.kind === 'bite');
+        return bite ? bite.at + 60 - (performance.now() - m.started) : -1;
+      });
+      if (left >= 0) {
+        await p.waitForTimeout(Math.max(0, left));
+        if (session === desk) await p.keyboard.press('Space');
+        else await p.locator('[data-do="fishHook"]').tap();
+        await p.waitForTimeout(150);
+      }
+      if (await p.evaluate(() => window.__dao.shell.get().modal?.kind === 'fishing'))
+        await p.locator('[data-do="fishQuit"]').click();
       await performed(p);
-      assert.equal(await p.evaluate(() => window.__dao.game.ask('outings', 'fish').pending), false);
-      assert.equal(
-        await p.evaluate(() => window.__dao.game.ask('outings', 'fish').options[0].left),
-        2,
-      );
+      assert.equal(await p.evaluate(() => window.__dao.game.ask('fishing').bout), null);
+      assert.equal(await p.evaluate(() => window.__dao.shell.get().modal), null);
       assert.deepEqual(session.errors, []);
     }
     // M4：开局选择已在open里点击；册子的三个分页能翻，成就随行动落印。

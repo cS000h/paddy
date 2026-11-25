@@ -1,4 +1,4 @@
-// 0.12 的体力、次数、产出。地点先落在小院附近，扩图时只挪地图数据。
+// 0.12 的体力、次数、产出。地点先落在小院附近，扩图时只挪地图数据。钓鱼另在 content/fishing.js。
 export const OUTDOOR = {
   forage: {
     id: 'forage',
@@ -90,15 +90,6 @@ export const OUTDOOR = {
     item: 'chestnut',
     n: 3,
   },
-  fish: {
-    id: 'fish',
-    kind: 'fish',
-    energy: 5,
-    outdoor: true,
-    label: '下竿钓鱼',
-    station: 'fish',
-    limit: 3,
-  },
 };
 export const HOMEWORK = {
   split: {
@@ -151,17 +142,6 @@ export const HOMEWORK = {
   stars: { id: 'stars', kind: 'sky', energy: 0, label: '在院里看天色', station: 'rest' },
 };
 export const GREENS = ['veg.qingcai', 'radish', 'cabbage', 'chive', 'longbean', 'cucumber'];
-export const FISH_BITE = {
-  sunny: 0.55,
-  cloudy: 0.8,
-  overcast: 0.85,
-  drizzle: 0.85,
-  rain: 0.6,
-  storm: 0,
-  fog: 0.7,
-  snow: 0.4,
-};
-export const FISH_TIMING = { center: 60, half: 15, great: 5 };
 // 沿溪找食材：各季能找到什么、各占几份。写成 [平常, 近来下过雨] 的，雨后机会不一样。
 // 顺序就是抽签的顺序，改了顺序，同一个种子抽到的东西也会变。
 export const FORAGE_FINDS = [

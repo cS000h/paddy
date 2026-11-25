@@ -146,14 +146,30 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   }
 
   function outing(t, at) {
-    if (t.station === 'fish') {
-      const cast = send('fish.cast', { at });
-      // 下了竿也可能走开：浮漂留在水里，下回来了接着收
-      if ((cast.ok && chance(0.85)) || chance(0.2)) send('fish.reel', { value: int(0, 100), at });
-      return;
-    }
+    if (t.station === 'fish') return fishing(at);
     const ids = Object.values(OUTDOOR).filter(a => a.station === t.station);
     if (ids.length) send('gather', { id: pick(ids).id, at });
+  }
+
+  // 钓鱼：下竿（有时挂饵），提竿的时刻有准有不准，遛鱼乱按一气；也会半路收竿、走开不管
+  function fishing(at) {
+    const bait = chance(0.3) ? 'worm' : null;
+    const cast = send('fish.cast', { at, bait });
+    if (!cast.ok && !chance(0.3)) return;
+    if (chance(0.1)) return void send('fish.quit', { at });
+    const bout = game.ask('fishing', at)?.bout;
+    const bite = bout?.float?.events.find(e => e.kind === 'bite');
+    const t = chance(0.1) ? -1 : bite && chance(0.7) ? bite.at + int(0, bite.dur) : int(0, 6000);
+    const hook = send('fish.hook', { at, t });
+    if (!hook.ok || !hook.facts.some(f => f.type === 'fish.hooked')) return;
+    if (chance(0.15)) return void send('fish.quit', { at });
+    const presses = [];
+    let ms = 0;
+    for (let k = int(0, 12); k > 0; k--) {
+      ms += int(0, 1500);
+      presses.push([ms, presses.length % 2 === 0 ? 1 : 0]);
+    }
+    send('fish.land', { at, log: chance(0.05) ? [[5, 7]] : presses });
   }
 
   function housework(t, at) {
@@ -194,7 +210,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     const k = game.ask('kitchen', at);
     const roll = r();
     // 身上端着饭回到灶前：多半先收回灶台
-    if (k.carried.length && chance(0.4)) return send('dish.store', { id: pick(k.carried).id, at });
+    if (k.carried.length && chance(0.6)) return send('dish.store', { id: pick(k.carried).id, at });
     // 灶台上的饭端走或吃掉，身上的饭收回灶台或吃掉，否则做一锅
     if (k.dishes.length && roll < 0.5) {
       if (chance(0.4)) return send('dish.eat', { id: pick(k.dishes).id, at });
@@ -494,9 +510,16 @@ export function askEverything(game) {
     ],
     notes: [[game.ask('clock').day], []],
     outings: [
-      ['fish', at],
       ['forage', at],
+      ['wood', at],
     ],
+    fishing: [[at], []],
+    'fish.fight': [
+      [[[0, 1]], 500],
+      [[], 0],
+      ['乱', -1],
+    ],
+    'fish.mood': [['river'], ['nowhere']],
     pack: [[at], []],
   };
   const failures = [];

@@ -23,7 +23,13 @@ export const pack = {
   install(ctx) {
     const { schema, commands, queries, core, people, store, body } = ctx.services;
 
-    const sizeOf = items => Object.keys(items).reduce((sum, k) => sum + ITEMS[k].size, 0);
+    // 钓上来的各种鱼都装在一只鱼篓里，合起来只占一格（content 里 kin 为「鱼」的，和老的「鱼」）
+    const inCreel = k => k === 'fish' || ITEMS[k].kin === 'fish';
+    const sizeOf = items => {
+      const keys = Object.keys(items);
+      const creel = keys.some(inCreel) ? 1 : 0;
+      return keys.reduce((sum, k) => sum + (inCreel(k) ? 0 : ITEMS[k].size), creel);
+    };
 
     schema.slice('packs', {
       initial: (env, world) =>
@@ -72,7 +78,10 @@ export const pack = {
     const room = (w, id) => w.packs[id].cap - used(w, id);
     /** 还放不放得下：已经有这样东西就能接着放，否则要有空格。 */
     const fits = (w, id, item) =>
-      !!ITEMS[item]?.carry && (count(w, id, item) > 0 || room(w, id) >= ITEMS[item].size);
+      !!ITEMS[item]?.carry &&
+      (count(w, id, item) > 0 ||
+        (inCreel(item) && Object.keys(w.packs[id].items).some(inCreel)) ||
+        room(w, id) >= ITEMS[item].size);
 
     const put = ctx.own((w, id, item, n = 1, why = null) => {
       const def = ITEMS[item];

@@ -60,7 +60,7 @@ const jar = (cloth, fleck, label) =>
     { '^': cloth, '%': fleck },
   );
 
-const FISH = [
+export const FISH = [
   '',
   '',
   '',

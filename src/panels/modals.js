@@ -8,7 +8,8 @@ import { weatherView, seedsView, fieldView } from './field.js';
 import { originView, bookView } from './book.js';
 import { encounterView } from './encounter.js';
 import { eventView } from './pulse.js';
-import { activityView, fishView } from './activities.js';
+import { activityView } from './activities.js';
+import { fishingView } from './fishing.js';
 import { kitchenView, recipesView, heatView } from './kitchen.js';
 import { bagView, storeView } from './bag.js';
 import { basketView } from './village.js';
@@ -30,7 +31,7 @@ const VIEWS = {
   event: eventView,
   visitor: encounterView,
   activity: activityView,
-  fish: fishView,
+  fishing: fishingView,
   kitchen: kitchenView,
   recipes: recipesView,
   heat: heatView,
@@ -60,7 +61,7 @@ const PLACE = {
   sign: 'dialogue',
   water: 'dialogue',
   sleep: 'dialogue',
-  fish: 'dialogue',
+  fishing: 'dialogue',
   activity: 'dialogue',
   origin: 'center',
   event: 'dialogue',

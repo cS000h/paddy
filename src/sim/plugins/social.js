@@ -23,7 +23,7 @@ import { GREETING_REPLY } from '../../content/encounters.js';
 import { TOPICS, tierOf, tierWord } from '../../content/talk.js';
 import { TIER_OPINION } from '../../content/opinion.js';
 import { GIFT_DISH, GIFT_ITEM, GIFT_FAVORITE, GIFT_SPOILED } from '../../content/gift-lines.js';
-import { ITEMS, CROPS, SOIL, plainOf } from '../../content/items.js';
+import { ITEMS, CROPS, SOIL, kindOf } from '../../content/items.js';
 import { dateOf } from '../../content/calendar.js';
 import { giftable } from '../../content/pantry.js';
 import { withGesture, lifeLine, chatLine, newsLine, skyLine, planLine } from '../talk.js';
@@ -283,9 +283,9 @@ export const social = {
         }
       } else {
         // 合心意的东西和过节的吃食，对方格外高兴；自家地里长的，有它自己的一句话。
-        // 极品照原来那样看合不合心意，再多算一点情分
-        const plain = plainOf(input.item);
-        fine = plain !== input.item;
+        // 极品照原来那样看合不合心意，再多算一点情分；各种鱼都算「鱼」
+        const plain = kindOf(input.item);
+        fine = !!ITEMS[input.item].fine;
         liked = person.treats.includes(plain) || FESTIVE.includes(plain);
         value = (liked ? 3 : 2) + (fine ? 1 : 0);
         const name = ITEMS[input.item].name;

@@ -26,6 +26,7 @@ import { personFrame, personSheet, LOOK_NAMES, FRAME_W, FRAME_H, POSES, DIRS } f
 import { plants } from './items-plants.js';
 import { pantry } from './items-pantry.js';
 import { things } from './items-things.js';
+import { water } from './items-water.js';
 
 export { paintGround, TILE } from './ground.js';
 export { FRAME_W, FRAME_H, POSES, DIRS, LOOK_NAMES };
@@ -163,7 +164,7 @@ export { cropFrames, cursor, icon, personFrame, personSheet, critters };
 export const lanternGlobe = landmarks.lanternGlobe;
 
 // 物品的图标：键和 content/pantry.js 里的物品一一对应（测试会检查）。
-const ITEM_MAKERS = { ...plants, ...pantry, ...things };
+const ITEM_MAKERS = { ...plants, ...pantry, ...things, ...water };
 
 export const ITEM_ICONS = Object.keys(ITEM_MAKERS);
 

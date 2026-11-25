@@ -3,6 +3,7 @@
 // 这个文件只管接线；常驻的几块在 hud.js，手记在 journal.js，小窗在 modals.js，
 // 摇杆圈在 stick.js，冒出来的字在 captions.js，得了成就、新衣时落下的纸条在 award.js。
 import { animateTiming } from './timing.js';
+import { animateFishing } from './fishing.js';
 import { modalView, brokenSheet, closesOnBackdrop, placementOf } from './modals.js';
 import { HUD_HTML, renderHud, syncToolbar, syncStamp } from './hud.js';
 import { journalView, nextStepView } from './journal.js';
@@ -262,6 +263,7 @@ export function createPanels({
 
   const offs = [
     animateTiming(root, shell),
+    animateFishing(root, shell, actions),
     offAct,
     offCancel,
     bindStick(el.stick, intents),

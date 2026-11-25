@@ -1,0 +1,52 @@
+/* 钓鱼小窗的临时样子（A-05 重做）：一条水面，浮漂在中间；遛鱼时两根条。 */
+.sheet .fish-water {
+  position: relative;
+  height: 72px;
+  margin: 8px 0;
+  border: 2px solid var(--line, #7b593a);
+  background: linear-gradient(#d0e6e0, #93bfc0);
+  overflow: hidden;
+}
+.sheet .fish-float {
+  position: absolute;
+  left: calc(50% - 5px);
+  top: 22px;
+  width: 10px;
+  height: 22px;
+  border-radius: 5px;
+  background: linear-gradient(#d1604a 45%, #fcf9f1 45%);
+  box-shadow: 0 0 0 2px #34423f;
+}
+.sheet .fish-bars {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+}
+.sheet .fish-bars label {
+  display: grid;
+  grid-template-columns: 4em 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.sheet .fish-bars b {
+  display: block;
+  height: 14px;
+  border: 2px solid #7b593a;
+  background: #ece4d0;
+}
+.sheet .fish-bars i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #547a4a;
+}
+.sheet .fish-bars i.tight {
+  background: #d1604a;
+}
+.sheet .fish-bars.running b {
+  border-color: #d1604a;
+}
+.sheet .fish-hold {
+  touch-action: none;
+  user-select: none;
+}

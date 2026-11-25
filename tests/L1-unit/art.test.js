@@ -21,7 +21,8 @@ test('每样食材有熟料，每道菜的成品可分，锅中有动作', () =>
   assert.deepEqual(
     [...COOKED_ITEMS].sort(),
     Object.keys(ITEMS)
-      .filter(k => ITEMS[k].cook && !ITEMS[k].fine)
+      // 极品照寻常的画；各种鱼下锅都算「鱼」（kin），熟料照鱼画
+      .filter(k => ITEMS[k].cook && !ITEMS[k].fine && !ITEMS[k].kin)
       .sort(),
   );
   const plates = new Map();

@@ -5,12 +5,11 @@ import { newGame, must, refused, plant, growOne, plotAt, carried, FIELD } from '
 
 test('锄地、播种、浇水，各扣各的体力和物料', () => {
   const g = newGame();
-  assert.deepEqual(must(g, 'farm.till', FIELD), [
-    'action.performed',
-    'plot.tilled',
-    'achievement.earned',
-    'guide.done',
-  ]);
+  // 锄地有时翻出蚯蚓（看这一格、这一刻），那条事实不算在这里
+  assert.deepEqual(
+    must(g, 'farm.till', FIELD).filter(t => t !== 'worm.found'),
+    ['action.performed', 'plot.tilled', 'achievement.earned', 'guide.done'],
+  );
   must(g, 'farm.sow', FIELD);
   must(g, 'farm.water', FIELD);
   assert.equal(g.ask('hero').energy, 100 - 4 - 1 - 2);

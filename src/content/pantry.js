@@ -56,6 +56,13 @@ const RAW = {
   cabbage: food('白菜', 2, 8, 'neutral', ['green', 'sweet', 'raw'], { season: [3] }),
   ginger: food('姜', 2, 2, 'warm', ['spicy']),
   fish: food('鱼', 5, 14, 'neutral', ['umami', 'fishy'], { keep: 1, ...NO }),
+  // 钓上来的六种鱼（见 content/fishing.js）。kin：下锅配菜名、送人看合不合心意时都算「鱼」
+  'fish.bleak': food('白条', 2, 8, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', ...NO }),
+  'fish.crucian': food('鲫鱼', 4, 12, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', ...NO }),
+  'fish.yellowcat': food('昂刺鱼', 5, 12, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', short: '昂刺', ...NO }),
+  'fish.carp': food('鲤鱼', 6, 16, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', ...NO }),
+  'fish.grass': food('草鱼', 7, 18, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', ...NO }),
+  'fish.mandarin': food('鳜鱼', 12, 16, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', ...NO }),
   tea: food('茶叶', 4, 0, 'cool', ['fragrant', 'alert'], { season: [0, 2], short: '茶' }),
   tofu: food('豆腐', 3, 10, 'cool', ['umami', 'raw', 'soft'], { keep: 1 }),
   // —— 肉：生的放不住；整只的要先分割（M5 之后）
@@ -105,6 +112,8 @@ const RAW = {
   // —— 工具
   umbrella: stuff('油纸伞', 'tool', 8, { sell: false }),
   flask: stuff('竹筒水壶', 'tool', 4, { sell: false, text: '装进行囊，渴了随时喝' }),
+  // —— 饵
+  worm: stuff('蚯蚓', 'bait', 0, { ...NO, text: '挂在钩上钓鱼：咬钩快，大鱼多。锄地、雨后翻石头能翻出来' }),
 };
 
 const finish = ([id, d]) => {
@@ -126,6 +135,7 @@ const finish = ([id, d]) => {
       keep: 0,
       text: '',
       fine: null,
+      kin: null,
       ...d,
       tags: Object.freeze([...(d.tags || [])]),
       buy: buyable ? (d.kind === 'seed' ? d.price : d.price * 4) : 0,
@@ -147,6 +157,9 @@ export const ITEMS = Object.freeze(
 
 /** 极品认作原来那样（下锅配菜名、送人看合不合心意）；寻常的原样返回。 */
 export const plainOf = id => ITEMS[id]?.fine || id;
+
+/** 下锅配菜名、送人看合不合心意时算作哪样：极品照原来那样，各种鱼都算「鱼」（菜谱、各人爱吃的写的是鱼）。 */
+export const kindOf = id => ITEMS[plainOf(id)]?.kin || plainOf(id);
 
 /** 这样东西此刻当不当季：有时令、而且现在正是。 */
 export const seasonal = (id, season) => !!ITEMS[id].season && ITEMS[id].season.includes(season);

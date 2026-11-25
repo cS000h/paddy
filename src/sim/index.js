@@ -26,6 +26,7 @@ import { comfort } from './plugins/comfort.js';
 import { moods } from './plugins/moods.js';
 import { weather } from './plugins/weather.js';
 import { gathering } from './plugins/gathering.js';
+import { fishing } from './plugins/fishing.js';
 import { homestead } from './plugins/homestead.js';
 import { growth } from './plugins/growth.js';
 import { persona } from './plugins/persona.js';
@@ -55,6 +56,7 @@ export const PLUGINS = Object.freeze([
   weather,
   comfort,
   gathering,
+  fishing,
   homestead,
   cooking,
   foodEffects,

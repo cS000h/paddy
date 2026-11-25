@@ -67,6 +67,33 @@ export const WELL = Object.freeze({
   at: Object.freeze({ x: 17, y: 18, dir: 'right' }),
 });
 
+/** 溪湾钓点（小院里）：站在它左边一格。 */
+export const FISH_SPOT = Object.freeze({ x: 37, y: 20 });
+
+/**
+ * 钓一竿，手上功夫是满分的：看见咬钩就提（early 为真时偏要提早），遛鱼时鱼冲就松、不冲就按。
+ * 返回最后一条命令的结果（没钩上就是提竿那一条）。bait 是 'worm' 或 null。
+ */
+export function fishOnce(game, at = FISH_SPOT, { bait = null, early = false } = {}) {
+  must(game, 'fish.cast', { at, bait });
+  const events = game.ask('fishing', at).bout.float.events;
+  const bite = events.find(e => e.kind === 'bite');
+  const t = !bite ? -1 : early ? Math.max(0, bite.at - 100) : bite.at + 20;
+  const hook = game.dispatch('fish.hook', { at, t });
+  if (!hook.ok || !hook.facts.some(f => f.type === 'fish.hooked')) return hook;
+  const log = [];
+  let holding = false;
+  for (let ms = 0; ms <= 30000; ms += 50) {
+    const s = game.ask('fish.fight', log, ms);
+    if (s.done) break;
+    if (s.running === holding) {
+      holding = !s.running;
+      log.push([ms, holding ? 1 : 0]);
+    }
+  }
+  return game.dispatch('fish.land', { at, log });
+}
+
 /** 让时间过去 minutes 分钟（一次最多走两个钟头）。 */
 export function wait(game, minutes) {
   for (let left = minutes; left > 0; left -= 120)

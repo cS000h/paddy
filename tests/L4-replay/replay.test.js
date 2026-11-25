@@ -60,7 +60,8 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '0c39ef55' }; // 收菜时抽一下是不是极品：多用一回随机数，往后的天气、货价都跟着变
+// 钓鱼重做：存档多了一份钓鱼记录（fishing），采集里旧的钓鱼（outings.fish）去掉，插件多了一个
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '0ff0a92e' };
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};

@@ -3,6 +3,7 @@ import { LEVEL_NAMES, SKILLS } from '../../content/growth.js';
 import { CALENDAR } from '../../content/calendar.js';
 import { ATTRS } from '../../content/traits.js';
 import { SKILL_ODDS, ATTR_ODDS } from '../../content/quality.js';
+import { FLOAT } from '../../content/fishing.js';
 export const growthPerks = {
   id: 'sim.growthPerks',
   requires: ['growth', 'compute', 'people', 'body', 'persona'],
@@ -11,6 +12,15 @@ export const growthPerks = {
     const { growth: g, compute: K, people, body, persona } = ctx.services;
     const lv = (w, k, who) => g.level(w, k, who),
       has = (w, t, who) => g.has(w, t, who);
+    // 看漂：采集本事每一级，咬钩后留给你提竿的工夫宽一点
+    K.tap(
+      'fish.window',
+      (r, { w, who }) => {
+        const l = lv(w, 'forage', who);
+        if (l) K.part(r, 'skill.forage', SKILLS.forage.name + LEVEL_NAMES[l], l * FLOAT.skill);
+      },
+      { priority: 40 },
+    );
     // 出极品的机会：这样活认的本事每一级加一点，认的那一项比底子高多少加多少
     K.tap(
       'quality.chance',

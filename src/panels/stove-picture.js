@@ -1,5 +1,5 @@
 import { cookingFrame, prepBoard, COOK_FRAMES, Grid, itemIcon } from '../art/index.js';
-import { plainOf } from '../content/items.js';
+import { kindOf } from '../content/items.js';
 import { toUrl } from './icons.js';
 
 // 食材组合很多，只留最近看过的图；每帧动作由浏览器换格，不用反复生成图片。
@@ -7,7 +7,7 @@ const urls = new Map();
 
 function picture(picked, stage, ready = true) {
   // 极品下锅，画出来跟寻常的一样
-  const selection = { ...picked, items: (picked.items || []).map(plainOf) };
+  const selection = { ...picked, items: (picked.items || []).map(kindOf) };
   const { items, method = 'stew', cut = null, quality = 'plain' } = selection;
   const key = JSON.stringify([
     stage,

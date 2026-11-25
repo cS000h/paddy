@@ -1,22 +1,14 @@
-// 野外：沿溪找食材、捡柴砍木、挖笋劈篾、采菌采茶、捡栗子，和钓鱼。
+// 野外：沿溪找食材、捡柴砍木、挖笋劈篾、采菌采茶、捡栗子。钓鱼另在 plugins/fishing.js。
 //   gather {id, at}        → forage.finished {id, item, n, line}
-//   fish.cast {at}         → fish.cast          下竿时就定好这一竿的运气
-//   fish.reel {value, at}  → fish.caught {n, timing, line} | fish.missed {timing, line}
 import { MAPS } from '../../content/maps/index.js';
 import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
 import { registerResidentOptions } from '../resident-options.js';
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
-import { OUTDOOR, FISH_BITE, FISH_TIMING, FORAGE_FINDS } from '../../content/activities.js';
-import { CALENDAR, dateOf } from '../../content/calendar.js';
+import { OUTDOOR, FORAGE_FINDS } from '../../content/activities.js';
+import { dateOf } from '../../content/calendar.js';
 import { ITEMS } from '../../content/items.js';
-import {
-  FIND_TEXT,
-  ACTIVITY_TEXT,
-  STICKS_TEXT,
-  STOWED,
-  FISH_TEXT,
-} from '../../content/life-text.js';
+import { FIND_TEXT, ACTIVITY_TEXT, STICKS_TEXT, STOWED } from '../../content/life-text.js';
 import { fill } from '../../content/text.js';
 import { atStation } from '../stations.js';
 
@@ -61,25 +53,15 @@ export const gathering = {
   ],
   writes: ['outings'],
   install(ctx) {
-    registerResidentOptions(ctx, 'zhou', c => outing(c, 'river', 'fish', '今天还能下几竿？'));
     registerResidentOptions(ctx, 'yun', c => outing(c, 'hill', 'tea', '茶垄今天能采吗？'));
     const { schema, commands, queries, reactions, people, pack, body, core, compute, weather } =
       ctx.services;
     schema.slice('outings', {
-      initial: (env, w) =>
-        Object.fromEntries(Object.keys(w.packs).map(id => [id, { counts: {}, fish: null }])),
+      initial: (env, w) => Object.fromEntries(Object.keys(w.packs).map(id => [id, { counts: {} }])),
       validate: (all, w) =>
         (is.keyedBy(all, Object.keys(w.packs)) &&
           Object.values(all).every(
-            o =>
-              is.obj(o.counts) &&
-              Object.values(o.counts).every(n => is.int(n, 0, 9999)) &&
-              (o.fish === null ||
-                (is.obj(o.fish) &&
-                  Number.isFinite(o.fish.roll) &&
-                  o.fish.roll >= 0 &&
-                  o.fish.roll < 1 &&
-                  is.int(o.fish.day, 1))),
+            o => is.obj(o.counts) && Object.values(o.counts).every(n => is.int(n, 0, 9999)),
           )) ||
         'outings',
     });
@@ -91,10 +73,7 @@ export const gathering = {
     reactions.on(
       'day.started',
       s => {
-        for (const o of Object.values(s.world.outings)) {
-          o.counts = {};
-          o.fish = null;
-        }
+        for (const o of Object.values(s.world.outings)) o.counts = {};
       },
       { priority: 20 },
     );
@@ -108,7 +87,6 @@ export const gathering = {
       if (['forage', 'shoot', 'logs'].includes(a.id) && weather.has(w, 'snow'))
         return '雪盖着，今天找不着';
       if (a.id === 'tea' && weather.has(w, 'heavy')) return '雨太大，茶叶泡了水就不香了';
-      if (a.id === 'fish' && w.clock.minute >= CALENDAR.dark) return '天黑了，明天再来钓';
       if (people.me(w).energy < people.quote(w, a.id).value) return '太累了，先歇歇';
       return null;
     };
@@ -139,7 +117,6 @@ export const gathering = {
       const a = OUTDOOR[input.id];
       const reason = why(w, a, null);
       if (reason) refuse(reason);
-      if (a.id === 'fish') refuse('先下竿');
       people.spend(w, draft, a.id, fact);
       mark(w, a.id);
       // 沿溪找食材是抽签；枯枝下雨天潮着，只捡得一小捆；其余照 content 里写的东西和份数。
@@ -155,56 +132,8 @@ export const gathering = {
         line: foundLine(a, item, n),
       });
     });
-    const chance = (w, timing) => {
-      let p = FISH_BITE[w.weather.now];
-      if (
-        w.weather.now === 'sunny' &&
-        (w.clock.minute < CALENDAR.morningEnd || w.clock.minute >= 1020)
-      )
-        p += 0.2;
-      p += timing === 'great' ? 0.25 : timing === 'good' ? 0.1 : -0.3;
-      return Math.max(
-        0.05,
-        Math.min(
-          0.97,
-          compute.run('fish.chance', { w, who: people.who(w) }, { value: p, parts: [] }).value,
-        ),
-      );
-    };
-    commands.register('fish.cast', ({ draft, input, fact }) => {
-      const w = draft.world;
-      people.place(w, input.at);
-      if (mine(w).fish) refuse('浮漂还在水里，先提竿');
-      const reason = why(w, OUTDOOR.fish, null);
-      if (reason) refuse(reason);
-      people.spend(w, draft, 'fish', fact);
-      mark(w, 'fish');
-      mine(w).fish = { roll: core.random(w), day: w.clock.day };
-      fact('fish.cast', { who: people.who(w) });
-    });
-    commands.register('fish.reel', ({ draft, input, fact }) => {
-      const w = draft.world;
-      people.place(w, input.at);
-      const attempt = mine(w).fish;
-      if (!attempt || !atStation(w, people, 'fish')) refuse('先去钓点下竿');
-      if (!is.int(input.value, 0, 100)) refuse('没看清浮漂');
-      const distance = Math.abs(input.value - FISH_TIMING.center);
-      const timing =
-        distance <= FISH_TIMING.great ? 'great' : distance <= FISH_TIMING.half ? 'good' : 'late';
-      mine(w).fish = null;
-      if (attempt.roll < chance(w, timing)) {
-        const n = yieldOf(w, OUTDOOR.fish, timing === 'great' ? 2 : 1);
-        pack.receive(w, people.who(w), 'fish', n, '钓上来的');
-        const line = n > 1 ? fill(FISH_TEXT.more, { n }) : FISH_TEXT.one;
-        fact('fish.caught', { who: people.who(w), n, timing, line });
-      } else {
-        body.mood(w, people.who(w), -1, '鱼脱钩了');
-        fact('fish.missed', { who: people.who(w), timing, line: FISH_TEXT.missed });
-      }
-    });
     queries.define('outings', (w, station, at) => ({
       weather: weather.view(w),
-      pending: !!mine(w).fish,
       options: Object.values(OUTDOOR)
         .filter(a => a.station === station)
         .map(a => ({
