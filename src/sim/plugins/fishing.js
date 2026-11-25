@@ -88,12 +88,13 @@ export const fishing = {
       return s ? Math.max(0, s.n - Math.floor((now(w) - s.at) / FISHING.calm)) : 0;
     }
 
-    /** 这一竿有鱼来咬的把握：天气、清早傍晚、挂没挂饵、这儿惊没惊着。 */
+    /** 这一竿有鱼来咬的把握：天气、清早傍晚、挂没挂饵、这儿惊没惊着，再走计算管道 'fish.bite'。 */
     function biteRate(w, id, spot, bait) {
       let p = (FISH_BITE[w.weather.now] ?? 0.6) + FISHING.base;
       if (dusk(w)) p += FISHING.dusk;
       if (bait) p += FISHING.bait;
       p -= FISHING.scare * scared(w, id, spot);
+      p = compute.run('fish.bite', { w, who: id, spot }, { value: p, parts: [] }).value;
       return Math.max(FISHING.min, Math.min(FISHING.max, p));
     }
 

@@ -1,14 +1,17 @@
-// L2-19 翻找碰上的小事：只在有动静的地方、照图和季节时段碰上，一天最多一件；
+// L2-19 翻找、钓鱼碰上的小事：翻找只在有动静的地方、照图和季节时段碰上，一天最多一件；
 // 失物捡了一辈子只一回，还给失主有那句话和回礼；昧下的只叫当时在场看见的人记着；
-// 帮人一把多一份交情；蚂蚁搬家看出了明天的天。规则一律通过端口问和做。
+// 帮人一把多一份交情；蚂蚁搬家看出了明天的天。钓完一竿偶尔碰上一件，对得上钓点；
+// 指点过的鱼口好些（今天的身边风物）；要用掉东西的做法，身上没有就做不了。
+// 出一锅偶尔碰上灶边的事，对得上做法和锅里有没有鱼。规则一律通过端口问和做。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
 import { MAPS, walkable } from '../../src/content/maps/index.js';
-import { EVENTS, SEARCH_EVENTS } from '../../src/content/events.js';
-import { FOUND_OWNERS } from '../../src/content/fishing.js';
+import { EVENTS, SEARCH_EVENTS, FISHING_EVENTS, STOVE_EVENTS } from '../../src/content/events.js';
+import { MODIFIERS } from '../../src/content/modifiers.js';
+import { FOUND_OWNERS, FISH_SPOTS } from '../../src/content/fishing.js';
 import { ITEMS } from '../../src/content/items.js';
-import { newGame, must, carried } from '../helpers.js';
+import { newGame, must, carried, fishOnce } from '../helpers.js';
 
 const SIDES = [
   [0, 1, 'up'],
@@ -157,4 +160,111 @@ test('蚂蚁搬家：看出来了，看云色的说法换成明天真的天，�
     assert.deepEqual([w.forecast, w.acc], ['rain', 95]);
   }
   assert.ok(ok, '十二回都没看出来');
+});
+
+test('钓鱼的九件都登记了：钓点、身边风物、要用的东西都对得上', () => {
+  assert.equal(Object.keys(FISHING_EVENTS).length, 9);
+  for (const ev of Object.values(FISHING_EVENTS)) {
+    assert.equal(EVENTS[ev.id], ev);
+    for (const k of ev.when.maps || []) assert.ok(FISH_SPOTS[k], `${ev.id} 的钓点 ${k}`);
+    for (const c of ev.choices)
+      for (const out of [c, c.onOk, c.onFail].filter(Boolean)) {
+        if (out.mod) assert.ok(MODIFIERS[out.mod], `${ev.id} 的 ${out.mod}`);
+        if (out.use) assert.ok(ITEMS[out.use.item], `${ev.id} 的 ${out.use.item}`);
+      }
+  }
+});
+
+test('钓完一竿偶尔碰上一件，对得上钓点；一天最多一件', () => {
+  let hits = 0;
+  for (let seed = 1; seed <= 30; seed++) {
+    const g = newGame(seed);
+    let met = 0;
+    for (let k = 0; k < 6 && g.ask('hero').energy > 10; k++) {
+      if (g.ask('fishing', { x: 37, y: 20, dir: 'down' }).reason) break;
+      const before = g.ask('events').active?.id;
+      fishOnce(g);
+      const now = g.ask('events').active;
+      if (!now || now.id === before) continue;
+      const ev = EVENTS[now.id];
+      // 下竿时原有的就地小事（trigger forage）也会碰上，处理掉接着钓
+      if (ev.trigger !== 'fishing') {
+        choose(g, 0);
+        continue;
+      }
+      assert.ok(!ev.when.maps || ev.when.maps.includes('yard'), `${now.id} 不该在溪湾`);
+      met++;
+      choose(g, 0);
+    }
+    assert.ok(met <= 1, `种子 ${seed} 一天碰上了 ${met} 件`);
+    hits += met;
+  }
+  assert.ok(hits > 0, '三十个种子一件都没碰上');
+});
+
+test('老周指点：今天鱼口正好，多一份交情', () => {
+  const g = facing(newGame(), 'fish_zhou_boat');
+  const known = g.save().state.world.bonds.known.zhou;
+  choose(g, 0);
+  assert.ok(g.ask('modifiers').list.some(m => m.id === 'fish_luck'));
+  assert.ok(g.save().state.world.bonds.known.zhou > known);
+});
+
+test('换条新蚯蚓：身上没有蚯蚓做不了，有就用掉一条', () => {
+  const none = facing(newGame(), 'fish_sink', w => {
+    delete w.packs.hero.items.worm;
+  });
+  const c = none.ask('events').active.choices[1];
+  assert.deepEqual([c.disabled, c.reason], [true, '身上没有蚯蚓']);
+  assert.equal(none.dispatch('event.choose', { choice: 1, at: here(none) }).reason, '身上没有蚯蚓');
+  const g = facing(newGame(), 'fish_sink', w => {
+    w.packs.hero.items.worm = 2;
+  });
+  choose(g, 1);
+  assert.equal(carried(g, 'worm'), 1);
+  assert.ok(g.ask('modifiers').list.some(m => m.id === 'fish_luck'));
+});
+
+test('灶边五件：出一锅偶尔碰上，对得上做法和锅里有没有鱼；一天最多一件', () => {
+  assert.equal(Object.keys(STOVE_EVENTS).length, 5);
+  const stove = { x: 10, y: 11, dir: 'up' };
+  let hits = 0;
+  for (let seed = 1; seed <= 30; seed++) {
+    const save = JSON.parse(JSON.stringify(newGame(seed).save()));
+    const w = save.state.world;
+    Object.assign(w.packs.hero.items, { 'fish.crucian': 6, wood: 6 });
+    w.weather.now = 'sunny';
+    const g = createGame({ saved: save, debug: true });
+    let met = 0;
+    for (let k = 0; k < 6; k++) {
+      const before = g.ask('events').active?.id;
+      const out = g.dispatch('cook', { items: ['fish.crucian'], method: 'stew', at: stove });
+      if (!out.ok) break;
+      const now = g.ask('events').active;
+      if (!now || now.id === before) continue;
+      const ev = EVENTS[now.id];
+      if (ev.trigger !== 'stove') {
+        choose(g, 0);
+        continue;
+      }
+      assert.ok(!ev.when.methods || ev.when.methods.includes('stew'), now.id);
+      assert.ok(!ev.when.weather || ev.when.weather.includes('sunny'), now.id);
+      met++;
+      choose(
+        g,
+        ev.choices.findIndex(c => !c.use),
+      );
+    }
+    assert.ok(met <= 1, `种子 ${seed} 一天碰上了 ${met} 件`);
+    hits += met;
+  }
+  assert.ok(hits > 0, '三十个种子一件都没碰上');
+});
+
+test('桂嫂隔墙闻香：盛一碗给她，多一份交情、回一罐腌菜', () => {
+  const g = facing(newGame(), 'stove_gui');
+  const pickle = carried(g, 'pickle');
+  choose(g, 0);
+  assert.equal(carried(g, 'pickle'), pickle + 1);
+  assert.ok(whyOf(g, 'gui').includes('why.helped'));
 });

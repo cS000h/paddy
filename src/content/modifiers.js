@@ -107,4 +107,26 @@ export const MODIFIERS = Object.freeze({
     attrs: { tige: -1 },
     sleep: -6,
   },
+  // 钓鱼时碰上的小事留下的（G-09）：只管今天。bite 咬钩的把握加减，window 提竿的工夫宽多少毫秒
+  fish_luck: {
+    name: '鱼口正好',
+    kind: 'good',
+    days: 1,
+    desc: '有人指点、看准了水，今天钓鱼咬钩多些',
+    bite: 0.15,
+  },
+  fish_steady: {
+    name: '手稳心静',
+    kind: 'good',
+    days: 1,
+    desc: '今天看漂不慌，咬钩后提竿的工夫宽一点',
+    window: 90,
+  },
+  fish_spooked: {
+    name: '水里惊了',
+    kind: 'bad',
+    days: 1,
+    desc: '水底惊着了，今天钓鱼咬钩少些',
+    bite: -0.12,
+  },
 });

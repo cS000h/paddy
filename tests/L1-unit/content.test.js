@@ -298,8 +298,10 @@ test('过客站位和小事的默认地点能站人、能走到跟前，不和�
       const clash = residents(mapId).find(r => r.x === s.x && r.y === s.y);
       assert.ok(!clash, `过客站位 ${mapId}(${s.x},${s.y}) 和 ${clash?.name} 重了`);
     }
-  // 翻找碰上的小事落在主角身边，没有默认地方
-  for (const ev of Object.values(EVENTS).filter(e => e.trigger !== 'search')) {
+  // 翻找、钓鱼、灶边碰上的小事落在主角身边，没有默认地方
+  for (const ev of Object.values(EVENTS).filter(
+    e => !['search', 'fishing', 'stove'].includes(e.trigger),
+  )) {
     const { map, x, y } = ev.spot;
     standable(map, x, y, ev.id);
     const visitor = (VISITOR_SPOTS[map] || []).some(s => s.x === x && s.y === y);

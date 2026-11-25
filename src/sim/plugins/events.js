@@ -1,10 +1,15 @@
 // 随机小事引擎：晨起小事、场景遇事与过几天后续。
 // 每件小事落在地图上的具体位置（map, x, y），玩家走到跟前在底部对话条里处理。
-// 走图翻找时，有动静的地方偶尔碰上一件（content/events-search.js），一天最多一件。
+// 走图翻找时，有动静的地方偶尔碰上一件（content/events-search.js）；钓完一竿偶尔碰上一件
+// （content/events-fishing.js）；出一锅偶尔碰上一件（content/events-stove.js）。这三样各自一天最多一件。
 //   event.choose {choice, at} → pulse.resolved {id, title, success, line, map, x, y, seen}
 import { is, check } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { EVENTS, MORNING_EVENTS, SCENE_EVENTS, SEARCH_EVENTS } from '../../content/events.js';
+import { FISHING_EVENTS, STOVE_EVENTS } from '../../content/events.js';
+import { STOVE_EVENT } from '../../content/events-stove.js';
+import { FISHING_EVENT } from '../../content/events-fishing.js';
+import { ITEMS } from '../../content/items.js';
 import { checkChance } from '../../content/events.js';
 import { SEARCH } from '../../content/search.js';
 import { dateOf } from '../../content/calendar.js';
@@ -133,33 +138,65 @@ export const events = {
       spawn(w, id, beside(w));
     };
 
-    /** 这件翻找小事此刻碰得上吗：图、翻的那一类、季节、时段、雨。 */
-    const fits = (w, when, map, kind) =>
+    /** 这件翻找、钓鱼、灶边小事此刻碰得上吗：图、翻的那一类、季节、时段、天气、雨、锅里做的什么。 */
+    const fits = (w, when, map, kind, meal = null) =>
       (!when.maps || when.maps.includes(map)) &&
+      (!when.methods || when.methods.includes(meal?.method)) &&
+      (!when.fish || !!meal?.fish) &&
+      (!when.weather || when.weather.includes(w.weather.now)) &&
       (!when.kinds || when.kinds.includes(kind)) &&
       (!when.seasons || when.seasons.includes(dateOf(w.clock.day).season)) &&
       (!when.periods || when.periods.includes(periodOf(w.clock.minute))) &&
       (when.wet === undefined || when.wet === weather.wetLately(w)) &&
       (!when.rainTomorrow || weather.wetTomorrow(w));
 
-    // 翻找小事：翻的是有动静的地方，才有机会碰上；手上有一件没处理，或今天已经碰上过一件，就不再碰。
-    const searched = (s, e) => {
-      const w = s.world;
-      const d = e.data;
-      if (!d.cued || w.pulse.active) return;
+    // 翻找、钓鱼碰上的小事：手上有一件没处理，或今天这一样已经碰上过一件，就不再碰。
+    const meet = (w, list, chance, map, kind, at, meal = null) => {
+      if (w.pulse.active) return;
+      const trigger = EVENTS[list[0]].trigger;
       const done = w.pulse.done;
-      if (Object.keys(done).some(id => done[id] === w.clock.day && EVENTS[id].trigger === 'search'))
+      if (Object.keys(done).some(id => done[id] === w.clock.day && EVENTS[id].trigger === trigger))
         return;
-      if (core.random(w) * 100 >= SEARCH.event) return;
-      const pool = eligible(w, Object.keys(SEARCH_EVENTS)).filter(id =>
-        fits(w, EVENTS[id].when, d.map, d.kind),
-      );
+      if (core.random(w) * 100 >= chance) return;
+      const pool = eligible(w, list).filter(id => fits(w, EVENTS[id].when, map, kind, meal));
       if (!pool.length) return;
       const id = pool[Math.floor(core.random(w) * pool.length)];
-      spawn(w, id, beside(w) || { map: d.map, x: d.x, y: d.y });
+      spawn(w, id, beside(w) || at);
+    };
+    // 翻的是有动静的地方，才有机会碰上
+    const searched = (s, e) => {
+      const d = e.data;
+      if (d.cued)
+        meet(s.world, Object.keys(SEARCH_EVENTS), SEARCH.event, d.map, d.kind, {
+          map: d.map,
+          x: d.x,
+          y: d.y,
+        });
     };
     reactions.on('search.found', searched, { priority: 75 });
     reactions.on('search.empty', searched, { priority: 75 });
+    // 一竿收了（钓上、空竿、跑了）
+    const fished = s => {
+      const me = people.me(s.world);
+      const at = { map: me.map, x: me.x, y: me.y };
+      meet(s.world, Object.keys(FISHING_EVENTS), FISHING_EVENT, me.map, null, at);
+    };
+    for (const type of ['fish.caught', 'fish.missed', 'fish.lost'])
+      reactions.on(type, fished, { priority: 75 });
+    // 出了一锅：做法、锅里有没有鱼
+    reactions.on(
+      'meal.cooked',
+      (s, e) => {
+        const me = people.me(s.world);
+        const at = { map: me.map, x: me.x, y: me.y };
+        const meal = {
+          method: e.data.method,
+          fish: e.data.items.some(k => k.startsWith('fish')),
+        };
+        meet(s.world, Object.keys(STOVE_EVENTS), STOVE_EVENT, me.map, null, at, meal);
+      },
+      { priority: 74 },
+    );
 
     // 清早小事：优先触发到期的后续，否则按概率抽 1 条晨起小事落在具体位置。
     reactions.on(
@@ -244,6 +281,11 @@ export const events = {
       if (choice.reqTrait && !growth.has(w, choice.reqTrait, who))
         refuse(`需要「${needName(choice.reqTrait)}」`);
       if (choice.cost?.coins) store.pay(w, choice.cost.coins, ev.title);
+      if (choice.use) {
+        if (!pack.has(w, who, choice.use.item, choice.use.n))
+          refuse(`身上没有${ITEMS[choice.use.item].name}`);
+        pack.use(w, who, choice.use.item, choice.use.n, ev.title);
+      }
 
       let success = true;
       let outcome = choice;
@@ -294,6 +336,7 @@ export const events = {
             const needTrait = c.reqTrait ? needName(c.reqTrait) : null;
             const hasTrait = !c.reqTrait || growth.has(w, c.reqTrait, who);
             const hasCoins = !c.cost?.coins || coins >= c.cost.coins;
+            const hasItem = !c.use || pack.has(w, who, c.use.item, c.use.n);
             const checkInfo = c.check
               ? {
                   attr: c.check.attr,
@@ -309,12 +352,14 @@ export const events = {
               traitName: needTrait,
               costCoins: c.cost?.coins || 0,
               check: checkInfo,
-              disabled: !hasTrait || !hasCoins,
+              disabled: !hasTrait || !hasCoins || !hasItem,
               reason: !hasTrait
                 ? `需要「${needTrait}」`
                 : !hasCoins
                   ? `需要 ${c.cost.coins} 文`
-                  : null,
+                  : !hasItem
+                    ? `身上没有${ITEMS[c.use.item].name}`
+                    : null,
             };
           }),
         },

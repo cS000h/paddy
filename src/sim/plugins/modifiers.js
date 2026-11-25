@@ -157,6 +157,28 @@ export const modifiers = {
       { priority: 55 },
     );
 
+    // 钓鱼：有人指点、看准了水，咬钩多些（bite）；手稳心静，提竿的工夫宽些（window，毫秒）
+    compute.tap(
+      'fish.bite',
+      (r, { w, who }) => {
+        for (const m of active(w, who)) {
+          const def = MODIFIERS[m.id];
+          if (def.bite) compute.part(r, 'mod.' + m.id, def.name, def.bite);
+        }
+      },
+      { priority: 68 },
+    );
+    compute.tap(
+      'fish.window',
+      (r, { w, who }) => {
+        for (const m of active(w, who)) {
+          const def = MODIFIERS[m.id];
+          if (def.window) compute.part(r, 'mod.' + m.id, def.name, def.window);
+        }
+      },
+      { priority: 68 },
+    );
+
     queries.define('modifiers', w => {
       const who = people.who(w);
       return {
