@@ -10,7 +10,8 @@ import { encounterView } from './encounter.js';
 import { eventView } from './pulse.js';
 import { activityView } from './activities.js';
 import { fishingView } from './fishing.js';
-import { kitchenView, recipesView, heatView } from './kitchen.js';
+import { kitchenView, recipesView } from './kitchen.js';
+import { fireView } from './fire.js';
 import { bagView, storeView } from './bag.js';
 import { basketView } from './village.js';
 import { mapView } from './map.js';
@@ -34,7 +35,7 @@ const VIEWS = {
   fishing: fishingView,
   kitchen: kitchenView,
   recipes: recipesView,
-  heat: heatView,
+  heat: fireView,
   water: n.waterView,
   talk: encounterView,
   sleep: n.sleepView,

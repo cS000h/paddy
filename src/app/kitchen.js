@@ -1,6 +1,7 @@
 // 灶台小窗的按钮：挑食材、调料、做法、刀工，掌火出锅，翻菜谱，吃饭端饭。
 // 挑选中的东西只放在小窗的状态里，按下“做”才发给规则。
-import { timingValue } from '../shell/timing.js';
+// 亲自掌火时按的每一下（下料、翻锅、添柴、翻面）记在小窗里，出锅时连同时刻一起交给规则判火候。
+import { FIRE } from '../content/cook-fire.js';
 export function kitchenActions({ game, shell, run, here, world }) {
   const edit = patch => shell.set({ modal: { ...shell.get().modal, ...patch } });
   const input = () => {
@@ -13,9 +14,10 @@ export function kitchenActions({ game, shell, run, here, world }) {
       at: here(),
     };
   };
-  function cook(heat = null) {
+  function cook(log = null) {
     const m = shell.get().modal;
-    const out = run('cook', { ...input(), heat });
+    const out = run('cook', { ...input(), log });
+    if (!out.ok && m?.kind === 'heat') edit({ finishing: false });
     if (out.ok) {
       const { line, ids } = out.facts.find(f => f.type === 'meal.cooked').data;
       // 合上小窗，在灶前把这顿饭做一遍给人看：切菜、添柴生火、翻炒、盛出来；做完再回到灶台
@@ -62,10 +64,24 @@ export function kitchenActions({ game, shell, run, here, world }) {
     cookHeat() {
       const data = input();
       if (data.method === 'mix') return cook();
-      edit({ kind: 'heat', ...data, started: performance.now() });
+      edit({ kind: 'heat', ...data, started: performance.now(), log: [], finishing: false });
     },
+    /** 掌火时按了一下：记下第几毫秒按的哪个键。 */
+    firePress({ key }) {
+      const m = shell.get().modal;
+      const log = m?.log || [];
+      if (m?.kind !== 'heat' || m.finishing || log.length >= FIRE.presses - 1) return;
+      const t = Math.min(60000, Math.round(performance.now() - m.started));
+      edit({ log: [...log, [Math.max(t, log.at(-1)?.[0] ?? 0), key]] });
+    },
+    /** 出锅：把按的记录交给规则判火候。 */
     cookFinish() {
-      cook(timingValue(performance.now() - shell.get().modal.started));
+      const m = shell.get().modal;
+      if (m?.kind !== 'heat' || m.finishing) return;
+      const log = m.log || [];
+      const t = Math.min(60000, Math.round(performance.now() - m.started));
+      edit({ finishing: true });
+      cook([...log, [Math.max(t, log.at(-1)?.[0] ?? 0), 'serve']]);
     },
     backKitchen() {
       edit({ kind: 'kitchen' });

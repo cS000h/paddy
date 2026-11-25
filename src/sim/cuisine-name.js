@@ -1,5 +1,5 @@
-// 沿用0.12的命名、调料匹配和火候判定。
-import { RECIPES, HEAT } from '../content/recipes.js';
+// 沿用0.12的命名和调料匹配。火候在 cook-fire.js 判。
+import { RECIPES } from '../content/recipes.js';
 const sameSet = (a, b) => a.length === b.length && a.every(x => b.includes(x));
 // The named recipe for these ingredients and seasonings: all its seasonings must be in; the one that uses the most wins.
 function findRecipe(items, method, spices = []) {
@@ -15,17 +15,6 @@ function findRecipe(items, method, spices = []) {
       best = r;
   }
   return best;
-}
-function quality(method, heat, bonus = 0) {
-  if (method === 'mix' || heat === null || heat === undefined) return 'plain';
-  const h = HEAT[method],
-    half = h.half + bonus,
-    d = heat - h.center,
-    a = Math.abs(d);
-  if (a <= half * 0.35) return 'great';
-  if (a <= half) return 'good';
-  if (a <= half * 2) return d < 0 ? 'under' : 'over';
-  return d < 0 ? 'raw' : 'burnt';
 }
 
 // item lookup is injected (the registry lives in core); the pure helpers below take it as `I`.
@@ -90,4 +79,4 @@ function dishName(items, method, I, spices = []) {
   return { name, named: false };
 }
 
-export { dishName, quality };
+export { dishName };

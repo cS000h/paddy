@@ -67,6 +67,7 @@ const QUERIES = [
   'bonds',
   'comfort',
   'clock',
+  'cook.fire',
   'cook.preview',
   'drink.why',
   'farm.detail',

@@ -1,5 +1,7 @@
 // 灶台：做饭、端走、放回、吃。饭菜存到户里；端走交给个人行囊。菜谱也属于这一户。
-//   cook {items, spices, method, cut, heat, at} → meal.cooked {…这道菜, first, ids, line}
+//   cook {items, spices, method, cut, log, at} → meal.cooked {…这道菜, perfect, beats, first, ids, line}
+//       log 是亲自掌火时按的记录（炒：下料、翻锅、出锅；炖：添柴、起锅；烤：翻面、出锅），没有就是稳稳做。
+//   查询 cook.preview(input) 给面板看这锅饭和这一锅的节拍；cook.fire(input, log, t) 是此刻锅里什么样子。
 //   dish.pack / dish.store / dish.eat {id, at}
 import { ITEMS } from '../../content/items.js';
 import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
@@ -9,14 +11,18 @@ import { refuse } from '../../kernel/dispatch.js';
 import { MAPS } from '../../content/maps/index.js';
 import { RECIPES, QUALITY } from '../../content/recipes.js';
 import { COOK_TEXT } from '../../content/life-text.js';
+import { FIRE_PERFECT } from '../../content/cook-fire.js';
+import { fireAt } from '../cook-fire.js';
 import { fill } from '../../content/text.js';
 import { previewMeal } from '../cuisine.js';
 import { validDish } from '../dish.js';
 import { near } from './people.js';
 
 // 出锅的一段话（沿用 0.12）：凉拌是摆上桌，其余先说火候再说出锅；头一回做、用了时令菜各添一句。
+// 掌火全中（镬气十足、汤白如奶、外焦里嫩）换那一句。
 function cookedLine(dish, first) {
-  const values = { quality: QUALITY[dish.quality].line, servings: dish.servings, name: dish.name };
+  const fire = dish.perfect ? FIRE_PERFECT[dish.method].line : QUALITY[dish.quality].line;
+  const values = { quality: fire, servings: dish.servings, name: dish.name };
   return (
     fill(dish.method === 'mix' ? COOK_TEXT.mix : COOK_TEXT.done, values) +
     (first ? COOK_TEXT.first : '') +
@@ -73,7 +79,7 @@ export const cooking = {
         'kitchens',
     });
     const home = w => w.kitchens[store.id(w)];
-    const preview = (w, input) => previewMeal(w, input, compute, people.who(w));
+    const preview = (w, input) => previewMeal(w, input, compute, people.who(w), home(w).fires);
     const atStove = (w, input) => {
       const p = people.place(w, input.at);
       const stove = MAPS[p.map].objects.find(([k, x, y]) => k === 'stove' && near(p, { x, y }));
@@ -104,8 +110,10 @@ export const cooking = {
       // 用掉的是挑的那几样（可能是极品）；菜里记的是原来那样，配菜名、画菜都照它
       for (const item of [...input.items, ...p.spices]) pack.use(w, id, item, 1, '做' + p.base);
       const ids = [];
+      // 这一锅的节拍、每一拍怎样只在出锅这一下用，不跟着饭菜存
+      const { plan, beats, perfect, fire, ...meal } = p;
       for (let i = 0; i < p.servings; i++) {
-        const dish = { ...p, id: core.nextId(w), day: w.clock.day };
+        const dish = { ...meal, id: core.nextId(w), day: w.clock.day };
         k.dishes.push(dish);
         ids.push(dish.id);
       }
@@ -120,7 +128,9 @@ export const cooking = {
       body.mood(w, id, QUALITY[p.quality].mood, '做了顿饭');
       fact('meal.cooked', {
         who: id,
-        ...p,
+        ...meal,
+        perfect,
+        beats,
         ingredients: p.ingredients.length,
         first: first && p.named,
         ids,
@@ -176,6 +186,15 @@ export const cooking = {
         known: !!home(w).known[name],
       })),
     }));
+    // 掌火时画面每一帧问一回：照这一锅的节拍和到现在按的记录，此刻锅里什么样子
+    queries.define('cook.fire', (w, input = {}, log = [], t = 0) => {
+      try {
+        const { plan } = preview(w, { ...input, log: null });
+        return plan && Number.isFinite(t) ? fireAt(plan, log, Math.max(0, t)) : null;
+      } catch {
+        return null;
+      }
+    });
     queries.define('cook.preview', (w, input = {}) => {
       try {
         return { ok: true, ...preview(w, input) };

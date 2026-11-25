@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newGame, must, carried } from '../helpers.js';
 import { FINE_CHANCE, FIELD_ODDS, FINE_HEAT } from '../../src/content/quality.js';
+import { FIRE } from '../../src/content/cook-fire.js';
 
 const WELL_AT = { x: 18, y: 18, at: { x: 17, y: 18, dir: 'right' } };
 const STOVE = { x: 10, y: 11, dir: 'up' };
@@ -99,7 +100,8 @@ test('极品下锅：菜名、性味照原来那样，火候宽一截；用掉�
   const plain = { ...fine, items: ['veg.qingcai'] };
   const [a, b] = [g.ask('cook.preview', fine), g.ask('cook.preview', plain)];
   assert.deepEqual([a.base, a.buff, a.ingredients], [b.base, b.buff, ['veg.qingcai']]);
-  assert.equal(a.heat.half, b.heat.half + FINE_HEAT);
+  assert.equal(a.fire.bonus, b.fire.bonus + FINE_HEAT);
+  assert.equal(a.plan.colorLong, b.plan.colorLong + FINE_HEAT * FIRE.widen);
   assert.ok(a.notes.includes('极品青菜：火候好拿捏些'));
   assert.equal(
     g.ask('cook.preview', { ...fine, items: ['veg.qingcai', 'veg.qingcai.fine'] }).ok,

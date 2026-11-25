@@ -2,8 +2,8 @@
 // 面板不改世界：要做事就发意图或调用 actions（由 app 提供），要显示就问端口。
 // 这个文件只管接线；常驻的几块在 hud.js，手记在 journal.js，小窗在 modals.js，
 // 摇杆圈在 stick.js，冒出来的字在 captions.js，得了成就、新衣时落下的纸条在 award.js。
-import { animateTiming } from './timing.js';
 import { animateFishing } from './fishing.js';
+import { animateFire } from './fire.js';
 import { modalView, brokenSheet, closesOnBackdrop, placementOf } from './modals.js';
 import { HUD_HTML, renderHud, syncToolbar, syncStamp } from './hud.js';
 import { journalView, nextStepView } from './journal.js';
@@ -283,8 +283,8 @@ export function createPanels({
   let lastNext = '';
 
   const offs = [
-    animateTiming(root, shell),
     animateFishing(root, shell, actions, platform),
+    animateFire(root, shell, actions, game, platform),
     offAct,
     offCancel,
     bindStick(el.stick, intents),

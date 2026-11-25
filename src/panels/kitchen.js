@@ -1,9 +1,8 @@
-// 灶台、菜谱册、掌火，以及几个小窗共用的“做好的饭菜”一行。
+// 灶台、菜谱册，以及几个小窗共用的“做好的饭菜”一行。亲自掌火的小窗在 fire.js。
 import { itemImg } from './icons.js';
-import { METHODS, HEAT, CUTS } from '../content/recipes.js';
+import { METHODS, CUTS } from '../content/recipes.js';
 import { ITEMS } from '../content/items.js';
 import { button, actions, close, title, para, itemRow, esc, paged } from './html.js';
-import { timingBar } from './timing.js';
 import { stovePicture, servedImg } from './stove-picture.js';
 
 /** 做好的饭菜，一份一行：能吃，灶上的能端走，带着的能放回。carry = 这些是身上带着的。 */
@@ -115,14 +114,4 @@ export function recipesView(m, game, here) {
   return `${title('菜谱册', `做过 ${known}/${recipes.length} 道 · ${book.page + 1}/${book.pages}页`)}
     <ul class="items">${rows.join('')}</ul>
     ${actions(book.buttons, button('backKitchen', '回灶台', { main: true }))}`;
-}
-
-export function heatView(m, game) {
-  const preview = game.ask('cook.preview', m);
-  const heat = preview.heat || HEAT[m.method];
-  return `${title('守着这锅火', heat.word)}
-    ${stovePicture({ ...m, base: preview.base }, 'heat')}
-    ${para('指针到了青色一段，按空格或点“出锅”。正中最好，太早夹生，太晚会焦。')}
-    ${timingBar(heat.center, heat.half)}
-    ${actions(button('backKitchen', '先不做了'), button('cookFinish', '出锅', { main: true }))}`;
 }

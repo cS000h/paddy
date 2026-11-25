@@ -13,6 +13,7 @@ import { TEA_DEEDS } from '../src/content/market.js';
 import { ORIGINS } from '../src/content/growth.js';
 import { ON_MAP } from '../src/content/people.js';
 import { CUTS, METHODS } from '../src/content/recipes.js';
+import { bestLog } from '../src/sim/cook-fire.js';
 import { COATS, HAIR } from '../src/content/wardrobe.js';
 
 export function rng(seed) {
@@ -66,7 +67,7 @@ const JUNK = [
   ...[[], {}, [1, 2], { x: 1 }, 'x'.repeat(500), '1', 'all'],
 ];
 const KEYS = ['x', 'y', 'item', 'n', 'id', 'to', 'kind', 'shop', 'items', 'spices', 'method'];
-const MORE_KEYS = ['cut', 'heat', 'value', 'minutes', 'route', 'reply', 'seed', 'dish', 'dir'];
+const MORE_KEYS = ['cut', 'log', 'value', 'minutes', 'route', 'reply', 'seed', 'dish', 'dir'];
 const WEAR_KEYS = ['coat', 'hair'];
 
 /**
@@ -202,8 +203,34 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
       method = pick(Object.keys(METHODS));
       if (chance(0.5)) cut = pick(Object.keys(CUTS));
     }
-    const heat = method === 'mix' || chance(0.3) ? null : int(0, 100);
-    send('cook', { items, spices, method, cut, heat, at });
+    send('cook', { items, spices, method, cut, log: fireLog({ items, spices, method, cut }), at });
+  }
+
+  /** 掌火：多半照这一锅的节拍按，手有早有晚、偶尔漏按；有时稳稳做（不掌火），偶尔按出一份乱的记录。 */
+  function fireLog(meal) {
+    if (meal.method === 'mix' || chance(0.3)) return null;
+    if (chance(0.05))
+      return pick([
+        [
+          [5, 'flip'],
+          [3, 'serve'],
+        ],
+        [
+          [1, 'add'],
+          [2.5, 'serve'],
+        ],
+        'x',
+      ]);
+    const plan = game.ask('cook.preview', { ...meal, log: null }).plan;
+    if (!plan) return null;
+    const spread = pick([0, 150, 400, 900, 2500]);
+    let t = 0;
+    return bestLog(plan)
+      .filter(e => e[1] === 'serve' || !chance(0.1))
+      .map(([at, key]) => {
+        t = Math.max(t, Math.min(60000, at + int(-spread, spread)));
+        return [t, key];
+      });
   }
 
   function kitchenWork(at) {

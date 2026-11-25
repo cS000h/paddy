@@ -309,7 +309,11 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.waitForTimeout(250);
       await shot(p, session === desk ? 'm2-kitchen-desktop.png' : 'm2-kitchen-phone.png');
       await p.locator('[data-do="cookHeat"]').click();
+      // 亲自掌火炒一锅：先下料（桌面上空格就是按主键），再出锅
+      assert.match(await p.locator('.sheet h2').textContent(), /亲自掌火/);
       if (session === desk) await p.keyboard.press('Space');
+      else await p.locator('[data-do="firePress"]').tap();
+      if (session === desk) await p.locator('[data-do="cookFinish"]').click();
       else await p.locator('[data-do="cookFinish"]').tap();
       await p.waitForSelector('[data-do="dishPack"]');
       await p.locator('[data-do="dishPack"]').first().click();

@@ -1,0 +1,80 @@
+/* 亲自掌火：灶台的小画、一句提示、几条进度、要按的键。手机横屏左右分，宽屏上下摞。 */
+.sheet .fire-play {
+  display: grid;
+  gap: 8px;
+}
+.compact .sheet .fire-play {
+  grid-template-columns: minmax(0, 40%) 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.compact .sheet .fire-play p {
+  margin: 2px 0;
+}
+.compact .sheet .fire-play .actions {
+  margin-top: 6px;
+}
+
+/* 正当时：灶台亮一下 */
+.sheet .fire-play .stove-picture {
+  transition: filter 0.15s;
+}
+.sheet .fire-play.hot .stove-picture {
+  filter: drop-shadow(0 0 6px rgba(234, 203, 110, 0.95));
+}
+
+/* 那一句：平常墨色，正当时金黄，要坏事了红 */
+.sheet .fire-cue {
+  min-height: 1.5em;
+  margin: 2px 0 4px;
+  font-weight: bold;
+  color: #34423f;
+}
+.sheet .fire-cue.now {
+  color: #a0844a;
+}
+.sheet .fire-cue.warn {
+  color: #aa4332;
+}
+
+/* 进度：淡黄的一条往右走，正当时那一截框出来（水青） */
+.sheet .fire-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0;
+  font-size: 0.9em;
+}
+.sheet .fire-bar span {
+  flex: none;
+  min-width: 3em;
+}
+.sheet .fire-bar i {
+  position: relative;
+  flex: 1;
+  height: 10px;
+  border: 2px solid var(--line, #7b593a);
+  background: #f6f1e3;
+}
+.sheet .fire-bar b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: #e1c884;
+}
+.sheet .fire-bar em {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  z-index: 1;
+  border-right: 2px solid #58848f;
+  border-left: 2px solid #58848f;
+  background: rgba(147, 191, 192, 0.35);
+}
+/* 炖的火：旺了发红，弱了发灰 */
+.sheet .fire-bar i.hot b {
+  background: #d1604a;
+}
+.sheet .fire-bar i.weak b {
+  background: #9ba598;
+}
