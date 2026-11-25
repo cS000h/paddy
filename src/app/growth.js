@@ -17,6 +17,9 @@ export function growthActions({ game, shell, run }) {
     ledgerWho({ who }) {
       edit({ ledgerWho: who });
     },
+    bookKind({ kind }) {
+      edit({ achKind: kind || null, page: 0 });
+    },
     bookPage({ page }) {
       edit({ page: Number(page) });
     },

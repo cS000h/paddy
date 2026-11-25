@@ -207,3 +207,4 @@ export { plotMark, PLOT_MARKS } from './plot-marks.js';
 export { cropSet } from './crops.js';
 export { cookingFrame, prepBoard, COOK_FRAMES } from './cooking-frames.js';
 export { uiIcon, UI_ICONS } from './ui-icons.js';
+export { achievementIcon, ACHIEVEMENT_ICON_KINDS } from './achievement-icons.js';

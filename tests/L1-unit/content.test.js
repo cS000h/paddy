@@ -422,3 +422,19 @@ test('好感的表：来由写全了，开局的交情指得上村民、一直�
     assert.equal(WHY[why]?.days, null, why);
   }
 });
+
+test('成就七类：每个成就都归了一类，七类各有拿到、没拿到两张 24×24 的图标', async () => {
+  const { ACHIEVEMENTS, ACHIEVEMENT_KINDS } = await import('../../src/content/achievements.js');
+  const { achievementIcon, ACHIEVEMENT_ICON_KINDS } = await import('../../src/art/index.js');
+  assert.deepEqual([...ACHIEVEMENT_ICON_KINDS], Object.keys(ACHIEVEMENT_KINDS));
+  for (const a of ACHIEVEMENTS) assert.ok(ACHIEVEMENT_KINDS[a.kind], `${a.id} 没归类`);
+  for (const kind of ACHIEVEMENT_ICON_KINDS)
+    for (const earned of [true, false]) {
+      const g = achievementIcon(kind, earned);
+      assert.deepEqual([g.w, g.h], [24, 24]);
+    }
+  assert.notEqual(
+    JSON.stringify(achievementIcon('farm', true)),
+    JSON.stringify(achievementIcon('farm', false)),
+  );
+});
