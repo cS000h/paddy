@@ -2,6 +2,7 @@ import { is } from '../kernel/schema.js';
 import { ITEMS } from '../content/items.js';
 import { BUFFS } from '../content/body.js';
 import { METHODS, QUALITY, CUTS } from '../content/recipes.js';
+import { FIRE_TWISTS } from '../content/cook-fire.js';
 /** 一份饭菜在行囊里占几格：带汤的（煮的）要两格，免得洒了。 */
 export const dishSize = d => (d.method === 'stew' ? 2 : 1);
 
@@ -26,4 +27,5 @@ export const validDish = d =>
   d.spices.every(k => ITEMS[k]?.kind === 'spice') &&
   is.int(d.water, -20, 20) &&
   is.int(d.tasteMood, -3, 3) &&
-  typeof d.seasonal === 'boolean';
+  typeof d.seasonal === 'boolean' &&
+  (d.twist === undefined || Object.hasOwn(FIRE_TWISTS, d.twist));

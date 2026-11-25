@@ -65,7 +65,8 @@ test('单文件离线运行：手机做饭、导出导入、旧档升级、坏�
     await page.locator('[data-do="cookCut"][data-cut="shred"]').tap();
     assert.match(await page.locator('.sheet').textContent(), /正对路/);
     await page.locator('[data-do="cookPlain"]').tap();
-    assert.match(await page.locator('.sheet').textContent(), /家常的味道/);
+    // 出锅了那一张：火候那句照做法说（炒的家常）
+    assert.match(await page.locator('.sheet').textContent(), /家常炒菜/);
     assert.equal(
       await page.evaluate(
         () => window.__dao.game.ask('kitchen', window.__dao.world.heroAt()).dishes[0].cut,
@@ -74,6 +75,7 @@ test('单文件离线运行：手机做饭、导出导入、旧档升级、坏�
     );
     await page.waitForTimeout(250);
     await page.screenshot({ path: path.join(root, '.cache/offline-kitchen-phone.png') });
+    await page.locator('[data-do="cookedBack"]').tap();
     await page.locator('[data-do="close"]').tap();
     await openSaves(page);
     const downloadPromise = page.waitForEvent('download');

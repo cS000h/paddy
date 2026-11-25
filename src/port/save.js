@@ -7,7 +7,50 @@ export const SAVE_FORMAT = 'dao.save';
 
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
+// v21 那时图鉴里有的东西（写死，以后图鉴加了东西也不改这一份）
+const words = text => text.trim().split(/\s+/);
+const CATALOG_V21 = [
+  ...words(`
+  bleak crucian yellowcat carp grass mandarin sleeper bitterling topmouth bream culter yellowtail
+  catfish
+`).map(f => 'fish.' + f),
+  ...words(`
+  shrimp crab snail mussel shard oldCoin shuttle waterweed oldSandal mugwort malan brake shepherd
+  shoot willowTwig tea herb wildPeach berry cicadaShell lotusFlower leaf peachGum lotusPod
+  caltrop mushroom chestnut pinecone straw camphorWood pineNeedles pebble moss earthEar
+  veg.qingcai chive cucumber longbean pumpkin radish cabbage
+`),
+];
+
 const MIGRATIONS = {
+  20(state) {
+    // 图鉴（sim/plugins/catalog.js）：每个有行囊的人一份——图鉴里每样收过几回、头一回哪天、见没见过极品、
+    // 鱼见过哪几档，加上今天钓上几条。旧档照已有的记录补上：钓过的鱼（条数）、翻到过的东西（算一回）、
+    // 出过极品的东西。日子不知道的记成升级这天；鱼见过哪几档、菜园收过什么旧档没记，从这一版起算。
+    const w = state.world;
+    w.meta.version = 21;
+    const book = new Set(CATALOG_V21);
+    w.catalog = {};
+    for (const id of Object.keys(w.packs)) {
+      const items = {};
+      const add = (item, n, day) => {
+        if (!book.has(item)) return;
+        items[item] ??= { n: 0, day };
+        items[item].n = Math.min(1e6, items[item].n + n);
+        items[item].day = Math.min(items[item].day, day);
+      };
+      for (const [fish, r] of Object.entries(w.fishing?.[id]?.records || {}))
+        if (r.n > 0) add('fish.' + fish, r.n, w.clock.day);
+      for (const [item, day] of Object.entries(w.search?.[id]?.found || {})) add(item, 1, day);
+      for (const [fine, day] of Object.entries(w.quality?.[id]?.found || {})) {
+        const plain = fine.replace(/\.fine$/, '');
+        if (!items[plain]) add(plain, 1, day);
+        if (items[plain]) items[plain].fine = true;
+      }
+      w.catalog[id] = { items, haul: { day: 0, n: 0 } };
+    }
+    return state;
+  },
   19(state) {
     // 走图翻找（sim/plugins/search.js）：每个有行囊的人一份——今天哪几处有动静、翻过哪几处、连着几处没翻到、
     // 各样东西头一回找到是哪天、地上冒出来还没捡的、拾到的有主的东西还了没有。

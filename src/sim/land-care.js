@@ -9,6 +9,8 @@ import { refuse } from '../kernel/dispatch.js';
 
 /** 这格地的水最多能到多少：开了沟的存不住那么多水。 */
 const capOf = p => (p.drained ? SOIL.drainedMax : SOIL.waterMax);
+/** 施肥用家里的哪样：堆肥最肥，钓鱼钩上来的水草团和灶膛里的草木灰次之（草木灰还防虫）。 */
+const MANURES = ['compost', 'waterweed', 'ash'];
 export function fieldAdvice(p) {
   const c = CROPS[p.crop];
   return !c
@@ -40,7 +42,7 @@ export function installLandCare(ctx, plotAt) {
         ? '今天施过肥了'
         : p.fert >= SOIL.fertMax
           ? '地力足了'
-          : !store.count(w, 'ash') && !store.count(w, 'compost')
+          : !MANURES.some(k => store.count(w, k))
             ? '灶膛里还没有灰，再烧几回火'
             : null;
     return '没有这件农活';
@@ -60,7 +62,7 @@ export function installLandCare(ctx, plotAt) {
       plot.water = Math.min(SOIL.drainedMax, plot.water);
     }
     if (input.kind === 'manure') {
-      const item = store.count(w, 'compost') ? 'compost' : 'ash';
+      const item = MANURES.find(k => store.count(w, k));
       store.take(w, item, 1, '给菜地施肥');
       plot.fert = Math.min(SOIL.fertMax, plot.fert + (item === 'compost' ? 3 : 2));
       plot.fed = w.clock.day;

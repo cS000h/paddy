@@ -1,9 +1,9 @@
-// 0.12 的菜谱、做法与火候表。
+// 0.12 的菜谱、做法、火候七档。掌火的节拍在 cook-fire.js。
 // prettier-ignore
 // prettier-ignore
 export const METHODS={stew:'煮',fry:'炒',roast:'烤',mix:'拌'};
 // prettier-ignore
-export const HEAT={stew:{center:42,half:15,word:'文火慢炖'},fry:{center:72,half:8,word:'旺火快炒'},roast:{center:58,half:10,word:'中火慢烤'}};
+export const HEAT={stew:{word:'文火慢炖'},fry:{word:'旺火快炒'},roast:{word:'中火慢烤'}};
 // prettier-ignore
 export const QUALITY={
   great:{name:'拿手',prefix:'拿手',full:1.25,uses:1,mood:3,xp:2,line:'火候正好，香气一下子就出来了。'},

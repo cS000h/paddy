@@ -110,6 +110,7 @@ function spray(g, x, y, p, amount) {
 }
 
 // progress 是本段从起到收的比例。收线时直接使用规则给的距离与张力。
+// lift 是鳊鱼送漂（浮漂往上一顶）；leap 为真时鱼冲的那几下跃出水面（翘嘴），t 是遛到第几毫秒。
 export function fishingFrame(
   spot,
   {
@@ -120,6 +121,8 @@ export function fishingFrame(
     running = false,
     size = 'mid',
     item = 'fish.crucian',
+    leap = false,
+    t = 0,
   } = {},
 ) {
   const g = new Grid(W, H).blit(background(spot), 0, 0);
@@ -135,6 +138,8 @@ export function fishingFrame(
         ? round(81 + 25 * Math.min(1, 4 * p))
         : 81;
   const y = fight ? round(37 - distance * 0.08) : 29;
+  // 翘嘴冲的时候一跃一跃地出水
+  const hop = fight && leap && running ? round(7 * Math.abs(Math.sin(t / 170))) : 0;
   const pull = action === 'hook' ? wave : 0;
   const bend = fight ? tension / 100 : 0;
   const tipX = round(53 + 5 * bend - 10 * pull),
@@ -148,7 +153,7 @@ export function fishingFrame(
   if (fight || action === 'slack') {
     const tail = action === 'slack' ? round(22 * p) : 0;
     const fx = x + tail,
-      fy = y + 3;
+      fy = y + 3 - hop;
     const length = size === 'big' ? 9 : size === 'small' ? 4 : 6;
     g.ellipse(fx, fy, length, 2, P.w4);
     g.poly(
@@ -162,7 +167,13 @@ export function fishingFrame(
     if (running || action === 'slack') spray(g, fx, fy - 1, p, size === 'big' ? 12 : 7);
   }
   const dive =
-    action === 'nod' ? round(3 * wave) : action === 'bite' ? round(15 * Math.min(1, 4 * p)) : 0;
+    action === 'nod'
+      ? round(3 * wave)
+      : action === 'bite'
+        ? round(15 * Math.min(1, 4 * p))
+        : action === 'lift'
+          ? -round(5 * Math.min(1, 3 * p))
+          : 0;
   const floatY = y + dive - round(13 * pull);
   const lineColor = bend > 0.78 ? P.c2 : bend > 0.5 ? P.t2 : P.ink3;
   const lineY = landed ? round(y - 3 - 17 * wave) : fight ? y : Math.min(y, floatY - 8);

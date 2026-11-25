@@ -1,0 +1,312 @@
+/* 亲自掌火、出锅了（照 Gemini G-11 的设计图）：小窗压在下半截，左边灶台特写，右边一句、几条、两个键；
+   页眉右边几枚小牌子。颜色只用调色板里的。 */
+.sheet .fire-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  margin: 0 0 6px;
+}
+.sheet .fire-head h2 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 17px;
+}
+.sheet .fire-head h2 small {
+  margin-left: 10px;
+  font-size: 12.5px;
+  font-weight: normal;
+  color: #7f8b82;
+}
+.sheet .fire-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+}
+.sheet .fire-chip {
+  padding: 1px 7px;
+  border: 1.5px solid #c0a578;
+  background: #f6f1e3;
+  color: #34423f;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.sheet .fire-chip.todo {
+  color: #7f8b82;
+}
+.sheet .fire-chip.done {
+  border-color: #6d935b;
+  background: #d5e3bc;
+  color: #3f5f3e;
+}
+.sheet .fire-chip.now {
+  border-color: #aa4332;
+  background: #f6d3cc;
+  color: #7f3025;
+}
+.sheet .fire-chip.warn {
+  border-color: #aa4332;
+  color: #aa4332;
+}
+.sheet .fire-chip.gold {
+  border-color: #d0a646;
+  background: #f7e6a8;
+  color: #5a402a;
+}
+.sheet .fire-chip.first {
+  border-color: #58848f;
+  background: #d0e6e0;
+}
+.sheet .fire-chip.twist {
+  border-color: #9f774c;
+  background: #ece4d0;
+  color: #5a402a;
+}
+
+/* 左边灶台特写，右边字和键 */
+.sheet .fire-play {
+  display: grid;
+  grid-template-columns: minmax(0, 44%) 1fr;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+.sheet .fire-scene {
+  position: relative;
+  border: 2px solid #c0a578;
+  background: #f6f1e3;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: border-color 0.12s;
+}
+.sheet .fire-play.hot .fire-scene {
+  border-color: #aa4332;
+}
+.sheet .fire-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+/* 按下去那一下，锅上冒一个字（滋啦、呼啦、噼啪） */
+.sheet .fire-sound {
+  position: absolute;
+  top: 8%;
+  left: 10%;
+  color: #7f3025;
+  font-size: 16px;
+  text-shadow:
+    1px 0 #f6f1e3,
+    -1px 0 #f6f1e3,
+    0 1px #f6f1e3,
+    0 -1px #f6f1e3;
+  opacity: 0;
+  pointer-events: none;
+}
+.sheet .fire-sound.pop {
+  animation: fire-pop 0.75s ease-out;
+}
+@keyframes fire-pop {
+  from {
+    opacity: 1;
+    transform: translateY(4px) scale(1.15);
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.sheet .fire-side {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.sheet .fire-side .row {
+  margin: 4px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+/* 那一句：大字墨色，正当时红褐，要坏事了朱红；底下小字说怎么看，刚按了一下说按得怎样 */
+.sheet .fire-say {
+  margin: 0;
+  padding: 5px 10px;
+  border: 1.5px solid #c0a578;
+  background: #f6f1e3;
+}
+.sheet .fire-say b {
+  display: block;
+  font-size: 15.5px;
+  color: #34423f;
+}
+.sheet .fire-say b.now {
+  color: #7f3025;
+}
+.sheet .fire-say b.warn {
+  color: #aa4332;
+}
+.sheet .fire-say small {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #55635d;
+}
+.sheet .fire-say small.good {
+  color: #3f5f3e;
+}
+.sheet .fire-say small.off {
+  color: #a0844a;
+}
+
+/* 进度：名字、条、小字三栏；正当时那一段青绿，炖的火顶上一截粉红是扑锅 */
+.sheet .fire-bar {
+  display: grid;
+  grid-template-columns: 3.4em 1fr 4.6em;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0;
+  font-size: 12.5px;
+}
+.sheet .fire-bar i {
+  position: relative;
+  height: 12px;
+  border: 2px solid #7b593a;
+  background: #f6f1e3;
+}
+.sheet .fire-bar em {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+.sheet .fire-bar em.ok {
+  background: #d5e3bc;
+  box-shadow:
+    inset 2px 0 #6d935b,
+    inset -2px 0 #6d935b;
+}
+/* 往右涨的条：正当时那一段只描边，盖在涨上来的颜色上面，涨到了看得见 */
+.sheet .fire-bar:not(.needle) em.ok {
+  z-index: 1;
+  background: none;
+  box-shadow:
+    inset 0 0 0 2px #6d935b,
+    inset 0 0 0 3px #f6f1e3;
+}
+.sheet .fire-bar em.hot {
+  background: #f6d3cc;
+}
+.sheet .fire-bar b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: #93bfc0;
+  opacity: 0.85;
+}
+.sheet .fire-bar.needle b {
+  width: 3px;
+  margin-left: -1px;
+  background: #aa4332;
+  opacity: 1;
+}
+.sheet .fire-bar.roast i {
+  background: linear-gradient(90deg, #f6f1e3, #e1c884 45%, #d0a646 62%, #7b593a 86%, #5a402a);
+}
+.sheet .fire-bar.roast em.ok {
+  background: none;
+  box-shadow:
+    inset 2px 0 #3f5f3e,
+    inset -2px 0 #3f5f3e;
+}
+.sheet .fire-note {
+  color: #58848f;
+  font-size: 12px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* 主键：大字下面一行小字 */
+.sheet .fire-key small {
+  display: block;
+  font-size: 11px;
+  font-weight: normal;
+  opacity: 0.85;
+}
+
+/* 出锅了：菜的小图（拿手、全中暖金双线框）、名字、出锅那句、这一锅每一拍 */
+.sheet .cooked-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sheet .cooked-card img {
+  flex: none;
+  width: 56px;
+  padding: 2px;
+  border: 2px solid #c0a578;
+  background: #f6f1e3;
+  image-rendering: pixelated;
+}
+.sheet .cooked-card.gold img {
+  border: 4px double #d0a646;
+  background: #f7e6a8;
+}
+.sheet .cooked-card p {
+  margin: 0;
+}
+.sheet .cooked-card b {
+  font-size: 17px;
+}
+.sheet .cooked-card small {
+  margin-left: 8px;
+  color: #a0844a;
+  font-size: 12.5px;
+}
+.sheet .cooked-line {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.sheet .cooked-note {
+  margin: 0;
+  padding: 2px 8px;
+  border-left: 3px solid #d0a646;
+  background: #ece4d0;
+  color: #5a402a;
+  font-size: 12px;
+}
+
+/* 矮屏（手机横着）：小窗高一点也不过半截多，字小一点，键紧一点 */
+.compact .frame.dialogue[data-kind='heat'],
+.compact .frame.dialogue[data-kind='cooked'] {
+  max-height: 72%;
+}
+.compact .sheet .fire-play {
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.compact .sheet .cooked-card img {
+  width: 44px;
+}
+.compact .sheet .cooked-line {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.compact .sheet .fire-say b {
+  font-size: 14.5px;
+}
+.compact .sheet .fire-side .row button {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}

@@ -1,14 +1,17 @@
 // 做饭预览和出锅共用这一条计算路径，避免面板承诺与实际结果不一致。
+// 火候：亲自掌火时 log 是按的记录（见 sim/cook-fire.js），照这一锅的节拍判；没有 log 是「稳稳做」，火候家常。
+// 这一锅的节拍由世界的种子和这户第几回烧火（fires）定，所以面板先问到的和出锅时判的是同一份。
 import { ITEMS, seasonal, inSeason, kindOf } from '../content/pantry.js';
 import { FINE_HEAT } from '../content/quality.js';
 import { METHODS, QUALITY, HEAT, CUTS } from '../content/recipes.js';
 import { BUFFS, buffUses } from '../content/body.js';
 import { dateOf } from '../content/calendar.js';
-import { dishName, quality } from './cuisine-name.js';
+import { dishName } from './cuisine-name.js';
+import { planFor, judge, goodLog, twistOf } from './cook-fire.js';
 import { buffOf, tasteOf } from './cuisine-taste.js';
 import { refuse } from '../kernel/dispatch.js';
-export function previewMeal(w, input, compute, who) {
-  const { items: picked = [], method = 'stew', spices = [], heat = null, cut = null } = input;
+export function previewMeal(w, input, compute, who, fires = 0) {
+  const { items: picked = [], method = 'stew', spices = [], log = null, cut = null } = input;
   // 极品照原来那样配菜名、算味道，各种鱼都算「鱼」；用了几样极品，火候就宽几截
   const items = Array.isArray(picked) ? picked.map(kindOf) : [];
   if (
@@ -28,7 +31,7 @@ export function previewMeal(w, input, compute, who) {
     refuse('调料最多两勺，盐留着腌菜');
   if (method === 'mix' && !items.every(k => ITEMS[k].tags.includes('raw')))
     refuse('这些食材不能生拌，得下锅');
-  if (heat !== null && (!Number.isFinite(heat) || heat < 0 || heat > 100)) refuse('火候没看清');
+  if (log !== null && method !== 'mix' && !goodLog(method, log)) refuse('火候没看清');
   if (cut !== null && !Object.hasOwn(CUTS, cut)) refuse('没有这种切法');
   const I = k => ITEMS[k];
   const si = dateOf(w.clock.day).season;
@@ -94,17 +97,30 @@ export function previewMeal(w, input, compute, who) {
     cutBonus +
     wineBonus +
     fine.length * FINE_HEAT;
-  r.heat = method === 'mix' ? null : { ...HEAT[method], half: HEAT[method].half + bonus };
-  const q = quality(method, heat, bonus);
+  const plan = method === 'mix' ? null : planFor(method, w.meta.seed, fires, bonus);
+  const verdict = plan && log ? judge(plan, log) : null;
+  const q = verdict ? verdict.quality : 'plain';
+  // 砸了也有点意思：扑了锅的浓汤、锅巴、焦皮、脆生的青菜，饱腹和名字照它算
+  const twist = verdict ? twistOf(method, q, r.ingredients, verdict.beats) : null;
+  const counts = QUALITY[twist && 'full' in twist ? twist.full : q];
+  r.fire = method === 'mix' ? null : { word: HEAT[method].word, bonus };
+  r.plan = plan;
+  r.perfect = !!verdict?.perfect;
+  r.beats = verdict?.beats || null;
   r.quality = q;
-  r.full = Math.round(r.full * QUALITY[q].full);
-  r.name = QUALITY[q].prefix + r.base;
+  r.full = Math.round(r.full * counts.full);
+  r.name = (twist ? twist.prefix : QUALITY[q].prefix) + r.base;
+  if (twist) {
+    r.twist = twist.id;
+    r.servings = Math.max(1, r.servings + ('servings' in twist ? twist.servings : 0));
+    r.tasteMood = Math.min(3, r.tasteMood + ('mood' in twist ? twist.mood : 0));
+  }
   r.uses = buffUses(
     r.buff,
     Math.max(
       1,
       BUFFS[r.buff].base +
-        QUALITY[q].uses +
+        counts.uses +
         compute.run('buff.uses', { w, who }, { value: 0, parts: [] }).value,
     ),
   );

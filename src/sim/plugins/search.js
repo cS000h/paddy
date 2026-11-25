@@ -10,7 +10,7 @@ import { refuse } from '../../kernel/dispatch.js';
 import { MAPS, walkable } from '../../content/maps/index.js';
 import { ITEMS, plainOf } from '../../content/items.js';
 import { CALENDAR, dateOf } from '../../content/calendar.js';
-import { FIRST_FINE } from '../../content/quality.js';
+import { FIRST_FINE, fineId } from '../../content/quality.js';
 import { fill } from '../../content/text.js';
 import {
   SEARCH,
@@ -171,7 +171,8 @@ export const search = {
       if (mine(w).done.includes(s.id)) return SEARCH_LINES.done;
       if (weather.has(w, 'storm')) return '打雷了，别在树底下、水边待着';
       if (me.energy < people.quote(w, 'search').value) return SEARCH_LINES.tired;
-      if (pack.room(w, people.who(w)) < 1 && !people.atHome(w, people.who(w), here))
+      const who = people.who(w);
+      if (pack.room(w, who) < 1 && !people.atHome(w, who, here) && !pack.count(w, who, 'basket'))
         return SEARCH_LINES.full;
       return null;
     }
@@ -226,6 +227,22 @@ export const search = {
         w,
         pool.map(x => [x, SEARCH.odds[x.odds]]),
       );
+      // 在外头行囊满了还能翻，是因为带着竹篮：野货进篮，柴、竹篾、蚯蚓这些装不下，只好放回去。
+      // 极品另占一格，寻常的和极品都放得下才拿（不先抽极品，免得没拿到手却记成见过极品）
+      const room = [f.item, fineId(f.item)].every(k => !ITEMS[k] || pack.fits(w, who, k));
+      if (!room && !people.atHome(w, who)) {
+        const line = f.line + SEARCH_LINES.left;
+        fact('search.found', {
+          ...where,
+          item: f.item,
+          n: 0,
+          fine: false,
+          first: false,
+          left: true,
+          line,
+        });
+        return;
+      }
       const got = quality.roll(w, who, 'forage', {}, f.item);
       const name = ITEMS[got.item].name;
       const first = !Object.hasOwn(s.found, plainOf(got.item));

@@ -10,6 +10,7 @@
 // 数值都是游戏尺度，不是营养建议。
 import { PEOPLE } from './people.js';
 import { FINE_ITEMS, FINE_PRICE, fineId } from './quality.js';
+import { FOUND_OWNERS } from './fish-catch.js';
 
 const food = (name, price, full, nature, tags, more = {}) => ({
   name,
@@ -63,6 +64,17 @@ const RAW = {
   'fish.carp': food('鲤鱼', 6, 16, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', ...NO }),
   'fish.grass': food('草鱼', 7, 18, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', ...NO }),
   'fish.mandarin': food('鳜鱼', 12, 16, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', ...NO }),
+  // G-09 新加的七种鱼
+  'fish.sleeper': food('塘鳢鱼', 6, 10, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', short: '塘鳢', ...NO }),
+  'fish.bitterling': food('鳑鲏', 1, 4, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', ...NO }),
+  'fish.topmouth': food('麦穗鱼', 1, 4, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', short: '麦穗', ...NO }),
+  'fish.bream': food('鳊鱼', 6, 14, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', ...NO }),
+  'fish.culter': food('翘嘴', 8, 14, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', ...NO }),
+  'fish.yellowtail': food('黄尾鲴', 5, 12, 'neutral', ['umami', 'fishy'], { keep: 1, kin: 'fish', short: '黄尾', ...NO }),
+  'fish.catfish': food('鲶鱼', 6, 16, 'neutral', ['umami', 'fishy', 'soft'], { keep: 1, kin: 'fish', ...NO }),
+  // 钓鱼时拉上来的河鲜：跟鱼一起装进鱼篓（creel），下锅不算「鱼」
+  shrimp: food('河虾', 4, 5, 'warm', ['umami', 'sweet'], { season: [0, 1], keep: 1, creel: true, ...NO }),
+  crab: food('毛蟹', 8, 8, 'cool', ['umami', 'fishy'], { season: [2], keep: 1, creel: true, ...NO }),
   tea: food('茶叶', 4, 0, 'cool', ['fragrant', 'alert'], { season: [0, 2], short: '茶' }),
   // 走图翻找、路边捡到的野货（见 content/search.js；名单照 G-08）
   wildPeach: food('野桃', 2, 6, 'warm', ['sweet', 'crisp', 'raw'], { season: [1], ...NO }),
@@ -130,6 +142,12 @@ const RAW = {
   pebble: stuff('鹅卵石', 'material', 1, { ...NO, text: '圆润光滑，攒多了能铺院里的小路' }),
   moss: stuff('青苔', 'material', 1, { ...NO, text: '绒绒的，修院子时点缀在石缝里' }),
   straw: stuff('稻草', 'material', 1, { ...NO, season: [2, 3], text: '编草绳、苫草棚，沤了能肥地' }),
+  // 钓鱼时钩上来的（G-09）
+  waterweed: stuff('水草团', 'material', 0, { ...NO, text: '湿漉漉一大团。放回家里，给菜地施肥时当肥用' }),
+  oldSandal: stuff('破草鞋', 'material', 0, { ...NO, text: '谁家冲下来的。工作台上拆开，还有两把稻草' }),
+  shard: stuff('青瓷片', 'material', 5, { ...NO, text: '天青釉的碎瓷，花纹清清楚楚。杂货铺收，小乔见了准喜欢' }),
+  oldCoin: stuff('旧铜钱', 'material', 4, { ...NO, text: '带绿锈的老钱，字还认得出。杂货铺按古钱收' }),
+  shuttle: stuff('木头梭子', 'material', 0, { ...NO, text: '绕着麻线的织补梭，像是谁家掉的' }),
   // —— 工具
   umbrella: stuff('油纸伞', 'tool', 8, { sell: false }),
   flask: stuff('竹筒水壶', 'tool', 4, { sell: false, text: '装进行囊，渴了随时喝' }),
@@ -207,14 +225,50 @@ export function eatenAs(id) {
   };
 }
 
-// 有人正用得上的东西（石伯编筐要竹篾），不是吃的也送得出手。
-const WANTED = new Set(
-  Object.values(PEOPLE).flatMap(person => ('treats' in person ? person.treats : [])),
-);
+// 有人正用得上的东西（石伯编筐要竹篾），不是吃的也送得出手；别人掉了的东西也得能还回去。
+const WANTED = new Set([
+  ...Object.values(PEOPLE).flatMap(person => ('treats' in person ? person.treats : [])),
+  ...Object.keys(FOUND_OWNERS),
+]);
 
 /** 拿得出手的东西：吃的、零嘴、手艺活，和有人用得上的材料。种子、柴火、工具不好拿去送人。 */
 export const giftable = id =>
   !!ITEMS[id] && (['food', 'snack', 'craft'].includes(ITEMS[id].kind) || WANTED.has(id));
+
+/**
+ * 带着竹篮出门时装进篮里的东西：路边翻到、采集点采到的野货，和鸡蛋（极品照原来那样算）。
+ * 篮子里的连篮子只占行囊一格，跟鱼篓一个道理；没带篮子照旧一样占一格。竹篮在工作台上用竹篾编。
+ */
+export const BASKET_GOODS = Object.freeze([
+  'herb',
+  'shepherd',
+  'shoot',
+  'mushroom',
+  'chestnut',
+  'tea',
+  'leaf',
+  'egg',
+  'wildPeach',
+  'peachGum',
+  'camphorWood',
+  'pinecone',
+  'pineNeedles',
+  'willowTwig',
+  'mugwort',
+  'malan',
+  'berry',
+  'brake',
+  'snail',
+  'mussel',
+  'cicadaShell',
+  'lotusPod',
+  'caltrop',
+  'lotusFlower',
+  'pebble',
+  'moss',
+  'straw',
+  'earthEar',
+]);
 
 /** 阿满肯收的东西：能卖的吃食和手艺活。 */
 export const basketTakes = id =>

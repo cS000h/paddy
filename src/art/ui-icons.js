@@ -136,6 +136,13 @@ const MAKERS = {
     g.rect(6, 6, 4, 4, P.paper0);
     return g;
   },
+  // 摊开的线装小册：图鉴
+  tab_catalog() {
+    const g = blank();
+    g.rect(2, 4, 6, 9, P.paper0).rect(8, 4, 6, 9, P.paper1).vline(8, 4, 12, P.t3);
+    g.hline(3, 6, 6, P.ink2).hline(3, 6, 9, P.ink2).hline(9, 12, 6, P.ink2).set(11, 9, P.g4);
+    return g.hline(2, 13, 13, P.t3);
+  },
   tab_folk() {
     const g = blank();
     g.hline(6, 9, 3, P.t3).rect(5, 4, 6, 7, P.y1).hline(6, 9, 11, P.t3);

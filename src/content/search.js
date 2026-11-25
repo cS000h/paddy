@@ -219,7 +219,8 @@ export const SEARCH_BOOK = Object.freeze([
 export const SEARCH_LINES = Object.freeze({
   fine: '细看是{name}！',
   first: '头一回找到{name}。',
-  full: '行囊满了，腾个地方再翻',
+  full: '行囊满了。编个竹篮带着，野货都能装进篮里',
+  left: '行囊装不下，只好放回原处。',
   tired: '太累了，先歇歇',
   done: '今天翻过了',
   far: '走到跟前再翻',

@@ -65,11 +65,11 @@ test('熟悉度与厨艺做出特质；获得后预览与出锅仍一致', () =>
     3,
   );
 });
-test('30个成就按事实计数，只落印一次；存取后进度和特质不丢', () => {
+test('成就按事实计数，只落印一次；存取后进度和特质不丢', () => {
   const g = newGame(),
     seen = [];
   g.on('achievement.earned', e => seen.push(e.data.id));
-  assert.equal(g.ask('achievements').length, 30);
+  assert.equal(g.ask('achievements').length, 48);
   must(g, 'farm.till', FIELD);
   assert.ok(seen.includes('soil1'));
   assert.equal(g.ask('achievements').find(a => a.id === 'soil1').day, 1);
