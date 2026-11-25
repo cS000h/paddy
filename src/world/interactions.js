@@ -282,7 +282,7 @@ export function poke(scene, decor) {
     const out = game.dispatch('search', { spot, at: scene.at() });
     if (!out.ok) return scene.refuse(out.reason);
     const f = out.facts.find(x => x.type === 'search.found' || x.type === 'search.empty');
-    if (f.type === 'search.found') {
+    if (f.type === 'search.found' && !f.data.left) {
       scene.effects.found(sprite.x, top, f.data.fine);
       platform.audio.play(f.data.fine ? 'fine' : 'harvest');
       if (f.data.fine) platform.haptic([14, 60, 24]);

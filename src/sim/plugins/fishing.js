@@ -1,12 +1,14 @@
 // 钓鱼：下竿、看漂、遛鱼。数据和说的话在 content/fishing.js。
 //   fish.cast {at, bait}  → fish.cast {who, spot, bait}
 //       下竿。这一竿钓到什么鱼、多长、浮漂怎么动、遛的时候冲几回，当场就定好了。
-//   fish.hook {at, t}     → fish.hooked {who, size} | fish.spooked {who, line} | fish.missed {who, line}
-//       看漂时第 t 毫秒提竿；t 为 -1 是一直没提。
-//   fish.land {at, log}   → fish.caught {who, item, fish, name, len, lenText, grade, gradeWord, n, fine,
-//                                          record, first, line, cheer}
+//   fish.hook {at, t}     → fish.hooked {who, size, leap} | fish.spooked {who, line}
+//                         | fish.missed {who, line, junk}
+//       看漂时第 t 毫秒提竿；t 为 -1 是一直没提。提晚了，钩子偶尔倒挂上水草、石头（junk 是那样东西）。
+//   fish.land {at, log}   → fish.caught {who, item, fish, thing, name, folk, len, lenText, grade, gradeWord,
+//                                          n, fine, record, first, line, cheer}
 //                         | fish.lost {who, why, line}
-//       遛鱼：照按下、松开的记录 [[毫秒, 1 按着 | 0 松开]] 结算。
+//       遛鱼：照按下、松开的记录 [[毫秒, 1 按着 | 0 松开]] 结算。folk 是这条鱼按大小的叫法（板鲫、大翘）；
+//       thing 为真是拉上来的不是鱼（河虾、瓷片……），不量长短。
 //   fish.quit {at}        → fish.missed（看漂时）| fish.lost（遛鱼时）
 // 查询 fishing(at) 给画面看钓点、饵、这一竿怎么动；fish.fight(log, t) 是遛到第 t 毫秒的样子。
 // 遛鱼的结算和画面用的是同一个 simulate，画面上看到的就是结果。
@@ -21,19 +23,20 @@ import {
   FISH_SPOTS,
   FISH_BITE,
   FISHING,
-  FLOAT,
   FIGHT,
   FISH_FINE,
   FISH_LINES,
+  FISH_NAMES,
+  FISH_THINGS,
   WORM_ODDS,
   ZHOU_FISH_LINES,
   FISH_GRADES,
-  FISH_CHEERS,
-  CHEER_REACH,
+  FOUND_OWNERS,
 } from '../../content/fishing.js';
-import { PEOPLE } from '../../content/people.js';
+import { makeBout, junkTable } from '../fishing-bout.js';
 import { atStation } from '../stations.js';
 import { lenText, sizeOf, wellLog, simulate, personOk, noise } from '../fishing-fight.js';
+import { gradeOf, cheerFor, fightView } from '../fishing-fight.js';
 import { registerResidentOptions } from '../resident-options.js';
 
 export const fishing = {
@@ -60,25 +63,6 @@ export const fishing = {
       ctx.services;
     const { weather, quality, residents } = ctx.services;
 
-    /** 这条鱼在它那一种里算哪一档。 */
-    const gradeOf = (fish, len) => {
-      const [lo, hi] = FISH[fish].len;
-      const k = hi > lo ? (len - lo) / (hi - lo) : 0;
-      return FISH_GRADES.reduce((g, x) => (k >= x.from ? x : g), FISH_GRADES[0]);
-    };
-
-    /** 钓上大个儿、破了纪录：身边看得见的村民里，离得最近、有话说的那一位说一句。 */
-    function cheerFor(w, fish) {
-      const lines = FISH_CHEERS[fish] || {};
-      const me = people.me(w);
-      const far = p => Math.abs(p.x - me.x) + Math.abs(p.y - me.y);
-      const near = residents
-        .positions(w)
-        .filter(p => p.visible && p.map === me.map && Object.hasOwn(lines, p.id))
-        .filter(p => far(p) <= CHEER_REACH)
-        .sort((a, b) => far(a) - far(b))[0];
-      return near ? { who: near.id, line: PEOPLE[near.id].name + lines[near.id] } : null;
-    }
     schema.slice('fishing', {
       initial: (env, w) =>
         Object.fromEntries(
@@ -134,59 +118,37 @@ export const fishing = {
       return null;
     }
 
-    /** 下竿时把这一竿定好：钓什么、多长、浮漂怎么动、遛的时候冲几回。 */
-    function makeBout(w, id, spot, bait) {
-      /** @param {readonly number[]} r 从 r[0] 到 r[1] 之间抽一个整数 */
-      const between = r => Math.round(r[0] + (r[1] - r[0]) * core.random(w));
-      const season = dateOf(w.clock.day).season;
-      /** @type {[string, number][]} */
-      const table = Object.entries(FISH_SPOTS[spot].fish).map(([k, n]) => [
-        k,
-        n * FISH[k].season[season] * (dusk(w) ? FISH[k].dusk : 1),
-      ]);
-      const kind = core.weighted(
-        w,
-        table.filter(([, n]) => n > 0),
-      );
-      const f = FISH[kind];
-      const lean = bait ? FISHING.baitLen : FISHING.plainLen;
-      const len = Math.round(f.len[0] + (f.len[1] - f.len[0]) * core.random(w) ** lean);
-      const bites = core.random(w) < biteRate(w, id, spot, bait);
-      const wait = bait ? FISHING.baitWait : 1;
-      const nods = between(f.nods);
-      const events = [];
-      let at = Math.round(between(FLOAT.first) * wait);
-      for (let k = 0; k < nods; k++) {
-        const dur = between(FLOAT.nod);
-        events.push({ at, kind: 'nod', dur });
-        at += dur + Math.round(between(k === nods - 1 ? FLOAT.bite : FLOAT.gap) * wait);
-      }
-      let end;
-      if (bites) {
-        const window = Math.round(
-          compute.run('fish.window', { w, who: id, fish: kind }, { value: f.window, parts: [] })
-            .value,
-        );
-        events.push({ at, kind: 'bite', dur: window, drag: f.drag });
-        end = at + window;
-      } else end = at + between(FLOAT.idle);
-      const runs = [];
-      let from = between(FIGHT.firstRun);
-      const long = Math.min(FIGHT.run[2], FIGHT.run[0] + len * FIGHT.run[1]);
-      for (let k = 0; k < f.runs + Math.floor(len / FIGHT.perRun); k++) {
-        runs.push([from, long]);
-        from += long + between(FIGHT.gap);
-      }
-      return {
-        spot,
-        fish: kind,
-        len,
-        bait: !!bait,
-        phase: 'float',
-        float: { events, end },
-        runs,
-        day: w.clock.day,
+    /** 此刻的季节、早晚、天气、近来下没下过雨：挑鱼、挑杂物都看它。 */
+    const nowOf = w => ({
+      season: dateOf(w.clock.day).season,
+      dusk: dusk(w),
+      weather: w.weather.now,
+      wet: weather.wetLately(w),
+    });
+
+    /** 下竿时把这一竿定好（见 sim/fishing-bout.js）。身上揣着的失物不会再钓上来一件。 */
+    function boutFor(w, id, spot, bait) {
+      const tools = {
+        rand: () => core.random(w),
+        pick: table => core.weighted(w, table),
+        windowOf: (fish, ms) =>
+          Math.round(
+            compute.run('fish.window', { w, who: id, fish }, { value: ms, parts: [] }).value,
+          ),
       };
+      const skip = Object.keys(FOUND_OWNERS).filter(item => pack.reach(w, id, item) > 0);
+      const rate = biteRate(w, id, spot, bait);
+      return makeBout(tools, spot, nowOf(w), { bait, rate, skip, day: w.clock.day });
+    }
+
+    /** 提晚了钩上来的杂物：抽中了而且拿得了就收下，返回那一样；没有就是 null。 */
+    function snag(w, id, spot) {
+      const table = junkTable(spot, nowOf(w));
+      if (!table.length || core.random(w) >= FISHING.junk) return null;
+      const j = core.weighted(w, table);
+      if (!pack.fits(w, id, j.item) && !people.atHome(w, id)) return null;
+      pack.receive(w, id, j.item, 1, '钓鱼钩上来的');
+      return j;
     }
 
     /** 清爽、身边风物这类「多得一份」的好处，钓鱼也认。 */
@@ -220,7 +182,7 @@ export const fishing = {
       const spot = spotHere(w);
       if (bait) pack.use(w, id, bait, 1, '挂上钩');
       people.spend(w, draft, 'fish', fact);
-      w.fishing[id].bout = makeBout(w, id, spot, bait);
+      w.fishing[id].bout = boutFor(w, id, spot, bait);
       fact('fish.cast', { who: id, spot, bait });
     });
 
@@ -236,13 +198,20 @@ export const fishing = {
       const t = input.t;
       if (bite && t >= bite.at && t <= bite.at + bite.dur) {
         b.phase = 'fight';
-        fact('fish.hooked', { who: id, size: sizeOf(b.len) });
+        fact('fish.hooked', { who: id, size: sizeOf(b.len), leap: !!FISH[b.fish]?.leap });
         return;
       }
       w.fishing[id].bout = null;
       if (bite && t >= 0 && t < bite.at)
-        fact('fish.spooked', { who: id, line: FISH_LINES.spooked });
-      else fact('fish.missed', { who: id, line: bite ? FISH_LINES.missed : FISH_LINES.none });
+        return void fact('fish.spooked', { who: id, line: FISH_LINES.spooked });
+      // 提晚了：鱼跑了，钩子偶尔倒挂上来一团水草、一块石头（行囊放得下、或者人在院里才拿）
+      const junk = bite && t > bite.at + bite.dur ? snag(w, id, b.spot) : null;
+      const line = bite ? FISH_LINES.missed : FISH_LINES.none;
+      fact('fish.missed', {
+        who: id,
+        line: junk ? line + junk.line : line,
+        junk: junk?.item || null,
+      });
     });
 
     commands.register('fish.land', ({ draft, input, fact }) => {
@@ -259,8 +228,10 @@ export const fishing = {
         fact('fish.lost', { who: id, why: r.done, line: FISH_LINES[r.done] });
         return;
       }
+      const clean = r.peak < FIGHT.clean;
+      if (FISH_THINGS[b.fish]) return void landThing(w, id, FISH_THINGS[b.fish], clean, fact);
       const f = FISH[b.fish];
-      const got = quality.roll(w, id, 'fish', { clean: r.peak < FIGHT.clean }, f.item);
+      const got = quality.roll(w, id, 'fish', { clean }, f.item);
       const n = yieldOf(w, id);
       if (pack.fits(w, id, got.item) || people.atHome(w, id))
         pack.receive(w, id, got.item, n, '钓上来的');
@@ -275,18 +246,26 @@ export const fishing = {
       w.fishing[id].spots[b.spot] = { n: Math.min(99, scared(w, id, b.spot) + 1), at: now(w) };
       const name = ITEMS[got.item].name;
       const text = lenText(b.len);
+      const grade = gradeOf(b.fish, b.len);
+      // 照大小叫：钓上一条板鲫；大家伙另有一句
+      const folk = FISH_NAMES[b.fish].names[FISH_GRADES.indexOf(grade)];
+      // 头一回那句没提鱼名的（虎头鲨、彩鳞鱼），括号里补上，好认得是哪种
+      const firstLine = FISH_LINES.first[b.fish];
       let line = first
-        ? FISH_LINES.first[b.fish] + '（' + text + '）'
-        : fill(FISH_LINES.caught, { name, len: text });
+        ? firstLine + '（' + (firstLine.includes(f.name) ? '' : f.name + '，') + text + '）'
+        : grade.id === 'huge'
+          ? FISH_NAMES[b.fish].huge + '（' + text + '）'
+          : fill(FISH_LINES.caught, { name: folk, len: text });
       if (record) line += fill(FISH_LINES.record, { name: f.name });
       if (got.first) line += fill(FIRST_FINE, { name });
-      const grade = gradeOf(b.fish, b.len);
       const proud = record || grade.id === 'big' || grade.id === 'huge';
       fact('fish.caught', {
         who: id,
         item: got.item,
         fish: b.fish,
+        thing: false,
         name,
+        folk,
         len: b.len,
         lenText: text,
         grade: grade.id,
@@ -296,9 +275,36 @@ export const fishing = {
         record,
         first,
         line,
-        cheer: proud ? cheerFor(w, b.fish) : null,
+        cheer: proud ? cheerFor(b.fish, people.me(w), residents.positions(w)) : null,
       });
     });
+
+    /** 拉上来的不是鱼：收下，说一句。不量长短、不记纪录，钓点也不算惊了一回。 */
+    function landThing(w, id, thing, clean, fact) {
+      const got = quality.roll(w, id, 'fish', { clean }, thing.item);
+      if (pack.fits(w, id, got.item) || people.atHome(w, id))
+        pack.receive(w, id, got.item, thing.n, '钓上来的');
+      else pack.deliver(w, id, got.item, thing.n, '钓上来的');
+      const name = ITEMS[got.item].name;
+      fact('fish.caught', {
+        who: id,
+        item: got.item,
+        fish: thing.id,
+        thing: true,
+        name,
+        folk: name,
+        len: 0,
+        lenText: '',
+        grade: null,
+        gradeWord: '',
+        n: thing.n,
+        fine: got.fine,
+        record: false,
+        first: false,
+        line: thing.line + (got.first ? fill(FIRST_FINE, { name }) : ''),
+        cheer: null,
+      });
+    }
 
     commands.register('fish.quit', ({ draft, input, fact }) => {
       const w = draft.world;
@@ -379,15 +385,7 @@ export const fishing = {
     queries.define('fish.fight', (w, log, t) => {
       const b = mine(w).bout;
       if (!b || b.phase !== 'fight' || !wellLog(log) || !is.int(t, 0, 1e9)) return null;
-      const r = simulate(b, log, Math.min(t, FIGHT.max));
-      return {
-        t: r.t,
-        distance: r.distance,
-        tension: r.tension,
-        running: r.running,
-        holding: r.holding,
-        done: r.done,
-      };
+      return fightView(b, log, t);
     });
 
     ctx.provide('fishing', Object.freeze({ simulate, lenText }));

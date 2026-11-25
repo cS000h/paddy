@@ -1,6 +1,7 @@
 // 测试里搭场景用的小工具。规则测试一律通过端口发命令，不直接改世界的数据。
 import assert from 'node:assert/strict';
 import { createGame } from '../src/port/game.js';
+import { bestLog } from '../src/sim/cook-fire.js';
 
 /** 新开一局，写入检查总是开着。 */
 export const newGame = (seed = 1) => createGame({ seed, debug: true });
@@ -19,6 +20,10 @@ export function must(game, type, input = {}) {
   assert.equal(out.ok, true, `${type} 应该成功，却被拒绝：${why}`);
   return out.facts.map(f => f.type);
 }
+
+/** 亲自掌火、样样按在正当时的记录：先问这一锅的节拍，再照着按（炒三拍、炖守火、烤翻面全中）。 */
+export const bestFire = (game, input) =>
+  bestLog(game.ask('cook.preview', { ...input, log: null }).plan);
 
 /** 发一条必须被拒绝的命令，返回拒绝的原因。 */
 export function refused(game, type, input = {}) {

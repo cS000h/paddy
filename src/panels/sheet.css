@@ -542,15 +542,6 @@
   background: var(--mist);
 }
 
-.timing {
-  position: relative;
-  height: 40px;
-  margin: 18px 6px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--mist-2);
-}
-
 .stove-picture {
   display: grid;
   place-items: center;
@@ -606,22 +597,6 @@
 .cooked-story img {
   flex: none;
   image-rendering: pixelated;
-}
-
-.timing .zone {
-  position: absolute;
-  height: 100%;
-  background: var(--qing);
-  opacity: 0.75;
-}
-
-.timing i {
-  position: absolute;
-  width: 4px;
-  height: 100%;
-  margin-left: -2px;
-  background: var(--cinnabar);
-  box-shadow: 0 0 6px rgba(163, 55, 42, 0.6);
 }
 
 .origin-choices {

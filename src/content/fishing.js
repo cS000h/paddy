@@ -1,100 +1,117 @@
-// 钓鱼：六种鱼、三处钓点、鱼口、遛鱼的手感，和钓鱼时说的话。只有数据，规则在 sim/plugins/fishing.js。
+// 钓鱼：十三种鱼、三处钓点、鱼口、遛鱼的手感。只有数据，规则在 sim/plugins/fishing.js。
 // 长短的单位是寸（十寸一尺）。看漂、遛鱼用毫秒；花掉的工夫用游戏里的分钟。
+// 说的话在 content/fish-text.js，钓上来的不是鱼在 content/fish-catch.js，这里一并转出去。
+export { FISH_LINES, FISH_BOOK, FISH_NAMES, FISH_CHEERS, ZHOU_FISH_LINES } from './fish-text.js';
+export { FISH_THINGS, FISH_JUNK, FOUND_OWNERS } from './fish-catch.js';
 
 /**
- * 六种鱼。
- *   item   物品编号（见 content/pantry.js，各种鱼下锅、送人都算「鱼」）
- *   len    长短（寸）：[最短, 最长]，多半偏短
- *   window 咬钩后留给你提竿的工夫（毫秒），本事好的再宽一点
- *   nods   咬钩前浮漂轻点几下：[最少, 最多]
- *   drag   咬钩时不往下沉，拖着浮漂往一边走
- *   runs   遛的时候本来就爱冲几回；再加上个头，每五寸多冲一回
- *   season 各季多不多：[春, 夏, 秋, 冬] 的倍数
- *   dusk   清早和傍晚的倍数（白天照 1 算）
+ * 十三种鱼。头六种是原有的，后七种出自 Gemini G-09（查了江南溪河里浮漂钓得上来的）。
+ *   item    物品编号（见 content/pantry.js，各种鱼下锅、送人都算「鱼」）
+ *   len     长短（寸）：[最短, 最长]，多半偏短
+ *   window  咬钩后留给你提竿的工夫（毫秒），本事好的再宽一点
+ *   nods    咬钩前浮漂轻点几下：[最少, 最多]；gap 点得多急（两下之间隔多久的倍数）
+ *   first   浮漂落下后多久头一回有动静（倍数；翘嘴漂还没站稳就来抢）
+ *   bite    咬钩时浮漂怎么动：sink 沉下去，drag 拖着走，lift 往上送（鳊鱼）
+ *   runs    遛的时候本来就爱冲几回；再加上个头，每五寸多冲一回；leap 冲的时候跃出水面
+ *   season  各季多不多：[春, 夏, 秋, 冬] 的倍数
+ *   dusk    清早和傍晚的倍数（白天照 1 算）
+ *   weather 什么天气多（倍数，没写的照 1 算）
  */
-export const FISH = Object.freeze({
-  bleak: {
-    id: 'bleak',
-    item: 'fish.bleak',
-    name: '白条',
-    len: [2, 5],
-    window: 380,
-    nods: [2, 4],
-    drag: false,
-    runs: 0,
-    season: [1, 1.4, 1, 0.3],
-    dusk: 1,
-  },
-  crucian: {
-    id: 'crucian',
-    item: 'fish.crucian',
-    name: '鲫鱼',
-    len: [3, 9],
-    window: 450,
-    nods: [1, 3],
-    drag: false,
-    runs: 0,
-    season: [1, 1, 1, 0.8],
-    dusk: 1,
-  },
-  yellowcat: {
-    id: 'yellowcat',
-    item: 'fish.yellowcat',
-    name: '昂刺鱼',
-    len: [3, 8],
-    window: 500,
-    nods: [0, 2],
-    drag: false,
-    runs: 1,
-    season: [0.8, 1.2, 1, 0.3],
-    dusk: 3,
-  },
-  carp: {
-    id: 'carp',
-    item: 'fish.carp',
-    name: '鲤鱼',
-    len: [6, 22],
-    window: 750,
-    nods: [0, 1],
-    drag: true,
-    runs: 1,
-    season: [1, 1, 1, 0.5],
-    dusk: 1,
-  },
-  grass: {
-    id: 'grass',
-    item: 'fish.grass',
-    name: '草鱼',
-    len: [8, 28],
-    window: 550,
-    nods: [0, 1],
-    drag: false,
-    runs: 1,
-    season: [0.3, 1, 1, 0.2],
-    dusk: 1,
-  },
-  mandarin: {
-    id: 'mandarin',
-    item: 'fish.mandarin',
-    name: '鳜鱼',
-    len: [6, 16],
-    window: 320,
-    nods: [0, 0],
-    drag: false,
-    runs: 1,
-    season: [1, 0.4, 0.4, 0],
-    dusk: 1,
-  },
+const fish = (id, name, d) => ({
+  id,
+  item: 'fish.' + id,
+  name,
+  gap: 1,
+  first: 1,
+  bite: 'sink',
+  leap: false,
+  dusk: 1,
+  weather: {},
+  ...d,
 });
 
-/** 三处钓点：地图编号 → 名字和各种鱼有几份。名字照地图上钓点的名牌。 */
+// prettier-ignore
+export const FISH = Object.freeze({
+  bleak: fish('bleak', '白条', { len: [2, 5], window: 380, nods: [2, 4], runs: 0, season: [1, 1.4, 1, 0.3] }),
+  crucian: fish('crucian', '鲫鱼', { len: [3, 9], window: 450, nods: [1, 3], runs: 0, season: [1, 1, 1, 0.8] }),
+  yellowcat: fish('yellowcat', '昂刺鱼', { len: [3, 8], window: 500, nods: [0, 2], runs: 1, season: [0.8, 1.2, 1, 0.3], dusk: 3 }),
+  carp: fish('carp', '鲤鱼', { len: [6, 22], window: 750, nods: [0, 1], bite: 'drag', runs: 1, season: [1, 1, 1, 0.5] }),
+  grass: fish('grass', '草鱼', { len: [8, 28], window: 550, nods: [0, 1], runs: 1, season: [0.3, 1, 1, 0.2] }),
+  mandarin: fish('mandarin', '鳜鱼', { len: [6, 16], window: 320, nods: [0, 0], runs: 1, season: [1, 0.4, 0.4, 0] }),
+  // 伏底猛吸一口：漂先顿一下就死死黑漂；劲沉贴底。春秋、早晚、阴雨多
+  sleeper: fish('sleeper', '塘鳢鱼', { len: [3, 6], window: 420, nods: [1, 1], runs: 1, season: [1.4, 0.6, 1.2, 0.2], dusk: 2,
+    weather: { overcast: 1.4, drizzle: 1.4, rain: 1.6 } }),
+  // 口极轻，细碎点两三下；晴天多
+  bitterling: fish('bitterling', '鳑鲏', { len: [1, 3], window: 300, nods: [2, 3], runs: 0, season: [1.2, 1.2, 1, 0.2],
+    weather: { sunny: 1.3, cloudy: 1.2, rain: 0.6 } }),
+  // 抢食极急，浮漂乱抖后猛拉黑漂；晴天午后最闹窝
+  topmouth: fish('topmouth', '麦穗鱼', { len: [1, 3], window: 330, nods: [3, 5], gap: 0.4, runs: 0, season: [1.2, 1.4, 1.2, 0.2],
+    dusk: 0.8, weather: { sunny: 1.4 } }),
+  // 送漂：先晃一下再稳稳往上顶；侧身横游，力道稳
+  bream: fish('bream', '鳊鱼', { len: [6, 13], window: 700, nods: [1, 1], bite: 'lift', runs: 1, season: [0.6, 1.2, 1.2, 0.3],
+    dusk: 1.6, weather: { overcast: 1.4 } }),
+  // 半水抢食：漂还没站稳就斜拉黑漂；前两下极猛，常跃出水面甩头
+  culter: fish('culter', '翘嘴', { len: [5, 18], window: 320, nods: [0, 0], first: 0.35, bite: 'drag', runs: 1, leap: true,
+    season: [0.4, 1.3, 1.3, 0.1], dusk: 2.5, weather: { overcast: 1.3 } }),
+  // 轻顿一下就干脆斜拉黑漂；个头不大劲极猛
+  yellowtail: fish('yellowtail', '黄尾鲴', { len: [5, 12], window: 380, nods: [1, 1], bite: 'drag', runs: 2,
+    season: [0.4, 1.2, 1.2, 0.2], dusk: 1.4, weather: { cloudy: 1.3, drizzle: 1.6 } }),
+  // 几乎不点漂，沉稳地拖黑走深；贴底打桩。傍晚、阴雨天最多，晴天少
+  catfish: fish('catfish', '鲶鱼', { len: [7, 18], window: 850, nods: [0, 0], bite: 'drag', runs: 1, season: [0.5, 1.3, 1, 0],
+    dusk: 3, weather: { sunny: 0.4, overcast: 1.8, drizzle: 2, rain: 2.5 } }),
+});
+
+/**
+ * 三处钓点：地图编号 → 名字和各种鱼有几份。名字照地图上钓点的名牌。
+ * 白条、鲫鱼、昂刺这些家常鱼占大半，新来的几种靠季节、早晚、天气分出来：选对了天色才出稀客。
+ */
 export const FISH_SPOTS = Object.freeze({
-  yard: { id: 'yard', name: '溪湾钓点', fish: { bleak: 5, crucian: 4, yellowcat: 2 } },
-  creek: { id: 'creek', name: '竹影钓点', fish: { bleak: 4, crucian: 5, yellowcat: 2 } },
+  yard: {
+    id: 'yard',
+    name: '溪湾钓点',
+    fish: {
+      bleak: 5,
+      crucian: 4,
+      yellowcat: 2,
+      topmouth: 1.5,
+      bitterling: 1.2,
+      sleeper: 0.8,
+      catfish: 0.2,
+    },
+  },
+  creek: {
+    id: 'creek',
+    name: '竹影钓点',
+    fish: {
+      bleak: 4,
+      crucian: 5,
+      yellowcat: 2,
+      topmouth: 1.2,
+      bitterling: 1.2,
+      yellowtail: 1,
+      sleeper: 0.4,
+      bream: 0.3,
+      culter: 0.3,
+      catfish: 0.1,
+    },
+  },
   river: {
     id: 'river',
     name: '渡口钓点',
-    fish: { crucian: 4, carp: 3, grass: 3, yellowcat: 2, mandarin: 0.7 },
+    fish: {
+      crucian: 4,
+      carp: 3,
+      grass: 3,
+      yellowcat: 2,
+      bream: 1.5,
+      culter: 1.2,
+      yellowtail: 1,
+      catfish: 0.8,
+      mandarin: 0.7,
+      topmouth: 0.3,
+      bitterling: 0.3,
+      sleeper: 0.2,
+    },
   },
 });
 
@@ -127,6 +144,8 @@ export const FISHING = Object.freeze({
   baitWait: 0.7, // 挂了饵，等得短一些
   minutes: 8, // 看一回漂过去多少分钟
   fightMinutes: 4, // 遛一回鱼起码过去多少分钟，鱼每冲一回再加 2
+  things: 0.1, // 有东西来咬时，拉上来的不是鱼的把握（河虾、毛蟹、瓷片……）
+  junk: 0.3, // 提竿晚了，钩子倒挂上水草、石头的把握
 });
 
 /** 看漂：毫秒。 */
@@ -137,6 +156,8 @@ export const FLOAT = Object.freeze({
   bite: [600, 1400], // 最后一下之后多久咬钩
   idle: [3000, 5000], // 没有鱼来，等多久收竿
   skill: 30, // 采集本事每一级，咬钩的工夫宽多少
+  thing: 450, // 拉上来的不是鱼时，咬钩留给你提竿的工夫
+  thingNods: [0, 2],
 });
 
 /**
@@ -171,66 +192,6 @@ export const FISH_FINE = Object.freeze({ clean: 8 });
 /** 锄地时翻出蚯蚓的把握；近来下过雨更多。 */
 export const WORM_ODDS = Object.freeze({ dry: 0.15, wet: 0.3 });
 
-/** 钓鱼时冒的话。{name} 鱼名，{len} 长短。 */
-export const FISH_LINES = Object.freeze({
-  spooked: '浮漂才点了一下你就提竿，鱼一甩尾吓跑了。',
-  missed: '浮漂沉下去又浮上来，钩上的饵没了。',
-  none: '等了好一会儿，浮漂一动不动，你收起竿。',
-  quit: '你收起钓竿。',
-  snap: '线绷得太紧，“嘣”一声断了，鱼带着钩跑了。',
-  slack: '线一松，鱼甩掉钩子溜了。',
-  caught: '钓上一条{name}，{len}。',
-  record: '比以前钓过的{name}都长！',
-  worm: '锄起的土里扭着一条蚯蚓，你捏起来收好，钓鱼用得上。',
-  // 头一回钓上某种鱼说的一句（Gemini G-08）
-  first: {
-    bleak: '水面银光一闪，钩上挂了条细长扑腾的小白条。',
-    crucian: '浮漂轻轻一点，提竿上来条银亮活泼的巴掌鲫鱼。',
-    yellowcat: '刚提上岸就咕咕直叫，原来是条黄肚皮的昂刺鱼。',
-    carp: '鱼竿猛地一沉，费了好大劲才拽上来一条大鳞鲤鱼。',
-    grass: '水面炸开一大片水花，竟拉上来一条结实的大草鱼！',
-    mandarin: '鱼线绷得笔直，拉出条带花斑的肥鳜鱼，真稀罕！',
-  },
-});
-
-/** 鱼谱上的一句（Gemini G-08），图谱那一页用。 */
-export const FISH_BOOK = Object.freeze({
-  bleak: '细长银白如柳叶，爱在水面成群窜浪，油煎至酥脆最下酒。',
-  crucian: '溪塘最常见的小银鱼，背厚刺细，入冬攒膘熬汤能炖得雪白。',
-  yellowcat: '无鳞黄腹、背胸生硬刺，离水常咕咕叫，炖豆腐极鲜嫩。',
-  carp: '嘴边生须、鳞大身沉，河湾深水处多见，逢喜事常讨它的好口彩。',
-  grass: '青背白腹的河里大个头，专啃水草，鱼尾肉最活嫩鲜香。',
-  mandarin: '斑纹如锦、大口细鳞，藏在深石滩边，刺少肉如蒜瓣般细嫩。',
-});
-
-/** 钓上一条大的，旁边的人说一句（Gemini G-08）。集日比鱼、有人在旁边看时用。 */
-export const FISH_CHEERS = Object.freeze({
-  bleak: {
-    zhou: '拎起鱼线直乐，“好条大白条！入梅涨水那阵，它们专爱逆着急浪窜。”',
-    aman: '拍着板车喊，“这号大白条裹点面油炸酥，连骨头嚼着都喷香！”',
-  },
-  crucian: {
-    zhou: '掂了掂鱼绳点头，“好肥的板鲫！天冷下来，这鱼熬汤最养人。”',
-    gui: '凑近瞧了瞧，“背厚肚圆，回家切几片白萝卜一炖，鲜得人直吞口水！”',
-  },
-  yellowcat: {
-    zhou: '提醒你捏稳鱼头，“小心它两根硬刺！这号大昂刺鱼，炖嫩豆腐最绝。”',
-    qiao: '探头不敢伸手，“它还在叫唤呢！听说镇上酒楼红烧昂刺鱼可贵啦！”',
-  },
-  carp: {
-    zhou: '抄网一兜笑道，“沉手哩！大夏天的河鲤肉最紧实，红烧最地道。”',
-    shi: '估摸着份量点头，“少说三四斤！拎去杂货铺称一称，准能卖个好价钱。”',
-  },
-  grass: {
-    zhou: '扶着鱼篓赞道，“好家伙，大草鱼力气足，亏你竿子稳没叫它跑了。”',
-    gui: '连声支招，“草鱼尾巴最嫩！回头切段做个熏鱼，能放好些天呢！”',
-  },
-  mandarin: {
-    zhou: '捋着胡子直夸，“好条大鳜鱼！桃花水发的时候，它最肥最鲜喽。”',
-    gui: '双手一拍惊呼，“蒜瓣肉的大鳜鱼！清蒸出来，整张桌子都体面！”',
-  },
-});
-
 /**
  * 同一种鱼按长短分四档（这一种鱼最短到最长之间排第几成）：小个儿、中不溜、大个儿、大家伙。
  * 拉上来那一下照档说、照档演；大个儿以上，身边的村民看见了会说一句（FISH_CHEERS）。
@@ -244,11 +205,3 @@ export const FISH_GRADES = Object.freeze([
 
 /** 钓上大个儿时，几格以内的村民看得见、会说一句。 */
 export const CHEER_REACH = 8;
-
-/** 问老周鱼口：按渡口那边的鱼口说。 */
-export const ZHOU_FISH_LINES = Object.freeze({
-  good: '“今儿个水色好，渡口这一片鱼口正旺，下竿吧。”',
-  fair: '“鱼口一般，耐着性子等，浮漂点几下别急着提。”',
-  spooked: '“这一片刚叫你钓惊了，过一两个时辰再来，或者换个地方。”',
-  storm: '“打雷天别在水边待着，鱼也躲到深处去了。”',
-});

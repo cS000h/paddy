@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newGame, must } from '../helpers.js';
 import { createGame } from '../../src/port/game.js';
+import { FIRE } from '../../src/content/cook-fire.js';
 const at = { x: 10, y: 11, dir: 'up' };
 const meal = { items: ['potato', 'bean'], method: 'stew', at };
 test('0.12菜谱对照：蛋炒饭、土豆炖豆子、香草烤土豆的名称与性味', () => {
@@ -92,11 +93,15 @@ test('刀工与黄酒沿用0.12：匹配切法饱腹加二、火候放宽，切�
   const shred = g.ask('cook.preview', { items: ['potato'], method: 'fry', cut: 'shred' });
   const chunk = g.ask('cook.preview', { items: ['potato'], method: 'fry', cut: 'chunk' });
   assert.equal(shred.full, base.full + 2);
-  assert.equal(shred.heat.half, base.heat.half + 3);
-  assert.equal(chunk.heat.half, base.heat.half - 3);
+  assert.equal(shred.fire.bonus, base.fire.bonus + 3);
+  assert.equal(chunk.fire.bonus, base.fire.bonus - 3);
+  // 放宽落在这一锅的节拍上：下料那一段宽三截，切块窄三截
+  assert.equal(shred.plan.smokeLong, base.plan.smokeLong + 3 * FIRE.widen);
+  assert.equal(chunk.plan.smokeLong, base.plan.smokeLong - 3 * FIRE.widen);
   const fish = g.ask('cook.preview', { items: ['fish'], method: 'stew' });
   const wine = g.ask('cook.preview', { items: ['fish'], method: 'stew', spices: ['wine'] });
-  assert.equal(wine.heat.half, fish.heat.half + 3);
+  assert.equal(wine.fire.bonus, fish.fire.bonus + 3);
+  assert.ok(wine.plan.band[1] - wine.plan.band[0] > fish.plan.band[1] - fish.plan.band[0]);
   const plain = newGame();
   must(plain, 'cook', { items: ['potato'], method: 'fry', at });
   must(g, 'cook', { items: ['potato'], method: 'fry', cut: 'shred', at });

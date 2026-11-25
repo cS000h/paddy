@@ -110,6 +110,15 @@ export const HOMEWORK = {
     cost: { strip: 3 },
     give: { basket: 1 },
   },
+  unpick: {
+    id: 'unpick',
+    kind: 'craft',
+    energy: 1,
+    label: '拆破草鞋',
+    station: 'workbench',
+    cost: { oldSandal: 1 },
+    give: { straw: 2 },
+  },
   bigbasket: {
     id: 'bigbasket',
     kind: 'craft',

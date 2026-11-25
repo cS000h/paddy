@@ -27,6 +27,7 @@ export const SCRIPTS = Object.freeze({
   // 院里
   split: [{ act: 'chop', times: 2, around: 'chips', sound: 'hoe' }],
   weave: once('weave'),
+  unpick: once('weave'),
   bigbasket: once('weave'),
   pickle: once('press'),
   buildCoop: [{ act: 'hammer', times: 2, around: 'chips', sound: 'hoe' }],

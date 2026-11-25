@@ -23,6 +23,8 @@ import { GREETING_REPLY } from '../../content/encounters.js';
 import { TOPICS, tierOf, tierWord } from '../../content/talk.js';
 import { TIER_OPINION } from '../../content/opinion.js';
 import { GIFT_DISH, GIFT_ITEM, GIFT_FAVORITE, GIFT_SPOILED } from '../../content/gift-lines.js';
+import { FOUND_OWNERS } from '../../content/fish-catch.js';
+import { FIRE_TWISTS } from '../../content/cook-fire.js';
 import { ITEMS, CROPS, SOIL, kindOf } from '../../content/items.js';
 import { dateOf } from '../../content/calendar.js';
 import { giftable } from '../../content/pantry.js';
@@ -270,13 +272,18 @@ export const social = {
       if (dish) {
         favorite = person.favorite === dish.base;
         const spoiled = SPOILED.includes(dish.quality);
-        liked = !spoiled && (favorite || dish.buff === person.likes);
+        // 砸了也有点意思：有人偏爱这一口（阿满爱啃焦壳），送他算合心意
+        const twist = dish.twist ? FIRE_TWISTS[dish.twist] : null;
+        const fan = !!twist && 'fan' in twist && twist.fan === to;
+        liked = !spoiled && (favorite || fan || dish.buff === person.likes);
         value = spoiled ? 1 : favorite ? 4 : liked ? 3 : 2;
         line = spoiled
           ? GIFT_SPOILED[to]
           : favorite
             ? GIFT_FAVORITE[to]
-            : withGesture(to, band, GIFT_DISH[to][liked ? 'yes' : 'no'](dish.name), key);
+            : fan && 'fanLine' in twist
+              ? twist.fanLine
+              : withGesture(to, band, GIFT_DISH[to][liked ? 'yes' : 'no'](dish.name), key);
         if (favorite) {
           moods.cheer(w, to, 8);
           b.favs[to] = true;
@@ -299,6 +306,12 @@ export const social = {
             ? LINES[to].gift.replace('{n}', name)
             : say.no(name);
         line = withGesture(to, band, line, key);
+        // 把人家掉了的东西还给失主：情分照最爱吃的那一道算，说的话也不一样
+        if (FOUND_OWNERS[plain]?.owner === to) {
+          liked = true;
+          value = 4;
+          line = FOUND_OWNERS[plain].line;
+        }
       }
       b.gifted[to] = w.clock.day;
       const gain = relate(w, to, value, 'gift');

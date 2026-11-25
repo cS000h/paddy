@@ -1,11 +1,13 @@
 // L2-14 走图翻找：每天清早几处有动静，路边的东西每处每天翻一回，有动静的地方翻得出当季的东西，
-// 别处多半空手、连着没翻到机会慢慢加；野货出极品；不能吃的东西送人不说「吃」。规则一律通过端口问和做。
+// 别处多半空手、连着没翻到机会慢慢加；野货出极品；不能吃的东西送人不说「吃」；
+// 带着竹篮野货进篮不占格，满了翻到柴这些放回去。规则一律通过端口问和做。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
 import { MAPS, walkable } from '../../src/content/maps/index.js';
 import { ITEMS, plainOf } from '../../src/content/items.js';
 import { SEARCH, SEARCH_FINDS, SEARCH_BOOK } from '../../src/content/search.js';
+import { BASKET_GOODS } from '../../src/content/pantry.js';
 import { dateOf } from '../../src/content/calendar.js';
 import { noise } from '../../src/sim/noise.js';
 import { newGame, must, refused, carried, HOME } from '../helpers.js';
@@ -30,12 +32,40 @@ function goTo(g, map) {
   if (g.ask('hero').map !== map) must(g, 'travel.to', { to: map });
 }
 
-/** 行囊快满了，回家把翻到的东西放下（菜种留着）。 */
+/** 行囊快满了，回家把翻到的东西放下（菜种留着；篮子最后放，篮里还有东西时拿不走它）。 */
 function makeRoom(g) {
   if (g.ask('pack').room > 1) return;
   goTo(g, 'yard');
-  for (const it of g.ask('pack').items.filter(i => i.id !== 'seed.qingcai'))
+  const items = g.ask('pack').items.filter(i => i.id !== 'seed.qingcai');
+  for (const it of [
+    ...items.filter(i => i.id !== 'basket'),
+    ...items.filter(i => i.id === 'basket'),
+  ])
     must(g, 'pack.take', { item: it.id, n: 'all', at: HOME });
+}
+
+// 塞行囊用的杂货：哪儿都翻不到、也不进竹篮的东西，各占一格
+const FOUND = new Set(Object.values(SEARCH_FINDS).flatMap(k => k.finds.map(f => f.item)));
+const FILLER = Object.keys(ITEMS).filter(
+  k =>
+    ITEMS[k].carry &&
+    ITEMS[k].size === 1 &&
+    !k.includes('.') &&
+    !FOUND.has(k) &&
+    !BASKET_GOODS.includes(k) &&
+    !['basket', 'fish', 'flask'].includes(k) &&
+    ITEMS[k].kin !== 'fish',
+);
+
+/** 换一份行囊：带着 keep 这几样，空下的格子拿杂货塞满。 */
+function packed(seed, keep) {
+  const save = JSON.parse(JSON.stringify(newGame(seed).save()));
+  const p = save.state.world.packs.hero;
+  const slots = Object.keys(keep).filter(k => !(keep.basket && BASKET_GOODS.includes(k))).length;
+  p.items = { ...keep };
+  p.dishes = [];
+  for (const k of FILLER.slice(0, p.cap - slots)) p.items[k] = 1;
+  return createGame({ saved: save, debug: true });
 }
 
 /** 翻一处：行囊腾出地方，走过去，站在旁边翻。返回命令的结果。 */
@@ -199,4 +229,48 @@ test('送人不能吃的东西（荷花、柳条……）对方不说「吃」',
   const line = given.facts.find(f => f.type === 'gift.given').data.line;
   assert.doesNotMatch(line, /吃/);
   assert.equal(carried(h, 'lotusFlower'), 0);
+});
+
+test('带着竹篮，翻到的野货装进篮里不占格；满了翻到柴、竹篾这些只好放回去；没带篮子满了不让翻', () => {
+  let wild = 0;
+  let left = 0;
+  for (let seed = 1; seed <= 30 && (wild < 3 || !left); seed++) {
+    const g = packed(seed, { basket: 1 });
+    assert.equal(g.ask('pack').room, 0);
+    assert.ok(g.ask('pack').basket);
+    for (const c of cuesOf(g).filter(x => x.map !== 'yard')) {
+      goTo(g, c.map);
+      const out = g.dispatch('search', { at: besideOf(c.map, c), spot: { x: c.x, y: c.y } });
+      assert.ok(out.ok, out.reason);
+      const f = out.facts.find(x => x.type === 'search.found').data;
+      if (BASKET_GOODS.includes(plainOf(f.item))) {
+        assert.ok(!f.left && f.n >= 1, f.item);
+        assert.ok(carried(g, f.item) >= f.n);
+        wild++;
+      } else {
+        assert.ok(f.left && f.n === 0, f.item);
+        assert.match(f.line, /放回原处/);
+        assert.equal(carried(g, f.item), 0);
+        left++;
+      }
+      assert.equal(g.ask('pack').room, 0);
+    }
+  }
+  assert.ok(wild >= 3, `只有 ${wild} 回翻到野货`);
+  assert.ok(left >= 1, '一回都没碰上装不下的柴、竹篾');
+  const g = packed(3, {});
+  const c = cuesOf(g).find(x => x.map !== 'yard');
+  goTo(g, c.map);
+  assert.match(refused(g, 'search', { at: besideOf(c.map, c), spot: { x: c.x, y: c.y } }), /竹篮/);
+});
+
+test('篮里的山货多过空格时拿不走篮子；放下一些，篮子就能拿出来', () => {
+  const g = packed(1, { basket: 1, herb: 2, mushroom: 1 });
+  assert.equal(g.ask('pack').room, 0);
+  assert.match(refused(g, 'pack.take', { item: 'basket', n: 1, at: HOME }), /竹篮里还装着山货/);
+  must(g, 'pack.take', { item: 'herb', n: 'all', at: HOME });
+  must(g, 'pack.take', { item: 'basket', n: 1, at: HOME });
+  assert.equal(carried(g, 'mushroom'), 1);
+  assert.equal(g.ask('pack').room, 0);
+  assert.ok(!g.ask('pack').basket);
 });

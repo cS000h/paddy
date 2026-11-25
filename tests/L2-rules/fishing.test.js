@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
 import { kindOf } from '../../src/content/items.js';
 import { lenText } from '../../src/sim/fishing-fight.js';
-import { FISH } from '../../src/content/fishing.js';
+import { FISH, FISH_THINGS } from '../../src/content/fishing.js';
 import { newGame, must, refused, fishOnce, FISH_SPOT, HOME } from '../helpers.js';
 
 const at = FISH_SPOT;
@@ -106,6 +106,14 @@ test('钓上来：鱼进行囊，事实里有名字和长短；头一回说来�
     if (!c) continue;
     caught++;
     const d = c.data;
+    // 偶尔拉上来的不是鱼：不量长短、不记纪录
+    if (d.thing) {
+      assert.ok(Object.hasOwn(FISH_THINGS, d.fish));
+      assert.equal(d.lenText, '');
+      assert.ok(!d.record && !d.first);
+      must(g, 'pack.take', { item: d.item, n: 'all', at: HOME });
+      continue;
+    }
     assert.ok(Object.hasOwn(FISH, d.fish));
     assert.equal(kindOf(d.item), 'fish');
     assert.equal(d.lenText, lenText(d.len));

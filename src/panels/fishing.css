@@ -33,19 +33,72 @@
   -webkit-user-select: none;
 }
 
-/* 结果页：桌面上水面在上、话在下；矮屏上并排，「再下一竿」不被挤到下面去 */
-.compact .sheet .fish-result {
+/* 看漂、遛鱼、结果页：桌面上水面在上、字和按钮在下；矮屏上水面在左、右边是字和按钮，
+   小窗压在下半截，上面还看得见人在钓（Gemini G-09 设计图说明） */
+.compact .sheet .fish-result,
+.compact .sheet .fish-play {
   display: grid;
   grid-template-columns: minmax(0, 46%) 1fr;
   gap: 10px;
   align-items: center;
 }
-.compact .sheet .fish-result .fish-scene {
+.compact .sheet .fish-result .fish-scene,
+.compact .sheet .fish-play .fish-scene {
   width: 100%;
   margin: 0;
 }
-.compact .sheet .fish-result p {
+.compact .sheet .fish-result p,
+.compact .sheet .fish-play p {
   margin: 2px 0;
+}
+.compact .sheet .fish-play .actions {
+  margin-top: 6px;
+}
+
+/* 遛鱼：鱼离岸（水青）、线绷着（最后四分之一是要断的地方，浅粉底、一道红线） */
+.sheet .fish-bars {
+  margin: 4px 0;
+}
+.sheet .fish-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0;
+  font-size: 0.9em;
+}
+.sheet .fish-bar i {
+  position: relative;
+  flex: 1;
+  height: 10px;
+  border: 2px solid var(--line, #7b593a);
+  background: #f6f1e3;
+}
+.sheet .fish-bar b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  background: #74a6ad;
+}
+.sheet .fish-bar.line b {
+  width: 0;
+  background: #c0a578;
+}
+.sheet .fish-bar.line em {
+  position: absolute;
+  inset: 0 0 0 75%;
+  border-left: 2px solid #aa4332;
+  background: rgba(246, 211, 204, 0.6);
+}
+.sheet .fish-bar .danger b {
+  background: #d1604a;
+}
+.sheet .fish-state {
+  margin: 4px 0 0;
+  font-weight: bold;
+  color: #34423f;
+}
+.sheet .fish-state.warn {
+  color: #aa4332;
 }
 .compact .sheet .fish-big {
   width: 48px;
@@ -99,15 +152,33 @@
   font-weight: normal;
   font-size: 0.85em;
 }
+/* 四枚小标签：头一回水青、新纪录暖褐、极品浅金、大家伙金红 */
+.sheet .fish-mark.first {
+  border-color: #74a6ad;
+  color: #34423f;
+  background: #d0e6e0;
+}
+.sheet .fish-mark.record {
+  border-color: #9f774c;
+  color: #5a402a;
+  background: #ece4d0;
+}
 .sheet .fish-mark.gold {
   border-color: #d0a646;
   color: #a0844a;
   background: #f7e6a8;
 }
 .sheet .fish-mark.big {
-  border-color: #34423f;
-  background: #34423f;
-  color: #fcf9f1;
+  border-color: #aa4332;
+  color: #7f3025;
+  background: #eacb6e;
+}
+/* 极品、大家伙：鱼图换上暖金双线框 */
+.sheet .fish-catch.framed .fish-big {
+  box-sizing: content-box;
+  padding: 2px;
+  border: 4px double #d0a646;
+  background: #f6f1e3;
 }
 .sheet .fish-cheer {
   margin-top: 2px;

@@ -68,14 +68,14 @@ test('三处水面的动作帧、物品图标与矮屏尺寸', async t => {
           c.width = c.height = 16;
           c.getContext('2d').putImageData(new ImageData(grid.bytes(), 16, 16), 0, 0);
           const tag = document.createElement('i');
-          tag.append(c, ['鲫鱼', '白条', '鲤鱼', '草鱼', '昂刺鱼', '鳜鱼', '蚯蚓'][i]);
+          tag.append(c, Object.keys(fishItems)[i]);
           items.append(tag);
           return c.toDataURL();
         });
         const cues = [];
         const platform = { audio: { play: id => cues.push(id) }, haptic: () => cues.push('震动') };
         for (const cue of ['nod', 'bite', 'reel', 'snap', 'splash']) fishingCue(platform, cue);
-        const moving = ['nod', 'bite', 'drag', 'hook', 'snap', 'slack', 'landed'].every(
+        const moving = ['nod', 'bite', 'drag', 'lift', 'hook', 'snap', 'slack', 'landed'].every(
           action =>
             image('yard', { action, progress: 0 }).toDataURL() !==
             image('yard', { action, progress: 0.55 }).toDataURL(),
@@ -84,7 +84,7 @@ test('三处水面的动作帧、物品图标与矮屏尺寸', async t => {
         return { size: [rect.width, rect.height], icons: new Set(icons).size, moving, cues };
       }, screen === 'phone');
       assert.ok(result.size[0] >= (screen === 'phone' ? 360 : 480) && result.size[1] >= 110);
-      assert.equal(result.icons, 7);
+      assert.equal(result.icons, 21, '十三种鱼、河虾毛蟹、五样钩上来的东西和蚯蚓，没有两张一样的');
       assert.ok(result.moving);
       assert.deepEqual(result.cues, ['nod', 'bite', '震动', 'reel', 'snap', 'splash']);
       await shot(page, `a05-art-${screen}.png`);

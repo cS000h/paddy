@@ -9,7 +9,14 @@ import { validDish, dishSize } from '../dish.js';
 import { is, check } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { ITEMS } from '../../content/items.js';
-import { START_PACK, eatenAs, giftable, basketTakes } from '../../content/pantry.js';
+import {
+  START_PACK,
+  BASKET_GOODS,
+  eatenAs,
+  giftable,
+  basketTakes,
+  plainOf,
+} from '../../content/pantry.js';
 import { BODY, SNACK_BUFF_USES, buffUses } from '../../content/body.js';
 
 export const PACK_SLOTS = 6;
@@ -24,11 +31,17 @@ export const pack = {
     const { schema, commands, queries, core, people, store, body } = ctx.services;
 
     // 钓上来的各种鱼都装在一只鱼篓里，合起来只占一格（content 里 kin 为「鱼」的，和老的「鱼」）
-    const inCreel = k => k === 'fish' || ITEMS[k].kin === 'fish';
+    const inCreel = k => k === 'fish' || ITEMS[k].kin === 'fish' || !!ITEMS[k].creel;
+    // 带着竹篮，野货和鸡蛋都装进篮里，不另占格（篮子自己占一格）
+    const WILD = new Set(BASKET_GOODS);
+    const inBasket = (items, k) => (items.basket || 0) > 0 && WILD.has(plainOf(k));
     const sizeOf = items => {
       const keys = Object.keys(items);
       const creel = keys.some(inCreel) ? 1 : 0;
-      return keys.reduce((sum, k) => sum + (inCreel(k) ? 0 : ITEMS[k].size), creel);
+      return keys.reduce(
+        (sum, k) => sum + (inCreel(k) || inBasket(items, k) ? 0 : ITEMS[k].size),
+        creel,
+      );
     };
 
     schema.slice('packs', {
@@ -81,6 +94,7 @@ export const pack = {
       !!ITEMS[item]?.carry &&
       (count(w, id, item) > 0 ||
         (inCreel(item) && Object.keys(w.packs[id].items).some(inCreel)) ||
+        inBasket(w.packs[id].items, item) ||
         room(w, id) >= ITEMS[item].size);
 
     const put = ctx.own((w, id, item, n = 1, why = null) => {
@@ -95,6 +109,13 @@ export const pack = {
     const take = ctx.own((w, id, item, n = 1, why = null) => {
       if (!is.int(n, 1) || count(w, id, item) < n) refuse(`身上没带${ITEMS[item]?.name || '它'}`);
       const left = count(w, id, item) - n;
+      if (item === 'basket' && !left) {
+        const rest = { ...w.packs[id].items };
+        delete rest.basket;
+        const dishes = w.packs[id].dishes.reduce((k, d) => k + dishSize(d), 0);
+        if (sizeOf(rest) + dishes > w.packs[id].cap)
+          refuse('竹篮里还装着山货，先把山货放下再拿篮子');
+      }
       if (left) w.packs[id].items[item] = left;
       else delete w.packs[id].items[item];
       core.log(w, id, 'pack:' + item, -n, why);
@@ -241,6 +262,7 @@ export const pack = {
         used: used(w, id),
         room: room(w, id),
         big: p.big,
+        basket: count(w, id, 'basket') > 0,
         atHome: home,
         items: Object.entries(p.items).map(view),
         dishes: p.dishes,
