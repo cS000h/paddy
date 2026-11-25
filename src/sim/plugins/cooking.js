@@ -11,7 +11,7 @@ import { refuse } from '../../kernel/dispatch.js';
 import { MAPS } from '../../content/maps/index.js';
 import { RECIPES, QUALITY } from '../../content/recipes.js';
 import { COOK_TEXT } from '../../content/life-text.js';
-import { FIRE_PERFECT } from '../../content/cook-fire.js';
+import { FIRE_PERFECT, FIRE_QUALITY, FIRE_TWISTS } from '../../content/cook-fire.js';
 import { fireAt } from '../cook-fire.js';
 import { fill } from '../../content/text.js';
 import { previewMeal } from '../cuisine.js';
@@ -19,9 +19,13 @@ import { validDish } from '../dish.js';
 import { near } from './people.js';
 
 // 出锅的一段话（沿用 0.12）：凉拌是摆上桌，其余先说火候再说出锅；头一回做、用了时令菜各添一句。
-// 掌火全中（镬气十足、汤白如奶、外焦里嫩）换那一句。
+// 火候那一句照做法分开说（G-11）；掌火全中、砸了也有点意思，换那一句。
 function cookedLine(dish, first) {
-  const fire = dish.perfect ? FIRE_PERFECT[dish.method].line : QUALITY[dish.quality].line;
+  const fire = dish.perfect
+    ? FIRE_PERFECT[dish.method].line
+    : dish.twist
+      ? FIRE_TWISTS[dish.twist].line
+      : FIRE_QUALITY[dish.method]?.[dish.quality] || QUALITY[dish.quality].line;
   const values = { quality: fire, servings: dish.servings, name: dish.name };
   return (
     fill(dish.method === 'mix' ? COOK_TEXT.mix : COOK_TEXT.done, values) +

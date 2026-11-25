@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newGame, refused, bestFire } from '../helpers.js';
-import { FIRE, FIRE_PERFECT } from '../../src/content/cook-fire.js';
+import { FIRE, FIRE_PERFECT, FIRE_QUALITY, FIRE_TWISTS } from '../../src/content/cook-fire.js';
 
 const at = { x: 10, y: 11, dir: 'up' };
 const FRY = { items: ['rice', 'egg'], method: 'fry' };
@@ -115,6 +115,7 @@ test('稳稳做不掌火是家常；按的记录不对不收，世界不动', ()
   const g = newGame();
   const d = cooked(g, FRY, null);
   assert.deepEqual([d.quality, d.perfect], ['plain', false]);
+  assert.ok(d.line.includes(FIRE_QUALITY.fry.plain), '火候那一句照做法说');
   for (const log of [
     [[500, 'flip']], // 炒不收翻面
     [
@@ -163,4 +164,111 @@ test('cook.fire：画面每一帧问到的样子，炒到了哪一拍、炖的�
   assert.equal(ask(ROAST, [[roast.brown[0] + 100, 'flip']], roast.brown[0] + 200).side, 1);
   assert.equal(ask(FRY, [], NaN), null);
   assert.equal(ask({ items: ['rice'], method: 'mix' }, [], 100), null);
+});
+
+test('刚按的那一下：下料、翻锅照正当时说，添柴看火，翻面照这一面；窜火之前火苗先拔高', () => {
+  const g = newGame();
+  const ask = (meal, log, t) => g.ask('cook.fire', meal, log, t);
+  const fry = planOf(g, FRY);
+  const add = fry.smoke + 10;
+  assert.deepEqual(ask(FRY, [[add, 'add']], add + 50).said, { key: 'add', v: 'right', at: add });
+  assert.equal(ask(FRY, [[fry.smoke - 900, 'add']], fry.smoke).said.v, 'early');
+  const tossAt = add + fry.flares[0] + 20;
+  assert.equal(
+    ask(
+      FRY,
+      [
+        [add, 'add'],
+        [tossAt, 'toss'],
+      ],
+      tossAt,
+    ).said.v,
+    'right',
+  );
+  assert.equal(
+    ask(
+      FRY,
+      [
+        [add, 'add'],
+        [add + 100, 'toss'],
+      ],
+      add + 100,
+    ).said.v,
+    'early',
+  );
+  const missed = add + fry.flares[0] + fry.flareLong + 200;
+  assert.equal(
+    ask(
+      FRY,
+      [
+        [add, 'add'],
+        [missed, 'toss'],
+      ],
+      missed,
+    ).said.v,
+    'late',
+  );
+  const rising = ask(FRY, [[add, 'add']], add + fry.flares[0] - 200);
+  assert.deepEqual(
+    [rising.beat, rising.rising, rising.cue, rising.flare],
+    ['toss', true, true, false],
+  );
+  // 刚开火火正旺，添柴早了；火快灭了才添，晚了
+  assert.equal(ask(STEW, [[100, 'stoke']], 150).said.v, 'early');
+  assert.equal(ask(STEW, [[8000, 'stoke']], 8050).said.v, 'late');
+  const roast = planOf(g, ROAST);
+  const flip = roast.brown[0] + 10;
+  assert.deepEqual(ask(ROAST, [[flip, 'flip']], flip).said, { key: 'flip', v: 'right', at: flip });
+  assert.equal(ask(ROAST, [], 100).said, null);
+});
+
+test('砸了也有点意思：扑了锅的浓汤少一份照样顶饱，炒过头的米饭结锅巴，欠火的青菜脆生不罚', () => {
+  // 柴添太猛：找一个熬过头、扑过锅的起锅时刻
+  const stoked = Array.from({ length: 14 }, (_, k) => [k * 450, 'stoke']);
+  const g = newGame();
+  const plain = g.ask('cook.preview', STEW);
+  const end = Array.from({ length: 60 }, (_, k) => 7000 + k * 250).find(
+    t => g.ask('cook.preview', { ...STEW, log: [...stoked, [t, 'serve']] }).twist === 'thick',
+  );
+  assert.ok(end, '柴添太猛，总有一刻是扑了锅、熬过头');
+  const thick = cooked(newGame(), STEW, [...stoked, [end, 'serve']]);
+  assert.deepEqual([thick.quality, thick.twist], ['over', 'thick']);
+  assert.equal(thick.servings, plain.servings - 1);
+  assert.equal(thick.name, FIRE_TWISTS.thick.prefix + plain.base);
+  assert.ok(thick.full > Math.round(plain.full * 0.85), '照样顶饱');
+  assert.ok(thick.line.includes(FIRE_TWISTS.thick.line));
+  // 炒过头的蛋炒饭：锅巴，吃着多一分心情
+  const fry = planOf(g, FRY);
+  const best = bestFire(g, FRY);
+  const late = best[0][0] + fry.color + fry.colorLong + FIRE.near + 100;
+  const crust = cooked(newGame(), FRY, serveAt(best, late));
+  assert.deepEqual([crust.quality, crust.twist, crust.name], ['over', 'crust', '锅巴蛋炒饭']);
+  assert.equal(crust.tasteMood, g.ask('cook.preview', FRY).tasteMood + 1);
+  // 欠火的炒青菜：脆生，饱腹、劲头照家常算，名字不带「夹生的」
+  const GREEN = { items: ['veg.qingcai'], method: 'fry' };
+  const green = planOf(g, GREEN);
+  const raw = bestFire(g, GREEN);
+  const early = raw[0][0] + green.color - FIRE.near - 100;
+  const crisp = cooked(newGame(), GREEN, serveAt(raw, early));
+  const usual = g.ask('cook.preview', GREEN);
+  assert.deepEqual([crisp.quality, crisp.twist], ['under', 'crisp']);
+  assert.deepEqual([crisp.full, crisp.uses, crisp.name], [usual.full, usual.uses, usual.base]);
+});
+
+test('烤焦了一面：焦皮，阿满偏爱这一口，送他算合心意', () => {
+  const g = newGame();
+  const plan = planOf(g, ROAST);
+  const best = bestFire(g, ROAST);
+  const late = plan.brown[0] + plan.brownLong + FIRE.near + 100;
+  const log = [[late, 'flip'], ...best.slice(1).map(([t, k]) => [t - best[0][0] + late, k])];
+  const d = cooked(g, ROAST, log);
+  assert.deepEqual([d.quality, d.twist], ['over', 'char']);
+  assert.ok(d.name.startsWith('焦皮'));
+  const id = d.ids[0];
+  assert.equal(g.dispatch('dish.pack', { id, at }).ok, true);
+  const given = g
+    .dispatch('gift', { to: 'aman', dish: id, at: { x: 20, y: 21 } })
+    .facts.find(f => f.type === 'gift.given').data;
+  assert.equal(given.line, FIRE_TWISTS.char.fanLine);
+  assert.equal(given.liked, true);
 });

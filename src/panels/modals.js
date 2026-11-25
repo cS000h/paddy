@@ -12,6 +12,7 @@ import { activityView } from './activities.js';
 import { fishingView } from './fishing.js';
 import { kitchenView, recipesView } from './kitchen.js';
 import { fireView } from './fire.js';
+import { cookedView } from './cooked.js';
 import { bagView, storeView } from './bag.js';
 import { basketView } from './village.js';
 import { mapView } from './map.js';
@@ -36,6 +37,7 @@ const VIEWS = {
   kitchen: kitchenView,
   recipes: recipesView,
   heat: fireView,
+  cooked: cookedView,
   water: n.waterView,
   talk: encounterView,
   sleep: n.sleepView,
@@ -63,6 +65,8 @@ const PLACE = {
   water: 'dialogue',
   sleep: 'dialogue',
   fishing: 'dialogue',
+  heat: 'dialogue',
+  cooked: 'dialogue',
   activity: 'dialogue',
   origin: 'center',
   event: 'dialogue',

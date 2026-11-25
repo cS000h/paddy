@@ -310,13 +310,15 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await shot(p, session === desk ? 'm2-kitchen-desktop.png' : 'm2-kitchen-phone.png');
       await p.locator('[data-do="cookHeat"]').click();
       // 亲自掌火炒一锅：先下料（桌面上空格就是按主键），再出锅
-      assert.match(await p.locator('.sheet h2').textContent(), /亲自掌火/);
+      assert.match(await p.locator('.sheet h2').textContent(), /掌火 · 炒/);
       if (session === desk) await p.keyboard.press('Space');
       else await p.locator('[data-do="firePress"]').tap();
       if (session === desk) await p.locator('[data-do="cookFinish"]').click();
       else await p.locator('[data-do="cookFinish"]').tap();
-      await p.waitForSelector('[data-do="dishPack"]');
-      await p.locator('[data-do="dishPack"]').first().click();
+      // 出锅了那一张：端走，回到灶台
+      await p.waitForSelector('[data-do="cookedPack"]');
+      assert.match(await p.locator('.sheet h2').textContent(), /出锅了/);
+      await p.locator('[data-do="cookedPack"]').click();
       assert.equal(await p.evaluate(() => window.__dao.game.ask('pack').dishes.length), 1);
       await p.locator('[data-do="dishEat"]').first().click();
       await p.locator('[data-do="recipes"]').click();

@@ -7,7 +7,7 @@ import { METHODS, QUALITY, HEAT, CUTS } from '../content/recipes.js';
 import { BUFFS, buffUses } from '../content/body.js';
 import { dateOf } from '../content/calendar.js';
 import { dishName } from './cuisine-name.js';
-import { planFor, judge, goodLog } from './cook-fire.js';
+import { planFor, judge, goodLog, twistOf } from './cook-fire.js';
 import { buffOf, tasteOf } from './cuisine-taste.js';
 import { refuse } from '../kernel/dispatch.js';
 export function previewMeal(w, input, compute, who, fires = 0) {
@@ -100,19 +100,27 @@ export function previewMeal(w, input, compute, who, fires = 0) {
   const plan = method === 'mix' ? null : planFor(method, w.meta.seed, fires, bonus);
   const verdict = plan && log ? judge(plan, log) : null;
   const q = verdict ? verdict.quality : 'plain';
+  // 砸了也有点意思：扑了锅的浓汤、锅巴、焦皮、脆生的青菜，饱腹和名字照它算
+  const twist = verdict ? twistOf(method, q, r.ingredients, verdict.beats) : null;
+  const counts = QUALITY[twist && 'full' in twist ? twist.full : q];
   r.fire = method === 'mix' ? null : { word: HEAT[method].word, bonus };
   r.plan = plan;
   r.perfect = !!verdict?.perfect;
   r.beats = verdict?.beats || null;
   r.quality = q;
-  r.full = Math.round(r.full * QUALITY[q].full);
-  r.name = QUALITY[q].prefix + r.base;
+  r.full = Math.round(r.full * counts.full);
+  r.name = (twist ? twist.prefix : QUALITY[q].prefix) + r.base;
+  if (twist) {
+    r.twist = twist.id;
+    r.servings = Math.max(1, r.servings + ('servings' in twist ? twist.servings : 0));
+    r.tasteMood = Math.min(3, r.tasteMood + ('mood' in twist ? twist.mood : 0));
+  }
   r.uses = buffUses(
     r.buff,
     Math.max(
       1,
       BUFFS[r.buff].base +
-        QUALITY[q].uses +
+        counts.uses +
         compute.run('buff.uses', { w, who }, { value: 0, parts: [] }).value,
     ),
   );

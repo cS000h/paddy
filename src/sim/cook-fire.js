@@ -1,8 +1,9 @@
 // 掌火的节拍和判法：炒三拍、炖守火、烤翻面。数在 content/cook-fire.js。
 // 纯函数：这一锅的节拍由「固定的随机」定（世界的种子、这户第几回烧火），不动存档里的随机数，
 // 所以画面先问到的节拍和出锅时规则判的是同一份。按的记录 log 是 [[毫秒, 键], ...]，键见 FIRE_KEYS。
-// 画面每一帧问 fireAt(plan, log, t) 看此刻是什么样子；出锅时 judge(plan, log) 定火候。
-import { FIRE, FIRE_KEYS } from '../content/cook-fire.js';
+// 画面每一帧问 fireAt(plan, log, t) 看此刻是什么样子、刚按的那一下早了还是晚了；出锅时 judge(plan, log) 定火候，
+// twistOf 看砸了有没有点意思（G-11：浓汤半碗、锅巴脆底、焦香脆壳、脆生爽口）。
+import { FIRE, FIRE_KEYS, FIRE_TWISTS } from '../content/cook-fire.js';
 import { noise } from './noise.js';
 
 /** 这一锅的节拍。seed、fires 定随机；bonus 是厨艺、极品料这些让正当时宽几截（可以是负的）。 */
@@ -112,15 +113,61 @@ function fryAt(plan, log, t) {
   }
   const since = t - add;
   const flare = plan.flares.findIndex(f => since >= f && since <= f + plan.flareLong);
+  const rising = plan.flares.some(f => since >= f - FIRE.fry.flareCue && since < f);
   const color = since >= plan.color && since <= plan.color + plan.colorLong;
   return {
-    beat: flare >= 0 ? 'toss' : 'serve',
+    beat: flare >= 0 || rising ? 'toss' : 'serve',
     now: flare >= 0 || color,
     flare: flare >= 0,
-    cue: !color && since >= plan.color - FIRE.fry.cue && since < plan.color,
+    rising,
+    cue: rising || (!color && since >= plan.color - FIRE.fry.cue && since < plan.color),
     late: since > plan.color + plan.colorLong,
     cooked: Math.max(0, Math.min(1.4, since / (plan.color + plan.colorLong / 2))),
+    tossed: tossHits(plan, log, add),
+    flares: plan.flares.length,
   };
+}
+
+/** 翻锅翻中了几回火头（每回火头只算一下）。 */
+const tossHits = (plan, log, add) =>
+  plan.flares.filter(f =>
+    log.some(e => e[1] === 'toss' && e[0] - add >= f && e[0] - add <= f + plan.flareLong),
+  ).length;
+
+/** 早了、晚了还是正好（差一点也照早晚说）。 */
+const sideOf = x => (x.v === 'right' ? 'right' : x.d < 0 ? 'early' : 'late');
+
+/**
+ * 最近按的那一下：哪一句（FIRE_SAY 的键）、早了正好还是晚了、第几毫秒按的。画面照着冒一句、响一声。
+ * 炒的下料、烤的翻面照正当时说；翻锅看有没有赶上火头；添柴看按之前的火：太旺早了，快灭晚了。
+ */
+function saidOf(plan, log) {
+  const last = log.at(-1);
+  if (!last || last[1] === 'serve') return null;
+  const [at, key] = last;
+  const said = (/** @type {string} */ k, /** @type {string} */ v) => ({ key: k, v, at });
+  if (key === 'add') return said('add', sideOf(verdict(at, plan.smoke, plan.smokeLong)));
+  if (key === 'toss') {
+    const since = at - (firstOf(log, 'add') ?? 0);
+    if (plan.flares.some(f => since >= f && since <= f + plan.flareLong))
+      return said('toss', 'right');
+    const missed = plan.flares.some(
+      f => since > f + plan.flareLong && since <= f + plan.flareLong + 700,
+    );
+    return said('toss', missed ? 'late' : 'early');
+  }
+  if (key === 'stoke') {
+    const fire = stewAt(plan, log.slice(0, -1), at).fire;
+    const v =
+      fire > plan.band[1] - FIRE.stew.stoke / 2 ? 'early' : fire < plan.band[0] ? 'late' : 'right';
+    return said('stoke', v);
+  }
+  const flips = log.filter(e => e[1] === 'flip').map(e => e[0]);
+  const side = flips.length - 1;
+  if (side >= plan.brown.length - 1) return null;
+  const from = side ? flips[side - 1] : 0;
+  const v = sideOf(verdict(at - from, plan.brown[side], plan.brownLong));
+  return said(side ? 'flipMore' : 'flip', v);
 }
 
 /** 炖：从开火算到第 t 毫秒，火多大、汤熬到几成、扑过几回锅。 */
@@ -195,22 +242,42 @@ function roastAt(plan, log, t) {
   };
 }
 
-/** 画面每一帧问的：此刻锅里什么样子。 */
+/** 画面每一帧问的：此刻锅里什么样子，刚按的那一下怎样。 */
 export function fireAt(plan, log, t) {
-  if (plan.method === 'fry') return { method: 'fry', ...fryAt(plan, log, t) };
+  const said = saidOf(plan, log);
+  if (plan.method === 'fry') return { method: 'fry', said, ...fryAt(plan, log, t) };
   if (plan.method === 'stew') {
     const s = stewAt(plan, log, t);
     return {
       method: 'stew',
+      said,
       ...s,
       white: s.soup >= FIRE.stew.done && s.soup <= plan.over,
       dry: s.soup > plan.over,
       band: plan.band,
+      boil: FIRE.stew.boil,
       done: FIRE.stew.done,
       over: plan.over,
     };
   }
-  return { method: 'roast', ...roastAt(plan, log, t) };
+  return { method: 'roast', said, ...roastAt(plan, log, t) };
+}
+
+/**
+ * 砸了也有点意思：这种做法砸在这一档、锅里有那几样（炖的还得扑过锅），换个说法、少罚一点或另有用处。
+ * @param {string} method
+ * @param {string} quality
+ * @param {string[]} items
+ * @param {any} beats
+ */
+export function twistOf(method, quality, items, beats) {
+  for (const [id, t] of Object.entries(FIRE_TWISTS)) {
+    if (t.method !== method || t.quality !== quality) continue;
+    if ('items' in t && !items.some(k => t.items.includes(k))) continue;
+    if ('boiled' in t && !(beats?.boils > 0)) continue;
+    return { id, ...t };
+  }
+  return null;
 }
 
 /**
