@@ -490,9 +490,23 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     send('search', { at, spot: { x: s.x, y: s.y } });
   }
 
+  // 捡地上冒出来的野货：多半站到旁边或踩上去捡，偶尔隔得远（该被拒绝），偶尔捡没东西的地方
+  function glean() {
+    const list = game.ask('ground');
+    if (!list.length) return rummage();
+    const g = pick(list);
+    const close = layout(hero().map).stand.filter(
+      p => Math.abs(p.x - g.x) + Math.abs(p.y - g.y) <= 1,
+    );
+    const at = close.length && chance(0.9) ? { ...pick(close), dir: pick(DIRS) } : here();
+    const spot = chance(0.95) ? g : { x: g.x + 3, y: g.y };
+    send('ground.pick', { at, x: spot.x, y: spot.y });
+  }
+
   const PLANS = [
     [4, travel],
     [3, rummage],
+    [2, glean],
     [14, useThing],
     [8, farm],
     [3, folk],
@@ -571,6 +585,7 @@ export function askEverything(game) {
     search: [[]],
     'search.spots': [...Object.keys(MAPS).map(m => [m]), ['nowhere'], []],
     'search.why': [[{ x: at.x, y: at.y }, at], [{}], []],
+    ground: [...Object.keys(MAPS).map(m => [m]), ['nowhere'], []],
     pack: [[at], []],
   };
   const failures = [];

@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
+import { MAPS as MAPS_FOR_GROUND } from '../../src/content/maps/index.js';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createGame } from '../../src/port/game.js';
@@ -124,6 +125,19 @@ test('v16 升级：村民之间开局的几条交情记进好感，主角这边�
       .sort(),
     ['天天吃他送的菜', '莫名别扭'].sort(),
   );
+});
+
+test('v21 升级：地上冒野货从零起，翻找里留的空位去掉', () => {
+  const saved = JSON.parse(
+    readFileSync(new URL('../fixtures/save-v21.json', import.meta.url), 'utf8'),
+  );
+  const g = createGame({ saved, debug: true });
+  const w = g.save().state.world;
+  assert.deepEqual(Object.keys(w.ground).sort(), Object.keys(w.packs).sort());
+  for (const x of Object.values(w.ground)) assert.deepEqual(x, { items: [] });
+  for (const s of Object.values(w.search)) assert.equal(Object.hasOwn(s, 'ground'), false);
+  g.dispatch('sleep', {});
+  assert.ok(Object.keys(MAPS_FOR_GROUND).some(m => g.ask('ground', m).length));
 });
 
 test('v20 升级：图鉴照已有的钓鱼记录、翻到过的、出过极品的补上，日子不知道的记成那天', () => {

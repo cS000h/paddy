@@ -48,17 +48,10 @@ for (const [map, m] of Object.entries(MAPS))
 export const SEARCH_SPOTS = Object.freeze(SPOTS);
 
 const MAX_CUES = SEARCH.cues[1] + SEARCH.wetCues;
-export const MAX_GROUND = 24;
 const LOST_STATES = ['returned', 'sold'];
 
 const spotList = (list, max) =>
   is.arr(list, max) && list.every(id => BY_ID.has(id)) && new Set(list).size === list.length;
-const groundOk = g =>
-  is.obj(g) &&
-  Object.hasOwn(MAPS, g.map) &&
-  is.int(g.x, 0, 99) &&
-  is.int(g.y, 0, 99) &&
-  Object.hasOwn(ITEMS, g.item);
 const personOk = s =>
   is.obj(s) &&
   spotList(s.cues, MAX_CUES) &&
@@ -66,8 +59,6 @@ const personOk = s =>
   is.int(s.miss, 0, 999) &&
   is.obj(s.found) &&
   Object.entries(s.found).every(([k, day]) => Object.hasOwn(ITEMS, k) && is.int(day, 1)) &&
-  is.arr(s.ground, MAX_GROUND) &&
-  s.ground.every(groundOk) &&
   is.obj(s.lost) &&
   Object.entries(s.lost).every(([k, v]) => Object.hasOwn(ITEMS, k) && LOST_STATES.includes(v));
 
@@ -137,7 +128,6 @@ export const search = {
       done: [],
       miss: 0,
       found: {},
-      ground: [],
       lost: {},
     });
 

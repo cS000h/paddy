@@ -75,7 +75,10 @@ test('腌菜确实扣三份菜和一份盐，雨后菌子可采', () => {
     const q = g.ask('outings', 'mushroom', { x: 19, y: 8 }).options[0];
     if (!q.reason) {
       must(g, 'gather', { id: 'mushroom', at: { x: 19, y: 8 } });
-      assert.ok(carried(g, 'mushroom') >= 2);
+      assert.ok(
+        carried(g, 'mushroom') + carried(g, 'mushroom.fine') >= 2,
+        '采到的菌子（可能是极品）',
+      );
       return;
     }
     must(g, 'sleep');

@@ -1,6 +1,7 @@
 // 图鉴：收到一样图鉴里有的东西，就在这人的册子上记一笔（几回、头一回哪天、见没见过极品、鱼见过哪几档）。
 // 不改别人的数据，只听已经发生的事：钓上来、挂上来、翻到、采到、收菜。哪几页、每样写什么见 content/catalog.js。
-//   听  fish.caught、fish.missed（挂上来的杂物）、search.found、forage.finished、crop.harvested
+//   听  fish.caught、fish.missed（挂上来的杂物）、search.found、ground.picked、forage.finished、
+//       crop.harvested
 //   发  catalog.got {who, item, page, first, fine, fineFirst, river, snag, wildFine,
 //                    grade, allGrades, rainFind, haul}
 //       给成就数用：初识水色、鲜货入篓、大小通吃、满载而归……（content/achievements.js）
@@ -112,6 +113,9 @@ export const catalog = {
       if (e.data.junk) note(s.world, whoOf(s.world, e), e.data.junk, 1, false, emit);
     });
     reactions.on('search.found', (s, e, emit) =>
+      note(s.world, whoOf(s.world, e), e.data.item, e.data.n, e.data.fine, emit),
+    );
+    reactions.on('ground.picked', (s, e, emit) =>
       note(s.world, whoOf(s.world, e), e.data.item, e.data.n, e.data.fine, emit),
     );
     reactions.on('forage.finished', (s, e, emit) =>

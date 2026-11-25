@@ -16,7 +16,7 @@ import { weatherEffects } from './weather.js';
 import { fieldInspection } from './field-inspection.js';
 import { refreshPlots } from './plots.js';
 import { repeatField, bindAction, bindKeyboard, bindPointer } from './input.js';
-import { hintFor, touchThing, drawWater, poke, stirCues } from './interactions.js';
+import { hintFor, touchThing, drawWater, poke } from './interactions.js';
 import { swing } from './farm-motion.js';
 import { tapAt } from './tap.js';
 import { leaveByRoad } from './travel.js';
@@ -167,7 +167,7 @@ export class VillageScene extends Phaser.Scene {
   frame(time, delta) {
     this.inspectField();
     this.ambient.update(time, delta);
-    stirCues(this, delta);
+    this.extras.frame(delta);
     this.weatherFx.update(time, this.map.indoor ? 'sunny' : this.weather.code);
     const dt = Math.min(0.05, delta / 1000);
     const { intents, shell } = this.deps;

@@ -122,3 +122,53 @@ test('送人：极品照原来那样看合不合心意，对方多记一笔「�
   const why = g.ask('opinion', 'gui').parts.find(p => p.id === 'why.fine');
   assert.deepEqual([why.label, why.delta], ['送的是极品', 5]);
 });
+
+test('采集点采到的也出极品：连着采几天总碰得上一回，说一句；放不下极品时照寻常的给', () => {
+  const at = { x: 35, y: 17 };
+  let fine = 0;
+  for (let seed = 1; seed <= 6 && !fine; seed++) {
+    const g = newGame(seed);
+    for (let day = 0; day < 12 && !fine; day++) {
+      for (let k = 0; k < 2; k++) {
+        const out = g.dispatch('gather', { id: 'forage', at });
+        const f = out.facts?.find(x => x.type === 'forage.finished');
+        if (!f?.data.fine) continue;
+        fine++;
+        assert.match(f.data.item, /\.fine$/);
+        assert.match(f.data.line, /极品/);
+      }
+      for (const i of g.ask('pack').items)
+        if (i.id !== 'seed.qingcai')
+          must(g, 'pack.take', { item: i.id, n: 'all', at: { x: 5, y: 12 } });
+      must(g, 'sleep');
+    }
+  }
+  assert.ok(fine > 0, '六局各采十来天，总该有一回极品');
+});
+
+test('捡蛋：一窝里偶尔有一枚极品蛋，总数照旧', () => {
+  const coop = { x: 12, y: 11 };
+  let fine = 0;
+  let total = 0;
+  for (let seed = 1; seed <= 4; seed++) {
+    const g = newGame(seed);
+    must(g, 'gather', { id: 'bamboo', at: { x: 16, y: 9 } });
+    must(g, 'homestead', { id: 'buildCoop', at: coop });
+    must(g, 'homestead', { id: 'buyHen', at: coop });
+    for (let day = 0; day < 10; day++) {
+      if (g.ask('homestead', 'coop').fed !== g.ask('clock').day)
+        g.dispatch('homestead', { id: 'feedHens', at: coop });
+      const n = g.ask('homestead', 'coop').eggs;
+      if (n) {
+        const before = carried(g, 'egg') + carried(g, 'egg.fine');
+        const out = g.dispatch('homestead', { id: 'eggs', at: coop });
+        const e = out.facts.find(x => x.type === 'eggs.collected');
+        assert.equal(carried(g, 'egg') + carried(g, 'egg.fine') - before, n);
+        total += n;
+        if (e.data.fine) fine++;
+      }
+      must(g, 'sleep');
+    }
+  }
+  assert.ok(total > 0 && fine > 0, `捡了 ${total} 个蛋，该有一窝里出过极品`);
+});

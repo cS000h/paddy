@@ -37,7 +37,7 @@ npm run art:sheet # 不开浏览器，把整张场景和素材导出到 .cache/ 
    `onCommit` / `on`（听已经发生的事）、`save`。不许直接读世界的数据结构。
 2. **所有人物是同一种数据。** 玩家只是 `world.player.controls` 指着的那个人。东西和钱属于“一户”。
    将来换下一代接班，不应该需要改任何规则。
-3. **存档带版本号。** 改了世界的数据结构：`SAVE_VERSION` 加一，在 `src/port/save.js` 的 `MIGRATIONS`
+3. **存档带版本号。** 改了世界的数据结构：`SAVE_VERSION` 加一，在 `src/port/migrations.js` 的 `MIGRATIONS`
    里写上一级怎么升，再留一份旧版本的样本存档（`node tools/make-fixture.mjs`）。
 
 **移动端一律横屏。** 手机竖着拿时，平台层把整个画面转 90 度（`platform.viewport`）。所以：
