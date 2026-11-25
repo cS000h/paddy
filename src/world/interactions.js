@@ -212,7 +212,6 @@ export function poke(scene, decor) {
   const p = POKES[decor.kind];
   const { sprite } = decor;
   scene.player.face(dirTo(scene.player.tile, decor));
-  if (thing.act === 'water') return drawWater(scene, thing);
   platform.audio.play('talk');
   if (!decor.shaking) {
     decor.shaking = true;

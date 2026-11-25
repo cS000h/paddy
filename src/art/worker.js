@@ -38,7 +38,7 @@ function arm(g, C, shoulder, elbow, at, far) {
 
 /**
  * 画一个做活的人。
- * @param {Grid} g
+ * @param {import('./pixel.js').Grid} g
  * @param {{x: number, feet: number, bend?: number, lean?: number, at: number[],
  *   sitting?: boolean, far?: number[] | null, look?: string}} o
  *   x 脚的横坐标，feet 脚底那一行；bend 屈膝时骨盆往下沉几像素；lean 上身往前探几像素；

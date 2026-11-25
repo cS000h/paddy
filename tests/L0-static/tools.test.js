@@ -17,3 +17,13 @@ test('规则一侧通过类型检查（kernel、sim、port、content）', () => 
   const out = run('node_modules/typescript/bin/tsc', '-p', 'tsconfig.json', '--noEmit');
   assert.equal(out.status, 0, out.stdout + out.stderr);
 });
+
+// 画面一侧（world、panels、app……）不做完整的类型检查，但用到没定义的名字一定是错：
+// 那一行一跑到就报错，测试里又未必走得到。所以拿 tsc 把整个 src 过一遍，只看「找不到这个名字」。
+test('全部源码没有用到没定义的名字（画面一侧也查）', () => {
+  const out = run('node_modules/typescript/bin/tsc', '-p', 'tsconfig.names.json', '--noEmit');
+  const missing = (out.stdout + out.stderr)
+    .split('\n')
+    .filter(line => /error TS(2304|2552):/.test(line));
+  assert.deepEqual(missing, []);
+});
