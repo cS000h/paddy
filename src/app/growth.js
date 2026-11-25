@@ -9,7 +9,7 @@ export function growthActions({ game, shell, run }) {
       edit({ tab, page: 0 });
     },
     bookWho({ who }) {
-      edit({ who: who || null, attr: null });
+      shell.set({ modal: { kind: 'book', tab: 'persona', who: who || null, attr: null } });
     },
     bookAttr({ attr }) {
       edit({ attr: shell.get().modal.attr === attr ? null : attr });

@@ -126,6 +126,7 @@ export function createPanels({
     const sameLine = sameKind && shownModal?.line === modal.line;
     shownModal = modal;
     const scroller = el.modal.querySelector('.sheet');
+    const rosterTop = el.modal.querySelector('.folio-ledger nav')?.scrollTop || 0;
     const keep = force && scroller ? scroller.scrollTop : 0;
     try {
       el.modal.className = 'modal ' + placementOf(modal);
@@ -137,6 +138,8 @@ export function createPanels({
       report(error, 'panels:' + modal.kind);
       return;
     }
+    const roster = el.modal.querySelector('.folio-ledger nav');
+    if (roster) roster.scrollTop = rosterTop;
     if (keep) el.modal.querySelector('.sheet').scrollTop = keep;
     // 说话的那一句一个字一个字地出来；同一句重画时不再重来
     const say = el.modal.querySelector('.say');
@@ -246,10 +249,19 @@ export function createPanels({
     const modal = shell.get().modal;
     if (event.target === el.modal && modal && closesOnBackdrop(modal)) shell.set({ modal: null });
   });
-  el.do.addEventListener('click', () => intents.emit('act'));
+  el.do.addEventListener('pointerdown', event => {
+    if (!event.isPrimary || event.button !== 0) return;
+    el.do.setPointerCapture(event.pointerId);
+    intents.emit('act', { phase: 'down' });
+  });
+  el.do.addEventListener('lostpointercapture', () => intents.emit('act', { phase: 'up' }));
+  el.do.addEventListener('click', event => {
+    if (!event.detail) intents.emit('act');
+  });
 
   // 有小窗的时候：确认键按主按钮，取消键关掉
-  const offAct = intents.on('act', () => {
+  const offAct = intents.on('act', ({ phase }) => {
+    if (phase === 'up') return;
     if (shell.get().modal)
       (el.modal.querySelector('button.main') || el.modal.querySelector('button'))?.click();
   });

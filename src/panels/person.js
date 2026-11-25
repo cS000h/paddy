@@ -29,8 +29,19 @@ function attributes(profile, selected) {
   );
 }
 
+function rosterOf(game) {
+  const villagers = game.ask('bonds').map(b => ({ ...b, look: PEOPLE[b.id].look }));
+  const { active, book } = game.ask('visitors');
+  const away = book.filter(b => !active.some(v => v.id === b.id));
+  return [
+    ['村里乡邻', villagers],
+    ['在村过客', active],
+    ['来过的熟客', away],
+  ];
+}
 export function personaBody(m, game, mods) {
-  const bonds = game.ask('bonds');
+  const groups = rosterOf(game);
+  const bonds = groups.flatMap(([, people]) => people);
   const other = bonds.find(b => b.id === m.who);
   const profile = game.ask('persona', other?.id);
   const person = other || game.ask('hero');
@@ -55,7 +66,7 @@ export function personaBody(m, game, mods) {
   const bowl = n < 40 ? 'low' : n < 70 ? 'mid' : 'high';
   return `<div class="folio"><section><header>${stamp('人物')}<details class="folio-picker"><summary>看谁 · ${esc(person.name)}</summary>
     <div>${options}</div></details></header>
-    <div class="folio-identity">${portrait(other ? PEOPLE[other.id].look : person.look)}<div><h2>${esc(person.name)}</h2>
+    <div class="folio-identity">${portrait(person.look)}<div><h2>${esc(person.name)}</h2>
     ${line ? esc(line.name) + '<br>' + level + ' · ' + esc(line.title) : '出身未记'}</div></div>
     <div class="folio-traits">${traits.join('')}</div><small>根骨天资 ${names(profile.innate)}　毛病 ${names(profile.coping)}${earned}</small>
     ${n === null ? '' : `<div class="folio-stress">${uiIconImg('stress_' + bowl, 28)}心烦　${n} / 100</div>`}</section>
@@ -63,7 +74,8 @@ export function personaBody(m, game, mods) {
 }
 
 export function ledgerBody(m, game) {
-  const bonds = game.ask('bonds');
+  const groups = rosterOf(game);
+  const bonds = groups.flatMap(([, people]) => people);
   const person = bonds.find(b => b.id === m.ledgerWho) || bonds[0];
   const opinion = game.ask('opinion', person.id);
   const group = (title, rows) =>
@@ -76,15 +88,23 @@ export function ledgerBody(m, game) {
     .slice(0, 3)
     .map(p => part(p) + ' · ' + (p.left == null ? '一直记着' : '余 ' + p.left + ' 天'));
   if (reasons.length > 3) lines.push('还有 ' + (reasons.length - 3) + ' 条');
-  const roster = bonds
+  const roster = groups
     .map(
-      b => `<button data-do="ledgerWho" data-who="${esc(b.id)}" aria-pressed="${b === person}">
-    ${esc(b.name)}<small>${b.known ? esc(tierWord(b.known)) : '还没说过话'}</small></button>`,
+      ([label, list]) =>
+        `<h3>${label}</h3>` +
+        (list
+          .map(b => {
+            const detail = b.title || (b.known ? tierWord(b.known) : '还没说过话');
+            return `<button data-do="ledgerWho" data-who="${esc(b.id)}" aria-pressed="${b === person}">
+      ${esc(b.name)}<small>${esc(detail)}${b.visits ? ' · 来过 ' + b.visits + ' 回' : ''}</small></button>`;
+          })
+          .join('') || '<small>暂无</small>'),
     )
     .join('');
   return `<div class="folio folio-ledger"><section><header>${stamp('乡邻')}</header><nav>${roster}</nav></section>
-    <section><header>${stamp('人情账')}</header><div class="folio-identity">${portrait(PEOPLE[person.id].look)}
-    <div><h2>${esc(person.name)}</h2>${esc(person.role)}</div><b class="folio-score">好感 ${signed(opinion.value)}</b></div>
-    ${group('相投相冲', affinity.map(part))}${group('好感来由', lines)}
-    ${group('熟悉', opinion.parts.filter(p => p.id === 'known').map(part))}</section></div>`;
+    <section><header>${stamp('人情账')}</header><div class="folio-identity">${portrait(person.look)}
+    <div><h2>${esc(person.name)}</h2>${esc(person.title || person.role)}</div><b class="folio-score">好感 ${signed(opinion.value)}</b></div>
+    ${group('相投相冲', affinity.map(part))}${person.title ? '' : group('好感来由', lines)}
+    ${person.title ? '' : group('熟悉', opinion.parts.filter(p => p.id === 'known').map(part))}
+    <button data-do="bookWho" data-who="${esc(person.id)}">看人</button></section></div>`;
 }

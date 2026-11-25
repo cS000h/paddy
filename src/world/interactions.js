@@ -1,5 +1,6 @@
 // 地点交互集中在这里：面前的东西该提示什么、右下那枚印上刻什么字，点了以后开哪个面板，
 // 或者直接动手做（采集点、院里的活，见 work）。规则仍由端口决定，这里只发命令、把结果演出来。
+import { BODY } from '../content/body.js';
 import { PEOPLE } from '../content/people.js';
 import { POKES } from '../content/pokes.js';
 import { farmable } from '../content/maps/index.js';
@@ -62,6 +63,29 @@ const TOOL_STAMP = { hoe: '锄地', seed: '播种', can: '浇水', hand: '采收
  * 面前那一格的提示：{text, verb, ok, care}；没什么可做是 null。
  * text 是提示条上的一句话，verb 是印上的字，ok 为 false 时 text 写着为什么不行。
  */
+function waterOptions(scene, { x, y }) {
+  const { game } = scene.deps;
+  const at = scene.at();
+  const drink = !game.ask('drink.why', x, y, at) && game.ask('body').thirst < BODY.notThirsty;
+  const reason = game.ask('farm.why', 'refill', x, y, at);
+  return {
+    drink,
+    refill: !reason,
+    text: drink ? (reason ? '喝口水' : '喝水，再灌满水壶') : reason || '灌满浇菜的水壶',
+  };
+}
+
+export function drawWater(scene, target) {
+  const { drink, refill, text } = waterOptions(scene, target);
+  if (!drink && !refill) return scene.deps.shell.toast(text);
+  if (drink && !scene.send('drink', target).ok) return;
+  if (refill && !scene.send('farm.refill', target).ok) return;
+  scene.deps.shell.toast(
+    drink ? (refill ? '喝过水，也灌满了浇菜的水壶。' : '捧起清水，解了渴。') : '浇菜的水壶灌满了。',
+  );
+  scene.performer.play('refill', { target });
+}
+
 export function hintFor(scene, t) {
   const { game, shell } = scene.deps;
   if (t.kind === 'decor') {
@@ -73,6 +97,10 @@ export function hintFor(scene, t) {
   if (t.kind === 'visitor')
     return { text: `和${t.visitor.visitor.name}说话`, verb: '说话', ok: true };
   if (t.kind === 'pulse') return { text: `看看${t.pulse.title}`, verb: '看看', ok: true };
+  if (t.kind === 'water' || t.thing?.act === 'water') {
+    const { drink, refill, text } = waterOptions(scene, t);
+    return { text, verb: drink ? '喝水' : '打水', ok: drink || refill };
+  }
   if (t.kind === 'thing') {
     const { act, station, label } = t.thing;
     const verb = STATION_STAMP[station] || STAMP[act] || '看看';
@@ -81,10 +109,6 @@ export function hintFor(scene, t) {
       verb: act === 'housework' && station === 'tea' ? '喝茶' : verb,
       ok: true,
     };
-  }
-  if (t.kind === 'water') {
-    const reason = game.ask('farm.why', 'refill', t.x, t.y, scene.at());
-    return { text: reason || '打水', verb: '打水', ok: !reason };
   }
   if (!farmable(scene.map, t.x, t.y)) return null;
   const plot = game.ask('farm.detail', t.x, t.y);
@@ -102,6 +126,7 @@ export function hintFor(scene, t) {
 export function touchThing(scene, thing) {
   const { shell, platform } = scene.deps;
   scene.player.face(dirTo(scene.player.tile, thing));
+  if (thing.act === 'water') return drawWater(scene, thing);
   platform.audio.play('talk');
   if (thing.to) {
     const out = scene.send('travel', thing);
@@ -134,7 +159,6 @@ export function touchThing(scene, thing) {
     if (!out.ok) return;
   }
   const kind = {
-    water: 'water',
     store: 'store',
     wardrobe: 'wardrobe',
     cloth: 'cloth',
@@ -185,6 +209,7 @@ export function poke(scene, decor) {
   const p = POKES[decor.kind];
   const { sprite } = decor;
   scene.player.face(dirTo(scene.player.tile, decor));
+  if (thing.act === 'water') return drawWater(scene, thing);
   platform.audio.play('talk');
   if (!decor.shaking) {
     decor.shaking = true;

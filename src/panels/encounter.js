@@ -66,5 +66,5 @@ export function encounterView(m, game, here) {
     y = Number(m.anchor?.y) || 140;
   return `<div class="npc-bubble" style="--npc-x:${x}px;--npc-y:${y}px"><b>${esc(name)}</b>
     <p class="say">${esc(m.line || '')}</p>${m.favorite ? '<small>记下了最爱吃的' + esc(m.favorite) + '</small>' : ''}</div>
-    <div class="npc-actions">${actions(options(m, rows), close('告辞', false))}</div>`;
+    <div class="npc-actions">${actions(options(m, rows), button('bookWho', '看人', { data: { who: id } }), close('告辞', false))}</div>`;
 }

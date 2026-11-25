@@ -15,8 +15,8 @@ import { createEffects } from './effects.js';
 import { weatherEffects } from './weather.js';
 import { fieldInspection } from './field-inspection.js';
 import { refreshPlots } from './plots.js';
-import { bindKeyboard, bindPointer } from './input.js';
-import { hintFor, touchThing, poke } from './interactions.js';
+import { repeatField, bindAction, bindKeyboard, bindPointer } from './input.js';
+import { hintFor, touchThing, drawWater, poke } from './interactions.js';
 import { swing } from './farm-motion.js';
 import { tapAt } from './tap.js';
 import { leaveByRoad } from './travel.js';
@@ -58,6 +58,8 @@ export class VillageScene extends Phaser.Scene {
   build() {
     const { game, intents, shell, map } = this.deps;
     this.map = map;
+    this.heldPlot = null;
+    this.fineUntil = 0;
     this.destination = null;
     this.busy = false;
     this.hintKey = '';
@@ -113,7 +115,7 @@ export class VillageScene extends Phaser.Scene {
       () => this.scale.off('resize', fit),
       bindKeyboard(this, intents),
       bindPointer(this, intents, this.deps.platform),
-      intents.on('act', () => this.act()),
+      ...bindAction(this, intents),
       intents.on('tap', p => this.tap(p.x, p.y)),
       game.onCommit(facts => this.onFacts(facts)),
       () => this.performer.stop(),
@@ -188,6 +190,7 @@ export class VillageScene extends Phaser.Scene {
       leaveByRoad(this, true);
     } else if (!this.player.follow(dt)) this.player.animate(false);
     this.updateHint();
+    repeatField(this);
   }
   /** 面前或身边一圈有什么可以互动的（见 target.js）。 */
   target() {
@@ -226,7 +229,7 @@ export class VillageScene extends Phaser.Scene {
   }
 
   /** 对面前的东西做该做的事。 */
-  act() {
+  act(hold = false) {
     const { game, shell, platform } = this.deps;
     // 正在演一件活：按一下就快进（开着小窗时这一下是给小窗的，比如钓鱼时提竿）
     if (this.performer.active) return shell.paused() ? undefined : this.performer.skip();
@@ -239,7 +242,7 @@ export class VillageScene extends Phaser.Scene {
     if (t.kind === 'visitor') return this.extras.interactVisitor(t.visitor);
     if (t.kind === 'pulse') return this.extras.interactEvent(t.pulse);
     if (t.kind === 'thing') return this.touch(t.thing);
-    if (t.kind === 'water') return shell.set({ modal: { kind: 'water', x: t.x, y: t.y } });
+    if (t.kind === 'water') return drawWater(this, t);
     if (t.kind === 'decor') return poke(this, t.decor);
     if (!farmable(this.map, t.x, t.y)) return undefined;
     const action = hintFor(this, t);
@@ -247,6 +250,7 @@ export class VillageScene extends Phaser.Scene {
     const tool = action.tool;
     if (!tool) return shell.set({ modal: { kind: 'field', x: t.x, y: t.y } });
     const seed = shell.get().seed;
+    if (hold) this.heldPlot = { x: t.x, y: t.y, tool, next: this.time.now + 745 };
     return swing(this, tool, () => this.send(COMMAND_OF[tool], t, { seed }));
   }
 
@@ -257,6 +261,7 @@ export class VillageScene extends Phaser.Scene {
   }
 
   refuse(reason) {
+    this.heldPlot = null;
     this.deps.shell.toast(reason);
     this.deps.platform.audio.play('no');
     this.tweens.add({ targets: this.cursor, alpha: { from: 0.2, to: 1 }, duration: 90, repeat: 2 });
@@ -311,6 +316,7 @@ export class VillageScene extends Phaser.Scene {
       if (FEEDBACK[f.type]) {
         const [effect, sound] = FEEDBACK[f.type];
         // 收到极品：菜蹦得高、冒金星，换一串往上走的响；头一回还在底下说说它有什么用
+        if (d.fine) this.fineUntil = this.time.now + 1200;
         this.effects[effect](d.x, d.y, d.crop, d.fine);
         platform.audio.play(d.fine ? 'fine' : sound);
         platform.haptic(d.fine ? [14, 60, 24] : undefined);
