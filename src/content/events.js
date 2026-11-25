@@ -1,4 +1,5 @@
 import { SCENE_MAP } from './events-scene.js';
+import { SEARCH_EVENTS } from './events-search.js';
 // 随机事件配置表：晨起小事、场景遇事、过几天后续。
 // 每件小事落在具体地点（spot），玩家走到跟前在底部对话条里处理。
 
@@ -175,6 +176,7 @@ export const EVENTS = Object.freeze({
     ],
   },
   ...SCENE_MAP,
+  ...SEARCH_EVENTS,
   // — 过几天伏笔后续（4 个） —
   delay_swallow: {
     id: 'delay_swallow',
@@ -257,6 +259,7 @@ export const MORNING_EVENTS = Object.freeze(
 );
 export const SCENE_EVENTS = Object.freeze(
   Object.values(EVENTS)
-    .filter(e => !['morning', 'delayed'].includes(e.trigger))
+    .filter(e => !['morning', 'delayed', 'search'].includes(e.trigger))
     .map(e => e.id),
 );
+export { SEARCH_EVENTS };

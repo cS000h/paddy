@@ -167,6 +167,13 @@ export const weather = {
       fact('sky.looked', { who: people.who(w), acc: w.weather.acc });
     });
     queries.define('weather', view);
-    ctx.provide('weather', Object.freeze({ has, wetLately, view }));
+    /** 明天会不会下雨下雪（真的天，不是看云色猜的）。 */
+    const wetTomorrow = w => TYPES[w.weather.tomorrow].tags.includes('wet');
+    /** 看出了明天的天：看云色的说法换成真的，把握九成五。 */
+    const foresee = ctx.own(w => {
+      w.weather.forecast = w.weather.tomorrow;
+      w.weather.acc = 95;
+    });
+    ctx.provide('weather', Object.freeze({ has, wetLately, view, wetTomorrow, foresee }));
   },
 };

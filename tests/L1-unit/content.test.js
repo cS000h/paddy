@@ -139,8 +139,9 @@ test('作物和物品：种子、作物、收成互相指得上', () => {
 test('物品总表：每样东西字段齐全，买卖价按基准价折算，开局的东西和能托捎的货都登记过', () => {
   assert.equal(
     Object.keys(ITEMS).length,
-    141,
-    '104 样寻常的（钓鱼加了十三种鱼、河虾毛蟹、五样钩上来的东西和蚯蚓，走图翻找加了 20 样野货），' +
+    149,
+    '112 样寻常的（钓鱼加了十三种鱼、河虾毛蟹、五样钩上来的东西和蚯蚓，走图翻找加了 20 样野货' +
+      '和八样失物），' +
       '加 37 样极品（七样菜、十一种鱼、河虾毛蟹、16 样野货和鸡蛋，见 L1 收成出彩）',
   );
   const KINDS = ['food', 'whole', 'spice', 'snack', 'seed', 'material', 'craft', 'tool', 'bait'];
@@ -297,7 +298,8 @@ test('过客站位和小事的默认地点能站人、能走到跟前，不和�
       const clash = residents(mapId).find(r => r.x === s.x && r.y === s.y);
       assert.ok(!clash, `过客站位 ${mapId}(${s.x},${s.y}) 和 ${clash?.name} 重了`);
     }
-  for (const ev of Object.values(EVENTS)) {
+  // 翻找碰上的小事落在主角身边，没有默认地方
+  for (const ev of Object.values(EVENTS).filter(e => e.trigger !== 'search')) {
     const { map, x, y } = ev.spot;
     standable(map, x, y, ev.id);
     const visitor = (VISITOR_SPOTS[map] || []).some(s => s.x === x && s.y === y);

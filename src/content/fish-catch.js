@@ -115,12 +115,37 @@ export const FISH_JUNK = Object.freeze([
 ]);
 
 /**
- * 别人掉了的东西：还给失主，他说的话比寻常送礼的那句重（情分照最爱吃的那一道算）。
- * 以后走图翻找捡到的失物也放在这里。
+ * 别人掉了的东西：还给失主，他说的话比寻常送礼的那句重（情分照最爱吃的那一道算）；
+ * thanks 是失主回送的东西。钓上来的木梭，和走图翻找碰上的八样失物（G-08 小事 1–8）。
+ * 失物一件只有一回，不进图鉴。
  */
+const lost = (owner, line, thanks = null) => Object.freeze({ owner, line, thanks });
 export const FOUND_OWNERS = Object.freeze({
-  shuttle: Object.freeze({
-    owner: 'gui',
-    line: '桂嫂一拍大腿：“哎哟，上午漂线掉水里急死我了，多亏你！”',
+  shuttle: lost('gui', '桂嫂一拍大腿：“哎哟，上午漂线掉水里急死我了，多亏你！”'),
+  pipe: lost('zhou', '老周摩挲着铜烟锅：“我还当掉河里了呢！多亏你眼尖，拿两条小鱼去。”', {
+    item: 'fish.crucian',
+    n: 2,
   }),
+  kite: lost('qiao', '小乔把风筝护在胸前：“没撕破！我画掌柜画了三晚，糖你拿着！”', {
+    item: 'candy',
+    n: 1,
+  }),
+  thimble: lost('gui', '桂嫂把顶针套回手指：“可找着了！没它纳不匀鞋底，拿罐脆萝卜去！”', {
+    item: 'pickle',
+    n: 1,
+  }),
+  purse: lost('aman', '阿满一把拍上你肩：“救命恩人哪！少一文我都得赔工钱，回头请你吃包子！”'),
+  stripKnife: lost('shi', '石伯拿袖口擦擦刀背：“没崩口。跟了我四十年的老刀，这几根篾你拿去。”', {
+    item: 'strip',
+    n: 3,
+  }),
+  sachet: lost('yun', '云姑攥紧布袋，低声道：“原来掉蕨丛里了……谢你没拆开……这把茶你拿着。”', {
+    item: 'tea',
+    n: 1,
+  }),
+  bell: lost('qiao', '小乔捏着小铃铛直晃：“掌柜没铃总悄声吓我！麦芽糖请你吃！”', {
+    item: 'candy',
+    n: 1,
+  }),
+  tally: lost('aman', '阿满拍着脑门直喘气：“就说少了一块！算错账桂嫂得骂死我，多亏你！”'),
 });
