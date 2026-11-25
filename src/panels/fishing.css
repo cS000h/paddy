@@ -1,0 +1,9 @@
+.fishing-water {
+  display: block;
+  width: min(480px, 100%);
+  height: auto;
+  image-rendering: pixelated;
+}
+.tight .fishing-water {
+  width: min(360px, 100%);
+}
