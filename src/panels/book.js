@@ -1,6 +1,7 @@
 // 开局的两个选择，和实体书签式「稻乡小册」（人物三层、本事、性情、成就、只读熟人册）。
 import { ORIGINS, TRAITS } from '../content/growth.js';
 import { personaBody, ledgerBody } from './person.js';
+import { catalogBody } from './catalog.js';
 import { uiIconImg } from './icons.js';
 import { button, actions, close, title, para, esc, paged } from './html.js';
 
@@ -90,6 +91,7 @@ const TABS = [
   ['skills', '本事', 'tab_skills'],
   ['traits', '性情', 'tab_traits'],
   ['achievements', '成就', 'tab_achievements'],
+  ['catalog', '图鉴', 'tab_catalog'],
 ];
 
 function rowsOf(tab, game) {
@@ -110,7 +112,10 @@ export function bookView(m, game) {
   const origin = game.ask('growth').origin ? '' : button('origin', '补记初来时的两件小事');
   let body;
   let foot;
-  if (tab === 'persona' || tab === 'ledger') {
+  if (tab === 'catalog') {
+    body = catalogBody(m, game);
+    foot = '';
+  } else if (tab === 'persona' || tab === 'ledger') {
     body =
       tab === 'ledger'
         ? ledgerBody(m, game)

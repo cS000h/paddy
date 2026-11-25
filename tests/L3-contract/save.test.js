@@ -126,6 +126,24 @@ test('v16 升级：村民之间开局的几条交情记进好感，主角这边�
   );
 });
 
+test('v20 升级：图鉴照已有的钓鱼记录、翻到过的、出过极品的补上，日子不知道的记成那天', () => {
+  const saved = JSON.parse(
+    readFileSync(new URL('../fixtures/save-v20.json', import.meta.url), 'utf8'),
+  );
+  const w0 = saved.state.world;
+  w0.fishing.hero.records = { crucian: { n: 3, best: 8 } };
+  w0.search.hero.found = { moss: 2 };
+  const g = createGame({ saved, debug: true });
+  const w = g.save().state.world;
+  assert.deepEqual(Object.keys(w.catalog).sort(), Object.keys(w.packs).sort());
+  const items = w.catalog.hero.items;
+  assert.deepEqual(items['fish.crucian'], { n: 3, day: w0.clock.day });
+  assert.deepEqual(items.moss, { n: 1, day: 2 });
+  assert.equal(items['veg.qingcai'].fine, true);
+  assert.deepEqual(Object.keys(items).sort(), ['fish.crucian', 'moss', 'veg.qingcai']);
+  assert.equal(g.ask('catalog')[0].entries.find(e => e.item === 'fish.crucian').bestText, '八寸');
+});
+
 test('v18 升级：旧的钓鱼（下竿时抽好的运气、今天钓过几竿）去掉，钓鱼记录从零记起', () => {
   const saved = JSON.parse(
     readFileSync(new URL('../fixtures/save-v18.json', import.meta.url), 'utf8'),
