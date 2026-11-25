@@ -127,6 +127,17 @@ test('v16 升级：村民之间开局的几条交情记进好感，主角这边�
   );
 });
 
+test('v22 升级：集日比鱼的记录从零起，今天没有钓客', () => {
+  const old = JSON.parse(
+    readFileSync(new URL('../fixtures/save-v22.json', import.meta.url), 'utf8'),
+  );
+  const g = createGame({ saved: old, debug: true });
+  assert.equal(g.save().version, SAVE_VERSION);
+  const m = g.save().state.world.match;
+  assert.deepEqual([m.fairs, m.wins, m.today, m.echo], [0, 0, null, null]);
+  assert.equal(g.ask('match'), null);
+});
+
 test('v21 升级：地上冒野货从零起，翻找里留的空位去掉', () => {
   const saved = JSON.parse(
     readFileSync(new URL('../fixtures/save-v21.json', import.meta.url), 'utf8'),

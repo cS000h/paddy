@@ -188,8 +188,11 @@ export const social = {
 
     function openingLine(w, to, c) {
       if (!w.bonds.known[to] && w.bonds.talked[to] === undefined) return firstWords(w, to, c).line;
-      if (w.bonds.talked[to] !== w.clock.day && w.bonds.gifted[to] === w.clock.day - 1)
-        return AFTER_RETURN[to];
+      // 今天头一回说话，先提村里刚出的事（计算管道 'talk.news'，比如昨天集日比鱼）
+      const fresh = w.bonds.talked[to] !== w.clock.day;
+      const news = fresh && compute.run('talk.news', { w, to }, { value: '', parts: [] }).value;
+      if (news) return news;
+      if (fresh && w.bonds.gifted[to] === w.clock.day - 1) return AFTER_RETURN[to];
       return lifeLine(to, c, w.clock.day + c.slot + mark(to));
     }
 

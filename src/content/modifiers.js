@@ -129,4 +129,28 @@ export const MODIFIERS = Object.freeze({
     desc: '水底惊着了，今天钓鱼咬钩少些',
     bite: -0.12,
   },
+  // 集日比鱼赢来的称号（content/fair-match.js）
+  match_head: {
+    name: '渡口头竿',
+    kind: 'good',
+    days: 3,
+    desc: '集日渡口压过外乡钓客，大伙儿见了你都高看三分，人情 +1',
+    attrs: { renqing: 1 },
+    relation: 1,
+  },
+  match_eye: {
+    name: '亮眼识鱼',
+    kind: 'good',
+    days: 3,
+    desc: '当众揪出暗篓充数的假把式，连老周都服你的眼力，阅历 +2',
+    attrs: { yueli: 2 },
+  },
+  match_bay: {
+    name: '水湾压场',
+    kind: 'good',
+    days: 10,
+    desc: '几回集日稳坐渡口赢家，胆量 +1，钓鱼咬钩多些',
+    attrs: { danliang: 1 },
+    bite: 0.08,
+  },
 });

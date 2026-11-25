@@ -307,6 +307,12 @@ test('过客站位和小事的默认地点能站人、能走到跟前，不和�
     const visitor = (VISITOR_SPOTS[map] || []).some(s => s.x === x && s.y === y);
     assert.ok(!visitor, `${ev.id} 的默认地点压在过客站位上，过客在时点不中`);
   }
+  // 集日比鱼的钓客站在渡口钓点边：不挡钓点，不压乡邻和过客
+  const { MATCH } = await import('../../src/content/fair-match.js');
+  const { map, x, y } = MATCH.spot;
+  standable(map, x, y, '比鱼钓客');
+  assert.ok(!residents(map).some(r => r.x === x && r.y === y), '比鱼钓客压在乡邻的去处上');
+  assert.ok(!VISITOR_SPOTS[map].some(s => s.x === x && s.y === y), '比鱼钓客压在过客站位上');
 });
 
 test('特质表：八对性情各两个、方向相反，加减只落在六项上；出身线、根骨、毛病和旧特质的换法都指得上', () => {
@@ -437,4 +443,15 @@ test('成就七类：每个成就都归了一类，七类各有拿到、没拿�
     JSON.stringify(achievementIcon('farm', true)),
     JSON.stringify(achievementIcon('farm', false)),
   );
+});
+
+test('集日比鱼的台词每句不超过 30 字（{name}这类空位不算）', async () => {
+  const m = await import('../../src/content/fair-match.js');
+  const lines = [];
+  const walk = v =>
+    typeof v === 'string' ? lines.push(v) : Object.values(v).forEach(x => x && walk(x));
+  for (const k of ['MATCH_WORDS', 'MATCH_BEFORE', 'MATCH_CROWD', 'MATCH_ECHO', 'MATCH_RUMOR'])
+    walk(m[k]);
+  for (const line of lines)
+    assert.ok([...line.replace(/\{\w+\}/g, '')].length <= 30, `太长：${line}`);
 });

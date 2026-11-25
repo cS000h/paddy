@@ -32,7 +32,12 @@ export function activityActions({ game, shell, run, here, world }) {
     const caught = out.facts.find(f => f.type === 'fish.caught')?.data;
     const lost = out.facts.find(f => f.type === 'fish.lost')?.data;
     const other = out.facts.find(f => f.type.startsWith('fish.') && f.data.line)?.data.line;
-    const aside = out.facts.find(f => f.type === 'wardrobe.got')?.data.line || null;
+    // 顺带的事：捡到衣装、集日比鱼记下这一竿
+    const aside =
+      out.facts
+        .filter(f => f.type === 'wardrobe.got' || f.type === 'match.cast')
+        .map(f => f.data.line)
+        .join('') || null;
     world.perform(caught ? 'reel' : 'miss', { target: fishingAt, water: true });
     if (m?.kind !== 'fishing') return void (aside && shell.toast(aside));
     const next = { ...m, started: performance.now(), events: null, aside };

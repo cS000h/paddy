@@ -18,6 +18,14 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  22(state) {
+    // 集日比鱼（sim/plugins/fair-match.js）：一份比鱼的记录，从零起。今天要是集日，钓客下个集日才来。
+    const w = state.world;
+    w.meta.version = 23;
+    const host = () => ({ met: 0, last: null, caught: false });
+    w.match = { fairs: 0, wins: 0, hosts: { he: host(), qian: host() }, today: null, echo: null };
+    return state;
+  },
   21(state) {
     // 地上冒野货（sim/plugins/ground.js）：每个有行囊的人一份今天地上冒在哪儿。旧档今天地上什么也没有，
     // 过一夜就冒出来了。翻找里原先给它留的空位（search 的 ground）去掉。
