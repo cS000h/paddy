@@ -32,12 +32,77 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
   const port = server.address().port;
   await mkdir(path.join(root, '.cache'), { recursive: true });
   try {
+    for (const touch of [false, true]) {
+      const held = await open(browser, port, {
+        viewport: { width: 844, height: 390 },
+        hasTouch: true,
+      });
+      const h = held.page;
+      await h.evaluate(() => {
+        const { game, world, shell } = window.__dao;
+        for (const x of [8, 9, 10]) {
+          const result = game.dispatch('farm.till', {
+            x,
+            y: 21,
+            at: { x: x - 1, y: 21, dir: 'right' },
+          });
+          if (!result.ok) throw Error(result.reason);
+        }
+        const actor = world.scene().player;
+        actor.px = 7 * 16 + 8;
+        actor.py = 21 * 16 + 13;
+        actor.face('right');
+        actor.sync();
+        shell.set({ manualTool: true, tool: 'can' });
+      });
+      await frames(h, 4);
+      if (touch) await shot(h, 'a03b-water-before.png');
+      const client = await h.context().newCDPSession(h);
+      const fingers = (type, touchPoints) =>
+        client.send('Input.dispatchTouchEvent', { type, touchPoints });
+      if (touch) {
+        const stamp = await h.locator('button.do').boundingBox();
+        const right = { id: 2, x: stamp.x + stamp.width / 2, y: stamp.y + stamp.height / 2 };
+        const left = { id: 1, x: 150, y: 230 };
+        await fingers('touchStart', [left]);
+        await fingers('touchStart', [left, right]);
+        await fingers('touchMove', [{ ...left, x: left.x + 45 }, right]);
+      } else {
+        await h.keyboard.down('e');
+        await h.keyboard.down('ArrowRight');
+      }
+      await h.waitForFunction(() =>
+        [8, 9, 10].every(x => window.__dao.game.ask('farm.detail', x, 21)?.wet),
+      );
+      if (touch) await fingers('touchEnd', []);
+      else {
+        await h.keyboard.up('ArrowRight');
+        await h.keyboard.up('e');
+      }
+      await frames(h, 30);
+      if (touch) await shot(h, 'a03b-water-after.png');
+      await h.evaluate(() => {
+        const actor = window.__dao.world.scene().player;
+        actor.px = 17 * 16 + 8;
+        actor.py = 18 * 16 + 13;
+        actor.face('right');
+        actor.sync();
+      });
+      await h.keyboard.press('j');
+      assert.equal(await h.evaluate(() => window.__dao.shell.get().modal), null);
+      const home = await h.evaluate(() => window.__dao.game.ask('home'));
+      assert.equal(home.can, home.canMax);
+      assert.deepEqual(held.errors, []);
+      await h.context().close();
+    }
     // —— 桌面：键鼠 ——
     const desk = await open(browser, port, { viewport: { width: 1280, height: 720 } });
     const page = desk.page;
     assert.equal(await page.locator('.stick').isVisible(), false, '键鼠设备上不该出现摇杆');
     assert.equal(await page.evaluate(() => window.__dao.platform.viewport.size().rotated), false);
 
+    await frames(page, 20);
+    await shot(page, 'a03b-hud-desktop.png');
     await tap(page, 8, 18); // 先走到菜地边上
     await frames(page, 500);
     const click = await onScreen(page, 8, 20);
@@ -177,6 +242,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     );
     assert.equal(await wide.page.locator('#app.compact .stick').isVisible(), true);
     await frames(wide.page, 30);
+    await shot(wide.page, 'a03b-hud-phone.png');
     await shot(wide.page, 'smoke-phone-landscape.png');
     // 新来的人：手记收着时左上角有“下一步”，用这台设备的说法讲怎么做
     assert.match(await wide.page.locator('.next').textContent(), /锄松一格地.*菜地.*点右下印章/);
@@ -184,8 +250,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     await desk.page.evaluate(() => window.__dao.shell.set({ modal: null }));
     assert.match(await desk.page.locator('.next').textContent(), /下一步.*按空格/);
     await desk.page.locator('.vitals [data-do="journal"]').click();
-    await desk.page.locator('[data-do="journalTab"][data-tab="people"]').click();
-    assert.match(await desk.page.locator('.journal section').textContent(), /石伯/);
+    assert.equal(await desk.page.locator('[data-do="journalTab"][data-tab="people"]').count(), 0);
     await desk.page.locator('[data-do="journalTab"][data-tab="pack"]').click();
     assert.match(await desk.page.locator('.journal section').textContent(), /格/);
     await desk.page.locator('.journal header button').click();
@@ -222,7 +287,8 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await tap(p, 12, 10);
       await frames(p, 300);
       // 喝上了：小窗合上，人在水缸边舀一瓢（演完才能接着做别的）
-      await p.locator('button[data-do="drink"]').click();
+      const can = await p.evaluate(() => window.__dao.game.ask('home'));
+      assert.equal(can.can, can.canMax);
       assert.equal(await p.evaluate(() => window.__dao.game.ask('body').thirst), 100);
       assert.equal(await p.evaluate(() => window.__dao.shell.get().modal), null);
       await performed(p);
@@ -312,12 +378,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
         ),
         true,
       );
-      // 宽屏上“册子”就在右上；手机上收在“更多”里
-      if (session === desk) await p.locator('.vitals [data-do="book"]').click();
-      else {
-        await p.locator('[data-do="menu"]').click();
-        await p.locator('.modal [data-do="book"]').click();
-      }
+      await p.locator('.date .seal').click();
       assert.equal(await p.locator('.folio-stat').count(), 6);
       const household = p.locator('[data-attr="chijia"]');
       await household.click();
@@ -334,7 +395,14 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.locator('[data-tab="ledger"]').click();
       await p.locator('[data-do="ledgerWho"][data-who="shi"]').click();
       assert.match(await p.locator('.folio-score').textContent(), /好感/);
-      if (session === wide) await shot(p, 'a03a-ledger-phone.png');
+      const visitor = await p.evaluate(() => window.__dao.game.ask('visitors').active[0]);
+      await p.locator(`[data-do="ledgerWho"][data-who="${visitor.id}"]`).click();
+      if (session === wide) {
+        await p.waitForTimeout(3500);
+        await shot(p, 'a03b-ledger-phone.png');
+      }
+      await p.getByRole('button', { name: '看人', exact: true }).click();
+      assert.equal(await p.locator('.folio-identity h2').textContent(), visitor.name);
       await p.locator('[data-do="bookTab"][data-tab="traits"]').click();
       assert.match(await p.locator('.sheet').textContent(), /慢热/);
       await p.locator('[data-do="bookTab"][data-tab="achievements"]').click();

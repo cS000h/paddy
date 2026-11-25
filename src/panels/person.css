@@ -190,3 +190,13 @@
 .compact .folio-entry {
   padding: 4px 0;
 }
+
+.folio-ledger nav {
+  max-height: 48vh;
+  overflow-y: auto;
+}
+.folio-ledger nav h3 {
+  font-size: 13px;
+  color: var(--ink-2);
+  margin: 8px 0 2px;
+}

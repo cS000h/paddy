@@ -14,10 +14,14 @@ export function bindKeyboard(scene, intents) {
       (keys.S.isDown || keys.DOWN.isDown ? 1 : 0) - (keys.W.isDown || keys.UP.isDown ? 1 : 0);
     intents.setMove('keys', x, y);
   };
+  const actKeys = [' ', 'e', 'enter', 'j'];
+  const release = event => {
+    if (actKeys.includes(event.key.toLowerCase())) intents.emit('act', { phase: 'up' });
+  };
   const press = event => {
     if (event.repeat) return;
     const key = event.key.toLowerCase();
-    if (key === ' ' || key === 'e' || key === 'enter' || key === 'j') intents.emit('act');
+    if (actKeys.includes(key)) intents.emit('act', { phase: 'down' });
     else if (key.length === 1 && '1234'.includes(key))
       intents.emit('tool', { index: Number(key) - 1 });
     else if (key === 'q') intents.emit('tool.step', { by: -1 });
@@ -26,10 +30,12 @@ export function bindKeyboard(scene, intents) {
   };
   scene.events.on('preupdate', poll);
   keyboard.on('keydown', press);
+  keyboard.on('keyup', release);
   keyboard.addCapture('SPACE,UP,DOWN,LEFT,RIGHT');
   return () => {
     scene.events.off('preupdate', poll);
     keyboard.off('keydown', press);
+    keyboard.off('keyup', release);
     intents.setMove('keys', 0, 0);
   };
 }
@@ -110,4 +116,31 @@ export function bindPointer(scene, intents, platform) {
     offHide();
     offModal();
   };
+}
+
+export function repeatField(scene) {
+  if (scene.heldPlot && scene.time.now >= scene.fineUntil) {
+    const t = scene.target();
+    if (t.kind !== 'plot') return;
+    const hint = scene.deps.shell.get().hint;
+    if (!hint?.tool) return;
+    const last = scene.heldPlot;
+    const same = t.x === last.x && t.y === last.y;
+    if (!same || (last.tool !== hint.tool && scene.time.now >= last.next)) scene.act(true);
+  }
+}
+export function bindAction(scene, intents) {
+  const { shell } = scene.deps;
+  return [
+    intents.on('act', ({ phase }) => {
+      scene.heldPlot = null;
+      if (phase !== 'up') scene.act(phase === 'down');
+    }),
+    scene.deps.platform.onHide(() => {
+      scene.heldPlot = null;
+    }),
+    shell.subscribe(() => {
+      if (shell.paused()) scene.heldPlot = null;
+    }),
+  ];
 }

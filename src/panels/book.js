@@ -84,40 +84,17 @@ function modifiers(m, game) {
   return `<details class="folio-mods" ${m.mod ? 'open' : ''}><summary>身边风物 · ${list.length}</summary><div class="mod-split"><div class="mod-tiles">${tiles}</div>${detail}</div></details>`;
 }
 
-// 熟人册（只读）：只看谁在村里落脚、认识过哪些回头客，要说话得亲自走过去。
-function folkRows(game) {
-  const data = game.ask('visitors');
-  const here = data.active.map(
-    v =>
-      `<li><span class="what"><b>${esc(v.name)} · ${esc(v.title)}${v.returning ? ' · 熟客' : ''}</b>` +
-      `<small>眼下在${esc(v.spotName)}（还留 ${v.left} 天）· ${esc(v.traits.join('、'))}</small></span></li>`,
-  );
-  const known = data.book.map(
-    b =>
-      `<li><span class="what"><b>${esc(b.name)} · ${esc(b.title)}</b>` +
-      `<small>熟人册 · 来过 ${b.visits} 回 · 熟悉 ${b.rel} · ${esc(b.traits.join('、'))}</small></span></li>`,
-  );
-  const all = [...here, ...known];
-  return all.length
-    ? all
-    : [
-        '<li><span class="what"><small>眼下还没记下外村熟人，赶集日去茶摊、村口或渡口转转吧。</small></span></li>',
-      ];
-}
-
 const TABS = [
   ['persona', '人物', 'tab_persona'],
-  ['ledger', '人情账', 'tab_ledger'],
+  ['ledger', '乡邻', 'tab_ledger'],
   ['skills', '本事', 'tab_skills'],
   ['traits', '性情', 'tab_traits'],
   ['achievements', '成就', 'tab_achievements'],
-  ['folk', '熟人', 'tab_folk'],
 ];
 
 function rowsOf(tab, game) {
   if (tab === 'skills') return game.ask('growth').skills.map(skillRow);
   if (tab === 'traits') return game.ask('growth').traits.map(traitRow);
-  if (tab === 'folk') return folkRows(game);
   return game
     .ask('achievements')
     .toSorted((a, b) => Number(!!b.day) - Number(!!a.day))
@@ -128,7 +105,7 @@ export function bookView(m, game) {
   const tab = m.tab || 'persona';
   const tabs = TABS.map(
     ([id, name, ico]) =>
-      `<button class="book-tab ${tab === id ? 'on' : ''}" data-do="bookTab" data-tab="${id}" title="${name}" aria-label="${name}">${uiIconImg(ico, 32)}</button>`,
+      `<button class="book-tab ${tab === id ? 'on' : ''}" data-do="bookTab" data-tab="${id}" title="${name}" aria-label="${name}">${uiIconImg(ico, 24)}<span>${name}</span></button>`,
   ).join('');
   const origin = game.ask('growth').origin ? '' : button('origin', '补记初来时的两件小事');
   let body;

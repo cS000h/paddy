@@ -2,7 +2,7 @@
 // 右下那枚“做”的印（触屏时）。骨架只建一次，之后只改变了的字和数——原来每走一次时就把
 // 工具栏整个重建，手机上会顿一下，手指正按着的按钮也会被换掉，点了没反应。
 import { TOOLS, ITEMS } from '../content/items.js';
-import { toolIconUrl, itemIconUrl } from './icons.js';
+import { heroPortraitUrl, toolIconUrl, itemIconUrl } from './icons.js';
 import { termOf } from '../content/calendar.js';
 import { esc } from './html.js';
 
@@ -39,7 +39,7 @@ const toolButton = (tool, i) =>
 export const HUD_HTML = `
   <div class="left">
     <div class="card date">
-      <span class="seal">稻</span>
+      <button class="seal" data-do="book" aria-label="查看我的人物页"><img class="pixel" data-id="portrait" alt=""></button>
       <span class="when"><b data-id="date"></b><small data-id="time"></small></span>
       <button class="weather" data-do="weather" data-id="weather"></button>
     </div>
@@ -53,7 +53,6 @@ export const HUD_HTML = `
       src="${toolIconUrl('coin')}" alt="铜钱" /><span data-id="coins"></span></span>
     <nav class="system-keys" aria-label="常用入口">
       ${navKey('bag', '行囊')}${navKey('map', '地图')}
-      <button class="menu-btn book-key" data-do="book">册子</button>
       ${navKey('journal', '手记')}${navKey('menu', '菜单')}
     </nav>
   </div>
@@ -122,6 +121,7 @@ export function syncStamp(node, hint) {
 export function renderHud(el, { game, shell }) {
   const clock = game.ask('clock');
   const hero = game.ask('hero');
+  attr(el.portrait, 'src', heroPortraitUrl(hero.look));
   const body = game.ask('body');
   const weather = game.ask('weather');
   put(el.date, `${termOf(clock)} · 第 ${clock.dayOfSeason} 日`);
