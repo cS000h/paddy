@@ -195,6 +195,22 @@ export function createEffects(scene, map) {
       sparkle(fine ? 12 : 5, px, py, py + 3);
       if (fine) ring(px, py, py + 3);
     },
+    /** 点了空地：落点冒一个淡淡的水墨小圈，慢慢洇开。 */
+    mark(x, y) {
+      const [px, py] = centre(x, y);
+      const r = scene.add
+        .ellipse(px, py + 3, 10, 6)
+        .setStrokeStyle(1, 0x55635d, 0.55)
+        .setDepth(DEPTH.weeds + 1);
+      scene.tweens.add({
+        targets: r,
+        scale: 1.8,
+        alpha: { from: 1, to: 0 },
+        duration: 520,
+        ease: 'Sine.easeOut',
+        onComplete: () => r.destroy(),
+      });
+    },
     /** 有动静的石头、花丛：一闪。 */
     glint(px, py) {
       sparkle(2, px, py, py + 3);

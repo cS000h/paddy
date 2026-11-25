@@ -50,6 +50,6 @@ export function growthNotices(game, shell) {
       ...leveled.map(f => f.data.name + '到了「' + f.data.title + '」'),
       ...traits.map(f => '新特质：' + f.data.name),
     ];
-    if (messages.length) shell.toast(messages.join('；'));
+    if (messages.length) shell.toast(messages.join('；'), true);
   });
 }

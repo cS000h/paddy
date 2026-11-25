@@ -67,7 +67,7 @@ export function createGroundFinds(scene) {
         scene.effects.found(d.x * TILE + 8, d.y * TILE + 6, d.fine);
         platform.audio.play(d.fine ? 'fine' : 'harvest');
         if (d.fine) platform.haptic([14, 60, 24]);
-        shell.toast(d.line);
+        shell.toast(d.line, d.fine);
         changed = true;
       } else if (f.type === 'day.started' || f.type === 'person.travelled') changed = true;
     }

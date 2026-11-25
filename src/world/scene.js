@@ -321,7 +321,7 @@ export class VillageScene extends Phaser.Scene {
         this.effects[effect](d.x, d.y, d.crop, d.fine);
         platform.audio.play(d.fine ? 'fine' : sound);
         platform.haptic(d.fine ? [14, 60, 24] : undefined);
-        if (d.line) this.deps.shell.toast(d.line);
+        if (d.line) this.deps.shell.toast(d.line, d.fine || d.first);
         const day = this.deps.game.ask('clock').day;
         for (const v of this.villagers) v.work.notice(f.type, d, day);
         plots = true;

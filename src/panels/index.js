@@ -175,7 +175,7 @@ export function createPanels({
   function renderToast(state) {
     if (!state.toast || state.toast === lastToast) return;
     lastToast = state.toast;
-    captions.say(state.toast.text);
+    captions.say(state.toast.text, state.toast.keep);
   }
 
   // 按钮要做的事出错（包括 async 的），交给 report，不让它变成页面上没人接的错

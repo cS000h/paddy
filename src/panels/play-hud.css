@@ -78,9 +78,6 @@
   grid-template-columns: repeat(2, 42px);
   gap: 4px;
 }
-.touch .buff {
-  display: none;
-}
 .touch .system-keys button {
   width: 42px;
   height: 42px;

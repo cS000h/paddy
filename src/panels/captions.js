@@ -27,37 +27,70 @@ export function createCaptions(root, spot) {
   const layer = make('captions', '');
   root.append(layer);
   const later = (node, ms) => setTimeout(() => node.remove(), ms);
+  // 要紧的话（头一回找到、升了本事、头一回出极品）说着的时候，后来的话排队等它说完，不把它盖掉。
+  // 排队的最多 QUEUE 句，再多的寻常话就不说了；要紧的话照样排上。
+  const QUEUE = 3;
+  const QUEUED_MS = 1600; // 排队轮到的寻常话，至少留这么久再换下一句
+  const queue = [];
+  let holdUntil = 0;
+  let timer = null;
+  const flush = () => {
+    timer = null;
+    const next = queue.shift();
+    if (next) show(next.text, next.keep ? Infinity : QUEUED_MS);
+  };
+  const wait = () => {
+    if (!timer) timer = setTimeout(flush, Math.max(0, holdUntil - Date.now()));
+  };
+
+  /** 摆出来；之后 hold 毫秒（最多到它说完）里来的话排队：要紧的话等它说完，排着队轮到的寻常话一句一句过。 */
+  function show(text, hold) {
+    const ms = place(text);
+    if (hold) holdUntil = Date.now() + Math.min(ms, hold);
+    if (queue.length) wait();
+  }
+
+  function place(text) {
+    const head = spot();
+    if (text.length <= SHORT && head) {
+      layer.querySelector('.caption.head')?.remove();
+      const node = document.createElement('div');
+      node.className = 'caption head';
+      const img = document.createElement('img');
+      img.className = 'pixel bubble-ico';
+      img.width = 24;
+      img.height = 24;
+      img.alt = '';
+      img.src = uiIconUrl('scroll_exclaim');
+      const span = document.createElement('span');
+      span.textContent = text;
+      node.append(img, span);
+      layer.append(node);
+      // 先放进去量出多宽，再按半个宽度往里收，长一点的话也不出画面
+      const at = clampTo(root, head, Math.ceil(node.offsetWidth / 2) + 8);
+      node.style.left = at.x + 'px';
+      node.style.top = at.y + 'px';
+      later(node, 2600);
+      return 2600;
+    }
+    layer.querySelector('.caption.band')?.remove();
+    const node = make('caption band', text);
+    layer.append(node);
+    const ms = Math.max(3400, text.length * 150);
+    later(node, ms);
+    return ms;
+  }
 
   return {
-    /** 说一句。短的冒成头顶紧凑像素气泡，长的横在下方；同一处一次只留一句。 */
-    say(text) {
+    /** 说一句。keep 为真是要紧的话，说着的时候别的话排队。 */
+    say(text, keep = false) {
       if (!text) return;
-      const head = spot();
-      if (text.length <= SHORT && head) {
-        layer.querySelector('.caption.head')?.remove();
-        const node = document.createElement('div');
-        node.className = 'caption head';
-        const img = document.createElement('img');
-        img.className = 'pixel bubble-ico';
-        img.width = 24;
-        img.height = 24;
-        img.alt = '';
-        img.src = uiIconUrl('scroll_exclaim');
-        const span = document.createElement('span');
-        span.textContent = text;
-        node.append(img, span);
-        layer.append(node);
-        // 先放进去量出多宽，再按半个宽度往里收，长一点的话也不出画面
-        const at = clampTo(root, head, Math.ceil(node.offsetWidth / 2) + 8);
-        node.style.left = at.x + 'px';
-        node.style.top = at.y + 'px';
-        later(node, 2600);
+      if (Date.now() < holdUntil || queue.length) {
+        if (keep || queue.length < QUEUE) queue.push({ text, keep });
+        wait();
         return;
       }
-      layer.querySelector('.caption.band')?.remove();
-      const node = make('caption band', text);
-      layer.append(node);
-      later(node, Math.max(3400, text.length * 150));
+      show(text, keep ? Infinity : 0);
     },
     /** 一串数的变化，从头顶往上飘。entries: [{text, up, fine}]，up 为 true 是变多了，fine 是收到了极品。 */
     float(entries) {
@@ -77,6 +110,8 @@ export function createCaptions(root, spot) {
       });
     },
     destroy() {
+      if (timer) clearTimeout(timer);
+      queue.length = 0;
       layer.remove();
     },
   };
