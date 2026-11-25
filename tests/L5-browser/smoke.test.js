@@ -32,6 +32,69 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
   const port = server.address().port;
   await mkdir(path.join(root, '.cache'), { recursive: true });
   try {
+    for (const touch of [false, true]) {
+      const held = await open(browser, port, {
+        viewport: { width: 844, height: 390 },
+        hasTouch: true,
+      });
+      const h = held.page;
+      await h.evaluate(() => {
+        const { game, world, shell } = window.__dao;
+        for (const x of [8, 9, 10]) {
+          const result = game.dispatch('farm.till', {
+            x,
+            y: 21,
+            at: { x: x - 1, y: 21, dir: 'right' },
+          });
+          if (!result.ok) throw Error(result.reason);
+        }
+        const actor = world.scene().player;
+        actor.px = 7 * 16 + 8;
+        actor.py = 21 * 16 + 13;
+        actor.face('right');
+        actor.sync();
+        shell.set({ manualTool: true, tool: 'can' });
+      });
+      await frames(h, 4);
+      if (touch) await shot(h, 'a03b-water-before.png');
+      const client = await h.context().newCDPSession(h);
+      const fingers = (type, touchPoints) =>
+        client.send('Input.dispatchTouchEvent', { type, touchPoints });
+      if (touch) {
+        const stamp = await h.locator('button.do').boundingBox();
+        const right = { id: 2, x: stamp.x + stamp.width / 2, y: stamp.y + stamp.height / 2 };
+        const left = { id: 1, x: 150, y: 230 };
+        await fingers('touchStart', [left]);
+        await fingers('touchStart', [left, right]);
+        await fingers('touchMove', [{ ...left, x: left.x + 45 }, right]);
+      } else {
+        await h.keyboard.down('e');
+        await h.keyboard.down('ArrowRight');
+      }
+      await h.waitForFunction(() =>
+        [8, 9, 10].every(x => window.__dao.game.ask('farm.detail', x, 21)?.wet),
+      );
+      if (touch) await fingers('touchEnd', []);
+      else {
+        await h.keyboard.up('ArrowRight');
+        await h.keyboard.up('e');
+      }
+      await frames(h, 30);
+      if (touch) await shot(h, 'a03b-water-after.png');
+      await h.evaluate(() => {
+        const actor = window.__dao.world.scene().player;
+        actor.px = 17 * 16 + 8;
+        actor.py = 18 * 16 + 13;
+        actor.face('right');
+        actor.sync();
+      });
+      await h.keyboard.press('j');
+      assert.equal(await h.evaluate(() => window.__dao.shell.get().modal), null);
+      const home = await h.evaluate(() => window.__dao.game.ask('home'));
+      assert.equal(home.can, home.canMax);
+      assert.deepEqual(held.errors, []);
+      await h.context().close();
+    }
     // —— 桌面：键鼠 ——
     const desk = await open(browser, port, { viewport: { width: 1280, height: 720 } });
     const page = desk.page;
@@ -493,51 +556,6 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       );
       assert.deepEqual(session.errors, []);
     }
-    const held = await open(browser, port, {
-      viewport: { width: 844, height: 390 },
-      hasTouch: true,
-    });
-    const h = held.page;
-    await h.evaluate(() => {
-      const { game, world, shell } = window.__dao;
-      for (const x of [8, 9, 10]) {
-        const result = game.dispatch('farm.till', {
-          x,
-          y: 21,
-          at: { x: x - 1, y: 21, dir: 'right' },
-        });
-        if (!result.ok) throw Error(result.reason);
-      }
-      const actor = world.scene().player;
-      actor.px = 7 * 16 + 8;
-      actor.py = 21 * 16 + 13;
-      actor.face('right');
-      actor.sync();
-      shell.set({ manualTool: true, tool: 'can' });
-    });
-    await frames(h, 4);
-    await shot(h, 'a03b-water-before.png');
-    await h.keyboard.down('e');
-    await h.keyboard.down('ArrowRight');
-    await h.waitForFunction(() =>
-      [8, 9, 10].every(x => window.__dao.game.ask('farm.detail', x, 21)?.wet),
-    );
-    await h.keyboard.up('ArrowRight');
-    await h.keyboard.up('e');
-    await frames(h, 30);
-    await shot(h, 'a03b-water-after.png');
-    await h.evaluate(() => {
-      const actor = window.__dao.world.scene().player;
-      actor.px = 17 * 16 + 8;
-      actor.py = 18 * 16 + 13;
-      actor.face('right');
-      actor.sync();
-    });
-    await h.keyboard.press('j');
-    assert.equal(await h.evaluate(() => window.__dao.shell.get().modal), null);
-    const home = await h.evaluate(() => window.__dao.game.ask('home'));
-    assert.equal(home.can, home.canMax);
-    assert.deepEqual(held.errors, []);
     assert.deepEqual(wide.errors, []);
   } finally {
     await browser.close();

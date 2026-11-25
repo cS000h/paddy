@@ -249,12 +249,21 @@ export function createPanels({
     const modal = shell.get().modal;
     if (event.target === el.modal && modal && closesOnBackdrop(modal)) shell.set({ modal: null });
   });
+  let stampPointer = null;
   el.do.addEventListener('pointerdown', event => {
-    if (!event.isPrimary || event.button !== 0) return;
+    // 摇杆上已经有一根手指时，按印章的那根仍然算数。
+    if (stampPointer !== null || event.button !== 0) return;
+    stampPointer = event.pointerId;
     el.do.setPointerCapture(event.pointerId);
     intents.emit('act', { phase: 'down' });
   });
-  el.do.addEventListener('lostpointercapture', () => intents.emit('act', { phase: 'up' }));
+  const releaseStamp = event => {
+    if (event.pointerId !== stampPointer) return;
+    stampPointer = null;
+    intents.emit('act', { phase: 'up' });
+  };
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'])
+    el.do.addEventListener(type, releaseStamp);
   el.do.addEventListener('click', event => {
     if (!event.detail) intents.emit('act');
   });
