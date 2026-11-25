@@ -45,6 +45,13 @@ const foods = {
   saltfish: ['fish','e0','h1','h3'], pork: ['meat','k0','k2','u2'],
   chicken: ['chicken','l0','k0','t1'], mutton: ['lamb','k0','c0','u2'],
   bacon: ['meatStripe','e0','c0','t3'],
+  // 路边翻到、捡到的野货（G-08）：先借现成的轮廓换颜色，A-06 再看要不要另画
+  wildPeach: ['tomato','k0','p2','c1'], peachGum: ['bean','y0','y1','y2'],
+  mugwort: ['mint','g2','g4','s3'], malan: ['leaf','g2','g5','c2'],
+  berry: ['bean','c0','c1','c2'], brake: ['stem','b1','g4','g6'],
+  snail: ['chestnut','s1','s3','s5'], mussel: ['slice','k0','e1','u2'],
+  lotusPod: ['bean','l0','g0','g3'], caltrop: ['wedge','l0','paper1','c3'],
+  earthEar: ['cabbage','g4','g6','g7'],
 };
 
 export const COOKED_ITEMS = Object.keys(foods);

@@ -139,8 +139,9 @@ test('作物和物品：种子、作物、收成互相指得上', () => {
 test('物品总表：每样东西字段齐全，买卖价按基准价折算，开局的东西和能托捎的货都登记过', () => {
   assert.equal(
     Object.keys(ITEMS).length,
-    83,
-    '70 样寻常的（钓鱼加了六种鱼和蚯蚓），加 13 样极品（七样菜、六种鱼，见 L1 收成出彩）',
+    120,
+    '90 样寻常的（钓鱼加了六种鱼和蚯蚓，走图翻找加了 20 样野货），' +
+      '加 30 样极品（七样菜、六种鱼、16 样野货和鸡蛋，见 L1 收成出彩）',
   );
   const KINDS = ['food', 'whole', 'spice', 'snack', 'seed', 'material', 'craft', 'tool', 'bait'];
   for (const [id, item] of Object.entries(ITEMS)) {

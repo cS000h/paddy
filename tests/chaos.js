@@ -443,8 +443,23 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     return send('visitor.talk', { id: v.id, at });
   }
 
+  // 路边翻一翻：多半挑有动静的地方，有时随手翻一处，偶尔站得太远（该被拒绝）
+  function rummage() {
+    const spots = game.ask('search.spots');
+    if (!spots.length) return travel();
+    const fresh = spots.filter(x => !x.done);
+    const cued = fresh.filter(x => x.cue);
+    const s = pick(cued.length && chance(0.6) ? cued : fresh.length ? fresh : spots);
+    const near = layout(hero().map).stand.filter(
+      p => Math.abs(p.x - s.x) + Math.abs(p.y - s.y) === 1,
+    );
+    const at = near.length && chance(0.9) ? { ...pick(near), dir: pick(DIRS) } : here();
+    send('search', { at, spot: { x: s.x, y: s.y } });
+  }
+
   const PLANS = [
     [4, travel],
+    [3, rummage],
     [14, useThing],
     [8, farm],
     [3, folk],
@@ -520,6 +535,9 @@ export function askEverything(game) {
       ['乱', -1],
     ],
     'fish.mood': [['river'], ['nowhere']],
+    search: [[]],
+    'search.spots': [...Object.keys(MAPS).map(m => [m]), ['nowhere'], []],
+    'search.why': [[{ x: at.x, y: at.y }, at], [{}], []],
     pack: [[at], []],
   };
   const failures = [];

@@ -8,6 +8,20 @@ export const SAVE_FORMAT = 'dao.save';
 // MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
 const MIGRATIONS = {
+  19(state) {
+    // 走图翻找（sim/plugins/search.js）：每个有行囊的人一份——今天哪几处有动静、翻过哪几处、连着几处没翻到、
+    // 各样东西头一回找到是哪天、地上冒出来还没捡的、拾到的有主的东西还了没有。
+    // 旧档今天没有动静（要照清早的种子挑），过一夜就有了；路边哪儿都还能翻。
+    const w = state.world;
+    w.meta.version = 20;
+    w.search = Object.fromEntries(
+      Object.keys(w.packs).map(id => [
+        id,
+        { cues: [], done: [], miss: 0, found: {}, ground: [], lost: {} },
+      ]),
+    );
+    return state;
+  },
   18(state) {
     // 钓鱼重做（sim/plugins/fishing.js）：每个有行囊的人一份钓鱼的记录——眼下这一竿、各种鱼钓过几条最长多少、
     // 各处钓点惊没惊着。旧的钓鱼（outings 里的 fish，下竿时抽好的运气）不要了：没提的那一竿算收了，

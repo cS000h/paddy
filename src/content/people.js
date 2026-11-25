@@ -11,17 +11,17 @@ export const HERO = 'hero';
 export const PEOPLE = Object.freeze({
   hero: { id: 'hero', name: '你', role: '借住小院的后生', look: 'hero' },
   shi: { id: 'shi', favorite: '土豆炖豆子', name: '石伯', role: '种了一辈子地', look: 'shi', seal: '石', hobby: '编竹筐、看天',
-    likes: 'hearty', taste: '扎实顶饱的饭菜', treats: ['tea', 'bean', 'strip'] },
+    likes: 'hearty', taste: '扎实顶饱的饭菜', treats: ['tea', 'bean', 'strip', 'willowTwig'] },
   gui: { id: 'gui', favorite: '青菜蛋花汤', name: '桂嫂', role: '隔壁邻居', look: 'gui', seal: '桂', hobby: '腌菜、纳鞋底、听戏',
-    likes: 'warm', taste: '热乎乎的汤', treats: ['ginger', 'egg', 'herb'] },
+    likes: 'warm', taste: '热乎乎的汤', treats: ['ginger', 'egg', 'herb', 'mugwort'] },
   aman: { id: 'aman', favorite: '蛋炒饭', name: '阿满', role: '送菜的', look: 'aman', seal: '满', hobby: '哼小调、跟人抬杠',
-    likes: 'hearty', taste: '扎实顶饱的家常饭', treats: ['cake', 'melon', 'pickle'] },
+    likes: 'hearty', taste: '扎实顶饱的家常饭', treats: ['cake', 'melon', 'pickle', 'caltrop'] },
   qiao: { id: 'qiao', favorite: '香草烤土豆', name: '小乔', role: '杂货铺帮工', look: 'qiao', seal: '乔', hobby: '画画、跟猫斗智',
-    likes: 'fresh', taste: '带香草味的清爽吃食', treats: ['melon', 'cake', 'fish'] },
+    likes: 'fresh', taste: '带香草味的清爽吃食', treats: ['melon', 'cake', 'fish', 'lotusFlower'] },
   zhou: { id: 'zhou', favorite: '姜丝鱼汤', name: '老周', role: '渡口撑船的', look: 'zhou', seal: '周', hobby: '讲古、补网、哼渔歌',
-    likes: 'warm', taste: '热汤，最好带点姜', treats: ['ginger', 'pickle', 'tea'] },
+    likes: 'warm', taste: '热汤，最好带点姜', treats: ['ginger', 'pickle', 'tea', 'snail'] },
   yun: { id: 'yun', favorite: '南瓜粥', name: '云姑', role: '后山种茶的', look: 'yun', seal: '云', hobby: '唱山歌、认草药',
-    likes: 'treat', taste: '甜糯的东西', treats: ['chestnut', 'mushroom', 'cake'] },
+    likes: 'treat', taste: '甜糯的东西', treats: ['chestnut', 'mushroom', 'cake', 'cicadaShell'] },
 });
 
 // 过节的吃食，谁收到都高兴。

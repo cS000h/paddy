@@ -35,6 +35,17 @@ export const growthPerks = {
       },
       { priority: 40 },
     );
+    // 路边翻找：没动静的地方也翻得出东西的机会，采集本事每一级 +1，阅历比底子每高一点 +1
+    K.tap(
+      'search.chance',
+      (r, { w, who }) => {
+        const l = lv(w, 'forage', who);
+        if (l) K.part(r, 'skill.forage', SKILLS.forage.name + LEVEL_NAMES[l], l);
+        const v = persona.attrs(w, who).values.yueli;
+        K.part(r, 'attr.yueli', ATTRS.yueli + v, v - 4);
+      },
+      { priority: 40 },
+    );
     K.tap(
       'xp.gain',
       (r, { w, who, skill, source }) => {

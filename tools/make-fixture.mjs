@@ -38,6 +38,18 @@ run('gift', { to: 'gui', item: 'veg.qingcai' });
 run('basket.put', { item: 'veg.qingcai', n: 1 });
 run('basket.order', { item: 'seed.qingcai', n: 4 });
 run('clock.advance', { minutes: 90 });
+// 路边翻一翻（第 20 版起）：院里头一处能翻的地方，从它四面能站人的一格翻
+const sides = [
+  [0, 1, 'up'],
+  [0, -1, 'down'],
+  [1, 0, 'left'],
+  [-1, 0, 'right'],
+];
+const first = game.ask('search.spots', 'yard')?.[0];
+for (const [dx, dy, dir] of first ? sides : []) {
+  const at = { x: first.x + dx, y: first.y + dy, dir };
+  if (game.dispatch('search', { at, spot: { x: first.x, y: first.y } }).ok) break;
+}
 
 mkdirSync(dir, { recursive: true });
 writeFileSync(file, JSON.stringify(game.save(), null, 2) + '\n');

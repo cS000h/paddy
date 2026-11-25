@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check:names": "node --test --test-name-pattern=没定义的名字 tests/L0-static/tools.test.js",
     "art:sheet": "node tools/art-sheet.mjs",
     "build:offline": "node tools/build-offline.mjs",
     "font:subset": "node tools/font-subset.mjs"

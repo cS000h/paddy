@@ -3,18 +3,7 @@
 import { is } from '../kernel/schema.js';
 import { FISH, FISH_SPOTS, FIGHT } from '../content/fishing.js';
 
-/** 一个 0 到 1 的数，只看传进来的几个整数（同样的数给同样的结果），不动存档里的随机数。 */
-export function noise(...ns) {
-  let h = 2166136261;
-  for (const n of ns) {
-    h ^= n >>> 0;
-    h = Math.imul(h, 16777619) >>> 0;
-  }
-  h ^= h >>> 13;
-  h = Math.imul(h, 2246822507) >>> 0;
-  h ^= h >>> 16;
-  return h / 4294967296;
-}
+export { noise } from './noise.js';
 
 const DIGITS = '〇一二三四五六七八九';
 

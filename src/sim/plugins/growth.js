@@ -131,6 +131,14 @@ export const growth = {
       },
       { priority: 60 },
     );
+    // 路边翻找一回只花 1 体力，翻得勤：翻到东西才长一点采集的本事，空手的不算
+    reactions.on(
+      'search.found',
+      (s, e, emit) => {
+        if (mine(s.world, e.data.who)) gain(s.world, e.data.who, emit, 'forage', 1, 'search');
+      },
+      { priority: 60 },
+    );
     reactions.on(
       'meal.cooked',
       (s, e, emit) => {

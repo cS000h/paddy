@@ -289,11 +289,15 @@ export const social = {
         liked = person.treats.includes(plain) || FESTIVE.includes(plain);
         value = (liked ? 3 : 2) + (fine ? 1 : 0);
         const name = ITEMS[input.item].name;
+        // 不能吃的东西（荷花、柳条……）换一句不提「吃」的
+        const say = ['food', 'snack'].includes(ITEMS[plain]?.kind)
+          ? GIFT_ITEM[to]
+          : { ...GIFT_ITEM[to], ...GIFT_ITEM[to].thing };
         line = liked
-          ? GIFT_ITEM[to].yes(name)
+          ? say.yes(name)
           : homeGrown(plain)
             ? LINES[to].gift.replace('{n}', name)
-            : GIFT_ITEM[to].no(name);
+            : say.no(name);
         line = withGesture(to, band, line, key);
       }
       b.gifted[to] = w.clock.day;

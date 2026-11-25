@@ -8,6 +8,7 @@ export const CALENDAR = Object.freeze({
   realSecondsPerGameMinute: 0.7, // 外壳用：现实 0.7 秒 = 游戏 1 分钟
   tickMinutes: 10, // 外壳每凑满 10 分钟，给规则发一条“时间前进”
   morningEnd: 9 * 60, // 这之前算清早：早起的好处、清早的鱼口
+  dusk: 17 * 60, // 这之后算傍晚：路边翻找认清早、傍晚、夜里
   dark: 19 * 60, // 天黑：夜里才捉得到菜虫、看得见星星，鱼不钓了
   fairEvery: 5, // 每五天一个集日（第 5、10、15……日）
   legMinutes: 10, // 照着全村地图走过去时，每经过一块路牌（一段路）花的时辰
