@@ -8,6 +8,15 @@ export function growthActions({ game, shell, run }) {
     bookTab({ tab }) {
       edit({ tab, page: 0 });
     },
+    bookWho({ who }) {
+      edit({ who: who || null, attr: null });
+    },
+    bookAttr({ attr }) {
+      edit({ attr: shell.get().modal.attr === attr ? null : attr });
+    },
+    ledgerWho({ who }) {
+      edit({ ledgerWho: who });
+    },
     bookPage({ page }) {
       edit({ page: Number(page) });
     },

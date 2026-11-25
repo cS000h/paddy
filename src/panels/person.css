@@ -1,0 +1,192 @@
+.frame[data-kind='book']:has(.folio) {
+  width: min(1060px, 96%);
+}
+.book-page:has(.folio) {
+  padding: 0;
+  border-radius: 3px;
+  background: #f6f1e3;
+}
+.folio {
+  display: grid;
+  grid-template-columns: 1.07fr 1fr;
+  color: #34423f;
+}
+.folio > section {
+  min-width: 0;
+  padding: 20px 25px;
+}
+.folio > section:first-child {
+  background: linear-gradient(90deg, #f6f1e3 93%, #ece4d0);
+  border-right: 1px solid #b3a68b;
+}
+.folio > section > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  margin-bottom: 9px;
+}
+.folio > section:last-child > header {
+  padding-right: 34px;
+}
+.folio-stamp {
+  color: #aa4332;
+  border: 1px solid currentColor;
+  padding: 1px 5px;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+}
+.folio small {
+  font-size: 14px;
+  color: #55635d;
+}
+.folio-picker {
+  position: relative;
+}
+.folio summary {
+  cursor: pointer;
+  min-height: 44px;
+  align-content: center;
+}
+.folio-picker > div {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  width: 168px;
+  background: var(--moon);
+  border: 1px solid var(--frame);
+}
+.folio .folio-picker button {
+  min-height: 44px;
+}
+.folio-identity,
+.folio-stress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.folio-person {
+  width: 56px;
+  height: 112px;
+  image-rendering: pixelated;
+}
+.folio-identity h2 {
+  margin: 0;
+  font-size: 28px;
+}
+.folio-traits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 16px 0 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.folio-traits b,
+.folio-traits small {
+  display: block;
+  margin-top: 3px;
+}
+.folio-blank {
+  display: block;
+  width: 26px;
+  height: 26px;
+  margin: 3px;
+  border: 1px dashed var(--frame-2);
+}
+.folio-stress {
+  margin-top: 6px;
+}
+.sheet .folio-stat,
+.sheet .folio-ledger nav button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 9px;
+  min-height: 44px;
+  padding: 2px 5px;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+}
+.folio-stat b {
+  width: 2em;
+  text-align: right;
+}
+.folio-stat i {
+  flex: 1;
+  height: 7px;
+  background: #ddd3ba;
+}
+.folio-stat em {
+  display: block;
+  height: 100%;
+  background: #55635d;
+}
+.folio-stat[aria-expanded='true'] em {
+  background: #547a4a;
+}
+.folio-detail,
+.folio-mods {
+  margin-top: 8px;
+  font-size: 15px;
+}
+.folio-detail b {
+  color: #3f5f3e;
+}
+.folio-ledger {
+  grid-template-columns: 0.65fr 1.35fr;
+}
+.folio-ledger nav small,
+.folio-score {
+  margin-left: auto;
+}
+.folio-ledger nav button[aria-pressed='true'] {
+  background: #ece4d0;
+  border-left: 3px solid #aa4332;
+}
+.folio-score {
+  font-size: 22px;
+}
+.folio-entry {
+  display: grid;
+  grid-template-columns: 5em 1fr;
+  gap: 8px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+}
+.folio-entry > span {
+  color: #55635d;
+}
+.compact .book-page:has(.folio) {
+  padding: 0;
+}
+.compact .folio > section {
+  padding: 6px 12px;
+}
+.compact .folio > section > header {
+  margin: 0;
+}
+.compact .folio-person {
+  width: 36px;
+  height: 72px;
+}
+.compact .folio-traits {
+  margin: 6px 0;
+  padding-bottom: 5px;
+}
+.compact .folio-identity h2 {
+  font-size: 22px;
+}
+.compact .folio-score {
+  font-size: 18px;
+}
+.compact .folio-entry {
+  padding: 4px 0;
+}
