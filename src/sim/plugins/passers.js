@@ -1,4 +1,4 @@
-// 路过稻乡的外乡过客（G-15 的 2–12 号）：集日来两位，平常日子三成多来一位，辰时到、酉时走，
+// 路过稻乡的外乡过客（G-15 的 2–12 号）：集日来四位，平常日子一到两位，辰时到、酉时走，
 // 站在茶摊、杂货铺、渡口或你家院门口。谁是谁、每一步能选什么、选了怎么样，都在 content/passers.js。
 //   passer.pick {id, key, at} → passer.picked {who, id, pid, end, line, notes}
 //     id 是站着的那一位（查询 passers 给的），key 是 passer.options 给的一行。人得站到跟前（at）。
@@ -358,7 +358,7 @@ export const passers = {
           t.today.push(newEntry(v.id, day, v.visit, taken));
           taken.push('yard');
         }
-        for (const id of arrivals(w.meta.seed, day, isFairDay(day), t.met)) {
+        for (const id of arrivals(w.meta.seed, day, isFairDay(day), t.met, taken)) {
           if (t.today.length >= 4) break;
           t.today.push(newEntry(id, day, -1, taken));
           taken.push(PASSERS[id].map);

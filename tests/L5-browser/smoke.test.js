@@ -547,8 +547,17 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.locator('[data-do="close"]').click();
       await performed(p);
       await go(26, 14, 'tea');
-      await tap(p, 17, 10);
-      await frames(p, 400);
+      // 机器慢时现实时间走得多，到了申时小乔站在茶摊柜台前 (17,11)，点柜台就成了跟她说话：
+      // 站到柜台后头 (17,9) 朝下按「做」。过客多了茶摊边站的人也多，边走边等小窗冒出来。
+      await p.evaluate(() => {
+        const actor = window.__dao.world.scene().player;
+        actor.px = 17 * 16 + 8;
+        actor.py = 9 * 16 + 13;
+        actor.face('down');
+        actor.sync();
+      });
+      await p.keyboard.press('j');
+      await until(p, () => !!document.querySelector('[data-do="teaDo"][data-kind="listen"]'));
       await p.locator('[data-do="teaDo"][data-kind="listen"]').click();
       assert.match(await p.locator('.sheet').textContent(), /听邻桌东一句西一句/);
       await p.locator('[data-do="close"]').click();
@@ -556,11 +565,14 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await shot(p, session === desk ? 'river-desktop.png' : 'river-phone.png');
       await go(12, 4, 'creek');
       await go(12, 3, 'hill');
-      assert.ok(
-        await p.evaluate(() =>
-          window.__dao.world.scene().villagers.some(v => v.id === 'yun' && v.sprite.visible),
-        ),
+      // 云姑申时前在后山；机器慢、现实时间走过了申时她就下山去了溪边。
+      // 按作息查：该在这儿的人画出来了，不该在的没有。
+      const hill = await p.evaluate(() =>
+        window.__dao.world
+          .scene()
+          .villagers.map(v => [v.id, v.plan.visible && v.plan.map === 'hill', v.present]),
       );
+      for (const [id, due, shown] of hill) assert.equal(shown, due, `${id} 在不在后山`);
       await shot(p, session === desk ? 'hill-desktop.png' : 'hill-phone.png');
       await go(12, 20, 'creek');
       await go(1, 14, 'yard');

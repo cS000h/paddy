@@ -53,13 +53,25 @@ export const passersValid = s =>
     [Array.isArray(s.echo) && s.echo.length <= 8 && s.echo.every(echoOk), 'echo'],
   ]);
 
-/** 今天来哪几位：集日两位，平常日子三成多来一位；同一位隔几天才再来。只看种子和日子。 */
-export function arrivals(seed, day, fair, met) {
-  const n = fair ? 2 : noise(seed, day, 31) < R.chance ? 1 : 0;
+/** 今天来哪几位：集日四位，平常日子一位、六成再多一位；同一位隔几天才再来，一张图站满了不再挑。只看种子和日子。 */
+export function arrivals(seed, day, fair, met, taken = []) {
+  const n = fair ? R.fair : R.plain + (noise(seed, day, 31) < R.chance ? 1 : 0);
+  const used = [...taken];
+  // 一张图上的站位站满了，那张图的过客今天就不挑，免得两人叠在同一格
+  const room = id => {
+    const map = PASSERS[id].map;
+    return used.filter(m => m === map).length < PASSER_SPOTS[map].length;
+  };
   const free = PASSER_IDS.filter(id => !met[id] || day - met[id].day >= R.rest);
   const out = [];
-  for (let i = 0; i < n && free.length; i++)
-    out.push(free.splice(Math.floor(noise(seed, day, 32 + i) * free.length), 1)[0]);
+  for (let i = 0; i < n; i++) {
+    const open = free.filter(room);
+    if (!open.length) break;
+    const id = open[Math.floor(noise(seed, day, 32 + i) * open.length)];
+    free.splice(free.indexOf(id), 1);
+    used.push(PASSERS[id].map);
+    out.push(id);
+  }
   return out;
 }
 

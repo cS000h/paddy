@@ -1,4 +1,4 @@
-// L2 规则：外乡过客（G-15 的 2–12 号）。集日来两位、平常日子偶尔来一位；开场选一样，第二步定输赢；
+// L2 规则：外乡过客（G-15 的 2–12 号）。集日来四位、平常日子一到两位；开场选一样，第二步定输赢；
 // 了结以后第二天村民先提一句、茶摊传开一句；断案时受了委屈的那一方第二天到院门口来。
 // 规则测试一律通过端口发命令；过客哪天来只看种子和日子，这里把他摆进存档里直接见面。
 import { test } from 'node:test';
@@ -114,7 +114,7 @@ test('过客站的地方能站人，不压过客站位、乡邻的去处和比�
     }
 });
 
-test('集日来两位，平常日子三成多来一位；同一位隔几天才再来', () => {
+test('集日来四位，平常日子准来一位、六成再来一位；同一位隔几天才再来，一张图不站超了', () => {
   const met = {};
   let fair = 0,
     plain = 0,
@@ -122,11 +122,16 @@ test('集日来两位，平常日子三成多来一位；同一位隔几天才�
   for (let day = 1; day <= 120; day++) {
     const ids = arrivals(7, day, isFairDay(day), met);
     if (isFairDay(day)) {
-      assert.equal(ids.length, 2, `集日 ${day}`);
+      assert.equal(ids.length, PASSER_RULES.fair, `集日 ${day}`);
       fair++;
     } else {
       plainDays++;
       plain += ids.length;
+      assert.ok(ids.length >= 1, `平常日子 ${day} 一位都没来`);
+    }
+    for (const map of Object.keys(PASSER_SPOTS)) {
+      const n = ids.filter(id => PASSERS[id].map === map).length;
+      assert.ok(n <= PASSER_SPOTS[map].length, `${day} 日 ${map} 站了 ${n} 位`);
     }
     for (const id of ids) {
       assert.ok(!met[id] || day - met[id].day >= PASSER_RULES.rest, `${id} 来得太勤`);
@@ -134,7 +139,7 @@ test('集日来两位，平常日子三成多来一位；同一位隔几天才�
     }
   }
   assert.ok(fair > 5);
-  assert.ok(plain / plainDays > 0.2 && plain / plainDays < 0.5, String(plain / plainDays));
+  assert.ok(plain / plainDays > 1.4 && plain / plainDays < 1.8, String(plain / plainDays));
 });
 
 test('挑嘴老食客：接下点菜，端上一盘好菜，赏钱、称号，第二天村里提起、茶摊传开', () => {

@@ -456,3 +456,29 @@ test('集日比鱼的台词每句不超过 30 字（{name}这类空位不算）'
   for (const line of lines)
     assert.ok([...line.replace(/\{\w+\}/g, '')].length <= 30, `太长：${line}`);
 });
+
+test('乡邻随口的话：六位都有四段加生分、下雨的话，对聊的人指得上，一句不超过 24 个字', async () => {
+  const b = await import('../../src/content/barks.js');
+  const { PEOPLE } = await import('../../src/content/people.js');
+  const ids = Object.keys(PEOPLE).filter(id => id !== 'hero');
+  const lines = [...b.STRANGER_REPLY, ...b.GOSSIP.open, ...b.GOSSIP.reply];
+  for (const id of ids) {
+    for (const k of [...b.BARK_SLOTS, 'stranger', 'wet']) {
+      assert.ok(b.HELLO[id][k]?.length, `${id} 缺 ${k}`);
+      lines.push(...b.HELLO[id][k]);
+    }
+    for (const table of [b.OPEN, b.REPLY, b.TO_STRANGER]) {
+      assert.ok(table[id]?.length, `${id} 缺对聊的话`);
+      lines.push(...table[id]);
+    }
+  }
+  for (const [pair, talks] of Object.entries(b.PAIRS)) {
+    const [x, y] = pair.split('.');
+    assert.ok(ids.includes(x) && ids.includes(y), pair);
+    for (const t of talks) {
+      assert.equal(t.length, 2, pair);
+      lines.push(...t);
+    }
+  }
+  for (const line of lines) assert.ok([...line.replace('{t}', '')].length <= 24, `太长：${line}`);
+});
