@@ -298,6 +298,12 @@ export const social = {
         fine = !!ITEMS[input.item].fine;
         liked = person.treats.includes(plain) || FESTIVE.includes(plain);
         value = (liked ? 3 : 2) + (fine ? 1 : 0);
+        // 彩头：送谁都是天大的面子，情分照最爱吃的那一道算
+        if (ITEMS[input.item].prize) {
+          liked = true;
+          value = 4;
+          moods.cheer(w, to, 8);
+        }
         const name = ITEMS[input.item].name;
         // 不能吃的东西（荷花、柳条……）换一句不提「吃」的
         const say = ['food', 'snack'].includes(ITEMS[plain]?.kind)

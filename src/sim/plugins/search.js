@@ -10,7 +10,7 @@ import { refuse } from '../../kernel/dispatch.js';
 import { MAPS, walkable } from '../../content/maps/index.js';
 import { ITEMS, plainOf } from '../../content/items.js';
 import { CALENDAR, dateOf } from '../../content/calendar.js';
-import { FIRST_FINE, fineId } from '../../content/quality.js';
+import { FIRST_FINE, fineId, prizeLine } from '../../content/quality.js';
 import { fill } from '../../content/text.js';
 import {
   SEARCH,
@@ -242,13 +242,15 @@ export const search = {
       s.found[plainOf(got.item)] ??= w.clock.day;
       pack.receive(w, who, got.item, f.n, '路边翻到的');
       // 手机上一条提示放不下几句：翻到时那句之外只再说一句，头一回出极品最要紧，其次是极品，再次是头一回找到
-      const more = got.first
-        ? fill(FIRST_FINE, { name })
-        : got.fine
-          ? fill(SEARCH_LINES.fine, { name })
-          : first && SEARCH_BOOK.includes(plainOf(got.item))
-            ? fill(SEARCH_LINES.first, { name })
-            : '';
+      const more = got.prize
+        ? prizeLine(got.prize)
+        : got.first
+          ? fill(FIRST_FINE, { name })
+          : got.fine
+            ? fill(SEARCH_LINES.fine, { name })
+            : first && SEARCH_BOOK.includes(plainOf(got.item))
+              ? fill(SEARCH_LINES.first, { name })
+              : '';
       const line = f.line + more;
       fact('search.found', { ...where, item: got.item, n: f.n, fine: got.fine, first, line });
     });

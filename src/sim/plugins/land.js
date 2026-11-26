@@ -12,7 +12,7 @@ import { ENCOUNTER_WORDS as words } from '../../content/encounters.js';
 import { registerResidentOptions } from '../resident-options.js';
 import { is } from '../../kernel/schema.js';
 import { CROPS, ITEMS, CAN_CAPACITY, SOIL, cropStage, isRipe } from '../../content/items.js';
-import { FIRST_FINE, fineId } from '../../content/quality.js';
+import { FIRST_FINE, fineId, prizeLine } from '../../content/quality.js';
 import { fill } from '../../content/text.js';
 import { MAPS, farmable, waterSource, isHome } from '../../content/maps/index.js';
 import { dateOf } from '../../content/calendar.js';
@@ -202,7 +202,11 @@ export const land = {
         // 抽一下是不是极品；头一回收到极品，借这一回说说它有什么用
         const got = quality.roll(w, id, 'farm', { plot }, def.produce);
         pack.receive(w, id, got.item, n, '地里收的');
-        const line = got.first ? fill(FIRST_FINE, { name: ITEMS[got.item].name }) : null;
+        const line = got.prize
+          ? prizeLine(got.prize)
+          : got.first
+            ? fill(FIRST_FINE, { name: ITEMS[got.item].name })
+            : null;
         fact('crop.harvested', {
           map,
           x,

@@ -9,7 +9,7 @@ import { ITEMS } from '../../content/items.js';
 import { CALENDAR } from '../../content/calendar.js';
 import { ACTIVITY_TEXT, REST_TEXT, RAINY_NIGHT } from '../../content/life-text.js';
 import { fill } from '../../content/text.js';
-import { FIRST_FINE, fineId } from '../../content/quality.js';
+import { FIRST_FINE, fineId, prizeLine } from '../../content/quality.js';
 import { atStation } from '../stations.js';
 
 // 做完一件家务的一段话（沿用 0.12）：歇脚看在哪儿歇，下雨的夜里看不见星星。
@@ -140,8 +140,13 @@ export const homestead = {
         if (got.fine) pack.receive(w, id, got.item, 1, '自家鸡下的');
         h.eggs = 0;
         const name = ITEMS[got.item].name;
-        if (got.fine) fineEgg = got.first ? fill(FIRST_FINE, { name }) : `里头有一枚${name}！`;
-        fact('eggs.collected', { who: id, n: eggs, fine: got.fine });
+        if (got.fine)
+          fineEgg = got.prize
+            ? prizeLine(got.prize)
+            : got.first
+              ? fill(FIRST_FINE, { name })
+              : `里头有一枚${name}！`;
+        fact('eggs.collected', { who: id, n: eggs, fine: got.fine, item: got.item });
       }
       if (a.id === 'bigbasket') {
         pack.upgrade(w, id);

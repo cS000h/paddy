@@ -124,13 +124,28 @@ test('物品图标：每样物品都有一张，16×16，只用调色板的颜�
     seen.set(key, id);
   }
   assert.throws(() => art.itemIcon('nothing'), /没有这样物品的图标/);
-  for (const [id, item] of Object.entries(ITEMS).filter(([, i]) => i.fine)) {
+  for (const [id, item] of Object.entries(ITEMS).filter(([, i]) => i.fine && !i.prize)) {
     const g = art.fineItemIcon(item.fine);
     assert.deepEqual([g.w, g.h], [16, 16]);
     assert.deepEqual(offPalette(g), [], `${id} 用了调色板以外的颜色`);
     assert.ok(!seen.has(g.data.join(',')), `${id} 跟别的图标一模一样`);
     assert.ok(g.data.includes(P.y2), `${id} 没描金边`);
   }
+  // 彩头另画（G-13），不描金边；图谱里还有 32×32 的大图和没找到的影子
+  const prizes = Object.values(ITEMS).filter(i => i.prize);
+  assert.deepEqual(prizes.map(i => i.prize).sort(), [...art.PRIZE_NAMES].sort());
+  for (const { id, prize } of prizes) {
+    const g = art.prizeIcon(prize);
+    assert.deepEqual([g.w, g.h], [16, 16]);
+    assert.deepEqual(offPalette(g), [], `${id} 用了调色板以外的颜色`);
+    assert.ok(!seen.has(g.data.join(',')), `${id} 跟别的图标一模一样`);
+    seen.set(g.data.join(','), id);
+    for (const big of [art.prizePicture(prize), art.prizeShadow(prize)]) {
+      assert.deepEqual([big.w, big.h], [32, 32]);
+      assert.deepEqual(offPalette(big), [], `${id} 的大图用了调色板以外的颜色`);
+    }
+  }
+  for (const t of art.TRACE_NAMES) assert.deepEqual(offPalette(art.prizeTrace(t)), [], t);
 });
 
 test('地块和图标：32 张土、4 个作物阶段、5 个图标、草和虫两种记号，都是 16×16', () => {

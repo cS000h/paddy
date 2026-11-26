@@ -25,6 +25,8 @@ import { createPerformer } from './perform.js';
 import { createFieldExtras } from './visitors-events.js';
 import { smartTarget, blockedByActor } from './target.js';
 import { showEmote } from './emotes.js';
+import { showPrize } from './prize-show.js';
+import { ITEMS } from '../content/items.js';
 import { AFTER } from '../content/resident-work.js';
 import { safely } from './safety.js';
 import { TILE, dirTo, COMMAND_OF, fitView } from './logic.js';
@@ -301,6 +303,7 @@ export class VillageScene extends Phaser.Scene {
     let plots = false;
     for (const f of facts) {
       const d = f.data;
+      if (ITEMS[d?.item]?.prize) showPrize(this, d.item); // 收到彩头：举过头顶或捧着看一眼
       if (f.type === 'person.travelled') {
         this.player.stop();
         this.deps.shell.toast(d.name);

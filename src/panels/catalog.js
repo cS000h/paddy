@@ -2,7 +2,7 @@
 // 找到的画出来、写一句摘要；没找到的画成淡灰的影子，写线索。数全从查询 catalog 来。
 import { ITEMS } from '../content/items.js';
 import { FISH_NAMES, FISH_CHEERS, FISH_GRADES } from '../content/fishing.js';
-import { itemImg } from './icons.js';
+import { itemImg, prizeImg } from './icons.js';
 import { button, actions, close, esc, paged } from './html.js';
 
 const PER = 9;
@@ -10,16 +10,19 @@ const PER = 9;
 const grades = e =>
   `<span class="cat-grades">${e.grades.map(on => `<i class="${on ? 'on' : ''}"></i>`).join('')}</span>`;
 
+// 彩头一页用 32×32 的大图，没找到的画影子（G-13）
+const pic = e => (e.prize ? prizeImg(e.prize, e.found) : itemImg(e.item));
+
 function card(e) {
   if (!e.found)
     return (
       `<button class="cat-card unknown" data-do="bookEntry" data-item="${esc(e.item)}" disabled>` +
-      `${itemImg(e.item)}<span><b>？？？</b><small>${esc(e.clue)}</small></span></button>`
+      `${pic(e)}<span><b>？？？</b><small>${esc(e.clue)}</small></span></button>`
     );
-  const sum = e.fish ? `最长 ${esc(e.bestText)}` : `找到 ${e.n} 回`;
+  const sum = e.fish ? `最长 ${esc(e.bestText)}` : e.prize ? e.date : `找到 ${e.n} 回`;
   return (
     `<button class="cat-card ${e.fine ? 'fine' : ''}" data-do="bookEntry" data-item="${esc(e.item)}">` +
-    `${itemImg(e.item)}<span><b>${esc(ITEMS[e.item].name)}</b><small>${sum}</small>` +
+    `${pic(e)}<span><b>${esc(ITEMS[e.item].name)}</b><small>${sum}</small>` +
     `${e.fish ? grades(e) : ''}</span>${e.fine ? '<em>极</em>' : ''}</button>`
   );
 }
@@ -31,7 +34,9 @@ function detail(page, e) {
     e.fish && e.bestText ? `<span class="cat-tag">最长${esc(e.bestText)}</span>` : '',
   ].join('');
   const count = e.fish ? `钓过 ${e.n} 条` : `找到 ${e.n} 回`;
-  const stats = `${count} · ${e.date} 头回入册 · 常在${e.clue}`;
+  const stats = e.prize
+    ? `${e.date} 头回收到 · 出在${e.clue}`
+    : `${count} · ${e.date} 头回入册 · 常在${e.clue}`;
   let fish = '';
   if (e.fish) {
     const names = FISH_NAMES[e.fish].names;
@@ -47,7 +52,7 @@ function detail(page, e) {
       (zhou ? `<blockquote><small>老周说过</small>${esc(zhou)}</blockquote>` : '');
   }
   return `<h2>${esc(page.name)} · 详情</h2>
-    <div class="cat-detail">${itemImg(e.item)}<div><b class="cat-name">${esc(name)}</b>${tags}
+    <div class="cat-detail">${pic(e)}<div><b class="cat-name">${esc(name)}</b>${tags}
       <p>${esc(e.line)}<small>${esc(stats)}</small></p></div></div>${fish}
     ${actions(button('bookEntry', '返回' + page.name, { data: { item: '' } }), close('合上册子', false))}`;
 }
