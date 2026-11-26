@@ -2,6 +2,8 @@
 //   bag   随时能开：身上带着什么，哪些能直接吃，水壶里还有几口
 //   store 站在橱柜跟前才开：左边是家里存的，右边是身上带的，来回倒腾
 import { dishRows } from './kitchen.js';
+import { ITEMS } from '../content/items.js';
+import { PRIZE_TRACES } from '../content/prizes.js';
 import { button, actions, close, title, para, itemRow, itemList, esc } from './html.js';
 
 // 直接吃下去是什么效果，写成一行小字。
@@ -16,6 +18,12 @@ function eatNote(eat) {
 
 const eatButton = item =>
   item.eat ? button('eat', '吃', { data: { item: item.id }, title: eatNote(item.eat) }) : '';
+
+// 彩头的别的用处（摆在院里、放回河里）；送人的那样在送礼里，不在这儿
+function prizeButton(item) {
+  const t = PRIZE_TRACES[ITEMS[item.id]?.prize];
+  return t && t.how !== 'gift' ? button('prizeUse', t.label, { data: { item: item.id } }) : '';
+}
 
 /** 饿不饿、渴不渴、心情怎样，吃过的饭菜还管着什么好处。 */
 function bodyLine(game) {
@@ -50,7 +58,7 @@ export function bagView(modal, game, here) {
       name: item.name,
       count: item.n,
       notes: [item.eat ? eatNote(item.eat) : item.text],
-      acts: eatButton(item),
+      acts: eatButton(item) + prizeButton(item),
     }),
   );
   const where = pack.atHome

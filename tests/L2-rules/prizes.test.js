@@ -80,3 +80,44 @@ test('图谱最后一页是彩头：收到过的画出来、写哪天头回收�
   assert.deepEqual([egg.found, egg.clue], [false, PRIZES.doubleYolkEgg.clue]);
   must(g, 'sleep');
 });
+
+test('家里的痕迹：南瓜王摆在院里一季，红鲤放回河里手气顺些、渡口隔天闪一回红影，明前茶送了别人不算', () => {
+  const g = withPrizes({
+    'prize.pumpkinKing': 1,
+    'prize.goldenRedCarp': 1,
+    'prize.preQingmingTea': 1,
+  });
+  const at = { x: 8, y: 11, dir: 'down' };
+  const out = g.dispatch('prize.use', { item: 'prize.pumpkinKing', at });
+  assert.equal(out.ok, true);
+  assert.equal(carried(g, 'prize.pumpkinKing'), 0);
+  assert.deepEqual(
+    g.ask('prize.traces', 'yard').map(t => t.trace),
+    ['homePumpkinKing'],
+  );
+  // 院子东边就是小溪，在院里放生也行；放了以后出极品的把握多一点
+  must(g, 'prize.use', { item: 'prize.goldenRedCarp', at });
+  must(g, 'farm.till', { x: 6, y: 19, at: { x: 6, y: 18, dir: 'down' } });
+  must(g, 'farm.sow', { x: 6, y: 19, at: { x: 6, y: 18, dir: 'down' } });
+  const luck = g.ask('farm.detail', 6, 19).odds.parts.find(p => p.id === 'prize.goldenRedCarp');
+  assert.deepEqual([luck.label, luck.delta], ['放生了红鲤', 4]);
+  assert.deepEqual(g.ask('prize.traces', 'river'), [], '放生当天水面还静着');
+  must(g, 'sleep');
+  const ripple = g.ask('prize.traces', 'river');
+  assert.deepEqual(
+    ripple.map(t => [t.trace, t.faint]),
+    [['homeRedCarpRipple', true]],
+  );
+  // 明前雀舌要送云姑才有那碗茶；送了别人凉亭里什么也没有
+  must(g, 'gift', { to: 'gui', item: 'prize.preQingmingTea' });
+  assert.deepEqual(g.ask('prize.traces', 'hill'), []);
+});
+
+test('彩头的别的用处有讲究：寻常东西没有，痕迹留够天数就收了', () => {
+  const g = withPrizes({ radish: 1, 'prize.doubleYolkEgg': 1 });
+  const at = { x: 8, y: 11, dir: 'down' };
+  assert.equal(g.dispatch('prize.use', { item: 'radish', at }).ok, false);
+  must(g, 'prize.use', { item: 'prize.doubleYolkEgg', at });
+  for (let i = 0; i < 3; i++) must(g, 'sleep');
+  assert.deepEqual(g.ask('prize.traces', 'yard'), [], '那碟双黄蛋摆三天');
+});

@@ -16,6 +16,7 @@ import { body } from './plugins/body.js';
 import { pack } from './plugins/pack.js';
 import { water } from './plugins/water.js';
 import { quality } from './plugins/quality.js';
+import { prizes } from './plugins/prizes.js';
 import { land } from './plugins/land.js';
 import { interactions } from './plugins/interactions.js';
 import { social } from './plugins/social.js';
@@ -70,6 +71,7 @@ export const PLUGINS = Object.freeze([
   cooking,
   foodEffects,
   quality,
+  prizes,
   land,
   moods,
   social,

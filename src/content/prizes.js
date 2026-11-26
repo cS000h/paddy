@@ -134,3 +134,58 @@ export const PRIZE_PAGE = Object.freeze({
   head: '每样收成里最了不起的那一个，可遇不可求',
   done: '十四样彩头都见过了，全村没人比得上你。',
 });
+
+/**
+ * 彩头留下的痕迹（G-06 核对时定的、G-13 的图）：
+ *   how   keep 在院里摆出来、release 放回河里、gift 送给 to 那个人
+ *   label 行囊里那个按钮的字；line 做了之后说的一句
+ *   days  痕迹留几天；trace 摆的是哪张图（art/prize-sketches.js），摆在 map 的 (x, y)
+ *   luck  放生之后这些天里出极品的把握多几点
+ */
+const tr = more => Object.freeze({ label: '', line: '', to: '', luck: 0, ...more });
+
+export const PRIZE_TRACES = Object.freeze({
+  pumpkinKing: tr({
+    how: 'keep',
+    label: '摆在院里',
+    line: '南瓜王坐在院门口，路过的都要停下看一眼。',
+    days: 28,
+    trace: 'homePumpkinKing',
+    map: 'yard',
+    x: 11,
+    y: 12,
+  }),
+  doubleYolkEgg: tr({
+    how: 'keep',
+    label: '盛一碟摆上',
+    line: '双黄蛋盛在碟里摆上长凳，图个好事成双。',
+    days: 3,
+    trace: 'homeDoubleYolkDish',
+    map: 'yard',
+    x: 6,
+    y: 12,
+  }),
+  goldenRedCarp: tr({
+    how: 'release',
+    label: '放回河里',
+    line: '红鲤一摆尾钻回水里，往后这些天手气像是顺了些。',
+    days: 14,
+    trace: 'homeRedCarpRipple',
+    map: 'river',
+    x: 19,
+    y: 18,
+    luck: 4,
+  }),
+  preQingmingTea: tr({
+    how: 'gift',
+    to: 'yun',
+    days: 7,
+    trace: 'homeQingmingTeaBowl',
+    map: 'hill',
+    x: 13,
+    y: 6,
+  }),
+});
+
+/** 放生要在水边：这几张图上有河有溪。 */
+export const RELEASE_MAPS = Object.freeze(['river', 'creek', 'yard']);

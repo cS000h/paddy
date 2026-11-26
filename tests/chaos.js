@@ -392,6 +392,9 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     if (roll < 0.4) {
       const it = pick(goods(at).filter(x => x.eat && x.n > 0));
       if (it) send('eat', { item: it.id, at });
+      // 行囊里有彩头，偶尔摆出来、放生（不在院里、不在水边会被拒）
+      const prize = game.ask('pack', at).items.find(x => x.id.startsWith('prize.'));
+      if (prize && chance(0.3)) send('prize.use', { item: prize.id, at });
     } else if (roll < 0.6) send('sip', { at });
     else if (roll < 0.75) send('sky.look', { at });
     else {

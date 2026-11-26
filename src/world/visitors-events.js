@@ -6,11 +6,13 @@ import { DEPTH } from './depth.js';
 import { TILE, dirTo } from './logic.js';
 import { stirCues } from './interactions.js';
 import { createGroundFinds } from './ground-finds.js';
+import { createPrizeTraces } from './prize-traces.js';
 
 /** 挂在 VillageScene 上的过客与小事实体管理，不占 scene.js 行数。 */
 export function createFieldExtras(scene) {
   const walkers = new Map();
   const ground = createGroundFinds(scene);
+  const traces = createPrizeTraces(scene);
   let eventMark = null;
   let eventRing = null;
   let eventTween = null;
@@ -34,6 +36,7 @@ export function createFieldExtras(scene) {
   /** 按规则里的最新状态，把当前地图上的过客与小事记号摆出来。 */
   function sync() {
     ground.sync();
+    traces.sync();
     const { game } = scene.deps;
     const mapId = scene.map.id;
     // 集日渡口立木牌的外乡钓客也照过客的样子站着（sim/plugins/fair-match.js）
@@ -183,6 +186,8 @@ export function createFieldExtras(scene) {
           'market.bought',
           'time.passed',
           'match.cast',
+          'prize.used',
+          'gift.given',
         ].includes(f.type)
       ) {
         needSync = true;
