@@ -338,9 +338,7 @@
       },
       "households": {
         "home": {
-          "members": [
-            "hero"
-          ],
+          "members": ["hero"],
           "coins": 16,
           "items": {
             "rice": 3,
@@ -383,12 +381,7 @@
       "weather": {
         "now": "overcast",
         "today": "overcast",
-        "history": [
-          "sunny",
-          "cloudy",
-          "overcast",
-          "overcast"
-        ],
+        "history": ["sunny", "cloudy", "overcast", "overcast"],
         "tomorrow": "cloudy",
         "forecast": "drizzle",
         "acc": 55,
@@ -441,17 +434,8 @@
       },
       "search": {
         "hero": {
-          "cues": [
-            "hill:22,18",
-            "yard:1,3",
-            "creek:15,7",
-            "river:2,6",
-            "tea:12,4",
-            "market:3,6"
-          ],
-          "done": [
-            "yard:4,10"
-          ],
+          "cues": ["hill:22,18", "yard:1,3", "creek:15,7", "river:2,6", "tea:12,4", "market:3,6"],
+          "done": ["yard:4,10"],
           "miss": 0,
           "found": {
             "wood": 4
@@ -684,11 +668,7 @@
           "stress": 0
         },
         "shi": {
-          "tempers": [
-            "diligent",
-            "honest",
-            "stingy"
-          ],
+          "tempers": ["diligent", "honest", "stingy"],
           "line": {
             "id": "farmer",
             "lv": 3
@@ -698,27 +678,17 @@
           "stress": 0
         },
         "gui": {
-          "tempers": [
-            "gregarious",
-            "generous",
-            "ambitious"
-          ],
+          "tempers": ["gregarious", "generous", "ambitious"],
           "line": {
             "id": "cook",
             "lv": 3
           },
-          "innate": [
-            "gourmet"
-          ],
+          "innate": ["gourmet"],
           "coping": [],
           "stress": 0
         },
         "aman": {
-          "tempers": [
-            "gregarious",
-            "honest",
-            "hasty"
-          ],
+          "tempers": ["gregarious", "honest", "hasty"],
           "line": {
             "id": "peddler",
             "lv": 2
@@ -728,11 +698,7 @@
           "stress": 0
         },
         "qiao": {
-          "tempers": [
-            "gregarious",
-            "sly",
-            "ambitious"
-          ],
+          "tempers": ["gregarious", "sly", "ambitious"],
           "line": {
             "id": "teahouse",
             "lv": 2
@@ -742,27 +708,17 @@
           "stress": 0
         },
         "zhou": {
-          "tempers": [
-            "calm",
-            "content",
-            "trusting"
-          ],
+          "tempers": ["calm", "content", "trusting"],
           "line": {
             "id": "boatman",
             "lv": 4
           },
-          "innate": [
-            "steady"
-          ],
+          "innate": ["steady"],
           "coping": [],
           "stress": 0
         },
         "yun": {
-          "tempers": [
-            "diligent",
-            "shy",
-            "paranoid"
-          ],
+          "tempers": ["diligent", "shy", "paranoid"],
           "line": {
             "id": "herbalist",
             "lv": 2
@@ -782,9 +738,7 @@
             "sky": 0,
             "craft": 0
           },
-          "traits": [
-            "earlybird"
-          ],
+          "traits": ["earlybird"],
           "counters": {
             "wetOut": 0,
             "cold": 0,
@@ -875,23 +829,13 @@
               "item": "wine",
               "left": 1,
               "price": 17,
-              "why": [
-                [
-                  "货少",
-                  1
-                ]
-              ]
+              "why": [["货少", 1]]
             },
             {
               "item": "umbrella",
               "left": 1,
               "price": 33,
-              "why": [
-                [
-                  "货少",
-                  1
-                ]
-              ]
+              "why": [["货少", 1]]
             },
             {
               "item": "flask",
@@ -1048,10 +992,7 @@
             "x": 11,
             "y": 13,
             "dir": "down",
-            "traits": [
-              "爽快",
-              "重义"
-            ],
+            "traits": ["爽快", "重义"],
             "until": 6,
             "rel": 0,
             "talkedDay": 0,
@@ -1066,10 +1007,7 @@
             "x": 13,
             "y": 11,
             "dir": "down",
-            "traits": [
-              "热心",
-              "爱说话"
-            ],
+            "traits": ["热心", "爱说话"],
             "until": 7,
             "rel": 0,
             "talkedDay": 0,
@@ -1129,16 +1067,8 @@
         },
         "owned": {
           "home": {
-            "coat": [
-              "plain",
-              "field"
-            ],
-            "hair": [
-              "plain",
-              "short",
-              "tail",
-              "loose"
-            ]
+            "coat": ["plain", "field"],
+            "hair": ["plain", "short", "tail", "loose"]
           }
         }
       }
