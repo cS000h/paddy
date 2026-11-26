@@ -13,10 +13,18 @@ const TYPES = {
   '.webmanifest': 'application/manifest+json',
 };
 
+// Linux 上 Chrome 按系统的语言环境给下载的文件起名：没设 LANG 的机器（云端容器、CI）
+// 认不出中文文件名，一律叫成 “download”。玩家的机器都设了，这里替测试补上。
+export const CHROME = {
+  channel: 'chrome',
+  headless: true,
+  env: { ...process.env, LANG: process.env.LANG || 'C.UTF-8' },
+};
+
 export async function launch() {
   try {
     const { chromium } = await import('playwright-core');
-    return await chromium.launch({ channel: 'chrome', headless: true });
+    return await chromium.launch(CHROME);
   } catch {
     return null;
   }
@@ -46,6 +54,27 @@ export const frames = (page, n) =>
     let t = performance.now();
     for (let i = 0; i < count; i++) game.step((t += 16.67), 16.67);
   }, n);
+/**
+ * 一边让引擎走帧、一边等 check（在页面里跑）成立，最多走 most 帧。
+ * 走到门口换地图、走到跟前冒出小窗这类事，不要先走死数再用 waitForFunction 等：机器慢的时候
+ * 无界面 Chrome 自己的画面循环一秒只走几帧，提示、气泡这些按真实时间排队的东西会落在死数后面。
+ * 等不到就报出此刻的地图、站位和小窗，方便看是卡在哪儿。
+ */
+export async function until(page, check, most = 3000) {
+  for (let done = 0; ; done += 60) {
+    if (await page.evaluate(check)) return;
+    if (done >= most) {
+      const now = await page.evaluate(() => {
+        const s = window.__dao.world.scene();
+        return { map: s.map.id, at: s.player.tile, shell: window.__dao.shell.get() };
+      });
+      throw new Error(`走了 ${most} 帧还没等到：${check}\n此刻：${JSON.stringify(now)}`);
+    }
+    await frames(page, 60);
+    await page.waitForTimeout(50);
+  }
+}
+
 // 用意图“点”一格（不经过真实的鼠标或手指）。
 export const tap = (page, x, y) =>
   page.evaluate(

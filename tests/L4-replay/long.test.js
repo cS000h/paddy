@@ -34,6 +34,15 @@ test('玩过一年多：不出错、不卡住，存档不走样，也不会越�
     assert.ok(biggest < 60000, `存档长到了 ${biggest} 字`);
     for (const [type, t] of Object.entries(c.tally)) done[type] = (done[type] || 0) + t.ok;
   }
+  // 能摆、能放生的彩头太稀罕，一年也未必碰上一样：从行囊和家里都放着几样的存档接着乱玩一阵
+  // （乱玩的人见了就卖、就送、就往篮里放，只放一个转眼就没了）
+  const save = structuredClone(createGame({ seed: 24 }).save());
+  const prizes = { 'prize.pumpkinKing': 5, 'prize.doubleYolkEgg': 5, 'prize.goldenRedCarp': 5 };
+  Object.assign(save.state.world.packs.hero.items, prizes);
+  Object.assign(save.state.world.households.home.items, prizes);
+  const lucky = createChaos(24, { debug: false, saved: save }).run(1500);
+  assert.deepEqual(lucky.errors, [], show(lucky.errors));
+  for (const [type, t] of Object.entries(lucky.tally)) done[type] = (done[type] || 0) + t.ok;
   // 以后加了命令，乱玩的人不会用，这里就提醒去 tests/chaos.js 里教它
   const never = createGame()
     .commands()

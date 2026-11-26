@@ -8,6 +8,7 @@ import { chromium } from 'playwright-core';
 import { createGame } from '../../src/port/game.js';
 import { daylight } from '../../src/art/daylight.js';
 import { KEY } from '../../src/platform/storage.js';
+import { CHROME, until } from './browser.js';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const file = path.join(root, '发布', '稻-手机版.html');
 const url = pathToFileURL(file).href + '?debug';
@@ -36,7 +37,7 @@ test('单文件离线运行：手机做饭、导出导入、旧档升级、坏�
   assert.equal(built.status, 0, built.stdout + built.stderr);
   const html = await readFile(file, 'utf8');
   assert.doesNotMatch(html, /<script[^>]+src=|<link[^>]+(?:stylesheet|manifest)/);
-  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  const browser = await chromium.launch(CHROME);
   await mkdir(path.join(root, '.cache'), { recursive: true });
   const options = {
     viewport: { width: 844, height: 390 },
@@ -170,7 +171,7 @@ test('离线小屋读档即呈雨夜，早雾散去时室内曝光逐步改变',
   const game = createGame({ seed: 1 });
   game.dispatch('origin.choose', { route: 'later', reply: 'quiet' });
   assert.ok(game.dispatch('travel', { x: 8, y: 9, at: { x: 8, y: 10, dir: 'up' } }).ok);
-  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  const browser = await chromium.launch(CHROME);
   try {
     for (const [minute, weather] of [
       [1320, 'rain'],
@@ -244,7 +245,7 @@ test('点阿满预览不涨关系；订种先确认再扣款，成交收据可�
   assert.ok(game.dispatch('basket.put', { item: 'cake', n: 1 }).ok);
   assert.ok(game.dispatch('sleep', {}).ok);
   const saved = game.save();
-  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  const browser = await chromium.launch(CHROME);
   try {
     for (const [width, height, hasTouch] of [
       [844, 390, true],
@@ -270,7 +271,7 @@ test('点阿满预览不涨关系；订种先确认再扣款，成交收据可�
           p = s.villagers.find(v => v.id === 'aman');
         s.tap(p.px, p.py - 12);
       });
-      await frames(page, 900);
+      await until(page, () => !!document.querySelector('[data-do="encounterMenu"]'));
       const click = async selector => {
         if (hasTouch) await page.locator(selector).tap();
         else await page.locator(selector).click();
@@ -322,7 +323,7 @@ test('点阿满预览不涨关系；订种先确认再扣款，成交收据可�
         const gui = scene.villagers.find(v => v.id === 'gui');
         scene.tap(gui.px, gui.py - 12);
       });
-      await frames(page, 900);
+      await until(page, () => !!document.querySelector('[data-do="encounterMenu"]'));
       for (const selector of [
         '[data-do="encounterMenu"]',
         '[data-key="talk"]',
@@ -367,7 +368,7 @@ test('石伯田间指认：点作物能换畦，旋转手机仍指向正确的�
     for (const type of ['farm.till', 'farm.sow', ...(x === 7 ? ['farm.water'] : [])])
       assert.ok(g.dispatch(type, spot).ok);
   }
-  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  const browser = await chromium.launch(CHROME);
   try {
     for (const [width, height] of [
       [844, 390],
@@ -392,7 +393,7 @@ test('石伯田间指认：点作物能换畦，旋转手机仍指向正确的�
           p = s.villagers.find(v => v.id === 'shi');
         s.tap(p.px, p.py - 12);
       });
-      await frames(page, 900);
+      await until(page, () => !!document.querySelector('[data-do="encounterMenu"]'));
       const pick = async selector =>
         touch ? page.locator(selector).tap() : page.locator(selector).click();
       const limit = await page
@@ -450,7 +451,7 @@ test('带着已订的约定读档，在茶摊从接话菜单赴约', async () =>
     ['travel.to', { to: 'tea' }],
   ])
     assert.ok(game.dispatch(name, input).ok, name);
-  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  const browser = await chromium.launch(CHROME);
   try {
     const page = await browser.newPage({
       viewport: { width: 844, height: 390 },
@@ -469,7 +470,7 @@ test('带着已订的约定读档，在茶摊从接话菜单赴约', async () =>
         who = s.villagers.find(p => p.id === 'shi');
       s.tap(who.px, who.py - 12);
     });
-    await frames(page, 900);
+    await until(page, () => !!document.querySelector('[data-do="encounterMenu"]'));
     await page.getByRole('button', { name: '接话', exact: true }).tap();
     await page.getByRole('button', { name: '坐下赴约', exact: true }).tap();
     assert.equal(await page.evaluate(() => window.__dao.game.ask('visits').active), null);
