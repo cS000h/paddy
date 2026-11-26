@@ -252,12 +252,12 @@ export const fishing = {
       const grade = gradeOf(b.fish, b.len);
       // 照大小叫：钓上一条板鲫；大家伙另有一句
       const folk = FISH_NAMES[b.fish].names[FISH_GRADES.indexOf(grade)];
-      // 头一回那句没提鱼名的（虎头鲨、彩鳞鱼），括号里补上，好认得是哪种
+      // 头一回那句没提鱼名的（虎头鲨、彩鳞鱼），括号里补上，好认得是哪种；多长小窗上已经写了，不再重复
       const firstLine = FISH_LINES.first[b.fish];
       let line = first
-        ? firstLine + '（' + (firstLine.includes(f.name) ? '' : f.name + '，') + text + '）'
+        ? firstLine + (firstLine.includes(f.name) ? '' : '（' + f.name + '）')
         : grade.id === 'huge'
-          ? FISH_NAMES[b.fish].huge + '（' + text + '）'
+          ? FISH_NAMES[b.fish].huge
           : fill(FISH_LINES.caught, { name: folk, len: text });
       if (record) line += fill(FISH_LINES.record, { name: f.name });
       if (got.first) line += fill(FIRST_FINE, { name });

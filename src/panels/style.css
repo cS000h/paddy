@@ -729,10 +729,9 @@ button:focus-visible {
   color: #3f5d2b;
   font-size: 13.5px;
   white-space: nowrap;
-  text-shadow:
-    0 0 2px #fff,
-    0 0 3px #fff,
-    0 0 5px #fff;
+  /* 白边用描边画，不用模糊的 text-shadow：手机上的 Chrome 有小窗时会把模糊白光画成一整条白带（G-14 图 13） */
+  -webkit-text-stroke: 3px #fff;
+  paint-order: stroke fill;
   transform: translateX(-50%);
   animation: float-up 1.8s ease-out both;
 }
@@ -746,10 +745,7 @@ button:focus-visible {
   color: #9a6510;
   font-size: 16px;
   font-weight: bold;
-  text-shadow:
-    0 0 2px #fff,
-    0 0 3px #fff,
-    0 0 6px #fff4cf;
+  -webkit-text-stroke: 3px #fff4cf;
   animation: float-fine 2.4s ease-out both;
 }
 
@@ -1140,4 +1136,15 @@ button:focus-visible {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* 打开整幅、正中的小窗（地图、行囊、手记……）时，刚才那句旁白就不说了，免得压在小窗上（G-14 图 17）；
+   贴着下沿的对话、钓鱼小窗开着时，旁白挪到上头，别跟小窗叠在一起。 */
+#ui[data-place='side'] .caption.band,
+#ui[data-place='center'] .caption.band {
+  display: none;
+}
+#ui[data-place='dialogue'] .caption.band {
+  bottom: auto;
+  top: calc(56px + var(--safe-t));
 }

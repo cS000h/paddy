@@ -30,14 +30,15 @@ export function createCaptions(root, spot) {
   // 要紧的话（头一回找到、升了本事、头一回出极品）说着的时候，后来的话排队等它说完，不把它盖掉。
   // 排队的最多 QUEUE 句，再多的寻常话就不说了；要紧的话照样排上。
   const QUEUE = 3;
-  const QUEUED_MS = 1600; // 排队轮到的寻常话，至少留这么久再换下一句
+  const QUEUED_MS = 1200; // 排队轮到的寻常话，至少留这么久再换下一句
+  const KEEP_MS = 2000; // 要紧的话至少说这么久，后来的话才接上（太久了提示会跟手上的事错开，G-14 第 7 条）
   const queue = [];
   let holdUntil = 0;
   let timer = null;
   const flush = () => {
     timer = null;
     const next = queue.shift();
-    if (next) show(next.text, next.keep ? Infinity : QUEUED_MS);
+    if (next) show(next.text, next.keep ? KEEP_MS : QUEUED_MS);
   };
   const wait = () => {
     if (!timer) timer = setTimeout(flush, Math.max(0, holdUntil - Date.now()));
@@ -90,7 +91,7 @@ export function createCaptions(root, spot) {
         wait();
         return;
       }
-      show(text, keep ? Infinity : 0);
+      show(text, keep ? KEEP_MS : 0);
     },
     /** 一串数的变化，从头顶往上飘。entries: [{text, up, fine}]，up 为 true 是变多了，fine 是收到了极品。 */
     float(entries) {
@@ -102,8 +103,9 @@ export function createCaptions(root, spot) {
           'float ' + (entry.up ? 'up' : 'down') + (entry.fine ? ' fine' : ''),
           entry.text,
         );
-        node.style.left = at.x + 'px';
-        node.style.top = at.y - 18 - i * 17 + 'px';
+        // 从人身侧飘起，不从头顶：头顶留给说话的气泡，两层字别叠在一起（G-14 图 05、06）
+        node.style.left = at.x + 40 + 'px';
+        node.style.top = at.y + 10 - i * 17 + 'px';
         node.style.animationDelay = i * 110 + 'ms';
         layer.append(node);
         later(node, (entry.fine ? 2500 : 1900) + i * 110);

@@ -69,6 +69,18 @@ export function smartTarget(scene) {
   const here = scene.player.tile;
   const front = facing(here.x, here.y, scene.player.dir);
   const direct = inspectTile(scene, front.x, front.y);
+  // 站在钓点边上面朝水：钓点比喝水要紧，收竿后顺手一按还是下竿，不会莫名喝口水（G-14 图 14）
+  if (direct?.kind === 'water') {
+    const spot = [
+      front,
+      ...SIDE_ORDER[scene.player.dir]
+        .slice(0, 3)
+        .map(([dx, dy]) => ({ x: here.x + dx, y: here.y + dy })),
+    ]
+      .map(t => inspectTile(scene, t.x, t.y))
+      .find(t => t?.kind === 'thing' && t.thing.station === 'fish');
+    if (spot) return spot;
+  }
   if (direct) return direct;
 
   let best = null;

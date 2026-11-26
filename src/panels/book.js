@@ -24,7 +24,7 @@ export function originView(m) {
   return `${title('初来稻乡', ORIGIN_STEPS[step].small)}
     ${para(ORIGIN_STEPS[step].text)}
     <div class="origin-choices">${choices.join('')}</div>
-    ${para('这两个选择只决定起初的性情，往后的日子由你自己过。', 'aside')}`;
+    ${para('开局这两问只定下起初的性情，往后的日子由你自己过。', 'aside')}`;
 }
 
 function modIcon(item) {
