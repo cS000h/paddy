@@ -18,6 +18,7 @@ import {
   open,
   shot,
   performed,
+  until,
 } from './browser.js';
 
 test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏、手指点得准；全程没有报错', async t => {
@@ -266,11 +267,9 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       const p = session.page;
       await p.evaluate(() => window.__dao.shell.set({ modal: null }));
       await tap(p, 8, 9);
-      await frames(p, 1300);
-      await p.waitForFunction(() => window.__dao.world.scene().map.id === 'cottage');
+      await until(p, () => window.__dao.world.scene().map.id === 'cottage');
       await tap(p, 12, 6);
-      await frames(p, 900);
-      await p.waitForSelector('button[data-do="packPut"][data-item="rice"]');
+      await until(p, () => !!document.querySelector('button[data-do="packPut"][data-item="rice"]'));
       const before = await p.evaluate(() => window.__dao.game.ask('body').hunger);
       await p.locator('button[data-do="packPut"][data-item="rice"][data-n="1"]').click();
       await p.locator('button[data-do="eat"][data-item="cake"]').last().click();
@@ -473,8 +472,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       const p = session.page;
       const go = async (x, y, id) => {
         await tap(p, x, y);
-        await frames(p, 1600);
-        await p.waitForFunction(id => window.__dao.world.scene().map.id === id, id);
+        await until(p, `window.__dao.world.scene().map.id === ${JSON.stringify(id)}`, 4000);
         await frames(p, 30);
         assert.equal(await p.evaluate(() => window.__dao.game.ask('hero').map), id);
       };

@@ -63,9 +63,23 @@ function main(argv) {
     console.error('没有符合条件的测试');
     return 1;
   }
-  const files = selected.map(r => r.file);
-  const run = spawnSync(process.execPath, ['--test', ...files], { cwd: root, stdio: 'inherit' });
-  return run.status ?? 1;
+  // 浏览器测试一个一个跑：几个无界面 Chrome 同时用软件画 WebGL，慢机器（云端容器、CI）上
+  // 一帧要几十毫秒，按真实时间等的气泡、小窗就会超时，每回败在不同的地方。别的测试照常并行。
+  const browser = selected.filter(r => r.tags.includes('browser')).map(r => r.file);
+  const others = selected.filter(r => !r.tags.includes('browser')).map(r => r.file);
+  let status = 0;
+  for (const [files, more] of [
+    [others, []],
+    [browser, ['--test-concurrency=1']],
+  ]) {
+    if (!files.length) continue;
+    const run = spawnSync(process.execPath, ['--test', ...more, ...files], {
+      cwd: root,
+      stdio: 'inherit',
+    });
+    status ||= run.status ?? 1;
+  }
+  return status;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))

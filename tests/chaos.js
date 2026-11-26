@@ -15,6 +15,7 @@ import { ON_MAP } from '../src/content/people.js';
 import { CUTS, METHODS } from '../src/content/recipes.js';
 import { bestLog } from '../src/sim/cook-fire.js';
 import { COATS, HAIR } from '../src/content/wardrobe.js';
+import { PRIZE_TRACES, RELEASE_MAPS } from '../src/content/prizes.js';
 
 export function rng(seed) {
   let a = seed >>> 0;
@@ -280,6 +281,14 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   function market(shop, at) {
     send('market.visit', { shop, at });
     const wares = game.ask('market', shop, at).wares;
+    // 集上有竹筒水壶、自己还没有：多半买下（行囊满了先卖掉一样腾地方），不然一年也喝不上一口水壶里的水
+    const owned = [...goods(at), ...game.ask('home').items].some(x => x.id === 'flask');
+    if (!owned && wares.some(x => x.item === 'flask') && chance(0.8)) {
+      const extra = goods(at).filter(x => x.sell > 0 && x.n > 0);
+      if (game.ask('pack', at).room < 1 && extra.length)
+        send('market.sell', { shop, item: pick(extra).id, at });
+      return send('market.buy', { shop, item: 'flask', at });
+    }
     if (chance(0.5) && wares.length) send('market.buy', { shop, item: pick(wares).item, at });
     else {
       const it = pick(goods(at).filter(x => x.sell > 0 && x.n > 0));
@@ -371,8 +380,9 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     // 约定：碰上约好的人就赴约；有时约人明天茶摊坐坐，偶尔托人带话作罢
     const date = game.ask('visits');
     if (date.active?.due && date.active.npc === p.id) return send('visit.meet', { at });
-    if (chance(0.08))
-      return send(date.active && chance(0.3) ? 'visit.cancel' : 'invite', { to: p.id, at });
+    // 约下了还没到日子，偶尔托人带话作罢（不然约定多半赴了，带话作罢一年也碰不上一回）
+    if (date.active && !date.active.due && chance(0.1)) return send('visit.cancel', { at });
+    if (chance(0.08)) return send('invite', { to: p.id, at });
     // 见面聊日常；有时再问问近况、安排、天色（问过的、天黑了问安排，规则会拒绝）
     if (chance(0.6))
       return send('talk', {
@@ -392,9 +402,16 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     if (roll < 0.4) {
       const it = pick(goods(at).filter(x => x.eat && x.n > 0));
       if (it) send('eat', { item: it.id, at });
-      // 行囊里有彩头，偶尔摆出来、放生（不在院里、不在水边会被拒）
-      const prize = game.ask('pack', at).items.find(x => x.id.startsWith('prize.'));
-      if (prize && chance(0.3)) send('prize.use', { item: prize.id, at });
+      // 行囊里有彩头，偶尔摆出来、放生；多半先走到院里、水边，偶尔就地试（该被拒绝）
+      const prizes = game.ask('pack', at).items.filter(x => x.id.startsWith('prize.'));
+      const usable = prizes.filter(x => PRIZE_TRACES[x.id.slice(6)]?.how !== 'gift');
+      const prize = pick(usable.length && chance(0.8) ? usable : prizes);
+      if (prize && chance(0.3)) {
+        const how = PRIZE_TRACES[prize.id.slice(6)]?.how;
+        const to = how === 'keep' ? 'yard' : how === 'release' ? pick(RELEASE_MAPS) : null;
+        if (to && to !== hero().map && chance(0.8)) send('travel.to', { to, at: here() });
+        send('prize.use', { item: prize.id, at: here() });
+      }
     } else if (roll < 0.6) send('sip', { at });
     else if (roll < 0.75) send('sky.look', { at });
     else {
@@ -514,6 +531,27 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     send('ground.pick', { at, x: spot.x, y: spot.y });
   }
 
+  // 集日比鱼：钓客在渡口就走过去，按眼下这一局到了哪一步做下一步；比的三竿就在渡口下
+  function fairMatch() {
+    const m = game.ask('match');
+    if (!m || m.done) return travel();
+    if (hero().map !== m.map) return send('travel.to', { to: m.map, at: here() });
+    const close = layout(m.map).stand.filter(
+      p => Math.abs(p.x - m.x) <= 1 && Math.abs(p.y - m.y) <= 1,
+    );
+    // 偶尔站得远远地喊（该被拒绝）
+    const at = close.length && chance(0.9) ? { ...pick(close), dir: pick(DIRS) } : here();
+    if (m.phase === 'open') return send('match.join', { at, stake: chance(0.5) });
+    if (m.phase === 'fishing') {
+      const spots = layout(m.map).things.filter(t => t.station === 'fish');
+      return spots.length ? fishing(standBy(pick(spots))) : undefined;
+    }
+    if (m.phase === 'ready') return send('match.measure', { at });
+    if (m.phase === 'suspect') return send('match.inspect', { at, look: chance(0.6) });
+    if (m.phase === 'after')
+      return send('match.after', { at, choice: pick(['again', 'tea', 'leave', 'x']) });
+  }
+
   const PLANS = [
     [4, travel],
     [3, rummage],
@@ -525,6 +563,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     [4, time],
     [1, wander],
     [3, pulseAndVisitors],
+    [1, fairMatch],
   ];
   const total = PLANS.reduce((sum, [w]) => sum + w, 0);
   let steps = 0;
@@ -540,6 +579,9 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   function step() {
     if (steps++ === 0 && chance(0.8)) return origin();
     if (game.ask('visits').active?.due && chance(0.5)) return date();
+    // 比到一半的那一局多半接着比完（钓客申时就走，拖久了就作罢）
+    if (['fishing', 'ready', 'suspect', 'after'].includes(game.ask('match')?.phase) && chance(0.5))
+      return fairMatch();
     if (hostile && chance(hostile)) return rough();
     if (chance(0.002)) return origin(); // 选过以后再选，应该被拒绝
     let roll = r() * total;
