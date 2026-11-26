@@ -5,7 +5,7 @@
 // 落在哪儿只看日子、种子、地点（sim/noise.js），不动存档里的随机数，别处的收成照旧。
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
-import { MAPS, walkable, farmable, actAt } from '../../content/maps/index.js';
+import { MAPS, walkable, farmable, actAt, groundAt } from '../../content/maps/index.js';
 import { ITEMS } from '../../content/items.js';
 import { dateOf } from '../../content/calendar.js';
 import { FIRST_FINE, fineId, prizeLine } from '../../content/quality.js';
@@ -27,8 +27,8 @@ const SIDES = [
 // 有野地的图（翻找点所在的图），按名字排好，挑的时候顺序固定
 const FIELD_MAPS = [...new Set(SEARCH_SPOTS.map(s => s.map))].sort();
 
-/** 这张图上，挨着某几类东西、能站人、不是菜地也不是灶台井台的格子。 */
-function tilesNear(map, kinds) {
+/** 这张图上，挨着某几类东西、能站人、不是菜地也不是灶台井台的格子；soils 给了，只要这几种地面。 */
+function tilesNear(map, kinds, soils = null) {
   const m = MAPS[map];
   const out = new Map();
   for (const s of SEARCH_SPOTS)
@@ -36,6 +36,7 @@ function tilesNear(map, kinds) {
       for (const [dx, dy] of SIDES) {
         const x = s.x + dx,
           y = s.y + dy;
+        if (soils && !soils.includes(groundAt(m, x, y).id)) continue;
         if (walkable(m, x, y) && !farmable(m, x, y) && !actAt(m, x, y))
           out.set(`${x},${y}`, { x, y });
       }
@@ -75,7 +76,7 @@ export const ground = {
       const items = [];
       FIELD_MAPS.forEach((map, mi) => {
         const here = pool
-          .map(f => ({ f, tiles: tilesNear(map, f.near) }))
+          .map(f => ({ f, tiles: tilesNear(map, f.near, f.soils) }))
           .filter(x => x.tiles.length);
         if (!here.length) return;
         const n =

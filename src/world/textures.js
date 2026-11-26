@@ -80,6 +80,8 @@ export function buildTextures(scene, map) {
   add('fx:leaf', speck(2, 2, P.g3));
   add('fx:petal', speck(2, 1, P.p2));
   add('fx:glint', speck(3, 1, P.w0));
+  for (const name of art.STIR_FX)
+    art.stirFrames(name).forEach((g, i) => add(`stir:${name}:${i}`, g));
   add('fx:smoke', puff(9, P.l1));
   add('fx:steam', puff(7, P.l0));
   add('fx:lantern', art.lanternGlobe());
