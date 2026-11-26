@@ -216,3 +216,5 @@ export {
   TRACE_NAMES,
 } from './prizes.js';
 export { achievementIcon, ACHIEVEMENT_ICON_KINDS } from './achievement-icons.js';
+export { groundArt, hasGroundArt } from './ground-wild.js';
+export { stirFrames, STIR_FX } from './stir-fx.js';

@@ -4,7 +4,7 @@ import { Walker } from './actors.js';
 import { showEmote } from './emotes.js';
 import { DEPTH } from './depth.js';
 import { TILE, dirTo } from './logic.js';
-import { stirCues } from './interactions.js';
+import { createStir } from './stir.js';
 import { createGroundFinds } from './ground-finds.js';
 import { createPrizeTraces } from './prize-traces.js';
 
@@ -12,6 +12,7 @@ import { createPrizeTraces } from './prize-traces.js';
 export function createFieldExtras(scene) {
   const walkers = new Map();
   const ground = createGroundFinds(scene);
+  const stir = createStir(scene);
   const traces = createPrizeTraces(scene);
   let eventMark = null;
   let eventRing = null;
@@ -235,7 +236,7 @@ export function createFieldExtras(scene) {
 
   /** 每一帧：有动静的地方晃一晃，地上的野货闪一闪、踩上去就捡。 */
   function frame(delta) {
-    stirCues(scene, delta);
+    stir.frame(delta);
     ground.frame(delta);
   }
 

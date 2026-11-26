@@ -1,11 +1,12 @@
 // 地上冒出来的时令野货：照规则里的落点（查询 ground）把图标摆在地上，隔一阵闪一下；
 // 人走到那一格上就捡起来（命令 ground.pick），捡到时闪光、响一声、冒那句话。临时的样子，等 A-06。
-import { itemIcon } from '../art/index.js';
+import { itemIcon, groundArt, hasGroundArt } from '../art/index.js';
 import { gridToCanvas } from './textures.js';
 import { DEPTH } from './depth.js';
 import { TILE } from './logic.js';
+import { stirFx } from './stir.js';
 
-const GLINT_EVERY = 3200;
+const GLINT_EVERY = 4500; // 四五秒在右上角闪一下，远远扫得见、不扎眼（G-12）
 
 export function createGroundFinds(scene) {
   const sprites = new Map();
@@ -15,7 +16,11 @@ export function createGroundFinds(scene) {
   const keyOf = (x, y) => `${x},${y}`;
   function texture(item) {
     const key = 'ground:' + item;
-    if (!scene.textures.exists(key)) scene.textures.addCanvas(key, gridToCanvas(itemIcon(item)));
+    if (!scene.textures.exists(key))
+      scene.textures.addCanvas(
+        key,
+        gridToCanvas(hasGroundArt(item) ? groundArt(item) : itemIcon(item)),
+      );
     return key;
   }
 
@@ -31,10 +36,12 @@ export function createGroundFinds(scene) {
     for (const g of list) {
       const k = keyOf(g.x, g.y) + ':' + g.item;
       if (sprites.has(k)) continue;
+      // 单画的落地图正好一格大、自带影子，原样铺在那一格上；没单画的用行囊图标缩小立着
+      const own = hasGroundArt(g.item);
       const sprite = scene.add
-        .image(g.x * TILE + 8, g.y * TILE + 12, texture(g.item))
+        .image(g.x * TILE + 8, g.y * TILE + (own ? 16 : 12), texture(g.item))
         .setOrigin(0.5, 1)
-        .setScale(0.75)
+        .setScale(own ? 1 : 0.75)
         .setDepth(DEPTH.weeds + 1);
       sprites.set(k, sprite);
     }
@@ -46,7 +53,7 @@ export function createGroundFinds(scene) {
     glintIn -= delta;
     if (glintIn <= 0) {
       glintIn = GLINT_EVERY;
-      for (const s of sprites.values()) scene.effects.glint(s.x, s.y - 6);
+      for (const s of sprites.values()) stirFx(scene, 'glint', s.x + 5, s.y - 11, s.y);
     }
     const t = scene.player.tile;
     const here = keyOf(t.x, t.y);

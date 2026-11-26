@@ -224,7 +224,7 @@ export function decorOnWater(scene, x, y) {
 }
 
 /** 那样东西晃一晃（times 是来回几下）。 */
-function wiggle(scene, decor, times = 3) {
+export function wiggle(scene, decor, times = 3) {
   const { sprite } = decor;
   if (decor.shaking) return;
   decor.shaking = true;
@@ -240,27 +240,6 @@ function wiggle(scene, decor, times = 3) {
       decor.shaking = false;
     },
   });
-}
-
-let stirIn = 0;
-/**
- * 有动静的地方（今天还没翻）隔一阵轻轻一晃、落一两片叶子，石头一闪：每一帧调一回，自己数着时候。
- * 临时的样子，A-06 换成正式的（叶子一晃、草里一闪）。
- */
-export function stirCues(scene, delta) {
-  stirIn -= delta;
-  if (stirIn > 0 || scene.map.indoor) return;
-  stirIn = 2600;
-  for (const s of scene.deps.game.ask('search.spots', scene.map.id)) {
-    const decor = s.cue && !s.done && decorAt(scene, s.x, s.y);
-    if (!decor || Math.random() < 0.3) continue;
-    wiggle(scene, decor, 1);
-    const p = POKES[decor.kind];
-    const { sprite } = decor;
-    const top = sprite.y - sprite.displayHeight * 0.6;
-    if (SHED[p.fx]) scene.ambient.shed(sprite.x, top, 1, ...SHED[p.fx]);
-    else scene.effects.glint(sprite.x, sprite.y - 6);
-  }
 }
 
 const SHED = { leaf: ['fx:leaf', null], petal: ['fx:petal', null], needle: ['fx:leaf', 0x547a4a] };
