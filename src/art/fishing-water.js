@@ -175,7 +175,8 @@ export function fishingFrame(
           ? -round(5 * Math.min(1, 3 * p))
           : 0;
   const floatY = y + dive - round(13 * pull);
-  const lineColor = bend > 0.78 ? P.c2 : bend > 0.5 ? P.t2 : P.ink3;
+  // 鱼一冲线就发红（说明里写的「线发红就松手」），绷得太紧也红
+  const lineColor = (fight && running) || bend > 0.78 ? P.c2 : bend > 0.5 ? P.t2 : P.ink3;
   const lineY = landed ? round(y - 3 - 17 * wave) : fight ? y : Math.min(y, floatY - 8);
   const midX = round((tipX + x) / 2),
     midY = round((tipY + lineY) / 2 + 5 * (1 - bend));

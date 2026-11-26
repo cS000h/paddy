@@ -392,6 +392,9 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     if (roll < 0.4) {
       const it = pick(goods(at).filter(x => x.eat && x.n > 0));
       if (it) send('eat', { item: it.id, at });
+      // 行囊里有彩头，偶尔摆出来、放生（不在院里、不在水边会被拒）
+      const prize = game.ask('pack', at).items.find(x => x.id.startsWith('prize.'));
+      if (prize && chance(0.3)) send('prize.use', { item: prize.id, at });
     } else if (roll < 0.6) send('sip', { at });
     else if (roll < 0.75) send('sky.look', { at });
     else {
@@ -455,6 +458,14 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
         choice: pickChoice.index,
         at: { x: ev.x, y: ev.y, dir: 'down' },
       });
+    }
+    // 路过的外乡过客：在跟前随手挑一样（带不够、钱不够的会被拒）
+    const ps = game.ask('passers').filter(p => p.map === map && !p.done);
+    if (ps.length && chance(0.5)) {
+      const p = pick(ps);
+      const at = { x: p.x + pick([-1, 1]), y: p.y, dir: 'down' };
+      const rows = game.ask('passer.options', p.id);
+      if (rows.length) return send('passer.pick', { id: p.id, key: pick(rows).key, at });
     }
     const vs = game.ask('visitors').active.filter(v => v.map === map);
     if (!vs.length) return;

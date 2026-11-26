@@ -5,13 +5,15 @@
 //   发  catalog.got {who, item, page, first, fine, fineFirst, river, snag, wildFine,
 //                    grade, allGrades, rainFind, haul}
 //       给成就数用：初识水色、鲜货入篓、大小通吃、满载而归……（content/achievements.js）
-//   查询 catalog → 各页每一样找没找到、几回、头回哪天、见没见过极品；鱼另带最长几寸、见过哪几档
+//   查询 catalog → 各页每一样找没找到、几回、头回哪天、见没见过极品；鱼另带最长几寸、见过哪几档；
+//        最后一页是彩头（content/prizes.js），收没收到看 quality 记的
 import { is } from '../../kernel/schema.js';
 import { plainOf } from '../../content/items.js';
 import { CATALOG, CATALOG_INDEX, CATALOG_HAUL, RAIN_FINDS } from '../../content/catalog.js';
 import { FISH_GRADES } from '../../content/fishing.js';
 import { dateOf, termOf } from '../../content/calendar.js';
 import { lenText } from '../fishing-fight.js';
+import { PRIZES, PRIZE_PAGE, prizeId } from '../../content/prizes.js';
 
 const GRADES = FISH_GRADES.map(g => g.id);
 
@@ -129,7 +131,7 @@ export const catalog = {
       const who = people.who(w);
       const me = w.catalog[who];
       const records = w.fishing?.[who]?.records || {};
-      return CATALOG.map(page => {
+      const pages = CATALOG.map(page => {
         const entries = page.entries.map(entry => {
           const x = me.items[entry.item];
           const base = { item: entry.item, line: entry.line, clue: entry.clue, found: !!x };
@@ -160,6 +162,23 @@ export const catalog = {
           entries,
         };
       });
+      return [...pages, prizePage(w, who)];
     });
+
+    /** 彩头一页：收没收到过看 quality 记的头一回哪天（彩头不另记几回）。 */
+    function prizePage(w, who) {
+      const found = w.quality?.[who]?.found || {};
+      const entries = Object.entries(PRIZES).map(([id, d]) => {
+        const item = prizeId(id);
+        const day = found[item];
+        const base = { item, prize: id, line: d.line, clue: d.clue, found: !!day };
+        if (!day) return base;
+        const date = `${termOf(dateOf(day))} · 第 ${dateOf(day).dayOfSeason} 日`;
+        return { ...base, n: 1, day, date, fine: false };
+      });
+      const n = entries.filter(x => x.found).length;
+      const done = n === entries.length ? PRIZE_PAGE.done : null;
+      return { ...PRIZE_PAGE, done, found: n, total: entries.length, entries };
+    }
   },
 };

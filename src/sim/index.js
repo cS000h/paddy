@@ -16,6 +16,7 @@ import { body } from './plugins/body.js';
 import { pack } from './plugins/pack.js';
 import { water } from './plugins/water.js';
 import { quality } from './plugins/quality.js';
+import { prizes } from './plugins/prizes.js';
 import { land } from './plugins/land.js';
 import { interactions } from './plugins/interactions.js';
 import { social } from './plugins/social.js';
@@ -46,6 +47,7 @@ import { modifiers } from './plugins/modifiers.js';
 import { events } from './plugins/events.js';
 import { visitors } from './plugins/visitors.js';
 import { fairMatch } from './plugins/fair-match.js';
+import { passers } from './plugins/passers.js';
 import { wardrobe } from './plugins/wardrobe.js';
 
 export { SAVE_VERSION };
@@ -70,6 +72,7 @@ export const PLUGINS = Object.freeze([
   cooking,
   foodEffects,
   quality,
+  prizes,
   land,
   moods,
   social,
@@ -88,6 +91,7 @@ export const PLUGINS = Object.freeze([
   events,
   visitors,
   fairMatch,
+  passers,
   wardrobe,
   interactions,
 ]);

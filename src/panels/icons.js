@@ -1,5 +1,15 @@
 // 面板里用的小图：把 art 层画好的像素格子变成 <img> 能用的地址。同一张图只转一次。
-import { icon, itemIcon, fineItemIcon, uiIcon, personFrame, Grid } from '../art/index.js';
+import {
+  icon,
+  itemIcon,
+  fineItemIcon,
+  prizeIcon,
+  prizePicture,
+  prizeShadow,
+  uiIcon,
+  personFrame,
+  Grid,
+} from '../art/index.js';
 import { achievementIcon } from '../art/index.js';
 import { ITEMS } from '../content/items.js';
 
@@ -23,11 +33,24 @@ export const toolIconUrl = name => cached('tool:' + name, () => icon(name));
 
 /** 某样物品的图标。极品照寻常那样画，再描一圈金、点一颗星（art 层不认物品表，在这儿换过去）。 */
 export const itemIconUrl = id =>
-  cached('item:' + id, () => (ITEMS[id]?.fine ? fineItemIcon(ITEMS[id].fine) : itemIcon(id)));
+  cached('item:' + id, () =>
+    ITEMS[id]?.prize
+      ? prizeIcon(ITEMS[id].prize)
+      : ITEMS[id]?.fine
+        ? fineItemIcon(ITEMS[id].fine)
+        : itemIcon(id),
+  );
 
 /** 一样物品的 <img>。 */
 export const itemImg = id =>
   `<img class="pixel item" width="32" height="32" src="${itemIconUrl(id)}" alt="" />`;
+
+/** 图谱里彩头的大图（32×32）：找到的画出来，没找到的是淡墨影子。 */
+export const prizeImg = (id, found) =>
+  `<img class="pixel item prize" width="32" height="32" alt="" src="${cached(
+    `prize:${id}:${found ? 1 : 0}`,
+    () => (found ? prizePicture(id) : prizeShadow(id)),
+  )}" />`;
 
 /** 界面用平涂像素图标的地址与 <img>。 */
 export const uiIconUrl = id => cached('ui:' + id, () => uiIcon(id));

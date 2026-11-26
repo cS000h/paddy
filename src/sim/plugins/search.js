@@ -10,7 +10,7 @@ import { refuse } from '../../kernel/dispatch.js';
 import { MAPS, walkable } from '../../content/maps/index.js';
 import { ITEMS, plainOf } from '../../content/items.js';
 import { CALENDAR, dateOf } from '../../content/calendar.js';
-import { FIRST_FINE, fineId } from '../../content/quality.js';
+import { FIRST_FINE, fineId, prizeLine } from '../../content/quality.js';
 import { fill } from '../../content/text.js';
 import {
   SEARCH,
@@ -41,7 +41,7 @@ for (const [map, m] of Object.entries(MAPS))
     const id = idOf(map, x, y);
     if (!kind || BY_ID.has(id) || (HOME_ONLY.includes(kind) && map !== OWN_MAP)) continue;
     if (!SIDES.some(([dx, dy]) => walkable(m, x + dx, y + dy))) continue;
-    const spot = Object.freeze({ id, map, x, y, kind });
+    const spot = Object.freeze({ id, map, x, y, kind, obj: k });
     SPOTS.push(spot);
     BY_ID.set(id, spot);
   }
@@ -72,9 +72,11 @@ export const periodOf = minute =>
         ? 'dusk'
         : 'night';
 
-/** 这一类这一季有没有东西可翻（不看雨、不看时辰）。 */
-const inSeason = (kind, season) =>
-  SEARCH_FINDS[kind].finds.some(f => !f.seasons || f.seasons.includes(season));
+/** 这一处（哪一类、地图上哪样东西）翻得出的几条。 */
+const findsOn = spot => SEARCH_FINDS[spot.kind].finds.filter(f => !f.on || f.on.includes(spot.obj));
+/** 这一处这一季有没有东西可翻（不看雨、不看时辰）。 */
+const inSeason = (spot, season) =>
+  findsOn(spot).some(f => !f.seasons || f.seasons.includes(season));
 
 export const search = {
   id: 'sim.search',
@@ -111,7 +113,7 @@ export const search = {
       const wet = weather.wetLately(w) ? SEARCH.wetCues : 0;
       const n = lo + Math.floor(noise(seed, day, salt) * (hi - lo + 1)) + wet;
       const scored = SPOTS.map((s, i) => ({ s, r: noise(seed, day, salt, i + 1) })).filter(x =>
-        inSeason(x.s.kind, season),
+        inSeason(x.s, season),
       );
       const best = new Map();
       for (const x of scored) if (!(best.get(x.s.map)?.r <= x.r)) best.set(x.s.map, x);
@@ -168,11 +170,11 @@ export const search = {
     }
 
     /** 此刻这一处翻得出的几样。有动静的地方一定给一样：时辰对不上就不看时辰，再不行就不看雨。 */
-    function finds(w, kind, cued) {
+    function finds(w, spot, cued) {
       const season = dateOf(w.clock.day).season;
       const wet = weather.wetLately(w);
       const when = periodOf(w.clock.minute);
-      const all = SEARCH_FINDS[kind].finds.filter(f => !f.seasons || f.seasons.includes(season));
+      const all = findsOn(spot).filter(f => !f.seasons || f.seasons.includes(season));
       const strict = all.filter(f => (!f.wet || wet) && (!f.when || f.when.includes(when)));
       if (strict.length || !cued) return strict;
       const anyTime = all.filter(f => !f.wet || wet);
@@ -203,11 +205,12 @@ export const search = {
       const cued = s.cues.includes(spot.id);
       const where = { who, map: spot.map, x: spot.x, y: spot.y, kind: spot.kind, cued };
       let pool = [];
-      if (cued) pool = finds(w, spot.kind, true);
-      else if (core.random(w) * 100 < luck(w, who).value) pool = finds(w, spot.kind, false);
+      if (cued) pool = finds(w, spot, true);
+      else if (core.random(w) * 100 < luck(w, who).value) pool = finds(w, spot, false);
       if (!pool.length) {
         s.miss = Math.min(999, s.miss + 1);
-        const none = SEARCH_FINDS[spot.kind].none;
+        const kind = SEARCH_FINDS[spot.kind];
+        const none = kind.noneOn?.[spot.obj] || kind.none;
         const line = core.stable(none, w.clock.day + spot.x * 7 + spot.y * 13);
         fact('search.empty', { ...where, line });
         return;
@@ -239,13 +242,15 @@ export const search = {
       s.found[plainOf(got.item)] ??= w.clock.day;
       pack.receive(w, who, got.item, f.n, '路边翻到的');
       // 手机上一条提示放不下几句：翻到时那句之外只再说一句，头一回出极品最要紧，其次是极品，再次是头一回找到
-      const more = got.first
-        ? fill(FIRST_FINE, { name })
-        : got.fine
-          ? fill(SEARCH_LINES.fine, { name })
-          : first && SEARCH_BOOK.includes(plainOf(got.item))
-            ? fill(SEARCH_LINES.first, { name })
-            : '';
+      const more = got.prize
+        ? prizeLine(got.prize)
+        : got.first
+          ? fill(FIRST_FINE, { name })
+          : got.fine
+            ? fill(SEARCH_LINES.fine, { name })
+            : first && SEARCH_BOOK.includes(plainOf(got.item))
+              ? fill(SEARCH_LINES.first, { name })
+              : '';
       const line = f.line + more;
       fact('search.found', { ...where, item: got.item, n: f.n, fine: got.fine, first, line });
     });

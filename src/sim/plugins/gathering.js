@@ -10,7 +10,7 @@ import { dateOf } from '../../content/calendar.js';
 import { ITEMS } from '../../content/items.js';
 import { FIND_TEXT, ACTIVITY_TEXT, STICKS_TEXT, STOWED } from '../../content/life-text.js';
 import { fill } from '../../content/text.js';
-import { FIRST_FINE, fineId } from '../../content/quality.js';
+import { FIRST_FINE, fineId, prizeLine } from '../../content/quality.js';
 import { SEARCH_LINES } from '../../content/search.js';
 import { atStation } from '../stations.js';
 
@@ -136,11 +136,13 @@ export const gathering = {
         : { item, fine: false, first: false };
       pack.receive(w, who, got.item, n, '在野外找到的');
       const name = ITEMS[got.item].name;
-      const more = got.first
-        ? fill(FIRST_FINE, { name })
-        : got.fine
-          ? fill(SEARCH_LINES.fine, { name })
-          : '';
+      const more = got.prize
+        ? prizeLine(got.prize)
+        : got.first
+          ? fill(FIRST_FINE, { name })
+          : got.fine
+            ? fill(SEARCH_LINES.fine, { name })
+            : '';
       fact('forage.finished', {
         who,
         id: a.id,

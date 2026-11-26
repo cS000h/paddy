@@ -18,6 +18,20 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  24(state) {
+    // 外乡过客（sim/plugins/passers.js）：谁都还没来过，明天清早起才有人路过
+    const w = state.world;
+    w.meta.version = 25;
+    w.passers = { today: [], met: {}, echo: [] };
+    return state;
+  },
+  23(state) {
+    // 彩头留下的痕迹（sim/plugins/prizes.js）：每个有行囊的人一份，什么都还没摆
+    const w = state.world;
+    w.meta.version = 24;
+    w.prizes = Object.fromEntries(Object.keys(w.packs).map(id => [id, { since: {} }]));
+    return state;
+  },
   22(state) {
     // 集日比鱼（sim/plugins/fair-match.js）：一份比鱼的记录，从零起。今天要是集日，钓客下个集日才来。
     const w = state.world;

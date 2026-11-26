@@ -8,7 +8,7 @@ import { refuse } from '../../kernel/dispatch.js';
 import { MAPS, walkable, farmable, actAt } from '../../content/maps/index.js';
 import { ITEMS } from '../../content/items.js';
 import { dateOf } from '../../content/calendar.js';
-import { FIRST_FINE, fineId } from '../../content/quality.js';
+import { FIRST_FINE, fineId, prizeLine } from '../../content/quality.js';
 import { SEARCH_LINES } from '../../content/search.js';
 import { GROUND, GROUND_FINDS } from '../../content/ground.js';
 import { fill } from '../../content/text.js';
@@ -121,11 +121,13 @@ export const ground = {
       list.splice(i, 1);
       pack.receive(w, who, got.item, 1, '地上捡的');
       const name = ITEMS[got.item].name;
-      const more = got.first
-        ? fill(FIRST_FINE, { name })
-        : got.fine
-          ? fill(SEARCH_LINES.fine, { name })
-          : '';
+      const more = got.prize
+        ? prizeLine(got.prize)
+        : got.first
+          ? fill(FIRST_FINE, { name })
+          : got.fine
+            ? fill(SEARCH_LINES.fine, { name })
+            : '';
       const line = BY_ITEM.get(g.item).line + more;
       fact('ground.picked', {
         who,

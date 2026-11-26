@@ -11,6 +11,7 @@
 import { PEOPLE } from './people.js';
 import { FINE_ITEMS, FINE_PRICE, fineId } from './quality.js';
 import { FOUND_OWNERS } from './fish-catch.js';
+import { PRIZES, PRIZE_PRICE, prizeId } from './prizes.js';
 
 const food = (name, price, full, nature, tags, more = {}) => ({
   name,
@@ -183,6 +184,7 @@ const finish = ([id, d]) => {
       keep: 0,
       text: '',
       fine: null,
+      prize: null,
       kin: null,
       ...d,
       tags: Object.freeze([...(d.tags || [])]),
@@ -199,8 +201,16 @@ const FINE = FINE_ITEMS.map(id => {
   return [fineId(id), { ...fine, price: d.price * FINE_PRICE, buy: false }];
 });
 
+// 彩头（见 content/prizes.js）：照着寻常的那份，换个名字，价钱再翻几倍，买不到；也记着原来是哪样，
+// 下锅、送人都照原来那样算，火候也跟极品一样好拿捏。
+const PRIZE = Object.entries(PRIZES).map(([id, d]) => {
+  const base = RAW[d.item];
+  const more = { name: d.name, short: d.name, fine: d.item, prize: id, buy: false };
+  return [prizeId(id), { ...base, ...more, price: base.price * PRIZE_PRICE }];
+});
+
 export const ITEMS = Object.freeze(
-  Object.fromEntries([...Object.entries(RAW), ...FINE].map(finish)),
+  Object.fromEntries([...Object.entries(RAW), ...FINE, ...PRIZE].map(finish)),
 );
 
 /** 极品认作原来那样（下锅配菜名、送人看合不合心意）；寻常的原样返回。 */

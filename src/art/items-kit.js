@@ -14,6 +14,7 @@ export const INK = {
   // 红和粉
   o: P.c0, r: P.c1, R: P.c2, Q: P.c3,
   q: P.p1, p: P.p2, O: P.p3,
+  P: P.pu0, J: P.pu1,
   // 黄和稻草
   z: P.y0, y: P.y1, Y: P.y2,
   i: P.h0, h: P.h1, j: P.h2, H: P.h3,

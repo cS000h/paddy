@@ -19,6 +19,15 @@ export function homeActions({ game, shell, run, here, world }) {
     sip() {
       run('sip', at());
     },
+    /** 彩头的别的用处：南瓜王、双黄蛋摆在院里，红鲤放回河里（sim/plugins/prizes.js）。 */
+    prizeUse({ item }) {
+      const out = run('prize.use', { item, ...at() });
+      const f = out.ok && out.facts.find(x => x.type === 'prize.used');
+      if (f) {
+        shell.set({ modal: null });
+        shell.toast(f.data.line, true);
+      }
+    },
     packPut({ item, n }) {
       run('pack.put', { item, n: n === 'all' ? n : Number(n), ...at() });
     },

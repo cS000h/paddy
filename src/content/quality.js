@@ -81,3 +81,6 @@ export const ATTR_ODDS = Object.freeze({
 
 /** 头一回收到极品时，底下横着说的一句。 */
 export const FIRST_FINE = '头一回收到{name}！卖价是寻常的两倍，下锅火候也好拿捏些。';
+
+// 抽中极品后还可能是彩头，说的话在 content/prizes.js。
+export { prizeLine } from './prizes.js';

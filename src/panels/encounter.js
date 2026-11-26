@@ -44,9 +44,12 @@ function options(m, rows) {
 export function encounterView(m, game, here) {
   const id = m.who || m.id;
   const host = m.kind === 'visitor' ? game.ask('match') : null;
+  const passer = m.kind === 'visitor' ? game.ask('passers').find(p => p.id === id) : null;
   const visitor =
     m.kind === 'visitor'
-      ? game.ask('visitors').active.find(v => v.id === id) || (host?.id === id ? host : null)
+      ? game.ask('visitors').active.find(v => v.id === id) ||
+        (host?.id === id ? host : null) ||
+        passer
       : null;
   const name = visitor?.name || PEOPLE[id]?.name || '过客';
   const rows = game.ask('interaction.options', id, here, m.walking);
@@ -70,5 +73,5 @@ export function encounterView(m, game, here) {
     y = Number(m.anchor?.y) || 140;
   return `<div class="npc-bubble" style="--npc-x:${x}px;--npc-y:${y}px"><b>${esc(name)}</b>
     <p class="say">${esc(m.line || '')}</p>${m.favorite ? '<small>记下了最爱吃的' + esc(m.favorite) + '</small>' : ''}</div>
-    <div class="npc-actions">${actions(options(m, rows), host?.id === id ? '' : button('bookWho', '看人', { data: { who: id } }), close('告辞', false))}</div>`;
+    <div class="npc-actions">${actions(options(m, rows), host?.id === id || passer ? '' : button('bookWho', '看人', { data: { who: id } }), close('告辞', false))}</div>`;
 }

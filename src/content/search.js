@@ -46,11 +46,12 @@ export const SEARCH = Object.freeze({
 });
 
 // 一条：翻出什么、多常见、哪几季有（null 是四季）、翻到时那句；more 里 wet 是雨后才有，
-// when 是只在哪几个时段有，n 是一回翻出几份（不写是一份）。
+// when 是只在哪几个时段有，n 是一回翻出几份（不写是一份），on 是只在这一类里的哪几样东西上有
+// （院里草垛、稻草人、瓜棚同一类，话各说各的）。
 const e = (item, odds, seasons, line, more = {}) =>
-  Object.freeze({ item, odds, seasons, line, n: 1, wet: false, when: null, ...more });
+  Object.freeze({ item, odds, seasons, line, n: 1, wet: false, when: null, on: null, ...more });
 
-/** 每一类翻得出什么；none 是什么也没翻到时的话。 */
+/** 每一类翻得出什么；none 是什么也没翻到时的话，noneOn 是按地图上哪样东西分开说的。 */
 // prettier-ignore
 export const SEARCH_FINDS = Object.freeze({
   peach: {
@@ -178,13 +179,18 @@ export const SEARCH_FINDS = Object.freeze({
   yard: {
     name: '草垛',
     finds: [
-      e('straw', 'common', [2, 3], '从草垛边抽出一把晒得金黄干爽的稻草，捆成一束。'),
-      e('egg', 'uncommon', null, '暖烘烘的草垛窝里，竟藏着一颗不知谁家母鸡偷下的热鸡蛋！', { when: ['dawn'] }),
-      e('compost', 'common', [0, 2], '草垛底角沤出了一小撮黑亮松软的腐草，正好当堆肥。', { wet: true }),
-      e('ash', 'uncommon', [3], '瓜棚旧灶脚边扫出半撮细白草木灰，留着肥地正好。'),
-      e('bean', 'rare', [2], '瓜棚竹架缝里挂着两串晒干的老豆荚，剥出几粒好豆子。'),
+      e('straw', 'common', [2, 3], '从草垛边抽出一把晒得金黄干爽的稻草，捆成一束。', { on: ['haystack', 'scarecrow'] }),
+      e('egg', 'uncommon', null, '暖烘烘的草垛窝里，竟藏着一颗不知谁家母鸡偷下的热鸡蛋！', { when: ['dawn'], on: ['haystack'] }),
+      e('compost', 'common', [0, 2], '草垛底角沤出了一小撮黑亮松软的腐草，正好当堆肥。', { wet: true, on: ['haystack'] }),
+      e('ash', 'uncommon', [3], '瓜棚旧灶脚边扫出半撮细白草木灰，留着肥地正好。', { on: ['trellis'] }),
+      e('bean', 'rare', [2], '瓜棚竹架缝里挂着两串晒干的老豆荚，剥出几粒好豆子。', { on: ['trellis'] }),
     ],
-    none: ['抖了抖稻草人的破草帽，只掉下来几根干草屑。', '手伸进草垛里摸了一圈，暖呼呼的，像是刚有猫在这儿打过盹。'],
+    none: ['手伸进草垛里摸了一圈，暖呼呼的，像是刚有猫在这儿打过盹。'],
+    noneOn: {
+      haystack: ['手伸进草垛里摸了一圈，暖呼呼的，像是刚有猫在这儿打过盹。', '草垛扒开一角，只扑出一股晒过太阳的草香。'],
+      scarecrow: ['抖了抖稻草人的破草帽，只掉下来几根干草屑。', '稻草人袖管里塞的稻草早瘪了，掏不出什么。'],
+      trellis: ['拨开瓜藤看了看，藤还没爬满竹架，底下空空的。', '竹架上只挂着几根去年的枯藤，一扯就断了。'],
+    },
   },
 });
 

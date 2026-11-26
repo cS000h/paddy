@@ -16,7 +16,7 @@ import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { ITEMS } from '../../content/items.js';
 import { CALENDAR, dateOf } from '../../content/calendar.js';
-import { FIRST_FINE } from '../../content/quality.js';
+import { FIRST_FINE, prizeLine } from '../../content/quality.js';
 import { fill } from '../../content/text.js';
 import {
   FISH,
@@ -35,8 +35,8 @@ import {
 } from '../../content/fishing.js';
 import { makeBout, junkTable } from '../fishing-bout.js';
 import { atStation } from '../stations.js';
-import { lenText, sizeOf, wellLog, simulate, personOk, noise } from '../fishing-fight.js';
-import { gradeOf, cheerFor, fightView } from '../fishing-fight.js';
+import { lenText, sizeOf, wellLog, simulate, personOk, noise, gradeOf } from '../fishing-fight.js';
+import { cheerFor, fightView } from '../fishing-fight.js';
 import { registerResidentOptions } from '../resident-options.js';
 
 export const fishing = {
@@ -250,17 +250,17 @@ export const fishing = {
       const name = ITEMS[got.item].name;
       const text = lenText(b.len);
       const grade = gradeOf(b.fish, b.len);
-      // 照大小叫：钓上一条板鲫；大家伙另有一句
-      const folk = FISH_NAMES[b.fish].names[FISH_GRADES.indexOf(grade)];
-      // 头一回那句没提鱼名的（虎头鲨、彩鳞鱼），括号里补上，好认得是哪种
+      const folk = FISH_NAMES[b.fish].names[FISH_GRADES.indexOf(grade)]; // 照大小叫，大家伙另有一句
+      // 头一回那句没提鱼名的（虎头鲨、彩鳞鱼），括号里补上，好认得是哪种；多长小窗上已经写了，不再重复
       const firstLine = FISH_LINES.first[b.fish];
       let line = first
-        ? firstLine + '（' + (firstLine.includes(f.name) ? '' : f.name + '，') + text + '）'
+        ? firstLine + (firstLine.includes(f.name) ? '' : '（' + f.name + '）')
         : grade.id === 'huge'
-          ? FISH_NAMES[b.fish].huge + '（' + text + '）'
+          ? FISH_NAMES[b.fish].huge
           : fill(FISH_LINES.caught, { name: folk, len: text });
       if (record) line += fill(FISH_LINES.record, { name: f.name });
       if (got.first) line += fill(FIRST_FINE, { name });
+      if (got.prize) line = prizeLine(got.prize); // 彩头只说彩头那一句
       const proud = record || grade.id === 'big' || grade.id === 'huge';
       fact('fish.caught', {
         who: id,
