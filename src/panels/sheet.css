@@ -633,8 +633,8 @@
 }
 
 .achievement-mark img {
-  opacity: 0.3;
-  filter: grayscale(1);
+  /* 没拿到的那张本身就画成淡影子（G-10），不再另外调淡 */
+  opacity: 0.9;
 }
 
 .achievement-mark.earned {
@@ -646,6 +646,35 @@
 .achievement-mark.earned img {
   opacity: 1;
   filter: none;
+}
+
+/* 成就页顶上按类筛的那排小页签 */
+.ach-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 2px 0 6px;
+}
+.ach-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 30px;
+  padding: 2px 5px;
+  border: 1px solid var(--frame-2);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+}
+.ach-kind b {
+  font-size: 13px;
+}
+.ach-kind.on {
+  border-color: var(--sage-line);
+  background: var(--sage);
+  color: var(--ink);
 }
 
 .body-line {

@@ -287,7 +287,7 @@ export function poke(scene, decor) {
       platform.audio.play(f.data.fine ? 'fine' : 'harvest');
       if (f.data.fine) platform.haptic([14, 60, 24]);
     }
-    return shell.toast(f.data.line);
+    return shell.toast(f.data.line, f.data.first || f.data.fine);
   }
   if (why !== SEARCH_LINES.done && why !== SEARCH_LINES.nothing) return shell.toast(why);
   if (p.lines.length) shell.toast(p.lines[Math.floor(Math.random() * p.lines.length)]);

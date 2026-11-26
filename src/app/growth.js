@@ -17,6 +17,9 @@ export function growthActions({ game, shell, run }) {
     ledgerWho({ who }) {
       edit({ ledgerWho: who });
     },
+    bookKind({ kind }) {
+      edit({ achKind: kind || null, page: 0 });
+    },
     bookPage({ page }) {
       edit({ page: Number(page) });
     },
@@ -50,6 +53,6 @@ export function growthNotices(game, shell) {
       ...leveled.map(f => f.data.name + '到了「' + f.data.title + '」'),
       ...traits.map(f => '新特质：' + f.data.name),
     ];
-    if (messages.length) shell.toast(messages.join('；'));
+    if (messages.length) shell.toast(messages.join('；'), true);
   });
 }

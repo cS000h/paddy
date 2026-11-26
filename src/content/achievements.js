@@ -75,3 +75,35 @@ export const ACHIEVEMENTS = [
   { id: 'festival1', name: '赶上一回好日子', event: 'festival.finished', goal: 1, future: true },
   { id: 'festival4', name: '四时相聚', event: 'festival.finished', goal: 4, future: true },
 ];
+
+/** 成就的七类（G-10）：成就页顶上按这几类筛，每类一个图标（art/achievement-icons.js）。 */
+export const ACHIEVEMENT_KINDS = Object.freeze({
+  farm: '种地',
+  cook: '做饭',
+  fish: '钓鱼',
+  forage: '采集翻找',
+  social: '人情',
+  days: '日子',
+  book: '图鉴',
+});
+
+// 哪个成就归哪类：G-10 只给了七类的名字，分法是这边定的。图鉴某一页收齐、收到多少样的归「图鉴」，
+// 钓鱼、翻找时头一回碰上的归各自那一类。
+// prettier-ignore
+const KIND_OF = {
+  farm: ['soil1', 'soil20', 'seed1', 'seed30', 'water20', 'harvest1', 'harvest30', 'book.garden1'],
+  cook: ['cook1', 'cook10', 'servings30', 'recipes5', 'great1', 'seasonal5', 'eat10', 'pickle1'],
+  fish: ['fish1', 'fish10', 'book.fish3', 'book.fresh1', 'book.snag3', 'book.haul8', 'book.huge1',
+    'book.grades'],
+  forage: ['forage1', 'forage20', 'book.wild5', 'book.rain1', 'book.fine1'],
+  social: ['gift1', 'gift10', 'talk10', 'book.shuttle'],
+  days: ['days7', 'level5', 'trait4', 'weave1', 'coop1', 'eggs6', 'festival1', 'festival4'],
+  book: ['book.fish8', 'book.wild18', 'book.river7', 'book.garden7', 'book.fish13', 'book.wild25',
+    'book.gold7'],
+};
+for (const [kind, ids] of Object.entries(KIND_OF))
+  for (const id of ids) {
+    const a = ACHIEVEMENTS.find(x => x.id === id);
+    if (!a) throw new Error('分类里写了没有的成就：' + id);
+    a.kind = kind;
+  }

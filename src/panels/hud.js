@@ -48,7 +48,8 @@ export const HUD_HTML = `
   <div class="vitals"><div class="body-strip">
     ${gauge(GAUGES[0])}<em class="vigor" data-id="vigor"></em>
     ${GAUGES.slice(1).map(gauge).join('')}
-    <span class="buff" data-id="buff" hidden></span>
+    <button class="buff" data-do="vital" data-vital="buff" data-id="buff" hidden>
+      <span class="full"></span><span class="short"></span></button>
     </div><span class="coins" title="铜钱"><img class="pixel" width="16" height="16"
       src="${toolIconUrl('coin')}" alt="铜钱" /><span data-id="coins"></span></span>
     <nav class="system-keys" aria-label="常用入口">
@@ -117,6 +118,23 @@ export function syncStamp(node, hint) {
   attr(node, 'aria-label', hint ? hint.text : '对面前的东西做事');
 }
 
+// 饱腹、水分跌破红线（圈变成朱砂色）那一下，冒一句很轻的话；一天每样只说一回，涨回去再跌也不重说
+const LOW_WORDS = { hunger: '肚子有点空了。', thirst: '嗓子有点干了。' };
+const lowState = new WeakMap(); // 每块面板各记各的：上一回低没低、哪天说过
+function lowWords(el, body, day, shell) {
+  // 刚打开就已经低着的，不算「跌破」，不说
+  if (!lowState.has(el)) lowState.set(el, { hunger: { low: true }, thirst: { low: true } });
+  const seen = lowState.get(el);
+  for (const k of Object.keys(LOW_WORDS)) {
+    const low = body[k] < 30;
+    if (low && !seen[k].low && seen[k].day !== day) {
+      seen[k].day = day;
+      shell.toast(LOW_WORDS[k]);
+    }
+    seen[k].low = low;
+  }
+}
+
 /** 按规则里此刻的样子，改常驻几块里变了的地方。 */
 export function renderHud(el, { game, shell }) {
   const clock = game.ask('clock');
@@ -140,9 +158,13 @@ export function renderHud(el, { game, shell }) {
   setGauge(el.mood, body.mood, `心情 ${body.mood}：${body.moodWord}`, body.mood < 30);
   el.buff.hidden = !body.buff;
   if (body.buff) {
-    put(el.buff, `${body.buff.name} ${body.buff.left}`);
-    attr(el.buff, 'title', body.buff.text);
+    // 手机上地方小，只留头一个字；点它冒一句是什么
+    put(el.buff.firstElementChild, `${body.buff.name} ${body.buff.left}`);
+    put(el.buff.lastElementChild, body.buff.name.slice(0, 1));
+    attr(el.buff, 'title', `${body.buff.name}（还剩 ${body.buff.left}）：${body.buff.text}`);
+    attr(el.buff, 'aria-label', el.buff.getAttribute('title'));
   }
+  lowWords(el, body, clock.day, shell);
   put(el.coins, String(game.ask('home').coins));
   syncTools(el, game, shell.get().seed);
   syncToolbar(el, shell.get());

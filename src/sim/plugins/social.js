@@ -311,6 +311,8 @@ export const social = {
           liked = true;
           value = 4;
           line = FOUND_OWNERS[plain].line;
+          const thanks = FOUND_OWNERS[plain].thanks;
+          if (thanks) pack.deliver(w, people.who(w), thanks.item, thanks.n, `${person.name}回送的`);
         }
       }
       b.gifted[to] = w.clock.day;

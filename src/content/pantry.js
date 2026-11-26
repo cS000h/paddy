@@ -148,6 +148,15 @@ const RAW = {
   shard: stuff('青瓷片', 'material', 5, { ...NO, text: '天青釉的碎瓷，花纹清清楚楚。杂货铺收，小乔见了准喜欢' }),
   oldCoin: stuff('旧铜钱', 'material', 4, { ...NO, text: '带绿锈的老钱，字还认得出。杂货铺按古钱收' }),
   shuttle: stuff('木头梭子', 'material', 0, { ...NO, text: '绕着麻线的织补梭，像是谁家掉的' }),
+  // 走图翻找碰上的失物（G-08 小事 1–8）：卖不了，送还给失主
+  pipe: stuff('旧铜烟袋', 'material', 0, { ...NO, text: '竹杆铜锅，烟嘴缠着半圈旧红线。像是撑船人的' }),
+  kite: stuff('墨猫风筝', 'material', 0, { ...NO, text: '白宣纸糊的燕子风筝，上头画着只歪头小猫' }),
+  thimble: stuff('旧银顶针', 'material', 0, { ...NO, text: '磨出深凹痕，还缠着两寸蓝布线' }),
+  purse: stuff('粗麻荷包', 'material', 0, { ...NO, text: '打着补丁，里头十几文钱和一张菜账条' }),
+  stripKnife: stuff('弯嘴篾刀', 'material', 0, { ...NO, text: '磨得雪亮，木柄包着厚厚一层汗渍' }),
+  sachet: stuff('茶花药囊', 'material', 0, { ...NO, text: '淡青粗布，闻着有艾叶薄荷香，角上绣朵小茶花' }),
+  bell: stuff('铜铃红绳', 'material', 0, { ...NO, text: '朱红丝头绳系颗小铜铃，像是猫项圈' }),
+  tally: stuff('记账木牌', 'material', 0, { ...NO, text: '杉木牌，炭笔记着各家斤两' }),
   // —— 工具
   umbrella: stuff('油纸伞', 'tool', 8, { sell: false }),
   flask: stuff('竹筒水壶', 'tool', 4, { sell: false, text: '装进行囊，渴了随时喝' }),

@@ -75,7 +75,10 @@ test('腌菜确实扣三份菜和一份盐，雨后菌子可采', () => {
     const q = g.ask('outings', 'mushroom', { x: 19, y: 8 }).options[0];
     if (!q.reason) {
       must(g, 'gather', { id: 'mushroom', at: { x: 19, y: 8 } });
-      assert.ok(carried(g, 'mushroom') >= 2);
+      assert.ok(
+        carried(g, 'mushroom') + carried(g, 'mushroom.fine') >= 2,
+        '采到的菌子（可能是极品）',
+      );
       return;
     }
     must(g, 'sleep');
@@ -104,4 +107,22 @@ test('做完的事带着给玩家看的那段话：找到什么、劈柴、歇�
   const stove = { x: 10, y: 11 };
   const cook = { items: ['rice'], method: 'stew', at: stove };
   assert.match(said('cook', cook, 'meal.cooked'), /份白粥出锅了。/);
+});
+test('清早便条多三样：夜里刚熟的菜、鸡窝里的蛋、清早哪儿鱼口好', () => {
+  const g = newGame(3);
+  growOne(g);
+  const text = () =>
+    g
+      .ask('notes')
+      .filter(n => n.title === '院里院外')
+      .map(n => n.text)
+      .join('');
+  assert.match(text(), /熟了1畦/);
+  assert.match(text(), /鱼口好/);
+  const coop = { x: 12, y: 11 };
+  must(g, 'gather', { id: 'bamboo', at: { x: 16, y: 9 } });
+  must(g, 'homestead', { id: 'buildCoop', at: coop });
+  must(g, 'homestead', { id: 'buyHen', at: coop });
+  for (let i = 0; i < 8 && !g.ask('homestead', 'coop').eggs; i++) must(g, 'sleep');
+  assert.match(text(), /鸡窝里有\d+个蛋/);
 });

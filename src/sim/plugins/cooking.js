@@ -1,5 +1,5 @@
 // 灶台：做饭、端走、放回、吃。饭菜存到户里；端走交给个人行囊。菜谱也属于这一户。
-//   cook {items, spices, method, cut, log, at} → meal.cooked {…这道菜, perfect, beats, first, ids, line}
+//   cook {items, spices, method, cut, log, at} → meal.cooked {…这道菜, perfect, beats, first, ids, items, line}
 //       log 是亲自掌火时按的记录（炒：下料、翻锅、出锅；炖：添柴、起锅；烤：翻面、出锅），没有就是稳稳做。
 //   查询 cook.preview(input) 给面板看这锅饭和这一锅的节拍；cook.fire(input, log, t) 是此刻锅里什么样子。
 //   dish.pack / dish.store / dish.eat {id, at}
@@ -136,6 +136,7 @@ export const cooking = {
         perfect,
         beats,
         ingredients: p.ingredients.length,
+        items: [...p.ingredients],
         first: first && p.named,
         ids,
         line: cookedLine(p, first && p.named),

@@ -26,6 +26,8 @@ export const WHY = Object.freeze({
   met:       { label: '赴过约',         n: 8,   days: 30,   stack: 2 },
   missed:    { label: '约了没来',       n: -12, days: 20,   stack: 2 },
   cancelled: { label: '约了又推了',     n: -4,  days: 14,   stack: 2 },
+  helped:    { label: '帮过一把',       n: 4,   days: 30,   stack: 3 },
+  sly:       { label: '见你昧下人家的东西', n: -10, days: 30, stack: 2 },
   // 村民之间开局就有的交情，照台词里提到的事（见 STANDING），一直记着
   veggies:   { label: '常给他送菜',     n: 10,  days: null, stack: 1 },
   fed:       { label: '天天吃他送的菜', n: 10,  days: null, stack: 1 },

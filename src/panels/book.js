@@ -2,7 +2,8 @@
 import { ORIGINS, TRAITS } from '../content/growth.js';
 import { personaBody, ledgerBody } from './person.js';
 import { catalogBody } from './catalog.js';
-import { uiIconImg } from './icons.js';
+import { uiIconImg, achievementImg } from './icons.js';
+import { ACHIEVEMENT_KINDS } from '../content/achievements.js';
 import { button, actions, close, title, para, esc, paged } from './html.js';
 
 const ORIGIN_STEPS = {
@@ -54,7 +55,7 @@ const achievementRow = a => {
       ? '等村里的节日开张'
       : `${a.count} / ${a.goal}`;
   return (
-    `<li><span class="achievement-mark ${a.day ? 'earned' : ''}">${uiIconImg('award_rice', 24)}</span>` +
+    `<li><span class="achievement-mark ${a.day ? 'earned' : ''}">${achievementImg(a.kind, !!a.day)}</span>` +
     `<span class="what"><b>${esc(a.name)}</b><small>${state}</small></span></li>`
   );
 };
@@ -94,13 +95,42 @@ const TABS = [
   ['catalog', '图鉴', 'tab_catalog'],
 ];
 
-function rowsOf(tab, game) {
+function rowsOf(tab, game, kind = null) {
   if (tab === 'skills') return game.ask('growth').skills.map(skillRow);
   if (tab === 'traits') return game.ask('growth').traits.map(traitRow);
   return game
     .ask('achievements')
+    .filter(a => !kind || a.kind === kind)
     .toSorted((a, b) => Number(!!b.day) - Number(!!a.day))
     .map(achievementRow);
+}
+
+/** 成就页顶上那排小页签：全部，和七类各一个（图标 + 拿到几个 / 一共几个）。 */
+function kindBar(game, kind) {
+  const all = game.ask('achievements');
+  const chip = (id, label, ico, list) =>
+    `<button class="ach-kind ${kind === id ? 'on' : ''}" data-do="bookKind" data-kind="${id || ''}" ` +
+    `title="${label}" aria-label="${label}">${ico}<small>${list.filter(a => a.day).length}/${list.length}</small></button>`;
+  return (
+    `<nav class="ach-kinds" aria-label="按类看成就">` +
+    chip(null, '全部', '<b>全</b>', all) +
+    Object.entries(ACHIEVEMENT_KINDS)
+      .map(([id, label]) => {
+        const list = all.filter(a => a.kind === id);
+        return chip(
+          id,
+          label,
+          achievementImg(
+            id,
+            list.some(a => a.day),
+            20,
+          ),
+          list,
+        );
+      })
+      .join('') +
+    `</nav>`
+  );
 }
 
 export function bookView(m, game) {
@@ -122,8 +152,10 @@ export function bookView(m, game) {
         : personaBody(m, game, !m.who ? modifiers(m, game) : '');
     foot = actions(close('合上册子', false));
   } else {
-    const book = paged(rowsOf(tab, game), m.page || 0, 4, 'bookPage');
-    body = `${title('稻乡小册', `${book.page + 1} / ${book.pages} 页`)}
+    const kind = tab === 'achievements' ? m.achKind || null : null;
+    const book = paged(rowsOf(tab, game, kind), m.page || 0, 4, 'bookPage');
+    const bar = tab === 'achievements' ? kindBar(game, kind) : '';
+    body = `${title('稻乡小册', `${book.page + 1} / ${book.pages} 页`)}${bar}
       <ul class="items">${book.items.join('')}</ul>`;
     foot = actions(book.buttons, close('合上册子', false));
   }

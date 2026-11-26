@@ -1,5 +1,6 @@
 // 面板里用的小图：把 art 层画好的像素格子变成 <img> 能用的地址。同一张图只转一次。
 import { icon, itemIcon, fineItemIcon, uiIcon, personFrame, Grid } from '../art/index.js';
+import { achievementIcon } from '../art/index.js';
 import { ITEMS } from '../content/items.js';
 
 const cache = new Map();
@@ -30,6 +31,12 @@ export const itemImg = id =>
 
 /** 界面用平涂像素图标的地址与 <img>。 */
 export const uiIconUrl = id => cached('ui:' + id, () => uiIcon(id));
+/** 成就七类的图标（24×24）：拿到了的一张，没拿到的淡影子一张。 */
+export const achievementImg = (kind, earned, size = 24) =>
+  `<img class="pixel ui-ico" width="${size}" height="${size}" alt="" src="${cached(
+    `ach:${kind}:${earned ? 1 : 0}`,
+    () => achievementIcon(kind, earned),
+  )}" />`;
 export const uiIconImg = (id, size = 20) =>
   `<img class="pixel ui-ico" width="${size}" height="${size}" src="${uiIconUrl(id)}" alt="" />`;
 

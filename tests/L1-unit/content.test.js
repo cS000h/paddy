@@ -139,8 +139,9 @@ test('作物和物品：种子、作物、收成互相指得上', () => {
 test('物品总表：每样东西字段齐全，买卖价按基准价折算，开局的东西和能托捎的货都登记过', () => {
   assert.equal(
     Object.keys(ITEMS).length,
-    141,
-    '104 样寻常的（钓鱼加了十三种鱼、河虾毛蟹、五样钩上来的东西和蚯蚓，走图翻找加了 20 样野货），' +
+    149,
+    '112 样寻常的（钓鱼加了十三种鱼、河虾毛蟹、五样钩上来的东西和蚯蚓，走图翻找加了 20 样野货' +
+      '和八样失物），' +
       '加 37 样极品（七样菜、十一种鱼、河虾毛蟹、16 样野货和鸡蛋，见 L1 收成出彩）',
   );
   const KINDS = ['food', 'whole', 'spice', 'snack', 'seed', 'material', 'craft', 'tool', 'bait'];
@@ -297,7 +298,10 @@ test('过客站位和小事的默认地点能站人、能走到跟前，不和�
       const clash = residents(mapId).find(r => r.x === s.x && r.y === s.y);
       assert.ok(!clash, `过客站位 ${mapId}(${s.x},${s.y}) 和 ${clash?.name} 重了`);
     }
-  for (const ev of Object.values(EVENTS)) {
+  // 翻找、钓鱼、灶边碰上的小事落在主角身边，没有默认地方
+  for (const ev of Object.values(EVENTS).filter(
+    e => !['search', 'fishing', 'stove'].includes(e.trigger),
+  )) {
     const { map, x, y } = ev.spot;
     standable(map, x, y, ev.id);
     const visitor = (VISITOR_SPOTS[map] || []).some(s => s.x === x && s.y === y);
@@ -417,4 +421,20 @@ test('好感的表：来由写全了，开局的交情指得上村民、一直�
     assert.ok(ON_MAP.includes(from) && ON_MAP.includes(to) && from !== to, from + to);
     assert.equal(WHY[why]?.days, null, why);
   }
+});
+
+test('成就七类：每个成就都归了一类，七类各有拿到、没拿到两张 24×24 的图标', async () => {
+  const { ACHIEVEMENTS, ACHIEVEMENT_KINDS } = await import('../../src/content/achievements.js');
+  const { achievementIcon, ACHIEVEMENT_ICON_KINDS } = await import('../../src/art/index.js');
+  assert.deepEqual([...ACHIEVEMENT_ICON_KINDS], Object.keys(ACHIEVEMENT_KINDS));
+  for (const a of ACHIEVEMENTS) assert.ok(ACHIEVEMENT_KINDS[a.kind], `${a.id} 没归类`);
+  for (const kind of ACHIEVEMENT_ICON_KINDS)
+    for (const earned of [true, false]) {
+      const g = achievementIcon(kind, earned);
+      assert.deepEqual([g.w, g.h], [24, 24]);
+    }
+  assert.notEqual(
+    JSON.stringify(achievementIcon('farm', true)),
+    JSON.stringify(achievementIcon('farm', false)),
+  );
 });

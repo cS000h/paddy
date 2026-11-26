@@ -336,10 +336,29 @@ button:focus-visible {
 
 .buff {
   padding: 2px 9px;
+  border: 0;
   border-radius: 2px;
   background: var(--mist);
   color: var(--qing);
+  font: inherit;
   font-size: 11.5px;
+  cursor: pointer;
+}
+.buff .short {
+  display: none;
+}
+/* 手机上、矮屏上地方小：只留头一个字，点它冒一句是什么 */
+.touch .buff,
+.compact .buff {
+  padding: 2px 5px;
+}
+.touch .buff .full,
+.compact .buff .full {
+  display: none;
+}
+.touch .buff .short,
+.compact .buff .short {
+  display: inline;
 }
 
 .coins {
@@ -1012,8 +1031,7 @@ button:focus-visible {
   font-size: 11.5px;
 }
 
-.compact .roomy,
-.compact .buff {
+.compact .roomy {
   display: none;
 }
 

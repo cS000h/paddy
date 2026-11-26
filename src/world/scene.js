@@ -16,7 +16,7 @@ import { weatherEffects } from './weather.js';
 import { fieldInspection } from './field-inspection.js';
 import { refreshPlots } from './plots.js';
 import { repeatField, bindAction, bindKeyboard, bindPointer } from './input.js';
-import { hintFor, touchThing, drawWater, poke, stirCues } from './interactions.js';
+import { hintFor, touchThing, drawWater, poke } from './interactions.js';
 import { swing } from './farm-motion.js';
 import { tapAt } from './tap.js';
 import { leaveByRoad } from './travel.js';
@@ -167,7 +167,7 @@ export class VillageScene extends Phaser.Scene {
   frame(time, delta) {
     this.inspectField();
     this.ambient.update(time, delta);
-    stirCues(this, delta);
+    this.extras.frame(delta);
     this.weatherFx.update(time, this.map.indoor ? 'sunny' : this.weather.code);
     const dt = Math.min(0.05, delta / 1000);
     const { intents, shell } = this.deps;
@@ -321,7 +321,7 @@ export class VillageScene extends Phaser.Scene {
         this.effects[effect](d.x, d.y, d.crop, d.fine);
         platform.audio.play(d.fine ? 'fine' : sound);
         platform.haptic(d.fine ? [14, 60, 24] : undefined);
-        if (d.line) this.deps.shell.toast(d.line);
+        if (d.line) this.deps.shell.toast(d.line, d.fine || d.first);
         const day = this.deps.game.ask('clock').day;
         for (const v of this.villagers) v.work.notice(f.type, d, day);
         plots = true;

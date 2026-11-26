@@ -15,7 +15,7 @@ export function createShellState({ onError = null } = {}) {
     manualTool: false,
     modal: null, // 弹着的东西：null，或 {kind: 'talk' | 'sleep' | 'basket' | 'sign' | 'notes', …}
     hint: null, // 面前这一格能做什么：{text, ok}
-    toast: null, // 一句短提示：{text, id}
+    toast: null, // 一句短提示：{text, id, keep}；keep 是要紧的话，说着时别的话排队
     veil: 0, // 0–1，过夜时盖住世界的那层纸
   });
   const listeners = new Set();
@@ -36,8 +36,9 @@ export function createShellState({ onError = null } = {}) {
     },
     /** 有弹框时世界暂停：不走路、不过时间。 */
     paused: () => state.modal !== null,
-    toast(text) {
-      api.set({ toast: { text, id: ++toastId } });
+    /** 冒一句话；keep 为真是要紧的（头一回找到、升了本事、头一回出极品），不被下一句盖掉。 */
+    toast(text, keep = false) {
+      api.set({ toast: { text, id: ++toastId, keep: !!keep } });
     },
     /** 换到工具栏上的前一件或后一件。 */
     stepTool(by) {

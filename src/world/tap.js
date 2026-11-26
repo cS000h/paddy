@@ -40,7 +40,10 @@ export function tapAt(scene, wx, wy) {
   if (!person && !visitor && !pulse && !thing && !farm && !water && !decor) {
     if (tileOccupied(scene, tile.x, tile.y)) return;
     const path = findPath(walk, from, tile);
-    if (path) scene.player.walk(path);
+    if (path) {
+      scene.effects.mark(tile.x, tile.y);
+      scene.player.walk(path);
+    }
     return;
   }
 
@@ -50,8 +53,13 @@ export function tapAt(scene, wx, wy) {
     scene.approaching = null;
     if (dir) scene.player.face(dir);
     if (person) {
-      if (person.present && person.tile.x === tile.x && person.tile.y === tile.y)
+      // 他停下来等你，可点的时候他可能正迈到半步：只要走到了跟前就说话，不扑空
+      const here = scene.player.tile;
+      const t = person.tile;
+      if (person.present && Math.max(Math.abs(here.x - t.x), Math.abs(here.y - t.y)) <= 1) {
+        scene.player.face(dirTo(here, t));
         return scene.talk(person);
+      }
       return;
     }
     if (visitor) return scene.extras.interactVisitor(visitor);

@@ -4,10 +4,13 @@ import { Walker } from './actors.js';
 import { showEmote } from './emotes.js';
 import { DEPTH } from './depth.js';
 import { TILE, dirTo } from './logic.js';
+import { stirCues } from './interactions.js';
+import { createGroundFinds } from './ground-finds.js';
 
 /** 挂在 VillageScene 上的过客与小事实体管理，不占 scene.js 行数。 */
 export function createFieldExtras(scene) {
   const walkers = new Map();
+  const ground = createGroundFinds(scene);
   let eventMark = null;
   let eventRing = null;
   let eventTween = null;
@@ -30,6 +33,7 @@ export function createFieldExtras(scene) {
 
   /** 按规则里的最新状态，把当前地图上的过客与小事记号摆出来。 */
   function sync() {
+    ground.sync();
     const { game } = scene.deps;
     const mapId = scene.map.id;
     const list = game.ask('visitors').active.filter(v => v.map === mapId);
@@ -142,6 +146,7 @@ export function createFieldExtras(scene) {
 
   /** 规则结算后把结果在世界里演出来：做动作、冒表情，状态与得失交给头顶飘字。 */
   function onFacts(facts) {
+    ground.onFacts(facts);
     const { platform } = scene.deps;
     let needSync = false;
     for (const f of facts) {
@@ -169,7 +174,14 @@ export function createFieldExtras(scene) {
     if (needSync) sync();
   }
 
+  /** 每一帧：有动静的地方晃一晃，地上的野货闪一闪、踩上去就捡。 */
+  function frame(delta) {
+    stirCues(scene, delta);
+    ground.frame(delta);
+  }
+
   function destroy() {
+    ground.destroy();
     clearEvent();
     for (const w of walkers.values()) destroyWalker(w);
     walkers.clear();
@@ -185,6 +197,7 @@ export function createFieldExtras(scene) {
     interactVisitor,
     interactEvent,
     onFacts,
+    frame,
     destroy,
   };
 }

@@ -61,7 +61,7 @@ export function randomPlay(seed, steps) {
 }
 
 // 钓鱼重做：存档多了一份钓鱼记录（fishing），采集里旧的钓鱼（outings.fish）去掉，插件多了一个
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: 'b436541f' };
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '7e50b678' };
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};

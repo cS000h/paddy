@@ -10,14 +10,17 @@ import { dateOf } from '../../content/calendar.js';
 import { ITEMS } from '../../content/items.js';
 import { FIND_TEXT, ACTIVITY_TEXT, STICKS_TEXT, STOWED } from '../../content/life-text.js';
 import { fill } from '../../content/text.js';
+import { FIRST_FINE, fineId } from '../../content/quality.js';
+import { SEARCH_LINES } from '../../content/search.js';
 import { atStation } from '../stations.js';
 
 // 找到东西时的一段话（沿用 0.12）：先找这件事自己的说法，没有就按找到的东西说。
-function foundLine(a, item, n) {
+// got 是实际到手的那样（可能是极品），故事照寻常的那样讲。
+function foundLine(a, item, n, got = item) {
   let story = ACTIVITY_TEXT[a.id] || FIND_TEXT[item] || '';
   if (a.id === 'forage') story = FIND_TEXT[item];
   if (a.id === 'sticks') story = n > 1 ? STICKS_TEXT.many : STICKS_TEXT.few;
-  return fill(story, { n }) + fill(STOWED, { item: ITEMS[item].name, n });
+  return fill(story, { n }) + fill(STOWED, { item: ITEMS[got].name, n });
 }
 
 function outing({ ask, person }, place, id, label) {
@@ -50,12 +53,14 @@ export const gathering = {
     'core',
     'compute',
     'weather',
+    'quality',
   ],
   writes: ['outings'],
   install(ctx) {
     registerResidentOptions(ctx, 'yun', c => outing(c, 'hill', 'tea', '茶垄今天能采吗？'));
     const { schema, commands, queries, reactions, people, pack, body, core, compute, weather } =
       ctx.services;
+    const { quality } = ctx.services;
     schema.slice('outings', {
       initial: (env, w) => Object.fromEntries(Object.keys(w.packs).map(id => [id, { counts: {} }])),
       validate: (all, w) =>
@@ -123,13 +128,26 @@ export const gathering = {
       const item = a.id === 'forage' ? core.weighted(w, table(w)) : a.item;
       const wetSticks = a.id === 'sticks' && weather.has(w, 'wet');
       const n = yieldOf(w, a, wetSticks ? 1 : a.n || 1);
-      pack.receive(w, people.who(w), item, n, '在野外找到的');
+      // 采到的也可能是极品。极品另占一格：在外头放不下就不抽，免得抽中了反倒采不成
+      const who = people.who(w);
+      const room = pack.fits(w, who, fineId(item)) || people.atHome(w, who);
+      const got = room
+        ? quality.roll(w, who, 'forage', {}, item)
+        : { item, fine: false, first: false };
+      pack.receive(w, who, got.item, n, '在野外找到的');
+      const name = ITEMS[got.item].name;
+      const more = got.first
+        ? fill(FIRST_FINE, { name })
+        : got.fine
+          ? fill(SEARCH_LINES.fine, { name })
+          : '';
       fact('forage.finished', {
-        who: people.who(w),
+        who,
         id: a.id,
-        item,
+        item: got.item,
         n,
-        line: foundLine(a, item, n),
+        fine: got.fine,
+        line: foundLine(a, item, n, got.item) + more,
       });
     });
     queries.define('outings', (w, station, at) => ({
