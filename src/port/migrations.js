@@ -18,6 +18,14 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  25(state) {
+    // 开局两选换成落脚单（content/settle.js）：选过两选的，落脚单五项都记成空的，不补发好处
+    const w = state.world;
+    w.meta.version = 26;
+    const blank = { reason: null, keepsake: null, family: null, own: null, friend: null };
+    for (const g of Object.values(w.growth)) if (g.origin) g.origin = { ...blank };
+    return state;
+  },
   24(state) {
     // 外乡过客（sim/plugins/passers.js）：谁都还没来过，明天清早起才有人路过
     const w = state.world;

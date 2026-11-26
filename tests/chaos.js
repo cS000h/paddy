@@ -10,7 +10,8 @@ import { ITEMS } from '../src/content/items.js';
 import { BASKET_WARES } from '../src/content/pantry.js';
 import { OUTDOOR, HOMEWORK } from '../src/content/activities.js';
 import { TEA_DEEDS } from '../src/content/market.js';
-import { ORIGINS } from '../src/content/growth.js';
+import { REASONS, KEEPSAKES, FAMILY, OLD_TIES } from '../src/content/settle.js';
+import { TEMPERS } from '../src/content/traits.js';
 import { ON_MAP } from '../src/content/people.js';
 import { CUTS, METHODS } from '../src/content/recipes.js';
 import { bestLog } from '../src/sim/cook-fire.js';
@@ -68,7 +69,20 @@ const JUNK = [
   ...[[], {}, [1, 2], { x: 1 }, 'x'.repeat(500), '1', 'all'],
 ];
 const KEYS = ['x', 'y', 'item', 'n', 'id', 'to', 'kind', 'shop', 'items', 'spices', 'method'];
-const MORE_KEYS = ['cut', 'log', 'value', 'minutes', 'route', 'reply', 'seed', 'dish', 'dir'];
+const MORE_KEYS = [
+  'cut',
+  'log',
+  'value',
+  'minutes',
+  'reason',
+  'keepsake',
+  'family',
+  'own',
+  'friend',
+  'seed',
+  'dish',
+  'dir',
+];
 const WEAR_KEYS = ['coat', 'hair'];
 
 /**
@@ -433,9 +447,14 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   }
 
   function origin() {
-    send('origin.choose', {
-      route: pick(ORIGINS.route).id,
-      reply: pick(ORIGINS.reply).id,
+    // 照落脚单的样子填：旧交情跟着缘由走，自己的性子和家里那个不在同一对里（偶尔撞上，被拒绝也好）
+    const reason = pick(Object.keys(REASONS));
+    send('origin.settle', {
+      reason,
+      keepsake: pick(Object.keys(KEEPSAKES)),
+      family: pick(Object.keys(FAMILY)),
+      own: pick(Object.keys(TEMPERS)),
+      friend: REASONS[reason].friend ?? pick(Object.keys(OLD_TIES)),
     });
   }
 
@@ -452,8 +471,11 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     cut: () => pick(Object.keys(CUTS)),
     items: () => some(Object.keys(ITEMS), int(1, 3)),
     spices: () => ['salt'],
-    route: () => pick(ORIGINS.route).id,
-    reply: () => pick(ORIGINS.reply).id,
+    reason: () => pick(Object.keys(REASONS)),
+    keepsake: () => pick(Object.keys(KEEPSAKES)),
+    family: () => pick(Object.keys(FAMILY)),
+    own: () => pick(Object.keys(TEMPERS)),
+    friend: () => pick(Object.keys(OLD_TIES)),
     seed: () => 'seed.qingcai',
   };
   function rough() {

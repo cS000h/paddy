@@ -1,7 +1,7 @@
 // 人物档案：每个人的性情、出身线和级、根骨天资、解闷毛病、心烦，和由这些合算出来的六项。
 // 主角和村民存在存档里；过客照编号和身份推出来（同一个人再来还是那副性子），等过客也要攒心烦时再存。
 // 主角的性情可以不满三个：开局草案二里，性情是头半个月做出来的（见执行方案 M10）。
-//   服务 persona.get(w, id)、persona.hasOld(w, id, 旧特质)、persona.fromOrigin(w, id, 旧特质们)、
+//   服务 persona.get(w, id)、persona.hasOld(w, id, 旧特质)、persona.settle(w, id, 性情, 出身线, 经验)、
 //        persona.attrs(w, id?) → { values, detail }、persona.visible(w, id) → 玩家看得出他哪几个性情
 //   查询 persona(id?) → 给画面看的档案，六项带明细。别人的档案只给看你知道的（见 seen）
 import { is } from '../../kernel/schema.js';
@@ -16,7 +16,6 @@ import {
   INNATE,
   COPING,
   OLD_TRAITS,
-  DEFAULT_LINE,
 } from '../../content/traits.js';
 import { PEOPLE, PERSONA } from '../../content/people.js';
 import { VISITOR_LINES } from '../../content/visitors.js';
@@ -135,18 +134,14 @@ export const persona = {
       return to.temper ? p.tempers.includes(to.temper) : p.line?.id === to.line;
     }
 
-    /** 开局两选定下的旧特质换成性情和出身线；同一对里只留先来的那个，不硬凑满三个。 */
-    function fromOrigin(w, id, traits, skillXp) {
+    /** 落脚单定下的性情和出身线（两个性情已查过不在同一对里）；出身线的级照对口本事现在的级算。 */
+    function settle(w, id, tempers, lineId, skillXp) {
       const p = w.persona[id];
-      for (const t of traits) {
-        const to = OLD_TRAITS[t];
-        if (!to) continue;
-        if (to.line) p.line = { id: to.line, lv: 1 };
-        else if (!p.tempers.some(x => TEMPERS[x].pair === TEMPERS[to.temper].pair))
-          p.tempers.push(to.temper);
-      }
-      p.line ??= { id: DEFAULT_LINE, lv: 1 };
-      p.line.lv = lineLevel(skillLevel(skillXp[LINES_OF_ORIGIN[p.line.id].skill] || 0));
+      p.tempers = [...tempers];
+      p.line = {
+        id: lineId,
+        lv: lineLevel(skillLevel(skillXp[LINES_OF_ORIGIN[lineId].skill] || 0)),
+      };
     }
 
     // 主角的对口本事升了级，出身线跟着看要不要升（只升不降）。
@@ -215,9 +210,6 @@ export const persona = {
     /** 玩家看得出这个人的哪几个性情（自己的全看得出）。 */
     const visible = (w, id) => new Set((get(w, id)?.tempers || []).slice(0, seen(w, id).tempers));
 
-    ctx.provide(
-      'persona',
-      Object.freeze({ get, hasOld, fromOrigin: ctx.own(fromOrigin), attrs, visible }),
-    );
+    ctx.provide('persona', Object.freeze({ get, hasOld, settle: ctx.own(settle), attrs, visible }));
   },
 };

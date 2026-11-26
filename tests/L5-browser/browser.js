@@ -108,8 +108,7 @@ export async function open(browser, port, options) {
   page.on('console', message => message.type() === 'error' && errors.push(message.text()));
   await page.goto(`http://127.0.0.1:${port}/?debug`);
   await page.waitForFunction(() => window.__dao?.world.scene()?.player, null, { timeout: 15000 });
-  await page.locator('[data-do="originPick"][data-id="later"]').click();
-  await page.locator('[data-do="originPick"][data-id="quiet"]').click();
+  await page.locator('[data-do="originSettle"]').click();
   return { page, errors };
 }
 

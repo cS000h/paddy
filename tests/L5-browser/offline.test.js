@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
 import { createGame } from '../../src/port/game.js';
+import { FIRST_SHEET } from '../../src/shell/settle.js';
 import { daylight } from '../../src/art/daylight.js';
 import { KEY } from '../../src/platform/storage.js';
 import { CHROME, until } from './browser.js';
@@ -57,8 +58,7 @@ test('单文件离线运行：手机做饭、导出导入、旧档升级、坏�
     });
     await page.goto(url);
     await ready(page);
-    await page.locator('[data-do="originPick"][data-id="later"]').tap();
-    await page.locator('[data-do="originPick"][data-id="quiet"]').tap();
+    await page.locator('[data-do="originSettle"]').tap();
     await page.evaluate(() => window.__dao.intents.emit('tap', { x: 10 * 16 + 8, y: 10 * 16 + 8 }));
     await frames(page);
     await page.locator('[data-do="recipes"]').tap();
@@ -107,9 +107,8 @@ test('单文件离线运行：手机做饭、导出导入、旧档升级、坏�
     );
     await ready(page);
     assert.equal(await page.evaluate(() => window.__dao.game.save().version), saved.version);
-    if (await page.locator('[data-do="originPick"]').count()) {
-      await page.locator('[data-do="originPick"][data-id="later"]').tap();
-      await page.locator('[data-do="originPick"][data-id="quiet"]').tap();
+    if (await page.locator('[data-do="originSettle"]').count()) {
+      await page.locator('[data-do="originSettle"]').tap();
     }
     await openSaves(page);
     assert.equal(await page.locator('[data-do="exportBackup"]').count(), 1);
@@ -154,8 +153,7 @@ test('单文件离线运行：手机做饭、导出导入、旧档升级、坏�
     const p = await denied.newPage();
     await p.goto(url);
     await ready(p);
-    await p.locator('[data-do="originPick"][data-id="later"]').tap();
-    await p.locator('[data-do="originPick"][data-id="quiet"]').tap();
+    await p.locator('[data-do="originSettle"]').tap();
     await openSaves(p);
     assert.match(await p.locator('.sheet').textContent(), /没有开放|没有写入成功/);
     const downloading = p.waitForEvent('download');
@@ -169,7 +167,7 @@ test('单文件离线运行：手机做饭、导出导入、旧档升级、坏�
 
 test('离线小屋读档即呈雨夜，早雾散去时室内曝光逐步改变', async () => {
   const game = createGame({ seed: 1 });
-  game.dispatch('origin.choose', { route: 'later', reply: 'quiet' });
+  game.dispatch('origin.settle', FIRST_SHEET);
   assert.ok(game.dispatch('travel', { x: 8, y: 9, at: { x: 8, y: 10, dir: 'up' } }).ok);
   const browser = await chromium.launch(CHROME);
   try {
@@ -241,7 +239,7 @@ test('离线小屋读档即呈雨夜，早雾散去时室内曝光逐步改变',
 
 test('点阿满预览不涨关系；订种先确认再扣款，成交收据可原地查看', async () => {
   const game = createGame({ seed: 1 });
-  game.dispatch('origin.choose', { route: 'later', reply: 'quiet' });
+  game.dispatch('origin.settle', FIRST_SHEET);
   assert.ok(game.dispatch('basket.put', { item: 'cake', n: 1 }).ok);
   assert.ok(game.dispatch('sleep', {}).ok);
   const saved = game.save();
@@ -299,7 +297,7 @@ test('点阿满预览不涨关系；订种先确认再扣款，成交收据可�
       await ctx.close();
     }
     const morning = createGame({ seed: 1 });
-    morning.dispatch('origin.choose', { route: 'later', reply: 'quiet' });
+    morning.dispatch('origin.settle', FIRST_SHEET);
     for (const [width, height] of [
       [1280, 720],
       [844, 390],
@@ -362,7 +360,7 @@ test('点阿满预览不涨关系；订种先确认再扣款，成交收据可�
 
 test('石伯田间指认：点作物能换畦，旋转手机仍指向正确的地', async () => {
   const g = createGame({ seed: 1 });
-  g.dispatch('origin.choose', { route: 'later', reply: 'quiet' });
+  g.dispatch('origin.settle', FIRST_SHEET);
   for (const x of [6, 7]) {
     const spot = { x, y: 19, at: { x, y: 18, dir: 'down' } };
     for (const type of ['farm.till', 'farm.sow', ...(x === 7 ? ['farm.water'] : [])])
@@ -442,7 +440,7 @@ test('石伯田间指认：点作物能换畦，旋转手机仍指向正确的�
 test('带着已订的约定读档，在茶摊从接话菜单赴约', async () => {
   const game = createGame({ seed: 1 });
   for (const [name, input] of [
-    ['origin.choose', { route: 'later', reply: 'quiet' }],
+    ['origin.settle', FIRST_SHEET],
     ['talk', { to: 'shi' }],
     ['invite', { to: 'shi' }],
     ['sleep', {}],

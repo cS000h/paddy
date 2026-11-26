@@ -1,6 +1,7 @@
 // 好感：一个人怎么看另一个人。好感 = 相性（看两人的性情）+ 一条条来由（存在存档里，到日子自己掉）
 // + 别的插件接进 compute 'opinion' 的（村民看主角时，乡邻插件加熟悉的层次）。
-// 主角做的几件事，村民记一条：送东西（送的是极品再记一条）、说话、赴约、约了没来、约了又推。
+// 主角做的几件事，村民记一条：送东西（送的是极品再记一条）、说话、赴约、约了没来、约了又推；
+// 落脚单上的旧交情，那位村民一直记着。
 // 村民之间开局就有几条交情。
 //   服务 opinion.of(w, 谁, 对谁) → { value, parts }、opinion.note(w, 谁, 对谁, 来由, n?)
 //   查询 opinion(谁, 对谁?) → 谁对谁（不写就是对主角）的好感和明细；明细按分量大的在前。
@@ -116,6 +117,7 @@ export const opinion = {
     reactions.on('person.talked', (s, e) => {
       if (e.data.gained) note(s.world, e.data.to, e.data.who, 'chat');
     });
+    reactions.on('origin.settled', (s, e) => note(s.world, e.data.friend, e.data.who, 'oldtie'));
     reactions.on('appointment.fulfilled', (s, e) => note(s.world, e.data.npc, me(s.world), 'met'));
     reactions.on('appointment.missed', (s, e) => note(s.world, e.data.npc, me(s.world), 'missed'));
     reactions.on('appointment.cancelled', (s, e) =>
