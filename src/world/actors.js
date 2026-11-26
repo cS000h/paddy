@@ -1,5 +1,5 @@
 // 会走路的人：玩家操控的人和按作息走动的村民，用的是同一套走路、朝向和动画。
-import { TILE, tileOf, dirTo, findPath, exitToward } from './logic.js';
+import { TILE, tileOf, dirTo, findPath, exitToward, plotToll } from './logic.js';
 import { ResidentWork } from './resident-work.js';
 import { showEmote } from './emotes.js';
 import { GREET } from '../content/resident-work.js';
@@ -185,11 +185,13 @@ export class Villager extends Walker {
     this.commuting = false;
     this.leaving = false;
     const walk = (x, y) => walkable(this.map, x, y);
+    const toll = plotToll(this.scene, this.map);
+    const route = (from, to) => findPath(walk, from, to, 4000, toll);
     const away = p => (p.visible ? p.map : null);
     if (!plan.visible || plan.map !== this.map.id) {
       const door =
         !jump && this.sprite.visible && exitToward(this.map, away(plan), this.id, this.tile);
-      const path = door && findPath(walk, this.tile, door);
+      const path = door && route(this.tile, door);
       if (!path) {
         this.stop();
         this.setVisible(false);
@@ -212,7 +214,7 @@ export class Villager extends Walker {
       this.face(plan.dir);
       this.setVisible(true);
     };
-    const path = jump || !this.sprite.visible ? null : findPath(walk, this.tile, plan);
+    const path = jump || !this.sprite.visible ? null : route(this.tile, plan);
     if (!path) {
       this.place(plan);
       this.stop();

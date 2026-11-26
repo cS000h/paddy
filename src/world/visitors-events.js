@@ -16,6 +16,7 @@ export function createFieldExtras(scene) {
   let eventMark = null;
   let eventRing = null;
   let eventTween = null;
+  const eventSpark = [];
 
   function clearEvent() {
     eventTween?.stop();
@@ -24,6 +25,11 @@ export function createFieldExtras(scene) {
     eventMark = null;
     eventRing?.destroy();
     eventRing = null;
+    for (const t of eventSpark) {
+      scene.tweens.killTweensOf(t);
+      t.destroy();
+    }
+    eventSpark.length = 0;
   }
 
   function destroyWalker(w) {
@@ -82,6 +88,26 @@ export function createFieldExtras(scene) {
         .image(px, py + 1, 'shadow')
         .setOrigin(0.5, 0.5)
         .setDepth(py - 0.5);
+      // 光一个「！」飘在草上看不出是什么事：地上再闪两点光，像那儿有样东西等人去看（G-14 图 07）
+      for (const [dx, dy, delay] of [
+        [-3, -2, 0],
+        [4, 1, 700],
+      ]) {
+        const spark = scene.add
+          .image(px + dx, py + dy, 'fx:glint')
+          .setDepth(py)
+          .setAlpha(0);
+        scene.tweens.add({
+          targets: spark,
+          alpha: 1,
+          duration: 520,
+          delay,
+          yoyo: true,
+          repeat: -1,
+          repeatDelay: 500,
+        });
+        eventSpark.push(spark);
+      }
       eventMark = scene.add
         .image(px, py - 14, 'emote:exclaim')
         .setOrigin(0.5, 1)

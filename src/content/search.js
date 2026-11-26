@@ -35,6 +35,8 @@ export const PERIODS = Object.freeze(['dawn', 'day', 'dusk', 'night']);
  *   minutes 翻一处花的工夫；cues 每天清早有动静的处数（最少、最多），雨后再多 wetCues 处；
  *   odds 常见、少见、稀罕各占几份；luck 没动静的地方翻出东西的机会（百分数：底子、连着没翻到每一回加多少、
  *   最少、最多），走计算管道 'search.chance'；event 有动静的地方碰上一件小事的机会（百分数）。
+ *   newcomer 刚来的人还没翻出过 kinds 样东西时，连着 misses 处空手，下一处就当有动静算：
+ *   不认得「动静」的新人清早翻三处全空，会以为翻找是个摆设（G-14 完成标准 3）。
  */
 export const SEARCH = Object.freeze({
   minutes: 3,
@@ -43,6 +45,7 @@ export const SEARCH = Object.freeze({
   odds: Object.freeze({ common: 6, uncommon: 2, rare: 0.6 }),
   luck: Object.freeze({ base: 3, miss: 2, min: 2, max: 20 }),
   event: 15,
+  newcomer: Object.freeze({ kinds: 2, misses: 1 }),
 });
 
 // 一条：翻出什么、多常见、哪几季有（null 是四季）、翻到时那句；more 里 wet 是雨后才有，

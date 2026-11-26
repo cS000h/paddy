@@ -30,7 +30,7 @@ export function dirTo(a, b) {
  * 寻路（四方向 A*）。walk(x, y) 说这一格能不能走。
  * 返回从起点之后到终点的一串格子；起点就是终点返回 []；走不到返回 null。
  */
-export function findPath(walk, from, to, limit = 4000) {
+export function findPath(walk, from, to, limit = 4000, toll = null) {
   if (from.x === to.x && from.y === to.y) return [];
   if (!walk(to.x, to.y)) return null;
   const key = (x, y) => x + ',' + y;
@@ -53,7 +53,7 @@ export function findPath(walk, from, to, limit = 4000) {
       const x = current.x + dx;
       const y = current.y + dy;
       if (!walk(x, y)) continue;
-      const g = current.g + 1;
+      const g = current.g + 1 + (toll ? toll(x, y) : 0);
       if (g >= (cost.get(key(x, y)) ?? Infinity)) continue;
       cost.set(key(x, y), g);
       came.set(key(x, y), key(current.x, current.y));
@@ -80,10 +80,19 @@ export function standBeside(walk, from, target) {
 }
 
 /**
+ * 村民寻路时锄过、种上的地记多少步：能绕就绕，老农不会从人家刚种的菜畦上踩过去（G-14 图 07）；
+ * 实在没别的路才踩。只看眼前这张图（别的图上的地画面里也没有）；没有地是 null。
+ */
+export function plotToll(scene, map) {
+  const plots = scene.map === map ? scene.plots : null;
+  return plots?.size ? (x, y) => (plots.has(x + ',' + y) ? 8 : 0) : null;
+}
+
+/**
  * 侧着身对着 target 做活，站哪一格：它左边或右边能走的那格，离人近的优先。
  * 返回 {x, y, face, path}；两边都站不了就原地，朝着它那一侧。
  */
-export function sideSpot(walk, from, target) {
+export function sideSpot(walk, from, target, toll = null) {
   let best = null;
   for (const [dx, face] of [
     [-1, 'right'],
@@ -91,7 +100,7 @@ export function sideSpot(walk, from, target) {
   ]) {
     const spot = { x: target.x + dx, y: target.y };
     if (!walk(spot.x, spot.y)) continue;
-    const path = findPath(walk, from, spot);
+    const path = findPath(walk, from, spot, 4000, toll);
     if (path && (!best || path.length < best.path.length)) best = { ...spot, face, path };
   }
   return best || { ...from, face: target.x < from.x ? 'left' : 'right', path: [] };

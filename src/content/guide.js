@@ -20,6 +20,12 @@ export const GOALS = Object.freeze([
     text: '和乡邻打个招呼',
     hint: '石伯常在田边，桂嫂在东边自家门口，走到跟前{do}',
   },
+  {
+    id: 'forage',
+    on: 'search.found',
+    text: '路边翻出一样野货',
+    hint: '叶子一晃、草里一闪的地方今天有动静，走到跟前{do}',
+  },
   { id: 'drink', on: 'water.drunk', text: '渴了喝口水', hint: '水井、水缸、溪边都能喝' },
   { id: 'eat', on: 'meal.eaten', text: '饿了吃点东西', hint: '打开行囊，米糕拿起来就能吃' },
   {

@@ -169,8 +169,15 @@ test('有动静的地方一定翻得出这一类当季的东西，头一回找�
   }
 });
 
+/** 已经翻出过几样东西的人（不再算刚来的，翻空了没有保底）。 */
+function seasoned(seed) {
+  const save = JSON.parse(JSON.stringify(newGame(seed).save()));
+  save.state.world.search.hero.found = { straw: 1, egg: 1, ash: 1 };
+  return createGame({ saved: save, debug: true });
+}
+
 test('没动静的地方多半空手，连着没翻到机会一回回加上去，翻到了清零', () => {
-  const g = newGame(8);
+  const g = seasoned(8);
   const luck0 = g.ask('search').luck.value;
   assert.equal(luck0, SEARCH.luck.base);
   let empty = 0;
@@ -194,6 +201,24 @@ test('没动静的地方多半空手，连着没翻到机会一回回加上去�
   }
   assert.ok(empty >= 1, '头一处就翻到了，换个种子');
   assert.ok(hit || empty >= 8);
+});
+
+test('刚来的人还没翻出过两样东西：没动静的地方空手一回，下一处当季翻得出的就保底给一样', () => {
+  const { kinds, misses } = SEARCH.newcomer;
+  for (let seed = 1; seed <= 30; seed++) {
+    const g = newGame(seed);
+    let run = 0;
+    for (const s of g.ask('search.spots', 'yard').filter(x => !x.cue)) {
+      const out = searchAt(g, 'yard', s);
+      if (!out.ok) continue;
+      if (out.facts.some(f => f.type === 'search.found')) run = 0;
+      else run += 1;
+      // 空手一回之后还空手，只能是这一处这季本来就翻不出东西（瓜棚开春就是空的）
+      assert.ok(run <= misses + 1, `种子 ${seed}：刚来就连着 ${run} 处空手`);
+      if (Object.keys(g.save().state.world.search.hero.found).length >= kinds) break;
+    }
+    assert.ok(Object.keys(g.save().state.world.search.hero.found).length >= kinds);
+  }
 });
 
 test('翻到能吃的野货会出极品，名字前带「极品」，极品比寻常的值钱', () => {
