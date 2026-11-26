@@ -26,12 +26,13 @@ export const teahouse = {
     'social',
     'residents',
     'weather',
+    'compute',
   ],
   writes: ['teaDays'],
   install(ctx) {
     const { schema, commands, queries, people, body, pack, store, core, clock, social } =
       ctx.services;
-    const { residents, weather } = ctx.services;
+    const { residents, weather, compute } = ctx.services;
 
     // 每人每天各做一回：记的是上一次做的日子。
     schema.slice('teaDays', {
@@ -100,9 +101,11 @@ export const teahouse = {
           line = TEA_TEXT.hawk;
           clock.elapse(w, deed.minutes, fact);
         } else {
-          const gossip = isFairDay(w.clock.day + 1)
+          // 村里刚出的事走计算管道 'tea.gossip'（比如昨天集日比鱼传开的那一句）
+          const usual = isFairDay(w.clock.day + 1)
             ? TEA_TEXT.fairTomorrow
             : core.stable(TEA_GOSSIP, w.clock.day);
+          const gossip = compute.run('tea.gossip', { w }, { value: usual, parts: [] }).value;
           line = fill(TEA_TEXT.listen, { forecast: weather.view(w).forecast.name, gossip });
           core.post(w, { title: '茶摊上听来的', text: line });
         }

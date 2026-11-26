@@ -36,7 +36,11 @@ export function createFieldExtras(scene) {
     ground.sync();
     const { game } = scene.deps;
     const mapId = scene.map.id;
-    const list = game.ask('visitors').active.filter(v => v.map === mapId);
+    // 集日渡口立木牌的外乡钓客也照过客的样子站着（sim/plugins/fair-match.js）
+    const host = game.ask('match');
+    const list = [...game.ask('visitors').active, ...(host ? [host] : [])].filter(
+      v => v.map === mapId,
+    );
     const keep = new Set(list.map(v => v.id));
     for (const [id, w] of walkers) {
       if (!keep.has(id)) {
@@ -163,10 +167,23 @@ export function createFieldExtras(scene) {
         const w = walkers.get(d.id);
         if (w) showEmote(scene, w, f.type === 'visitor.fulfilled' ? 'coin' : 'tea');
         platform.audio.play(f.type === 'visitor.fulfilled' ? 'harvest' : 'talk');
+      } else if (f.type.startsWith('match.') && f.type !== 'match.cast') {
+        // 比鱼：气泡里是钓客的话，旁白和围观的人说的一句一句冒在画面上
+        needSync = true;
+        for (const note of d.notes || []) scene.deps.shell.toast(note, true);
+        const w = walkers.get('match.' + d.host);
+        if (w && d.result) showEmote(scene, w, d.result === 'lose' ? 'coin' : 'sweat');
+        platform.audio.play(d.result === 'win' ? 'harvest' : 'talk');
       } else if (
-        ['day.started', 'action.performed', 'meal.cooked', 'tea.done', 'market.bought'].includes(
-          f.type,
-        )
+        [
+          'day.started',
+          'action.performed',
+          'meal.cooked',
+          'tea.done',
+          'market.bought',
+          'time.passed',
+          'match.cast',
+        ].includes(f.type)
       ) {
         needSync = true;
       }

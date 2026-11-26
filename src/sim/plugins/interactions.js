@@ -130,6 +130,10 @@ export const interactions = {
         here = at || me;
       const person = residents.positions(w).find(p => p.id === id && p.visible && p.map === me.map);
       if (person) return forResident(person, ask, here, walking, ctx.services.compute);
+      // 集日渡口立木牌的外乡钓客（sim/plugins/fair-match.js）
+      const host = ask('match');
+      if (host && host.id === id && host.map === me.map && near(here, host))
+        return ask('match.options');
       const visitor = ask('visitors').active.find(
         v => v.id === id && v.map === me.map && near(here, v),
       );

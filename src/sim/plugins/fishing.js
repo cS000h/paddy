@@ -82,10 +82,11 @@ export const fishing = {
       return Object.hasOwn(FISH_SPOTS, map) && atStation(w, people, 'fish', at) ? map : null;
     }
 
-    /** 这处钓点刚钓上几条还没缓过来：每过 FISHING.calm 分钟缓过来一条。 */
-    function scared(w, id, spot) {
+    /** 钓点刚钓上几条还没缓过来（每 FISHING.calm 分钟缓一条）；piped 再走 'fish.scare'（集日比鱼）。 */
+    function scared(w, id, spot, piped = false) {
       const s = w.fishing[id]?.spots[spot];
-      return s ? Math.max(0, s.n - Math.floor((now(w) - s.at) / FISHING.calm)) : 0;
+      const n = s ? Math.max(0, s.n - Math.floor((now(w) - s.at) / FISHING.calm)) : 0;
+      return piped ? compute.run('fish.scare', { w, who: id, spot }, { value: n }).value : n;
     }
 
     /** 这一竿有鱼来咬的把握：天气、清早傍晚、挂没挂饵、这儿惊没惊着，再走计算管道 'fish.bite'。 */
@@ -93,13 +94,14 @@ export const fishing = {
       let p = (FISH_BITE[w.weather.now] ?? 0.6) + FISHING.base;
       if (dusk(w)) p += FISHING.dusk;
       if (bait) p += FISHING.bait;
-      p -= FISHING.scare * scared(w, id, spot);
+      p -= FISHING.scare * scared(w, id, spot, true);
       p = compute.run('fish.bite', { w, who: id, spot }, { value: p, parts: [] }).value;
       return Math.max(FISHING.min, Math.min(FISHING.max, p));
     }
 
     function moodOf(w, id, spot) {
-      if (scared(w, id, spot) >= FISHING.spooked) return { mood: 'spooked', moodWord: '惊了' };
+      if (scared(w, id, spot, true) >= FISHING.spooked)
+        return { mood: 'spooked', moodWord: '惊了' };
       return biteRate(w, id, spot, false) >= FISHING.good
         ? { mood: 'good', moodWord: '鱼口好' }
         : { mood: 'fair', moodWord: '一般' };
