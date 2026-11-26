@@ -41,9 +41,12 @@ export function createFieldExtras(scene) {
     const mapId = scene.map.id;
     // 集日渡口立木牌的外乡钓客也照过客的样子站着（sim/plugins/fair-match.js）
     const host = game.ask('match');
-    const list = [...game.ask('visitors').active, ...(host ? [host] : [])].filter(
-      v => v.map === mapId,
-    );
+    // 路过的外乡过客（sim/plugins/passers.js）也一样
+    const list = [
+      ...game.ask('visitors').active,
+      ...(host ? [host] : []),
+      ...game.ask('passers'),
+    ].filter(v => v.map === mapId);
     const keep = new Set(list.map(v => v.id));
     for (const [id, w] of walkers) {
       if (!keep.has(id)) {
@@ -177,6 +180,14 @@ export function createFieldExtras(scene) {
         const w = walkers.get('match.' + d.host);
         if (w && d.result) showEmote(scene, w, d.result === 'lose' ? 'coin' : 'sweat');
         platform.audio.play(d.result === 'win' ? 'harvest' : 'talk');
+      } else if (f.type === 'passer.picked') {
+        // 过客：气泡里是他的话，旁白、村民插的话一句一句冒在画面上
+        needSync = true;
+        for (const note of d.notes || []) scene.deps.shell.toast(note, true);
+        const w = walkers.get(d.id);
+        if (w && d.end)
+          showEmote(scene, w, d.end === 'ok' ? 'heart' : d.end === 'bad' ? 'sweat' : 'tea');
+        platform.audio.play(d.end === 'ok' ? 'harvest' : 'talk');
       } else if (
         [
           'day.started',

@@ -130,6 +130,35 @@ export const MODIFIERS = Object.freeze({
     bite: -0.12,
   },
   // 集日比鱼赢来的称号（content/fair-match.js）
+  // 外乡过客那儿挣来的名声（G-15，content/passers.js）
+  passer_stove: {
+    name: '茶摊好灶',
+    kind: 'good',
+    days: 5,
+    desc: '一盘家常热菜吃服了城里挑嘴老食客，人情 +1',
+    attrs: { renqing: 1 },
+  },
+  passer_crop: {
+    name: '菜头压村',
+    kind: 'good',
+    days: 5,
+    desc: '集日板车前压过邻村把式，全村都知道你地里出尖货，持家 +1',
+    attrs: { chijia: 1 },
+  },
+  passer_eye: {
+    name: '识货明眼',
+    kind: 'good',
+    days: 5,
+    desc: '当众拆穿过卖假货的，再碰上耍心眼的过客更容易识破，阅历 +1',
+    attrs: { yueli: 1 },
+  },
+  passer_fair: {
+    name: '公道人',
+    kind: 'good',
+    days: 10,
+    desc: '断案不偏不倚，外村汉子都服你一句话，再断案时更服众，人情 +1',
+    attrs: { renqing: 1 },
+  },
   match_head: {
     name: '渡口头竿',
     kind: 'good',

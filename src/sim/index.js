@@ -47,6 +47,7 @@ import { modifiers } from './plugins/modifiers.js';
 import { events } from './plugins/events.js';
 import { visitors } from './plugins/visitors.js';
 import { fairMatch } from './plugins/fair-match.js';
+import { passers } from './plugins/passers.js';
 import { wardrobe } from './plugins/wardrobe.js';
 
 export { SAVE_VERSION };
@@ -90,6 +91,7 @@ export const PLUGINS = Object.freeze([
   events,
   visitors,
   fairMatch,
+  passers,
   wardrobe,
   interactions,
 ]);

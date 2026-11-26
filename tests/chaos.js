@@ -459,6 +459,14 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
         at: { x: ev.x, y: ev.y, dir: 'down' },
       });
     }
+    // 路过的外乡过客：在跟前随手挑一样（带不够、钱不够的会被拒）
+    const ps = game.ask('passers').filter(p => p.map === map && !p.done);
+    if (ps.length && chance(0.5)) {
+      const p = pick(ps);
+      const at = { x: p.x + pick([-1, 1]), y: p.y, dir: 'down' };
+      const rows = game.ask('passer.options', p.id);
+      if (rows.length) return send('passer.pick', { id: p.id, key: pick(rows).key, at });
+    }
     const vs = game.ask('visitors').active.filter(v => v.map === map);
     if (!vs.length) return;
     const v = pick(vs);
