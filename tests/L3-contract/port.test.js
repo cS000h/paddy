@@ -29,7 +29,7 @@ const COMMANDS = [
   'ground.pick',
   'gift',
   'homestead',
-  'origin.choose',
+  'origin.settle',
   'pack.put',
   'pack.take',
   'person.place',

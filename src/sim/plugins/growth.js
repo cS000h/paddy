@@ -1,8 +1,22 @@
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
-import { SKILLS, TRAITS, LEVELS, LEVEL_NAMES, ORIGINS } from '../../content/growth.js';
+import { SKILLS, TRAITS, LEVELS, LEVEL_NAMES } from '../../content/growth.js';
+import { REASONS, KEEPSAKES, FAMILY, OLD_TIES } from '../../content/settle.js';
 import { CALENDAR } from '../../content/calendar.js';
-import { OLD_TRAITS } from '../../content/traits.js';
+import { OLD_TRAITS, TEMPERS } from '../../content/traits.js';
+const SETTLE_KEYS = ['reason', 'keepsake', 'family', 'own', 'friend'];
+const TABLES = {
+  reason: REASONS,
+  keepsake: KEEPSAKES,
+  family: FAMILY,
+  own: TEMPERS,
+  friend: OLD_TIES,
+};
+/** 落脚单记下的五项：每项是表里的编号，或者都是空的（旧档的开局两选升上来的）。 */
+const originOk = o =>
+  is.keyedBy(o, SETTLE_KEYS) &&
+  (SETTLE_KEYS.every(k => o[k] === null) ||
+    SETTLE_KEYS.every(k => typeof o[k] === 'string' && Object.hasOwn(TABLES[k], o[k])));
 export const level = xp => LEVELS.reduce((lv, need, i) => (xp >= need ? i : lv), 0);
 export const growth = {
   id: 'sim.growth',
@@ -18,11 +32,23 @@ export const growth = {
     'body',
     'weather',
     'persona',
+    'store',
   ],
   writes: ['growth'],
   install(ctx) {
-    const { schema, commands, queries, reactions, compute, core, people, body, weather, persona } =
-      ctx.services;
+    const {
+      schema,
+      commands,
+      queries,
+      reactions,
+      compute,
+      core,
+      people,
+      body,
+      weather,
+      persona,
+      store,
+    } = ctx.services;
     schema.slice('growth', {
       initial: (env, w) =>
         Object.fromEntries(
@@ -47,10 +73,7 @@ export const growth = {
               g.traits.every(k => Object.hasOwn(TRAITS, k) && !Object.hasOwn(OLD_TRAITS, k)) &&
               is.obj(g.counters) &&
               ['wetOut', 'cold', 'hot', 'dawn', 'meals'].every(k => is.int(g.counters[k])) &&
-              (g.origin === null ||
-                (is.obj(g.origin) &&
-                  ORIGINS.route.some(o => o.id === g.origin.route) &&
-                  ORIGINS.reply.some(o => o.id === g.origin.reply))),
+              (g.origin === null || originOk(g.origin)),
           )) ||
         'growth',
     });
@@ -84,18 +107,33 @@ export const growth = {
       mine(w, id).traits.push(t);
       emit('trait.gained', { who: id, trait: t, name: TRAITS[t].name });
     };
-    commands.register('origin.choose', ({ draft, input, fact }) => {
+    // 落脚单：缘由、旧物（定出身线）、随家里来的性情、自己的性子（和家里那个不在同一对里）、旧交情。
+    // 缘由跟谁有旧，旧交情就是谁。只填一次；旧档（开局两选）升上来的五项都是空的。
+    commands.register('origin.settle', ({ draft, input, fact }) => {
       const w = draft.world,
         id = people.who(w),
         g = mine(w, id);
-      if (g.origin) refuse('已经选过了，日子往前过');
-      const a = ORIGINS.route.find(o => o.id === input.route),
-        b = ORIGINS.reply.find(o => o.id === input.reply);
-      if (!a || !b) refuse('想好两件小事，再开始这段日子');
-      g.origin = { route: a.id, reply: b.id };
-      persona.fromOrigin(w, id, [a.trait, b.trait], g.xp);
-      if (a.id === 'borrow') gain(w, id, fact, 'cook', Math.max(0, 4 - g.xp.cook), 'origin');
-      fact('origin.chosen', { who: id });
+      if (g.origin) refuse('已经落过脚了，日子往前过');
+      const pick = (table, key) =>
+        typeof input[key] === 'string' && Object.hasOwn(table, input[key]) ? input[key] : null;
+      const reason = pick(REASONS, 'reason'),
+        keepsake = pick(KEEPSAKES, 'keepsake'),
+        family = pick(FAMILY, 'family'),
+        own = pick(TEMPERS, 'own'),
+        friend = pick(OLD_TIES, 'friend');
+      if (!reason || !keepsake || !family || !own || !friend) refuse('落脚单还没填齐');
+      const home = FAMILY[family].temper;
+      if (TEMPERS[own].pair === TEMPERS[home].pair)
+        refuse(`「${TEMPERS[own].name}」和随家里来的「${TEMPERS[home].name}」合不到一个人身上`);
+      const tie = REASONS[reason].friend;
+      if (tie && tie !== friend) refuse('这一户的旧交情是定下的');
+      g.origin = { reason, keepsake, family, own, friend };
+      persona.settle(w, id, [home, own], KEEPSAKES[keepsake].line, g.xp);
+      const r = REASONS[reason];
+      if (r.coins > 0) store.earn(w, r.coins, '落脚时带来的');
+      if (r.coins < 0) store.pay(w, Math.min(store.coins(w), -r.coins), '落脚时手头紧');
+      for (const [item, n] of Object.entries(r.items)) store.add(w, item, n, '落脚时带来的');
+      fact('origin.settled', { who: id, reason, friend, line: r.first });
     });
     reactions.on(
       'action.performed',

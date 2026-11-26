@@ -92,6 +92,7 @@ export const household = {
     }));
 
     const water = w => home(w).can;
+    const coins = w => home(w).coins;
     /** 家里存的全部东西：{物品: 份数}。只读。 */
     const items = w => home(w).items;
 
@@ -102,6 +103,7 @@ export const household = {
         count,
         items,
         water,
+        coins,
         add,
         take,
         pay,

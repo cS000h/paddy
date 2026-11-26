@@ -1,7 +1,7 @@
 // L2 规则：六项属性、时限修正池、落到具体地点的小事与村中实景过客。一律通过端口发命令。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, refused, bestFire } from '../helpers.js';
+import { newGame, must, refused, settle, bestFire } from '../helpers.js';
 import { MAPS, walkable, farmable } from '../../src/content/maps/index.js';
 import { ATTRS, TEMPERS, LINES_OF_ORIGIN, OLD_TRAITS } from '../../src/content/traits.js';
 import { TRAITS } from '../../src/content/growth.js';
@@ -19,11 +19,11 @@ test('六项从底子 4 起，加上性情、出身线和身边风物，每项�
   );
   assert.ok(
     before.every(a => a.value === 4 && a.parts.length === 1),
-    '开局两选之前只有底子',
+    '填落脚单之前只有底子',
   );
   assert.deepEqual(g.ask('modifiers').list, []);
-  // 随和换成知足（人情 +1），爱热闹换成热络（人情 +2），出身先给农桑庄户一级（持家 +2）
-  must(g, 'origin.choose', { route: 'stay', reply: 'join' });
+  // 随家里来的知足（人情 +1），自己热络（人情 +2），旧镰是农桑庄户一级（持家 +2）
+  settle(g, { family: 'enough', own: 'gregarious' });
   assert.deepEqual(parts(attr('renqing')), [
     ['底子', 4],
     ['知足', 1],

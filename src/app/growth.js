@@ -1,5 +1,10 @@
-// 开局两选、小册子的翻页，以及成就、升级、新特质的提示。
-export function growthActions({ game, shell, run }) {
+import { REASONS } from '../content/settle.js';
+import { FIRST_SHEET, rollSheet, cycleSheet } from '../shell/settle.js';
+// 开局的落脚单、小册子的翻页，以及成就、升级、新特质的提示。
+// 正式玩时落脚单随机抽一户；调试和测试（网址带 ?debug）时开局固定是同一户，结果才对得上
+const firstSheet = debug => (debug ? { ...FIRST_SHEET } : rollSheet(Math.random));
+
+export function growthActions({ game, shell, run, debug = false }) {
   const edit = patch => shell.set({ modal: { ...shell.get().modal, ...patch } });
   return {
     book() {
@@ -33,15 +38,24 @@ export function growthActions({ game, shell, run }) {
       edit({ mod });
     },
     origin() {
-      shell.set({ modal: { kind: 'origin' } });
+      shell.set({ modal: { kind: 'origin', sheet: firstSheet(debug) } });
     },
-    originPick({ id }) {
-      const m = shell.get().modal;
-      if (!m.route) edit({ route: id });
-      else if (run('origin.choose', { route: m.route, reply: id }).ok) {
-        shell.set({ modal: null });
-        shell.toast('小院的日子，就从今天开始。');
-      }
+    originRoll() {
+      edit({ sheet: rollSheet(Math.random) });
+    },
+    originCycle({ key, dir }) {
+      edit({ sheet: cycleSheet(shell.get().modal.sheet, key, Number(dir)) });
+    },
+    originSettle() {
+      const sheet = shell.get().modal.sheet;
+      if (!run('origin.settle', sheet).ok) return;
+      shell.set({ modal: null });
+      const me = game.ask('persona');
+      const tempers = me.tempers.map(t => t.name).join('、');
+      shell.toast(
+        `${REASONS[sheet.reason].first}（性情：${tempers}；出身：${me.line.name}）`,
+        true,
+      );
     },
   };
 }

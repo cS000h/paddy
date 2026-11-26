@@ -25,7 +25,8 @@ import {
   mapOfPlace,
 } from '../../src/content/people.js';
 import { VISITOR_LINES, ROLE_IDS } from '../../src/content/visitors.js';
-import { SKILLS, LEVELS, ORIGINS } from '../../src/content/growth.js';
+import { SKILLS, LEVELS, TRAITS } from '../../src/content/growth.js';
+import { REASONS, KEEPSAKES, FAMILY, OLD_TIES } from '../../src/content/settle.js';
 import {
   ATTRS,
   MAIN_ATTRS,
@@ -40,7 +41,6 @@ import {
   INNATE,
   COPING,
   OLD_TRAITS,
-  DEFAULT_LINE,
 } from '../../src/content/traits.js';
 import { CROPS, ITEMS, TOOLS, cropStage, isRipe } from '../../src/content/items.js';
 import { CALENDAR, dateOf, timeOf } from '../../src/content/calendar.js';
@@ -230,6 +230,28 @@ test('日历：日期和钟点的换算', () => {
   assert.equal(timeOf(24 * 60).period, '夜深');
 });
 
+test('落脚单：一条出身线一件旧物，家里的性情、缘由的旧交情都在表里，字数照 G-16 的规矩', () => {
+  assert.deepEqual(
+    Object.values(KEEPSAKES)
+      .map(k => k.line)
+      .sort(),
+    Object.keys(LINES_OF_ORIGIN).sort(),
+  );
+  assert.deepEqual(Object.keys(OLD_TIES).sort(), [...ON_MAP].sort());
+  for (const [id, f] of Object.entries(FAMILY))
+    assert.ok(Object.hasOwn(TEMPERS, f.temper) && f.text.length <= 30, id);
+  for (const [id, r] of Object.entries(REASONS)) {
+    assert.ok(r.text.length <= 60 && r.first.length <= 30 && r.name.length <= 8, id);
+    assert.ok(r.friend === null || Object.hasOwn(OLD_TIES, r.friend), id);
+    assert.ok(
+      r.family.every(f => Object.hasOwn(FAMILY, f)),
+      id,
+    );
+    assert.ok(Number.isInteger(r.coins) && Object.keys(r.items).every(i => ITEMS[i]), id);
+  }
+  for (const t of Object.values(OLD_TIES)) assert.ok(t.note.length <= 30 && t.hello.length <= 30);
+});
+
 test('每个出入口的落脚处存在且可走；小屋家具和全部地点能从小院到达', () => {
   const seen = new Set(['yard']),
     todo = ['yard'];
@@ -361,13 +383,12 @@ test('特质表：八对性情各两个、方向相反，加减只落在六项�
     levels[t.line + t.lv] = id;
   }
   for (const [id, c] of Object.entries(COPING)) assert.ok(attrsOk(c.attrs) && c.relief, id);
-  const opening = [...ORIGINS.route, ...ORIGINS.reply].map(o => o.trait).sort();
-  assert.deepEqual(Object.keys(OLD_TRAITS).sort(), opening);
-  for (const to of Object.values(OLD_TRAITS))
+  for (const [id, to] of Object.entries(OLD_TRAITS))
     assert.ok(
-      to.temper ? Object.hasOwn(TEMPERS, to.temper) : Object.hasOwn(LINES_OF_ORIGIN, to.line),
+      Object.hasOwn(TRAITS, id) &&
+        (to.temper ? Object.hasOwn(TEMPERS, to.temper) : Object.hasOwn(LINES_OF_ORIGIN, to.line)),
+      id,
     );
-  assert.ok(Object.hasOwn(LINES_OF_ORIGIN, DEFAULT_LINE));
   // 村民的档案：三个性情各占一对，出身线和级、根骨都在表里；过客每种身份都写了出身线（可以空着）
   assert.deepEqual(Object.keys(PERSONA).sort(), [...ON_MAP].sort());
   for (const [id, p] of Object.entries(PERSONA)) {

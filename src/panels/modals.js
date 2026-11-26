@@ -5,7 +5,8 @@ import { wardrobeView, clothView } from './wardrobe.js';
 import { savesView } from './saves.js';
 import { marketView, teaView } from './market.js';
 import { weatherView, seedsView, fieldView } from './field.js';
-import { originView, bookView } from './book.js';
+import { bookView } from './book.js';
+import { settleView } from './settle.js';
 import { encounterView } from './encounter.js';
 import { eventView } from './pulse.js';
 import { activityView } from './activities.js';
@@ -28,7 +29,7 @@ const VIEWS = {
   weather: weatherView,
   seeds: seedsView,
   field: fieldView,
-  origin: originView,
+  origin: settleView,
   book: bookView,
   event: eventView,
   visitor: encounterView,
@@ -55,7 +56,7 @@ const VIEWS = {
 
 // 小窗摆在哪儿：
 //   dialogue  贴着下沿的一长条：说话、旁白、水边、歇息、钓鱼、挑一件活。世界在上面照样看得见，像戏里的一场；
-//   center    正中一张：开局的选择、确认、出错、全村地图；
+//   center    正中一张：开局的落脚单、确认、出错、全村地图；
 //   menu      右上角“更多”底下的一小列；
 //   side      其余的从右边展开成一整幅，高到顶，左边还看得见世界。
 const PLACE = {
@@ -81,7 +82,7 @@ const PLACE = {
 export const placementOf = modal => PLACE[modal.kind] || 'side';
 
 // 内容多的小窗用宽一点的纸。
-const WIDE = new Set(['store', 'basket', 'kitchen', 'recipes', 'market', 'map']);
+const WIDE = new Set(['origin', 'store', 'basket', 'kitchen', 'recipes', 'market', 'map']);
 // 这几种小窗必须在里面做出选择，点纸外面不会关掉。
 const MUST_ANSWER = new Set(['origin', 'trouble', 'notes']);
 

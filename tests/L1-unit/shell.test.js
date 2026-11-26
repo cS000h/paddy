@@ -1,6 +1,10 @@
 // L1 外壳里不依赖浏览器的部分：输入意图、外壳状态、寻路和“点一下该做什么”。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { rollSheet, cycleSheet, locked, FIRST_SHEET } from '../../src/shell/settle.js';
+import { FAMILY } from '../../src/content/settle.js';
+import { TEMPERS } from '../../src/content/traits.js';
+import { createGame } from '../../src/port/game.js';
 import { createIntents } from '../../src/shell/intents.js';
 import { createShellState } from '../../src/shell/state.js';
 import {
@@ -214,4 +218,25 @@ test('摇杆手感：死区里不动；一推就走、推到六成是全速；�
   const far = stickState(o, { x: 100 + STICK.radius * 3, y: 100 });
   assert.equal(far.origin.x, 100 + STICK.radius * 2);
   assert.ok(stickState(far.origin, { x: far.origin.x - 30, y: 100 }).move.x < 0);
+});
+
+test('落脚单：换一户抽出来的都填得进去，换性子跳过和家里同一对的，旧交情跟着缘由锁死', () => {
+  let seed = 7;
+  const rand = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 2 ** 32) % 1;
+  for (let i = 0; i < 200; i++) {
+    const g = createGame({ seed: i, debug: true });
+    const sheet = rollSheet(rand);
+    assert.equal(g.dispatch('origin.settle', sheet).ok, true, JSON.stringify(sheet));
+  }
+  const pair = id => TEMPERS[id].pair;
+  let s = { ...FIRST_SHEET };
+  for (let i = 0; i < 40; i++) {
+    s = cycleSheet(s, i % 2 ? 'own' : 'family', i % 3 ? 1 : -1);
+    assert.notEqual(pair(s.own), pair(FAMILY[s.family].temper));
+  }
+  assert.ok(locked(FIRST_SHEET, 'friend'));
+  assert.deepEqual(cycleSheet(FIRST_SHEET, 'friend', 1), FIRST_SHEET);
+  const keeper = cycleSheet({ ...FIRST_SHEET, reason: 'town' }, 'reason', 1);
+  assert.equal(keeper.reason, 'rest');
+  assert.equal(keeper.friend, 'yun');
 });

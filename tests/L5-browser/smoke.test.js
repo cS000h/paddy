@@ -268,8 +268,18 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.evaluate(() => window.__dao.shell.set({ modal: null }));
       await tap(p, 8, 9);
       await until(p, () => window.__dao.world.scene().map.id === 'cottage');
+      // 新开一局的种子是随机的，进屋时可能先碰上一件小事（米缸受潮之类）：关上再去橱柜
+      const shelf = 'button[data-do="packPut"][data-item="rice"]';
       await tap(p, 12, 6);
-      await until(p, () => !!document.querySelector('button[data-do="packPut"][data-item="rice"]'));
+      await until(
+        p,
+        `!!document.querySelector('${shelf}') || window.__dao.shell.get().modal?.kind === 'event'`,
+      );
+      if (!(await p.locator(shelf).count())) {
+        await p.evaluate(() => window.__dao.shell.set({ modal: null }));
+        await tap(p, 12, 6);
+        await until(p, `!!document.querySelector('${shelf}')`);
+      }
       const before = await p.evaluate(() => window.__dao.game.ask('body').hunger);
       await p.locator('button[data-do="packPut"][data-item="rice"][data-n="1"]').click();
       await p.locator('button[data-do="eat"][data-item="cake"]').last().click();
@@ -421,7 +431,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.getByRole('button', { name: '看人', exact: true }).click();
       assert.equal(await p.locator('.folio-identity h2').textContent(), visitor.name);
       await p.locator('[data-do="bookTab"][data-tab="traits"]').click();
-      assert.match(await p.locator('.sheet').textContent(), /慢热/);
+      assert.match(await p.locator('.sheet').textContent(), /随家里来.*歇息时多恢复4体力/s);
       await p.locator('[data-do="bookTab"][data-tab="achievements"]').click();
       assert.ok((await p.locator('.achievement-mark.earned').count()) > 0);
       await p.waitForTimeout(250);
@@ -477,6 +487,16 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
         assert.equal(await p.evaluate(() => window.__dao.game.ask('hero').map), id);
       };
       await go(8, 9, 'cottage');
+      // 游戏时辰跟着真实时间走：云端机器慢时，走到这儿已过了晌午，后面照作息找的村民
+      // （茶摊柜台前的小乔、后山的云姑）就对不上。那就先睡到第二天清早再逛。
+      if (await p.evaluate(() => window.__dao.game.ask('clock').minute > 12 * 60)) {
+        const day = await p.evaluate(() => window.__dao.game.ask('clock').day);
+        await p.evaluate(() => window.__dao.shell.set({ modal: { kind: 'sleep' } }));
+        await p.locator('button[data-do="sleep"]').click();
+        await until(p, `window.__dao.game.ask('clock').day === ${day + 1}`);
+        await until(p, () => window.__dao.shell.get().veil === 0);
+        await p.evaluate(() => window.__dao.shell.set({ modal: null }));
+      }
       await shot(p, session === desk ? 'cottage-desktop.png' : 'cottage-phone.png');
       await tap(p, 8, 4);
       await frames(p, 400);
@@ -547,18 +567,29 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.locator('[data-do="close"]').click();
       await performed(p);
       await go(26, 14, 'tea');
-      // 机器慢时现实时间走得多，到了申时小乔站在茶摊柜台前 (17,11)，点柜台就成了跟她说话：
-      // 站到柜台后头 (17,9) 朝下按「做」。过客多了茶摊边站的人也多，边走边等小窗冒出来。
-      await p.evaluate(() => {
-        const actor = window.__dao.world.scene().player;
-        actor.px = 17 * 16 + 8;
-        actor.py = 9 * 16 + 13;
-        actor.face('down');
-        actor.sync();
-      });
-      await p.keyboard.press('j');
-      await until(p, () => !!document.querySelector('[data-do="teaDo"][data-kind="listen"]'));
-      await p.locator('[data-do="teaDo"][data-kind="listen"]').click();
+      // 走到茶摊、小窗打开才点（云端的软件画面一帧几十毫秒，死数帧不够）。
+      // 游戏时辰跟着真实时间走，机器慢时到了傍晚，村民照作息坐到茶摊（小乔站在柜台正前面，
+      // qiao.tea），点过去就成了跟人说话：那就关上，坐到同属茶摊的桌边，打开同一张茶摊小窗。
+      const listen = '[data-do="teaDo"][data-kind="listen"]';
+      const opened =
+        `!!document.querySelector('${listen}') || ` +
+        `['talk', 'activity'].includes(window.__dao.shell.get().modal?.kind)`;
+      for (const [x, y] of [
+        [17, 10],
+        [9, 11],
+        [13, 12],
+      ]) {
+        await tap(p, x, y);
+        await until(p, opened);
+        if (await p.locator(listen).count()) break;
+        const kind = await p.evaluate(() => window.__dao.shell.get().modal.kind);
+        await p.evaluate(
+          k => window.__dao.shell.set({ modal: k === 'talk' ? null : { kind: 'tea' } }),
+          kind,
+        );
+        if (kind === 'activity') break;
+      }
+      await p.locator(listen).click();
       assert.match(await p.locator('.sheet').textContent(), /听邻桌东一句西一句/);
       await p.locator('[data-do="close"]').click();
       await go(26, 14, 'river');

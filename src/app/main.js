@@ -116,7 +116,7 @@ function start() {
     ...encounterActions(deps),
     ...marketActions(deps),
     ...fieldActions(deps),
-    ...growthActions(deps),
+    ...growthActions({ ...deps, debug }),
     ...pulseActions(deps),
     ...activityActions(deps),
     ...kitchenActions(deps),
@@ -146,7 +146,7 @@ function start() {
 
   growthNotices(game, shell);
   pulseNotices(game, shell);
-  if (!game.ask('growth').origin) shell.set({ modal: { kind: 'origin' } });
+  if (!game.ask('growth').origin) actions.origin();
   if (loadProblem) actions.saves();
 
   intents.on('tool', data => {

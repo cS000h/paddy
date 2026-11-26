@@ -158,7 +158,8 @@ export const COPING = Object.freeze({
 });
 
 /**
- * 开局两选给的六个旧特质换成什么：存档升级和新开局（M10 做好之前）都用它。
+ * 原先开局两选给的六个旧特质换成了什么：存档升级用它；它们的好处（歇息多回体力之类）
+ * 也照它挂在性情和出身线上，册子里写在那个性情底下。
  * 做出来的六个（雨中行者等）照旧，叫「历练」，不在这里。
  */
 export const OLD_TRAITS = Object.freeze({
@@ -169,7 +170,4 @@ export const OLD_TRAITS = Object.freeze({
   solitary: { temper: 'shy' },
   curious: { line: 'scholar' },
 });
-// 换过来不满三个性情也不补：补出来的性情会被当成玩家选过的旧特质，白得好处；
-// 开局草案二里性情本来就是头半个月做出来的。
-/** 没从旧特质里换出出身线时给的那一条。 */
-export const DEFAULT_LINE = 'farmer';
+// 换过来不满三个性情也不补：开局草案二里，第三个性情本来就是头半个月做出来的。

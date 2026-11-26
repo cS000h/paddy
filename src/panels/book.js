@@ -1,31 +1,10 @@
-// 开局的两个选择，和实体书签式「稻乡小册」（人物三层、本事、性情、成就、只读熟人册）。
-import { ORIGINS, TRAITS } from '../content/growth.js';
+// 实体书签式「稻乡小册」（人物三层、本事、性情、成就、只读熟人册）。性情页在 temper-page.js。
 import { personaBody, ledgerBody } from './person.js';
+import { temperPage } from './temper-page.js';
 import { catalogBody } from './catalog.js';
 import { uiIconImg, achievementImg } from './icons.js';
 import { ACHIEVEMENT_KINDS } from '../content/achievements.js';
 import { button, actions, close, title, para, esc, paged } from './html.js';
-
-const ORIGIN_STEPS = {
-  route: {
-    small: '一顿饭',
-    text: '暮色落下来，桂嫂把小院钥匙放在你手里。茶摊的饭香顺着风飘来，今晚怎么过？',
-  },
-  reply: { small: '第二天清早', text: '阿满挑着担子经过院门，笑着问：“今天有什么打算？”' },
-};
-
-export function originView(m) {
-  const step = m.route ? 'reply' : 'route';
-  const choices = ORIGINS[step].map(choice => {
-    const trait = TRAITS[choice.trait];
-    const html = `${esc(choice.text)}<small>获得「${esc(trait.name)}」：${esc(trait.effect)}</small>`;
-    return button('originPick', '', { data: { id: choice.id }, html });
-  });
-  return `${title('初来稻乡', ORIGIN_STEPS[step].small)}
-    ${para(ORIGIN_STEPS[step].text)}
-    <div class="origin-choices">${choices.join('')}</div>
-    ${para('开局这两问只定下起初的性情，往后的日子由你自己过。', 'aside')}`;
-}
 
 function modIcon(item) {
   if (item.kind === 'bad') return 'mod_cloud';
@@ -42,11 +21,6 @@ const skillRow = s => {
   const head = `<b>${esc(s.name)} · ${esc(s.title)}</b><small>${xp}</small>`;
   return `<li><span class="what">${head}${s.perks.map(perkLine).join('')}</span></li>`;
 };
-
-const traitRow = t =>
-  `<li class="${t.owned ? 'active-perk' : ''}"><span class="what">` +
-  `<b>${t.owned ? '已得' : '未得'} · ${esc(t.name)}</b>` +
-  `<small>${esc(t.effect)}</small><small>${esc(t.need || t.from)}</small></span></li>`;
 
 const achievementRow = a => {
   const state = a.day
@@ -97,7 +71,6 @@ const TABS = [
 
 function rowsOf(tab, game, kind = null) {
   if (tab === 'skills') return game.ask('growth').skills.map(skillRow);
-  if (tab === 'traits') return game.ask('growth').traits.map(traitRow);
   return game
     .ask('achievements')
     .filter(a => !kind || a.kind === kind)
@@ -139,12 +112,16 @@ export function bookView(m, game) {
     ([id, name, ico]) =>
       `<button class="book-tab ${tab === id ? 'on' : ''}" data-do="bookTab" data-tab="${id}" title="${name}" aria-label="${name}">${uiIconImg(ico, 24)}<span>${name}</span></button>`,
   ).join('');
-  const origin = game.ask('growth').origin ? '' : button('origin', '补记初来时的两件小事');
+  const origin = game.ask('growth').origin ? '' : button('origin', '补填落脚单');
   let body;
   let foot;
   if (tab === 'catalog') {
     body = catalogBody(m, game);
     foot = '';
+  } else if (tab === 'traits') {
+    const page = temperPage(m, game);
+    body = `${title('稻乡小册', '性情')}${page.body}`;
+    foot = actions(page.buttons, close('合上册子', false));
   } else if (tab === 'persona' || tab === 'ledger') {
     body =
       tab === 'ledger'

@@ -21,6 +21,13 @@ const run = (type, input) => {
   const out = game.dispatch(type, input);
   if (!out.ok) throw new Error(`${type} 被拒绝：${out.reason}`);
 };
+run('origin.settle', {
+  reason: 'keeper',
+  keepsake: 'basket',
+  family: 'kind',
+  own: 'gregarious',
+  friend: 'gui',
+});
 for (const x of [6, 7, 8])
   for (const step of ['farm.till', 'farm.sow', 'farm.water']) run(step, spot(x, 19));
 for (let day = 0; day < 12 && !game.ask('farm.plots', 'yard').every(p => p.ripe); day++) {
