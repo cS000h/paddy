@@ -21,6 +21,23 @@ export function must(game, type, input = {}) {
   return out.facts.map(f => f.type);
 }
 
+/**
+ * 填落脚单。没给的几项用一户「看守老院」的人家：旧镰（农桑庄户）、家里老辈行船（沉稳）、自己热络、
+ * 跟桂嫂有旧。缘由换成别的时，旧交情跟着缘由走（没锁死的给桂嫂）。
+ */
+export function settle(game, sheet = {}) {
+  const reason = sheet.reason ?? 'keeper';
+  const friend = { oldfriend: 'shi', rest: 'yun' }[reason] ?? 'gui';
+  return must(game, 'origin.settle', {
+    reason,
+    keepsake: 'sickle',
+    family: 'boat',
+    own: 'gregarious',
+    friend,
+    ...sheet,
+  });
+}
+
 /** 亲自掌火、样样按在正当时的记录：先问这一锅的节拍，再照着按（炒三拍、炖守火、烤翻面全中）。 */
 export const bestFire = (game, input) =>
   bestLog(game.ask('cook.preview', { ...input, log: null }).plan);

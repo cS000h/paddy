@@ -601,24 +601,6 @@
   image-rendering: pixelated;
 }
 
-.origin-choices {
-  display: grid;
-  gap: 10px;
-}
-
-.sheet .origin-choices button {
-  padding: 12px 14px;
-  text-align: left;
-  line-height: 1.6;
-}
-
-.origin-choices small {
-  display: block;
-  margin-top: 4px;
-  color: var(--ink-2);
-  font-size: 12.5px;
-}
-
 .active-perk {
   color: var(--qing) !important;
 }
@@ -963,4 +945,44 @@
 .event-key {
   color: var(--seal, #a83c2b);
   border-color: var(--seal, #a83c2b);
+}
+
+/* 开局的落脚单：一行一项，左右两个箭头换 */
+.items li.settle-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 28px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+.settle-row b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.settle-label {
+  min-width: 5em;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: normal;
+}
+.settle-row .settle-use {
+  color: var(--qing);
+}
+.sheet .settle-arrow {
+  min-width: 28px;
+  padding: 4px 0;
+  font-size: 18px;
+  line-height: 1;
+}
+.book-page h3 {
+  margin: 8px 0 4px;
+  font-size: 14px;
+}
+.book-page h3 small {
+  margin-left: 6px;
+  color: var(--ink-2);
+  font-weight: normal;
+  font-size: 12px;
 }

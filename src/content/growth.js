@@ -1,4 +1,5 @@
 // 0.12的技能等级与十二个特质；获得条件由成长插件判断。
+// 前六个原是开局两选给的，现在挂在性情和出身线上（content/traits.js 的 OLD_TRAITS），后六个叫「历练」。
 export const LEVELS = [0, 4, 10, 18, 30, 45];
 export const LEVEL_NAMES = ['生疏', '入门', '熟手', '在行', '老练', '行家'];
 export const SKILLS = {
@@ -36,24 +37,24 @@ export const SKILLS = {
 export const TRAITS = {
   easygoing: {
     name: '随和',
-    from: '序章里，你留在茶摊和大家一起吃了饭',
+    from: '性情知足的人都这样',
     effect: '聊日常时，关系多涨1点',
   },
-  handy: { name: '自己动手', from: '序章里，你借了锅回院自己做饭', effect: '做饭时厨艺经验 +1' },
+  handy: { name: '自己动手', from: '性情勤勉的人都这样', effect: '做饭时厨艺经验 +1' },
   slowwarm: {
     name: '慢热',
-    from: '序章里，你想先回院子歇一歇',
+    from: '性情沉稳的人都这样',
     effect: '歇息时多恢复4体力，心情也好一点',
   },
-  lively: { name: '爱热闹', from: '第二天早上，你坐下来陪阿满聊天', effect: '聊天、送饭后心情 +2' },
+  lively: { name: '爱热闹', from: '性情热络的人都这样', effect: '聊天、送饭后心情 +2' },
   solitary: {
     name: '独行',
-    from: '第二天早上，你想先自己转转',
+    from: '性情怕生的人都这样',
     effect: '采集多得1点经验，心情 +2',
   },
   curious: {
     name: '好问',
-    from: '第二天早上，你问起了村里的事',
+    from: '出身耕读传家的人都这样',
     effect: '问人天色时听得更准，看天经验 +1',
   },
 
@@ -93,17 +94,4 @@ export const TRAITS = {
     need: '和村里人的熟悉度合计达到20',
     effect: '街坊会主动招呼你，有些事会找上门',
   },
-};
-
-export const ORIGINS = {
-  route: [
-    { id: 'stay', trait: 'easygoing', text: '留在茶摊，和大家一起吃饭' },
-    { id: 'borrow', trait: 'handy', text: '借口锅，回院自己做饭' },
-    { id: 'later', trait: 'slowwarm', text: '先回院里坐坐，慢慢认识大家' },
-  ],
-  reply: [
-    { id: 'join', trait: 'lively', text: '坐下来陪阿满聊一会儿' },
-    { id: 'quiet', trait: 'solitary', text: '先沿溪边自己走一走' },
-    { id: 'ask', trait: 'curious', text: '问问村里的路和明天的天气' },
-  ],
 };
