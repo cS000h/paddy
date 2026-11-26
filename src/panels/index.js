@@ -86,6 +86,10 @@ export function createPanels({
   }
 
   // “下一步”：刚换了目标时连怎么做一起说，过一会儿收成一行；点一下再展开。
+  // 矮屏（横着的手机）上只有三百来像素高，换了目标也只亮一行，不自己展开，免得跟头顶的气泡打架（G-14 第 5 条）。
+  function nudgeNext() {
+    if (!small(platform.device.profile())) openNext();
+  }
   function openNext() {
     el.next.classList.add('open');
     clearTimeout(nextTimer);
@@ -297,7 +301,7 @@ export function createPanels({
       renderAll();
       renderFeed();
       const goal = el.next.textContent;
-      if (goal && goal !== lastNext) openNext();
+      if (goal && goal !== lastNext) nudgeNext();
       lastNext = goal;
       if (shell.get().modal) renderModal(shell.get(), true);
     }),
@@ -320,7 +324,7 @@ export function createPanels({
   renderAll();
   renderShell(shell.get());
   lastNext = el.next.textContent;
-  if (lastNext) openNext();
+  if (lastNext) nudgeNext();
   return {
     refresh: renderAll,
     destroy() {

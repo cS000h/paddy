@@ -1,6 +1,6 @@
 import { walkable } from '../content/maps/index.js';
 import { actionTexture, playBody, supportedAct } from './action-texture.js';
-import { findPath, sideSpot } from './logic.js';
+import { findPath, plotToll, sideSpot } from './logic.js';
 
 import { RESIDENT_WORK } from '../content/resident-work.js';
 
@@ -36,11 +36,17 @@ export class ResidentWork {
     )
       return;
     const hero = p.scene.player.tile;
+    // 站到地边看，不站到旁边那格菜畦上；走过去也绕开种上的地
+    const toll = plotToll(p.scene, p.map);
     const spot = sideSpot(
       (x, y) =>
-        walkable(p.map, x, y) && (x !== hero.x || y !== hero.y) && (x !== plot.x || y !== plot.y),
+        walkable(p.map, x, y) &&
+        (x !== hero.x || y !== hero.y) &&
+        (x !== plot.x || y !== plot.y) &&
+        !toll?.(x, y),
       p.tile,
       plot,
+      toll,
     );
     if (Math.abs(spot.x - plot.x) !== 1 || spot.y !== plot.y) return;
     this.visitDay = day;
@@ -92,7 +98,9 @@ export class ResidentWork {
     this.inspectDir = null;
     const [dx, dy] = stops[this.stopIndex];
     const goal = { x: p.plan.x + dx, y: p.plan.y + dy };
-    const path = findPath((x, y) => walkable(p.map, x, y), p.tile, goal);
+    const toll = plotToll(p.scene, p.map);
+    if (toll?.(goal.x, goal.y)) return; // 落脚点让人锄成了地，就在原处接着干
+    const path = findPath((x, y) => walkable(p.map, x, y), p.tile, goal, 4000, toll);
     if (path) p.walk(path, () => p.face(p.plan.dir));
   }
 

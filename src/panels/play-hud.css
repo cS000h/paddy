@@ -258,6 +258,11 @@
 #ui.modal-open .toolbar {
   visibility: hidden;
 }
+/* 手记抽屉贴着右上角拉出来，盖住身体四样的一半，露出半个「力」圈不好看，干脆让开（G-14 图 16） */
+#ui.drawer-open .vitals {
+  opacity: 0;
+  pointer-events: none !important;
+}
 #ui.modal-open .vitals,
 #ui.modal-open .journal {
   visibility: hidden;

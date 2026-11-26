@@ -250,8 +250,21 @@ button:focus-visible {
   letter-spacing: 0.12em;
 }
 
+.next span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.next.open span {
+  white-space: normal;
+  text-wrap: balance;
+}
+
 .next small {
   grid-column: 1 / -1;
+  text-wrap: balance;
   max-height: 0;
   overflow: hidden;
   opacity: 0;
@@ -263,7 +276,7 @@ button:focus-visible {
 }
 
 .next.open small {
-  max-height: 4.5em;
+  max-height: 6em;
   margin-top: 2px;
   opacity: 1;
 }
@@ -704,6 +717,8 @@ button:focus-visible {
   font-size: 16px;
   line-height: 1.65;
   text-align: center;
+  /* 两行时两行一样长，不在第二行只挂两三个字（G-14 图 08） */
+  text-wrap: balance;
   transform: translateX(-50%);
   animation: band 3.8s ease both;
 }

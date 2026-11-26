@@ -94,7 +94,11 @@ export function hintFor(scene, t) {
     const why = game.ask('search.why', { x: t.decor.x, y: t.decor.y }, scene.at());
     if (!why) {
       const cost = costText(game.ask('action.cost', 'search'));
-      return { text: `翻一翻 · ${cost}`, verb: '翻翻', ok: true };
+      // 有动静的那几处当面说出来：光靠叶子晃一晃，新来的人认不出（G-14 完成标准 3）
+      const cue = game
+        .ask('search.spots', scene.map.id)
+        .some(s => s.cue && s.x === t.decor.x && s.y === t.decor.y);
+      return { text: `${cue ? '这儿有动静，' : ''}翻一翻 · ${cost}`, verb: '翻翻', ok: true };
     }
     if (why === SEARCH_LINES.done || why === SEARCH_LINES.nothing)
       return { text: p.hint, verb: p.verb, ok: true };

@@ -203,9 +203,11 @@ export const search = {
       const s = w.search[who];
       s.done.push(spot.id);
       const cued = s.cues.includes(spot.id);
+      const { kinds, misses } = SEARCH.newcomer;
+      const newcomer = Object.keys(s.found).length < kinds && s.miss >= misses;
       const where = { who, map: spot.map, x: spot.x, y: spot.y, kind: spot.kind, cued };
       let pool = [];
-      if (cued) pool = finds(w, spot, true);
+      if (cued || newcomer) pool = finds(w, spot, true);
       else if (core.random(w) * 100 < luck(w, who).value) pool = finds(w, spot, false);
       if (!pool.length) {
         s.miss = Math.min(999, s.miss + 1);
