@@ -411,6 +411,11 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await household.click();
       assert.match(await p.locator('.folio-detail').textContent(), /底子/);
       if (session === desk) await shot(p, 'a03a-person-desktop.png');
+      const stress = p.locator('.folio-stress');
+      assert.ok(await stress.isVisible());
+      for (const label of ['平', '烦', '快憋不住'])
+        assert.ok(await stress.getByText(label, { exact: true }).isVisible());
+      if (session === desk) await shot(p, 'a10-stress-desktop.png');
       await household.click();
       assert.equal(await p.locator('.folio-detail').count(), 0);
       if (session === wide) await shot(p, 'a03a-person-phone.png');

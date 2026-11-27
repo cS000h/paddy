@@ -77,6 +77,7 @@ export function growthActions({ game, shell, run, debug = false }) {
   };
 }
 export function growthNotices(game, shell) {
+  let lastOrdinaryDay = null;
   game.onCommit(facts => {
     const leveled = facts.filter(f => f.type === 'skill.leveled');
     const traits = facts.filter(f => f.type === 'trait.gained');
@@ -89,11 +90,27 @@ export function growthNotices(game, shell) {
     const near = facts.find(f => f.type === 'achievement.near');
     if (near && !messages.length)
       shell.toast(`再${near.data.left}回，就是「${near.data.name}」了。`);
-    // 心烦：涨过一档、用毛病解了闷才说一句；顺着违着性子的那句留给以后的旁白（A-03）
+    // 心烦：先说过档或解闷的话，顺着、违着性子的寻常话每天只说一次
     const vex = facts.find(
       f => f.type === 'stress.changed' && f.data.line && (f.data.crossed || !f.data.tag),
     );
     if (vex) shell.toast(vex.data.reply ? `${vex.data.line}${vex.data.reply}` : vex.data.line);
+    else {
+      const ordinary = facts.find(
+        f =>
+          f.type === 'stress.changed' &&
+          f.data.line &&
+          f.data.tag != null &&
+          f.data.crossed === false,
+      );
+      if (ordinary) {
+        const day = game.ask('clock').day;
+        if (day !== lastOrdinaryDay) {
+          lastOrdinaryDay = day;
+          shell.toast(ordinary.data.line);
+        }
+      }
+    }
     // 做事攒性情：冒出来问你认不认、满半个月落定、违着家里带来的性情心里冒一句
     const offered = facts.find(f => f.type === 'leaning.offered');
     if (offered) shell.toast(offered.data.line + '（翻开册子的「人物」页，认下或再看看）', true);

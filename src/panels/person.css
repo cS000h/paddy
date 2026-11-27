@@ -62,8 +62,7 @@
 .folio .folio-picker button {
   min-height: 44px;
 }
-.folio-identity,
-.folio-stress {
+.folio-identity {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -98,7 +97,52 @@
   border: 1px dashed var(--frame-2);
 }
 .folio-stress {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 4px;
   margin-top: 6px;
+}
+.stress-levels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+}
+.stress-levels small {
+  padding: 1px 3px;
+  border: 1px solid transparent;
+}
+.stress-levels [aria-current='true'] {
+  border-color: var(--frame);
+}
+.stress-track {
+  grid-column: 1 / -1;
+  height: 7px;
+  border: 1px solid var(--frame-2);
+  background: var(--mist);
+}
+.stress-track i {
+  display: block;
+  height: 100%;
+  background: var(--sprout);
+}
+.stress-stamp {
+  white-space: nowrap;
+  padding: 0 3px;
+  border: 1px solid currentColor;
+  color: var(--cinnabar);
+}
+.folio-stress:has(.stress-stamp) .stress-track i {
+  background: var(--cinnabar);
+}
+.stress-choices {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.stress-choices > small {
+  grid-column: 1 / -1;
+}
+.compact .stress-choices {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 100px), 1fr));
 }
 /* 憋不住了：心烦满了，挑一个解闷的法子（一直带着） */
 .folio-snap {
