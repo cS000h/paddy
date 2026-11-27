@@ -492,11 +492,67 @@ button:focus-visible {
 }
 
 .toolbar .chip {
+  white-space: nowrap;
   position: relative;
   height: 36px;
   padding: 0 11px;
   border-radius: var(--r);
   font-size: 13.5px;
+}
+
+/* 农具那一组：在自家院里才摆出来；平时和行囊排在同一行 */
+.toolbar .farm {
+  display: contents;
+}
+.toolbar .farm[hidden] {
+  display: none;
+}
+
+/* 行囊那排：一格一样东西，空格是虚线，带汤的饭菜占两格宽 */
+.toolbar .slots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.toolbar .slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: var(--r-card);
+  background: rgba(250, 247, 238, 0.66);
+}
+.toolbar .slot.wide {
+  width: 101px;
+}
+.toolbar .slot img {
+  width: 28px;
+  height: 28px;
+}
+.toolbar .slot img.served-dish {
+  width: 40px;
+  height: 31px;
+}
+.toolbar .slot.empty {
+  border: 1px dashed var(--line);
+  background: none;
+}
+.toolbar .slot.on {
+  background: var(--moon);
+  border: 2px solid var(--qing);
+  box-shadow: 0 6px 12px rgba(51, 83, 106, 0.28);
+  transform: translateY(-4px);
+}
+.toolbar .slots.full .slot {
+  animation: pack-full 0.4s ease-in-out 3;
+}
+@keyframes pack-full {
+  50% {
+    border-color: var(--cinnabar);
+    box-shadow: 0 0 0 2px var(--cinnabar);
+  }
 }
 
 /* 面前那格地长了草、生了虫：“看地”点上一点朱砂 */

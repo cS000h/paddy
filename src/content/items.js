@@ -79,7 +79,7 @@ export const CROPS = Object.freeze({
   },
 });
 
-// 工具栏的顺序就是数字键 1–4 的顺序。
+// 工具栏上农具的顺序（Q、R 照这个顺序换）。数字键 1–8 拿的是行囊里的格子。
 export const TOOLS = Object.freeze([
   { id: 'hoe', name: '锄头', verb: '锄地' },
   { id: 'seed', name: '菜种', verb: '播种' },

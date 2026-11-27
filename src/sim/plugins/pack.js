@@ -238,6 +238,41 @@ export const pack = {
 
     const view = ([item, n]) => ({ ...ITEMS[item], n, eat: eatenAs(item) });
 
+    /**
+     * 行囊一格一格地摆出来（底栏就照这个画）：顺序是东西放进行囊的先后。
+     * 鱼都在一只鱼篓里、野货在竹篮里，各算一格；饭菜一碗一格，带汤的占两格。
+     * key 在这件东西留在行囊里时不变，底栏拿它记「拿在手里的是哪一格」。
+     */
+    function slotsOf(p) {
+      const out = [];
+      const group = {};
+      const join = (key, name, icon, id, n) => {
+        if (!group[key]) {
+          group[key] = { key, slot: key, name, icon, size: 1, n: 0, members: [] };
+          out.push(group[key]);
+        }
+        if (id === 'basket') group[key].icon = 'basket';
+        else group[key].members.push({ ...ITEMS[id], id, n, eat: eatenAs(id) });
+        if (id !== 'basket') group[key].n += n;
+      };
+      for (const [id, n] of Object.entries(p.items)) {
+        if (inCreel(id)) join('creel', '鱼篓', id, id, n);
+        else if (id === 'basket' || inBasket(p.items, id)) join('basket', '竹篮', 'basket', id, n);
+        else out.push({ ...view([id, n]), key: id, slot: 'item', icon: id });
+      }
+      for (const d of p.dishes)
+        out.push({
+          key: 'dish:' + d.id,
+          slot: 'dish',
+          id: d.id,
+          name: d.name,
+          dish: d,
+          n: 1,
+          size: dishSize(d),
+        });
+      return out;
+    }
+
     // 眼下够得着的每一样东西（身上的加上在院里时家里的），和它能拿来做什么。
     // 送人、放进收菜筐、下锅，画面都从这一张单子里挑。
     queries.define('goods', (w, at) => {
@@ -269,6 +304,7 @@ export const pack = {
         atHome: home,
         items: Object.entries(p.items).map(view),
         dishes: p.dishes,
+        slots: slotsOf(p),
         flask: hasFlask ? { left: p.flask, max: BODY.flaskSips } : null,
       };
     });

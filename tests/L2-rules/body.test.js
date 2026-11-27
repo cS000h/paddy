@@ -199,6 +199,28 @@ test('行囊：一格放一样，一共 6 格；在自家院里才能和橱柜�
   assert.equal(refused(g, 'pack.take', { item: 'bean' }), '身上没带豆子');
 });
 
+test('行囊一格一格摆出来：顺序是放进去的先后，底栏照这个画', () => {
+  const g = newGame();
+  must(g, 'pack.put', { item: 'rice', n: 2, at: HOME });
+  must(g, 'pack.put', { item: 'egg', at: HOME });
+  const slots = g.ask('pack').slots;
+  assert.deepEqual(
+    slots.map(s => [s.key, s.slot, s.n]),
+    [
+      ['seed.qingcai', 'item', 12],
+      ['cake', 'item', 2],
+      ['rice', 'item', 2],
+      ['egg', 'item', 1],
+    ],
+  );
+  assert.equal(slots.find(s => s.key === 'cake').eat.full > 0, true, '能直接吃的带着吃法');
+  must(g, 'pack.take', { item: 'cake', n: 'all', at: HOME });
+  assert.deepEqual(
+    g.ask('pack').slots.map(s => s.key),
+    ['seed.qingcai', 'rice', 'egg'],
+  );
+});
+
 test('用东西先用身上的，不够的从家里补；够得着的东西列成一张单子', () => {
   const g = newGame();
   must(g, 'pack.put', { item: 'veg.qingcai', n: 1, at: HOME });
