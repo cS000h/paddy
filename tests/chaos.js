@@ -435,6 +435,10 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   }
 
   function time() {
+    // 憋不住了就挑一个解闷的法子；偶尔没憋着也挑一回（该被拒绝）
+    const snap = game.ask('stress').snap;
+    if (snap) send('stress.cope', { coping: pick(snap.choices).id });
+    else if (chance(0.02)) send('stress.cope', { coping: 'drink' });
     if (chance(0.25)) send('sleep', { at: here() });
     else send('clock.advance', { minutes: pick([10, 10, 10, 30, 60, 120]) });
   }

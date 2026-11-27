@@ -2,7 +2,8 @@
 // 主角和村民存在存档里；过客照编号和身份推出来（同一个人再来还是那副性子），等过客也要攒心烦时再存。
 // 主角的性情可以不满三个：开局草案二里，性情是头半个月做出来的（见执行方案 M10）。
 //   服务 persona.get(w, id)、persona.hasOld(w, id, 旧特质)、persona.settle(w, id, 性情, 出身线, 经验)、
-//        persona.attrs(w, id?) → { values, detail }、persona.visible(w, id) → 玩家看得出他哪几个性情
+//        persona.attrs(w, id?) → { values, detail }、persona.visible(w, id) → 玩家看得出他哪几个性情、
+//        persona.vex(w, id, 加减) → 心烦、persona.addCoping(w, id, 毛病)（心烦怎么涨落在 sim.stress）
 //   查询 persona(id?) → 给画面看的档案，六项带明细。别人的档案只给看你知道的（见 seen）
 import { is } from '../../kernel/schema.js';
 import {
@@ -210,6 +211,32 @@ export const persona = {
     /** 玩家看得出这个人的哪几个性情（自己的全看得出）。 */
     const visible = (w, id) => new Set((get(w, id)?.tempers || []).slice(0, seen(w, id).tempers));
 
-    ctx.provide('persona', Object.freeze({ get, hasOld, settle: ctx.own(settle), attrs, visible }));
+    /** 心烦加减，限在 0 到 100；只有存在存档里的人（主角、村民）记心烦。返回加减以后是多少。 */
+    function vex(w, id, delta) {
+      const p = w.persona[id];
+      if (!p) return 0;
+      p.stress = Math.max(0, Math.min(100, p.stress + Math.round(delta)));
+      return p.stress;
+    }
+    /** 染上一个解闷毛病（一直带着）。已经有了就不再加。 */
+    function addCoping(w, id, coping) {
+      const p = w.persona[id];
+      if (!p || !Object.hasOwn(COPING, coping) || p.coping.includes(coping)) return false;
+      p.coping.push(coping);
+      return true;
+    }
+
+    ctx.provide(
+      'persona',
+      Object.freeze({
+        get,
+        hasOld,
+        settle: ctx.own(settle),
+        attrs,
+        visible,
+        vex: ctx.own(vex),
+        addCoping: ctx.own(addCoping),
+      }),
+    );
   },
 };

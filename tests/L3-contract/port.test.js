@@ -58,6 +58,7 @@ const COMMANDS = [
   'visitor.fulfill',
   'wardrobe.wear',
   'wardrobe.buy',
+  'stress.cope',
 ];
 const QUERIES = [
   'persona',
@@ -110,6 +111,10 @@ const QUERIES = [
   'events',
   'visitors',
   'wardrobe',
+  'purse',
+  'heard',
+  'stress',
+  'deeds',
 ];
 
 test('端口对外只有这几样', () => {

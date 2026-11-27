@@ -28,6 +28,7 @@ export const WHY = Object.freeze({
   cancelled: { label: '约了又推了',     n: -4,  days: 14,   stack: 2 },
   helped:    { label: '帮过一把',       n: 4,   days: 30,   stack: 3 },
   sly:       { label: '见你昧下人家的东西', n: -10, days: 30, stack: 2 },
+  outburst:  { label: '冲他发过火',     n: -6,  days: 14,   stack: 2 },
   oldtie:    { label: '旧交情',         n: 12,  days: null, stack: 1 }, // 落脚单上的那一笔（content/settle.js）
   // 村民之间开局就有的交情，照台词里提到的事（见 STANDING），一直记着
   veggies:   { label: '常给他送菜',     n: 10,  days: null, stack: 1 },

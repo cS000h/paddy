@@ -64,12 +64,21 @@ export function personaBody(m, game, mods) {
       names(game.ask('growth').traits.filter(t => t.owned && !Object.hasOwn(OLD_TRAITS, t.id)));
   const n = profile.stress;
   const bowl = n < 40 ? 'low' : n < 70 ? 'mid' : 'high';
+  const snap = other ? null : game.ask('stress').snap;
+  const cope = snap
+    ? `<div class="folio-snap"><b>憋不住了</b><small>${esc(snap.line)}</small>${snap.choices
+        .map(
+          c =>
+            `<button data-do="cope" data-coping="${esc(c.id)}">${esc(c.name)}<small>${esc(c.note)}</small></button>`,
+        )
+        .join('')}</div>`
+    : '';
   return `<div class="folio"><section><header>${stamp('人物')}<details class="folio-picker"><summary>看谁 · ${esc(person.name)}</summary>
     <div>${options}</div></details></header>
     <div class="folio-identity">${portrait(person.look)}<div><h2>${esc(person.name)}</h2>
     ${line ? esc(line.name) + '<br>' + level + ' · ' + esc(line.title) : '出身未记'}</div></div>
     <div class="folio-traits">${traits.join('')}</div><small>根骨天资 ${names(profile.innate)}　毛病 ${names(profile.coping)}${earned}</small>
-    ${n === null ? '' : `<div class="folio-stress">${uiIconImg('stress_' + bowl, 28)}心烦　${n} / 100</div>`}</section>
+    ${n === null ? '' : `<div class="folio-stress">${uiIconImg('stress_' + bowl, 28)}心烦　${n} / 100</div>`}${cope}</section>
     <section><header>${stamp('六项')}<small>二十为满</small></header>${attributes(profile, m.attr)}${mods}</section></div>`;
 }
 

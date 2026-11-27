@@ -49,6 +49,10 @@ import { visitors } from './plugins/visitors.js';
 import { fairMatch } from './plugins/fair-match.js';
 import { passers } from './plugins/passers.js';
 import { wardrobe } from './plugins/wardrobe.js';
+import { purse } from './plugins/purse.js';
+import { witness } from './plugins/witness.js';
+import { stress } from './plugins/stress.js';
+import { deeds } from './plugins/deeds.js';
 
 export { SAVE_VERSION };
 // 顺序有讲究：后面的插件建自己的数据时，可以读前面的（比如身体和行囊按“户里有谁”来建）。
@@ -92,6 +96,10 @@ export const PLUGINS = Object.freeze([
   visitors,
   fairMatch,
   passers,
+  purse,
+  witness,
+  stress,
+  deeds,
   wardrobe,
   interactions,
 ]);

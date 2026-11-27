@@ -1,0 +1,1350 @@
+{
+  "format": "dao.save",
+  "version": 27,
+  "state": {
+    "revision": 21,
+    "world": {
+      "meta": {
+        "version": 27,
+        "seed": 2837527372,
+        "nextId": 9
+      },
+      "notes": {
+        "list": [
+          {
+            "id": 1,
+            "day": 2,
+            "title": "清早的天色",
+            "text": "多云，10°上下。看云色，明天可能多云（把握50%）。"
+          },
+          {
+            "id": 2,
+            "day": 2,
+            "title": "院里院外",
+            "text": "清早溪湾、竹影、渡口鱼口好。"
+          },
+          {
+            "id": 3,
+            "day": 3,
+            "title": "清早的天色",
+            "text": "阴，13°上下。看云色，明天可能多云（把握50%）。"
+          },
+          {
+            "id": 4,
+            "day": 3,
+            "title": "院里院外",
+            "text": "清早溪湾、竹影、渡口鱼口好。"
+          },
+          {
+            "id": 5,
+            "day": 4,
+            "title": "清早的天色",
+            "text": "阴，12°上下。看云色，明天可能小雨（把握55%）。"
+          },
+          {
+            "id": 8,
+            "day": 4,
+            "title": "院里院外",
+            "text": "夜里菜地熟了3畦，能收了。清早溪湾、竹影、渡口鱼口好。"
+          }
+        ]
+      },
+      "ledger": {
+        "seq": 35,
+        "list": [
+          {
+            "seq": 1,
+            "who": "hero",
+            "k": "item:veg.qingcai",
+            "d": 2,
+            "why": "落脚时带来的"
+          },
+          {
+            "seq": 2,
+            "who": "hero",
+            "k": "energy",
+            "d": -4,
+            "why": "锄地"
+          },
+          {
+            "seq": 3,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 4,
+            "who": "hero",
+            "k": "pack:worm",
+            "d": 1,
+            "why": "锄地翻出来的"
+          },
+          {
+            "seq": 5,
+            "who": "hero",
+            "k": "energy",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 6,
+            "who": "hero",
+            "k": "pack:seed.qingcai",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 7,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 8,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "浇水"
+          },
+          {
+            "seq": 9,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 10,
+            "who": "hero",
+            "k": "energy",
+            "d": -4,
+            "why": "锄地"
+          },
+          {
+            "seq": 11,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 12,
+            "who": "hero",
+            "k": "energy",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 13,
+            "who": "hero",
+            "k": "pack:seed.qingcai",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 14,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 15,
+            "who": "hero",
+            "k": "energy",
+            "d": -1,
+            "why": "浇水（农事熟手−1）"
+          },
+          {
+            "seq": 16,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 17,
+            "who": "hero",
+            "k": "energy",
+            "d": -2,
+            "why": "锄地（农事熟手−1，早起的人−1）"
+          },
+          {
+            "seq": 18,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 19,
+            "who": "hero",
+            "k": "pack:seed.qingcai",
+            "d": -1,
+            "why": "播种"
+          },
+          {
+            "seq": 20,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 21,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 2,
+            "why": "农事"
+          },
+          {
+            "seq": 22,
+            "who": "hero",
+            "k": "energy",
+            "d": 15,
+            "why": "睡了一觉"
+          },
+          {
+            "seq": 23,
+            "who": "hero",
+            "k": "pack:veg.qingcai.fine",
+            "d": 2,
+            "why": "地里收的"
+          },
+          {
+            "seq": 24,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 3,
+            "why": "农事"
+          },
+          {
+            "seq": 25,
+            "who": "hero",
+            "k": "pack:veg.qingcai",
+            "d": 2,
+            "why": "地里收的"
+          },
+          {
+            "seq": 26,
+            "who": "hero",
+            "k": "xp:farm",
+            "d": 3,
+            "why": "农事"
+          },
+          {
+            "seq": 27,
+            "who": "hero",
+            "k": "xp:social",
+            "d": 1,
+            "why": "交际"
+          },
+          {
+            "seq": 28,
+            "who": "hero",
+            "k": "mood",
+            "d": 2,
+            "why": "爱热闹：聊得开心"
+          },
+          {
+            "seq": 29,
+            "who": "hero",
+            "k": "pack:veg.qingcai",
+            "d": -1,
+            "why": "送给桂嫂"
+          },
+          {
+            "seq": 30,
+            "who": "hero",
+            "k": "xp:social",
+            "d": 2,
+            "why": "交际"
+          },
+          {
+            "seq": 31,
+            "who": "hero",
+            "k": "mood",
+            "d": 2,
+            "why": "爱热闹：送饭开心"
+          },
+          {
+            "seq": 32,
+            "who": "hero",
+            "k": "pack:veg.qingcai",
+            "d": -1,
+            "why": "放进收菜筐"
+          },
+          {
+            "seq": 33,
+            "who": "hero",
+            "k": "coins",
+            "d": -8,
+            "why": "托阿满捎青菜种子"
+          },
+          {
+            "seq": 34,
+            "who": "hero",
+            "k": "pack:wood",
+            "d": 1,
+            "why": "路边翻到的"
+          },
+          {
+            "seq": 35,
+            "who": "hero",
+            "k": "xp:forage",
+            "d": 1,
+            "why": "采集"
+          }
+        ]
+      },
+      "clock": {
+        "day": 4,
+        "minute": 453
+      },
+      "people": {
+        "hero": {
+          "energy": 100,
+          "map": "yard",
+          "x": 4,
+          "y": 11,
+          "dir": "up"
+        },
+        "shi": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "gui": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "aman": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "qiao": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "zhou": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        },
+        "yun": {
+          "energy": 100,
+          "map": "yard",
+          "x": 0,
+          "y": 0,
+          "dir": "down"
+        }
+      },
+      "player": {
+        "controls": "hero"
+      },
+      "households": {
+        "home": {
+          "members": ["hero"],
+          "coins": 16,
+          "items": {
+            "rice": 3,
+            "veg.qingcai": 4,
+            "egg": 2,
+            "potato": 2,
+            "herb": 1,
+            "bean": 1,
+            "wood": 4,
+            "salt": 4
+          },
+          "can": 7
+        }
+      },
+      "vitals": {
+        "hero": {
+          "hunger": 43,
+          "thirst": 59,
+          "mood": 66,
+          "stuffed": 0,
+          "sweat": 0,
+          "buff": null
+        }
+      },
+      "packs": {
+        "hero": {
+          "cap": 6,
+          "big": false,
+          "items": {
+            "seed.qingcai": 9,
+            "cake": 2,
+            "worm": 1,
+            "veg.qingcai.fine": 2,
+            "wood": 1
+          },
+          "flask": 0,
+          "dishes": []
+        }
+      },
+      "weather": {
+        "now": "overcast",
+        "today": "overcast",
+        "history": ["sunny", "cloudy", "overcast", "overcast"],
+        "tomorrow": "cloudy",
+        "forecast": "drizzle",
+        "acc": 55,
+        "jitter": 1,
+        "wetDays": 0,
+        "dryDays": 4,
+        "looked": 0
+      },
+      "sensations": {
+        "hero": {
+          "chill": null
+        }
+      },
+      "catalog": {
+        "hero": {
+          "items": {
+            "veg.qingcai": {
+              "n": 4,
+              "day": 4,
+              "fine": true
+            }
+          },
+          "haul": {
+            "day": 0,
+            "n": 0
+          }
+        }
+      },
+      "kitchens": {
+        "home": {
+          "dishes": [],
+          "known": {},
+          "fires": 0
+        }
+      },
+      "quality": {
+        "hero": {
+          "miss": {
+            "farm": 1
+          },
+          "found": {
+            "veg.qingcai.fine": 4
+          }
+        }
+      },
+      "outings": {
+        "hero": {
+          "counts": {}
+        }
+      },
+      "search": {
+        "hero": {
+          "cues": ["hill:22,18", "yard:1,3", "creek:15,7", "river:2,6", "tea:12,4", "market:3,6"],
+          "done": ["yard:4,10"],
+          "miss": 0,
+          "found": {
+            "wood": 4
+          },
+          "lost": {}
+        }
+      },
+      "ground": {
+        "hero": {
+          "items": [
+            {
+              "map": "creek",
+              "x": 10,
+              "y": 18,
+              "item": "malan"
+            },
+            {
+              "map": "creek",
+              "x": 18,
+              "y": 10,
+              "item": "malan"
+            },
+            {
+              "map": "hill",
+              "x": 17,
+              "y": 18,
+              "item": "herb"
+            },
+            {
+              "map": "market",
+              "x": 19,
+              "y": 6,
+              "item": "herb"
+            },
+            {
+              "map": "market",
+              "x": 9,
+              "y": 6,
+              "item": "herb"
+            },
+            {
+              "map": "river",
+              "x": 15,
+              "y": 8,
+              "item": "malan"
+            },
+            {
+              "map": "tea",
+              "x": 16,
+              "y": 7,
+              "item": "shepherd"
+            },
+            {
+              "map": "yard",
+              "x": 28,
+              "y": 13,
+              "item": "shepherd"
+            },
+            {
+              "map": "yard",
+              "x": 33,
+              "y": 13,
+              "item": "shepherd"
+            }
+          ]
+        }
+      },
+      "homesteads": {
+        "home": {
+          "coop": false,
+          "hens": 0,
+          "fed": 0,
+          "eggs": 0
+        }
+      },
+      "prizes": {
+        "hero": {
+          "since": {}
+        }
+      },
+      "land": {
+        "yard": {
+          "plots": {
+            "6,19": {
+              "wet": true,
+              "crop": null,
+              "age": 0,
+              "water": 14,
+              "drained": false,
+              "fert": 4,
+              "weeds": false,
+              "bugs": false,
+              "fed": 0,
+              "last": "qingcai"
+            },
+            "7,19": {
+              "wet": true,
+              "crop": null,
+              "age": 0,
+              "water": 14,
+              "drained": false,
+              "fert": 4,
+              "weeds": false,
+              "bugs": false,
+              "fed": 0,
+              "last": "qingcai"
+            },
+            "8,19": {
+              "wet": true,
+              "crop": "qingcai",
+              "age": 3,
+              "water": 14,
+              "drained": false,
+              "fert": 6,
+              "weeds": false,
+              "bugs": false,
+              "fed": 0,
+              "last": null
+            }
+          }
+        },
+        "cottage": {
+          "plots": {}
+        },
+        "creek": {
+          "plots": {}
+        },
+        "tea": {
+          "plots": {}
+        },
+        "market": {
+          "plots": {}
+        },
+        "river": {
+          "plots": {}
+        },
+        "hill": {
+          "plots": {}
+        }
+      },
+      "moods": {
+        "aman": 70,
+        "gui": 74,
+        "shi": 59,
+        "qiao": 69,
+        "zhou": 74,
+        "yun": 59
+      },
+      "achievements": {
+        "hero": {
+          "counts": {
+            "soil1": 1,
+            "soil20": 3,
+            "seed1": 1,
+            "seed30": 3,
+            "level5": 3,
+            "water20": 3,
+            "trait4": 1,
+            "days7": 3,
+            "harvest1": 1,
+            "harvest30": 4,
+            "book.garden1": 1,
+            "book.garden7": 1,
+            "book.gold7": 1,
+            "talk10": 1,
+            "gift1": 1,
+            "gift10": 1
+          },
+          "earned": {
+            "soil1": 1,
+            "seed1": 1,
+            "harvest1": 4,
+            "book.garden1": 4,
+            "gift1": 4
+          }
+        }
+      },
+      "fishing": {
+        "hero": {
+          "bout": null,
+          "records": {},
+          "spots": {}
+        }
+      },
+      "bonds": {
+        "known": {
+          "shi": 1,
+          "gui": 2,
+          "aman": 0,
+          "qiao": 0,
+          "zhou": 0,
+          "yun": 0
+        },
+        "talked": {
+          "shi": 4
+        },
+        "gifted": {
+          "gui": 4
+        },
+        "owed": [
+          {
+            "from": "gui",
+            "day": 5
+          }
+        ],
+        "asked": {},
+        "favs": {}
+      },
+      "basket": {
+        "goods": {
+          "veg.qingcai": 1
+        },
+        "order": {
+          "seed.qingcai": 4
+        },
+        "receipt": null
+      },
+      "persona": {
+        "hero": {
+          "tempers": ["honest", "gregarious"],
+          "line": {
+            "id": "hunter",
+            "lv": 1
+          },
+          "innate": [],
+          "coping": [],
+          "stress": 0
+        },
+        "shi": {
+          "tempers": ["diligent", "honest", "stingy"],
+          "line": {
+            "id": "farmer",
+            "lv": 3
+          },
+          "innate": [],
+          "coping": [],
+          "stress": 0
+        },
+        "gui": {
+          "tempers": ["gregarious", "generous", "ambitious"],
+          "line": {
+            "id": "cook",
+            "lv": 3
+          },
+          "innate": ["gourmet"],
+          "coping": [],
+          "stress": 3
+        },
+        "aman": {
+          "tempers": ["gregarious", "honest", "hasty"],
+          "line": {
+            "id": "peddler",
+            "lv": 2
+          },
+          "innate": [],
+          "coping": [],
+          "stress": 0
+        },
+        "qiao": {
+          "tempers": ["gregarious", "sly", "ambitious"],
+          "line": {
+            "id": "teahouse",
+            "lv": 2
+          },
+          "innate": [],
+          "coping": [],
+          "stress": 3
+        },
+        "zhou": {
+          "tempers": ["calm", "content", "trusting"],
+          "line": {
+            "id": "boatman",
+            "lv": 4
+          },
+          "innate": ["steady"],
+          "coping": [],
+          "stress": 0
+        },
+        "yun": {
+          "tempers": ["diligent", "shy", "paranoid"],
+          "line": {
+            "id": "herbalist",
+            "lv": 2
+          },
+          "innate": [],
+          "coping": [],
+          "stress": 0
+        }
+      },
+      "growth": {
+        "hero": {
+          "xp": {
+            "farm": 24,
+            "cook": 0,
+            "forage": 1,
+            "social": 3,
+            "sky": 0,
+            "craft": 0
+          },
+          "traits": ["earlybird"],
+          "counters": {
+            "wetOut": 0,
+            "cold": 0,
+            "hot": 0,
+            "dawn": 12,
+            "meals": 0
+          },
+          "origin": {
+            "reason": "keeper",
+            "keepsake": "basket",
+            "family": "kind",
+            "own": "gregarious",
+            "friend": "gui"
+          }
+        }
+      },
+      "shops": {
+        "day": 4,
+        "wares": {
+          "market": [
+            {
+              "item": "rice",
+              "left": 6,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "bean",
+              "left": 5,
+              "price": 12,
+              "why": []
+            },
+            {
+              "item": "egg",
+              "left": 5,
+              "price": 12,
+              "why": []
+            },
+            {
+              "item": "salt",
+              "left": 5,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "soy",
+              "left": 3,
+              "price": 12,
+              "why": []
+            },
+            {
+              "item": "vinegar",
+              "left": 3,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "sugar",
+              "left": 2,
+              "price": 12,
+              "why": []
+            },
+            {
+              "item": "chili",
+              "left": 3,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "scallion",
+              "left": 2,
+              "price": 4,
+              "why": []
+            },
+            {
+              "item": "ginger",
+              "left": 4,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "wood",
+              "left": 6,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "tofu",
+              "left": 4,
+              "price": 12,
+              "why": []
+            },
+            {
+              "item": "wine",
+              "left": 1,
+              "price": 17,
+              "why": [["货少", 1]]
+            },
+            {
+              "item": "umbrella",
+              "left": 1,
+              "price": 33,
+              "why": [["货少", 1]]
+            },
+            {
+              "item": "flask",
+              "left": 2,
+              "price": 16,
+              "why": []
+            },
+            {
+              "item": "herb",
+              "left": 4,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "shoot",
+              "left": 4,
+              "price": 16,
+              "why": []
+            },
+            {
+              "item": "chive",
+              "left": 3,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "seed.qingcai",
+              "left": 2,
+              "price": 2,
+              "why": []
+            },
+            {
+              "item": "seedChive",
+              "left": 3,
+              "price": 4,
+              "why": []
+            }
+          ],
+          "tea": [
+            {
+              "item": "cake",
+              "left": 5,
+              "price": 8,
+              "why": []
+            },
+            {
+              "item": "bun",
+              "left": 4,
+              "price": 12,
+              "why": []
+            }
+          ]
+        }
+      },
+      "teaDays": {
+        "hero": {
+          "chess": 0,
+          "hawk": 0,
+          "listen": 0
+        }
+      },
+      "guide": {
+        "done": {
+          "till": 1,
+          "sow": 1,
+          "water": 1,
+          "harvest": 4,
+          "meet": 4,
+          "gift": 4,
+          "forage": 4
+        }
+      },
+      "visits": {
+        "active": null,
+        "invitedDay": 0,
+        "history": []
+      },
+      "opinion": {
+        "notes": [
+          {
+            "from": "aman",
+            "to": "zhou",
+            "why": "veggies",
+            "n": 10,
+            "until": null
+          },
+          {
+            "from": "zhou",
+            "to": "aman",
+            "why": "fed",
+            "n": 10,
+            "until": null
+          },
+          {
+            "from": "aman",
+            "to": "gui",
+            "why": "pickles",
+            "n": 8,
+            "until": null
+          },
+          {
+            "from": "gui",
+            "to": "qiao",
+            "why": "raised",
+            "n": 8,
+            "until": null
+          },
+          {
+            "from": "yun",
+            "to": "qiao",
+            "why": "uphill",
+            "n": 8,
+            "until": null
+          },
+          {
+            "from": "gui",
+            "to": "hero",
+            "why": "oldtie",
+            "n": 12,
+            "until": null
+          },
+          {
+            "from": "shi",
+            "to": "aman",
+            "why": "chat",
+            "n": 2,
+            "until": 12
+          },
+          {
+            "from": "aman",
+            "to": "shi",
+            "why": "chat",
+            "n": 2,
+            "until": 12
+          },
+          {
+            "from": "shi",
+            "to": "aman",
+            "why": "chat",
+            "n": 2,
+            "until": 13
+          },
+          {
+            "from": "aman",
+            "to": "shi",
+            "why": "chat",
+            "n": 2,
+            "until": 13
+          },
+          {
+            "from": "shi",
+            "to": "aman",
+            "why": "chat",
+            "n": 2,
+            "until": 14
+          },
+          {
+            "from": "aman",
+            "to": "shi",
+            "why": "chat",
+            "n": 2,
+            "until": 14
+          },
+          {
+            "from": "shi",
+            "to": "hero",
+            "why": "chat",
+            "n": 2,
+            "until": 14
+          },
+          {
+            "from": "gui",
+            "to": "hero",
+            "why": "gift",
+            "n": 5,
+            "until": 34
+          }
+        ]
+      },
+      "modifiers": {
+        "hero": []
+      },
+      "pulse": {
+        "active": {
+          "id": "morning_rice_damp",
+          "day": 4,
+          "map": "cottage",
+          "x": 12,
+          "y": 7
+        },
+        "delayed": [],
+        "done": {},
+        "lastDay": 4
+      },
+      "visitors": {
+        "day": 4,
+        "active": [
+          {
+            "id": "v_6",
+            "name": "高姑娘",
+            "role": "grocer",
+            "look": "hero/cook/bun/2",
+            "map": "market",
+            "x": 11,
+            "y": 13,
+            "dir": "down",
+            "traits": ["爽快", "重义"],
+            "until": 6,
+            "rel": 0,
+            "talkedDay": 0,
+            "done": false
+          },
+          {
+            "id": "v_7",
+            "name": "何先生",
+            "role": "carpenter",
+            "look": "hero/rain/plain/0",
+            "map": "river",
+            "x": 13,
+            "y": 11,
+            "dir": "down",
+            "traits": ["热心", "爱说话"],
+            "until": 7,
+            "rel": 0,
+            "talkedDay": 0,
+            "done": false
+          }
+        ],
+        "book": []
+      },
+      "match": {
+        "fairs": 0,
+        "wins": 0,
+        "hosts": {
+          "he": {
+            "met": 0,
+            "last": null,
+            "caught": false
+          },
+          "qian": {
+            "met": 0,
+            "last": null,
+            "caught": false
+          }
+        },
+        "today": null,
+        "echo": null
+      },
+      "passers": {
+        "today": [
+          {
+            "id": "boat",
+            "day": 4,
+            "step": 0,
+            "visit": -1,
+            "picked": [],
+            "flags": [],
+            "seen": [],
+            "end": null,
+            "line": "",
+            "map": "river",
+            "x": 17,
+            "y": 13,
+            "dir": "left"
+          },
+          {
+            "id": "drummer",
+            "day": 4,
+            "step": 0,
+            "visit": -1,
+            "picked": [],
+            "flags": [],
+            "seen": [],
+            "end": null,
+            "line": "",
+            "map": "market",
+            "x": 20,
+            "y": 13,
+            "dir": "down"
+          }
+        ],
+        "met": {},
+        "echo": []
+      },
+      "purses": {
+        "houses": {
+          "shi": {
+            "coins": 63,
+            "fortune": 0,
+            "short": null
+          },
+          "gui": {
+            "coins": 46,
+            "fortune": 0,
+            "short": null
+          },
+          "aman": {
+            "coins": 25,
+            "fortune": 0,
+            "short": null
+          },
+          "qiao": {
+            "coins": 18,
+            "fortune": 0,
+            "short": null
+          },
+          "zhou": {
+            "coins": 42,
+            "fortune": 0,
+            "short": null
+          },
+          "yun": {
+            "coins": 34,
+            "fortune": 0,
+            "short": null
+          },
+          "shop": {
+            "coins": 125,
+            "fortune": 0,
+            "short": null
+          }
+        },
+        "tally": {
+          "wet": 0,
+          "heavy": 0
+        },
+        "spent": []
+      },
+      "witness": {
+        "seq": 3,
+        "list": [
+          {
+            "id": 1,
+            "day": 2,
+            "who": "aman",
+            "to": "shi",
+            "act": "chat",
+            "map": "yard",
+            "place": "field",
+            "coping": null,
+            "secret": false,
+            "knows": ["aman", "shi", "hero"],
+            "until": 5
+          },
+          {
+            "id": 2,
+            "day": 3,
+            "who": "aman",
+            "to": "shi",
+            "act": "chat",
+            "map": "yard",
+            "place": "field",
+            "coping": null,
+            "secret": false,
+            "knows": ["aman", "shi", "hero"],
+            "until": 6
+          },
+          {
+            "id": 3,
+            "day": 4,
+            "who": "aman",
+            "to": "shi",
+            "act": "chat",
+            "map": "yard",
+            "place": "field",
+            "coping": null,
+            "secret": false,
+            "knows": ["aman", "shi", "hero"],
+            "until": 7
+          }
+        ]
+      },
+      "vexes": {
+        "hero": {
+          "day": 4,
+          "n": {
+            "alone": 1,
+            "farm": 2,
+            "chat": 1,
+            "gift": 1
+          },
+          "quiet": 3,
+          "coped": 0,
+          "snap": null
+        },
+        "shi": {
+          "day": 4,
+          "n": {
+            "farm": 1,
+            "chat": 1
+          },
+          "quiet": 3,
+          "coped": 0,
+          "snap": null
+        },
+        "gui": {
+          "day": 4,
+          "n": {
+            "home": 1
+          },
+          "quiet": 3,
+          "coped": 0,
+          "snap": null
+        },
+        "aman": {
+          "day": 4,
+          "n": {
+            "farm": 1,
+            "chat": 1
+          },
+          "quiet": 3,
+          "coped": 0,
+          "snap": null
+        },
+        "qiao": {
+          "day": 4,
+          "n": {},
+          "quiet": 3,
+          "coped": 0,
+          "snap": null
+        },
+        "zhou": {
+          "day": 4,
+          "n": {
+            "quiet": 1
+          },
+          "quiet": 3,
+          "coped": 0,
+          "snap": null
+        },
+        "yun": {
+          "day": 4,
+          "n": {
+            "alone": 1
+          },
+          "quiet": 3,
+          "coped": 0,
+          "snap": null
+        }
+      },
+      "deeds": {
+        "at": 16,
+        "day": 4,
+        "done": {
+          "aman:chat": 1
+        }
+      },
+      "wardrobe": {
+        "worn": {
+          "hero": {
+            "coat": "plain",
+            "hair": "plain"
+          },
+          "shi": {
+            "coat": "plain",
+            "hair": "plain"
+          },
+          "gui": {
+            "coat": "plain",
+            "hair": "plain"
+          },
+          "aman": {
+            "coat": "plain",
+            "hair": "plain"
+          },
+          "qiao": {
+            "coat": "plain",
+            "hair": "plain"
+          },
+          "zhou": {
+            "coat": "plain",
+            "hair": "plain"
+          },
+          "yun": {
+            "coat": "plain",
+            "hair": "plain"
+          }
+        },
+        "owned": {
+          "home": {
+            "coat": ["plain", "field"],
+            "hair": ["plain", "short", "tail", "loose"]
+          }
+        }
+      }
+    }
+  }
+}
