@@ -58,7 +58,7 @@ export function createPanels({
   );
   const veil = document.getElementById('veil');
   const captions = createCaptions(root, spot);
-  const awards = createAwards(root);
+  const awards = createAwards(root, slip => slip.sound && platform.audio.play(slip.sound));
   const small = profile => profile.narrow || profile.compact;
   const touch = () => platform.device.profile().touch;
   let journalOpen = false;

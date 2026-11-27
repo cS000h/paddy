@@ -34,6 +34,12 @@ export function growthActions({ game, shell, run, debug = false }) {
     bookEntry({ item }) {
       edit({ entry: item || null });
     },
+    // 成就页上戴一个大成的称号，或摘下来
+    wearTitle({ title }) {
+      const out = run('achievement.wear', { id: title || null });
+      const f = out.ok && out.facts.find(x => x.type === 'achievement.worn')?.data;
+      if (f) shell.toast(f.title ? `往后村里人见了你，有时就叫「${f.title}」。` : '摘下了称号。');
+    },
     bookMod({ mod }) {
       edit({ mod });
     },
@@ -74,6 +80,10 @@ export function growthNotices(game, shell) {
       ...traits.map(f => '新特质：' + f.data.name),
     ];
     if (messages.length) shell.toast(messages.join('；'), true);
+    // 成就差最后几回：轻轻提一嘴（一个成就只提一回，规则那边管）
+    const near = facts.find(f => f.type === 'achievement.near');
+    if (near && !messages.length)
+      shell.toast(`再${near.data.left}回，就是「${near.data.name}」了。`);
     // 心烦：涨过一档、用毛病解了闷才说一句；顺着违着性子的那句留给以后的旁白（A-03）
     const vex = facts.find(
       f => f.type === 'stress.changed' && f.data.line && (f.data.crossed || !f.data.tag),

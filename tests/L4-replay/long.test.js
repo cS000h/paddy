@@ -62,6 +62,8 @@ test('玩过一年多：不出错、不卡住，存档不走样，也不会越�
   // 心烦满了、憋着没挑毛病的样子也难碰上：一并放进去
   save.state.world.persona.hero.stress = 100;
   save.state.world.vexes.hero.snap = ['drink', 'spree', 'recluse'];
+  // 大成的称号也要玩上大半年：放一个已经挣到的
+  save.state.world.achievements.hero.earned['book.grades'] = 1;
   const lucky = createChaos(24, { debug: false, saved: save }).run(1500);
   assert.deepEqual(lucky.errors, [], show(lucky.errors));
   for (const [type, t] of Object.entries(lucky.tally)) done[type] = (done[type] || 0) + t.ok;

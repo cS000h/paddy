@@ -439,6 +439,10 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     // 没憋着时乱挑由 rough() 的乱填去试
     const snap = game.ask('stress').snap;
     if (snap) send('stress.cope', { coping: snap.choices[0].id });
+    // 挣到了称号就戴上、下回摘下（也不抽随机数）
+    const board = game.ask('achievement.board');
+    if (board.titles.length)
+      send('achievement.wear', { id: board.worn ? null : board.titles[0].id });
     if (chance(0.25)) send('sleep', { at: here() });
     else send('clock.advance', { minutes: pick([10, 10, 10, 30, 60, 120]) });
   }

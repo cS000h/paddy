@@ -104,7 +104,7 @@ test('成就按事实计数，只落印一次；存取后进度和特质不丢',
   const g = newGame(),
     seen = [];
   g.on('achievement.earned', e => seen.push(e.data.id));
-  assert.equal(g.ask('achievements').length, 48);
+  assert.equal(g.ask('achievements').length, 65);
   must(g, 'farm.till', FIELD);
   assert.ok(seen.includes('soil1'));
   assert.equal(g.ask('achievements').find(a => a.id === 'soil1').day, 1);

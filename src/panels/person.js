@@ -57,6 +57,9 @@ export function personaBody(m, game, mods) {
       `<div><i class="folio-blank"></i><small>${other ? '还看不出' : '还没定下'}</small></div>`,
     );
   const line = profile.line;
+  // 戴着的称号（G-31 大成给的）只写在自己这页
+  const title = other ? null : game.ask('achievement.board').worn?.title;
+  const worn = title ? `<small class="folio-title">「${esc(title)}」</small>` : '';
   const level = line ? ['一级', '二级', '三级', '四级'][line.lv - 1] : '';
   const earned = other
     ? ''
@@ -75,7 +78,7 @@ export function personaBody(m, game, mods) {
     : '';
   return `<div class="folio"><section><header>${stamp('人物')}<details class="folio-picker"><summary>看谁 · ${esc(person.name)}</summary>
     <div>${options}</div></details></header>
-    <div class="folio-identity">${portrait(person.look)}<div><h2>${esc(person.name)}</h2>
+    <div class="folio-identity">${portrait(person.look)}<div><h2>${esc(person.name)}${worn}</h2>
     ${line ? esc(line.name) + '<br>' + level + ' · ' + esc(line.title) : '出身未记'}</div></div>
     <div class="folio-traits">${traits.join('')}</div><small>根骨天资 ${names(profile.innate)}　毛病 ${names(profile.coping)}${earned}</small>
     ${n === null ? '' : `<div class="folio-stress">${uiIconImg('stress_' + bowl, 28)}心烦　${n} / 100</div>`}${cope}</section>
@@ -112,7 +115,7 @@ export function ledgerBody(m, game) {
     .join('');
   return `<div class="folio folio-ledger"><section><header>${stamp('乡邻')}</header><nav>${roster}</nav></section>
     <section><header>${stamp('人情账')}</header><div class="folio-identity">${portrait(person.look)}
-    <div><h2>${esc(person.name)}</h2>${esc(person.title || person.role)}</div><b class="folio-score">好感 ${signed(opinion.value)}</b></div>
+    <div><h2>${esc(person.name)}${worn}</h2>${esc(person.title || person.role)}</div><b class="folio-score">好感 ${signed(opinion.value)}</b></div>
     ${group('相投相冲', affinity.map(part))}${person.title ? '' : group('好感来由', lines)}
     ${person.title ? '' : group('熟悉', opinion.parts.filter(p => p.id === 'known').map(part))}
     <button data-do="bookWho" data-who="${esc(person.id)}">看人</button></section></div>`;

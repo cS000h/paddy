@@ -855,6 +855,48 @@ button:focus-visible {
   animation: award-brush 0.6s 0.3s ease-out both;
 }
 
+/* 攒着、大成那档名字底下多一行小话；大成换成红纸、名字边上盖个印（G-31） */
+.award em {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-style: normal;
+  letter-spacing: 0.06em;
+}
+
+.award.grand {
+  padding: 8px 22px 8px 10px;
+  background: #f6e3d3;
+  border-color: #9b4a37;
+}
+
+.award.grand small {
+  color: #9b4a37;
+}
+
+.award.grand b::after {
+  background: linear-gradient(90deg, rgba(178, 72, 52, 0.75), rgba(178, 72, 52, 0.08));
+}
+
+.award.grand img {
+  animation: award-stamp 0.5s 0.25s ease-out both;
+}
+
+@keyframes award-stamp {
+  0% {
+    opacity: 0;
+    scale: 1.8;
+  }
+  70% {
+    opacity: 1;
+    scale: 0.92;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
 #ui[data-place='side'] .award {
   left: calc((100% - min(470px, 62%)) / 2);
 }
