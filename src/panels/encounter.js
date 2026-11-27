@@ -43,7 +43,9 @@ function options(m, rows) {
 }
 export function encounterView(m, game, here) {
   const id = m.who || m.id;
-  const host = m.kind === 'visitor' ? game.ask('match') : null;
+  const match = m.kind === 'visitor' ? game.ask('match') : null;
+  const caller = m.kind === 'visitor' ? game.ask('match.visit') : null;
+  const host = match?.id === id ? match : caller?.id === id ? caller : null;
   const passer = m.kind === 'visitor' ? game.ask('passers').find(p => p.id === id) : null;
   const visitor =
     m.kind === 'visitor'

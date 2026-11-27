@@ -71,6 +71,12 @@ export function activityActions({ game, shell, run, here, world }) {
       shell.set({ modal: null });
       world.work(m.group, id, spotOf(m));
     },
+    /** 修院子一处：合上小窗，修没修成都冒一句（话和路过的人说的见 world/visitors-events.js）。 */
+    yardFix({ id, help }) {
+      shell.set({ modal: null });
+      const out = run('yard.fix', { id, help: help === '1', at: here() });
+      if (out.ok) world.perform('buildCoop', {});
+    },
     fishCast({ bait }) {
       const m = modal();
       const out = run('fish.cast', { at: here(), bait: bait || null });

@@ -17,6 +17,20 @@ function pick(a) {
     <b>${esc(a.label)}</b><small>${esc(note)}</small></button>`;
 }
 
+/** 木墩边：院里六处能修的地方（sim/plugins/yard-fix.js）。修好的不再列。 */
+function fixes(game, here) {
+  const rows = game.ask('yard.fix', here).filter(r => !r.fixed);
+  if (!rows.length) return '';
+  const one = (r, help) => {
+    const how = help ? r.help : r;
+    const note =
+      how.reason || [how.materials, !help && r.check && `看${r.check}`].filter(Boolean).join(' · ');
+    return `<button data-do="yardFix" data-id="${esc(r.id)}" data-help="${help ? 1 : 0}"${how.reason ? ' disabled' : ''} title="${esc(r.open)}">
+    <b>${esc((help ? '请老鲁搭手修' : '修') + r.name)}</b><small>${esc(note)}</small></button>`;
+  };
+  return rows.map(r => one(r, false) + (r.help ? one(r, true) : '')).join('');
+}
+
 export function activityView(m, game, here) {
   const outing = m.group === 'outing';
   const data = game.ask(outing ? 'outings' : 'homestead', m.station, here);
@@ -39,6 +53,6 @@ export function activityView(m, game, here) {
       : '可从院灶端一份饭进来吃'
     : coop || (data.weather ? data.weather.name : '挑一件做');
   return `${title(m.label || '院里院外', sub)}
-    <div class="picks">${supper}${data.options.map(pick).join('')}</div>
+    <div class="picks">${supper}${data.options.map(pick).join('')}${m.station === 'workbench' ? fixes(game, here) : ''}</div>
     ${actions(close('算了', false))}`;
 }

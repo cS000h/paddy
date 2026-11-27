@@ -578,6 +578,28 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
       return send('match.after', { at, choice: pick(['again', 'tea', 'leave', 'x']) });
   }
 
+  // 院里的事：门口有闻香来的人就端菜，钓客上门就答他，不然随手修一处（材料不够、站错地方的会被拒）
+  function yard() {
+    const at = here();
+    const gate = game
+      .ask('residents')
+      .filter(p => p.map === hero().map && p.doing.includes('香味'));
+    if (gate.length) {
+      const p = pick(gate);
+      const how = pick(['share', 'sell', 'one', 'keep', 'x']);
+      return send('aroma.serve', { how, to: p.id, at: { x: p.x + 1, y: p.y - 1, dir: 'down' } });
+    }
+    const v = game.ask('match.visit');
+    if (v && !v.done) {
+      if (hero().map !== v.map) return send('travel.to', { to: v.map, at });
+      const rows = game.ask('match.visit.options');
+      const choice = rows.length ? pick(rows).input.choice : 'x';
+      return send('match.visit', { at: { x: v.x, y: v.y - 1, dir: 'down' }, choice });
+    }
+    const rows = game.ask('yard.fix', at);
+    send('yard.fix', { id: pick(rows).id, help: chance(0.3), at });
+  }
+
   const PLANS = [
     [4, travel],
     [3, rummage],
@@ -590,6 +612,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     [1, wander],
     [3, pulseAndVisitors],
     [1, fairMatch],
+    [1, yard],
   ];
   const total = PLANS.reduce((sum, [w]) => sum + w, 0);
   let steps = 0;

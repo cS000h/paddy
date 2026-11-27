@@ -138,7 +138,9 @@ export const fairMatch = {
           : result === 'tie' && t.host === 'qian'
             ? 'collude'
             : null;
-      m.echo = { day: w.clock.day, host: t.host, result, seen: [...t.seen], rumor };
+      // how：第二天钓客上门时为什么来（sim/plugins/match-visit.js）
+      const how = caught && result === 'win' ? 'caught' : null;
+      m.echo = { day: w.clock.day, host: t.host, result, seen: [...t.seen], rumor, how };
       const word = { win: '赢了', lose: '输了', tie: '打平' }[result];
       core.post(w, {
         title: '集日比鱼',
@@ -269,7 +271,9 @@ export const fairMatch = {
       const who = people.who(w);
       if (t.cheat === null) {
         body.mood(w, who, -1, '冤枉了钓客');
-        return void settle(w, t, 'lose', fact, { say: '', notes: [W.wrong] });
+        settle(w, t, 'lose', fact, { say: '', notes: [W.wrong] });
+        w.match.echo.how = 'wronged';
+        return;
       }
       const { chance } = inspectOdds(w, who);
       const roll = core.random(w) * 100;
@@ -296,6 +300,7 @@ export const fairMatch = {
         modifiers.add(w, who, 'fish_steady', null, `听${HOSTS[t.host].name}讲调漂`);
         // 输了还请钱胖子喝茶，多心的人就要说闲话了
         if (t.host === 'qian' && w.match.echo) w.match.echo.rumor = 'collude';
+        if (w.match.echo) w.match.echo.how = 'tea';
       }
       t.phase = 'over';
       const line = choice === 'leave' ? W.leave : '“' + W[choice] + '”';

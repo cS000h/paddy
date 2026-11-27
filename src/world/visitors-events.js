@@ -7,7 +7,11 @@ import { TILE, dirTo } from './logic.js';
 import { createStir } from './stir.js';
 import { createGroundFinds } from './ground-finds.js';
 import { createPrizeTraces } from './prize-traces.js';
+import { createYardFixes } from './yard-fixes.js';
 import { createChatter } from './chatter.js';
+
+// 冒字的院里的事；aroma.served、yard.guest 的那句话在对话气泡里，只冒旁白
+const SAY = ['yard.fixed', 'yard.guest', 'aroma.spread', 'aroma.served', 'aroma.returned'];
 
 /** 挂在 VillageScene 上的过客与小事实体管理，不占 scene.js 行数。 */
 export function createFieldExtras(scene) {
@@ -15,6 +19,7 @@ export function createFieldExtras(scene) {
   const ground = createGroundFinds(scene);
   const stir = createStir(scene);
   const traces = createPrizeTraces(scene);
+  const fixes = createYardFixes(scene);
   const chatter = createChatter(scene, () => [...walkers.values()]);
   let eventMark = null;
   let eventRing = null;
@@ -46,14 +51,17 @@ export function createFieldExtras(scene) {
   function sync() {
     ground.sync();
     traces.sync();
+    fixes.sync();
     const { game } = scene.deps;
     const mapId = scene.map.id;
     // 集日渡口立木牌的外乡钓客也照过客的样子站着（sim/plugins/fair-match.js）
     const host = game.ask('match');
+    const caller = game.ask('match.visit');
     // 路过的外乡过客（sim/plugins/passers.js）也一样
     const list = [
       ...game.ask('visitors').active,
       ...(host ? [host] : []),
+      ...(caller ? [caller] : []),
       ...game.ask('passers'),
     ].filter(v => v.map === mapId);
     const keep = new Set(list.map(v => v.id));
@@ -209,6 +217,19 @@ export function createFieldExtras(scene) {
         const w = walkers.get('match.' + d.host);
         if (w && d.result) showEmote(scene, w, d.result === 'lose' ? 'coin' : 'sweat');
         platform.audio.play(d.result === 'win' ? 'harvest' : 'talk');
+      } else if (SAY.includes(f.type)) {
+        // 院里的事（修院子、进院的客人、满院飘香）：旁白、门口的人说的一句一句冒在画面下方
+        needSync = true;
+        if (f.type !== 'aroma.served' && f.type !== 'yard.guest')
+          scene.deps.shell.toast(d.line, true);
+        for (const note of d.notes || []) scene.deps.shell.toast(note, true);
+      } else if (f.type === 'match.visited' || f.type === 'crowd.gathered') {
+        // 钓客上门、围过来看热闹：话冒在画面下方
+        needSync = true;
+        if (f.type === 'crowd.gathered') scene.deps.shell.toast(d.line, true);
+        for (const note of d.notes || []) scene.deps.shell.toast(note, true);
+        const w = walkers.get('visit.' + d.host);
+        if (w) showEmote(scene, w, 'tea');
       } else if (f.type === 'passer.picked') {
         // 过客：气泡里是他的话，旁白、村民插的话一句一句冒在画面上
         needSync = true;
@@ -245,6 +266,7 @@ export function createFieldExtras(scene) {
 
   function destroy() {
     ground.destroy();
+    fixes.destroy();
     clearEvent();
     for (const w of walkers.values()) destroyWalker(w);
     walkers.clear();

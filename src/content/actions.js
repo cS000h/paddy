@@ -22,6 +22,8 @@ export const ACTIONS = Object.freeze({
   can: { id: 'can', kind: 'farm', energy: 2, outdoor: true, label: '浇水' },
   hand: { id: 'hand', kind: 'farm', energy: 1, outdoor: true, label: '采收' },
   refill: { id: 'refill', kind: 'chore', energy: 0, outdoor: true, label: '打水' },
+  // 修院子一处（content/yard-fix.js）；请老鲁搭手也一样花力气
+  fixYard: { id: 'fixYard', kind: 'craft', energy: 10, outdoor: true, label: '拾掇院子' },
   // 钓鱼不限竿数，一竿 2 体力（见 content/fishing.js）
   fish: { id: 'fish', kind: 'fish', energy: 2, outdoor: true, label: '下竿钓鱼' },
   // 路边翻一翻：每处每天一回，一回 1 体力（见 content/search.js）

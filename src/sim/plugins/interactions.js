@@ -134,6 +134,10 @@ export const interactions = {
       const host = ask('match');
       if (host && host.id === id && host.map === me.map && near(here, host))
         return ask('match.options');
+      // 比完第二天上门来的钓客（sim/plugins/match-visit.js）
+      const caller = ask('match.visit');
+      if (caller && caller.id === id && caller.map === me.map && near(here, caller))
+        return ask('match.visit.options');
       // 路过的外乡过客（sim/plugins/passers.js）
       const passer = ask('passers').find(p => p.id === id && p.map === me.map && near(here, p));
       if (passer) return ask('passer.options', id);

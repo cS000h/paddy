@@ -70,6 +70,9 @@ export const visits = {
         if (a && a.day === w.clock.day && slot === a.slot) {
           r.value[a.npc] = PLACE;
           r.waiting = a.npc;
+          // 赴约要紧：围观、进院做客挪过去的站位作罢
+          delete r.spots[a.npc];
+          delete r.doing[a.npc];
         }
       },
       { priority: 80 },
