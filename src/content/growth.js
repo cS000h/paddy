@@ -1,6 +1,22 @@
 // 0.12的技能等级与十二个特质；获得条件由成长插件判断。
 // 前六个原是开局两选给的，现在挂在性情和出身线上（content/traits.js 的 OLD_TRAITS），后六个叫「历练」。
-export const LEVELS = [0, 4, 10, 18, 30, 45];
+// 升一级要的经验（累计）。照「勤快的人春末到在行、夏天老练、秋天才成行家」定，
+// 跑 `node tools/growth-curve.mjs` 看两种玩法下的曲线。
+export const LEVELS = [0, 20, 80, 200, 420, 760];
+/**
+ * 经验怎么给：干活按这件事的基准体力给（出多大力长多少本事），钓鱼按钓上来的给，不按甩竿。
+ * 每门本事一天头 fresh 点照给，再往后只给 over 这么多（今天手上已经熟了，再练长进慢）。
+ * 收一格菜另给 harvest，下锅做饭给 cook 的几样。rate 是几门不怎么花体力的本事的倍数，
+ * 让它们和种地、采集差不多快：聊天、看天一回只给一两点。
+ */
+export const XP = Object.freeze({
+  rate: Object.freeze({ cook: 2, social: 2, sky: 6 }),
+  fresh: 12,
+  over: 0.2,
+  harvest: 3,
+  fish: Object.freeze({ small: 2, fair: 2, big: 3, huge: 5, thing: 1 }),
+  cook: Object.freeze({ base: 2, great: 2, good: 1, first: 2, shred: 1 }),
+});
 export const LEVEL_NAMES = ['生疏', '入门', '熟手', '在行', '老练', '行家'];
 export const SKILLS = {
   farm: {
@@ -11,7 +27,7 @@ export const SKILLS = {
   cook: {
     grow: '灶火生得多了，咸淡心里有数',
     name: '厨艺',
-    perks: { 1: '每级让每份饭多2饱腹', 2: '三样食材能做出3份', 4: '食物增益多管用1次' },
+    perks: { 1: '每级火候好拿捏一些', 2: '调味有分寸，滋味多一分', 4: '食物增益多管用1次' },
   },
   forage: {
     grow: '林子走熟了，哪儿有东西，一眼就看得出',
@@ -79,7 +95,7 @@ export const TRAITS = {
   hearth: {
     got: '灶火生得多了，火候心里有了数',
     name: '灶边人',
-    need: '做出8份饭',
+    need: '做8回饭',
     effect: '食物增益多管用1次',
   },
   earlybird: {

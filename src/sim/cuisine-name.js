@@ -42,7 +42,7 @@ const SPICE_PREFIX = (sp, method) =>
                 : '';
 function dishName(items, method, I, spices = []) {
   const r = findRecipe(items, method, spices);
-  if (r) return { name: r[0], named: true };
+  if (r) return { name: r[0], named: true, spices: r[3] || [] };
   const pre = SPICE_PREFIX(spices, method);
   if (pre) {
     const plain = dishName(items, method, I).name.replace(/^(清炒|凉拌|烤)/, m =>

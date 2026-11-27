@@ -62,6 +62,7 @@ npm run art:sheet # 不开浏览器，把整张场景和素材导出到 .cache/ 
 | 有热闹时让村民围过去                   | 在自己插件的 `'resident.positions'` 接口里调 `src/sim/crowd.js` 的 `gather`，站位写进那张地图的 `spots` |
 | 院里加一处能修的地方、修好招谁进院     | 名单、材料、话和进院的人在 `src/content/yard-fix.js`，修好的图在 `src/art/yard-fix-sketches.js`         |
 | 改各户的营生、年景、大开销             | `src/content/purse.js`；跑 `node tools/village-sim.mjs` 看一季下来各户的钱                              |
+| 改本事长得快慢、升级要多少经验         | `src/content/growth.js` 的 `LEVELS`、`XP`；跑 `node tools/growth-curve.mjs` 看几种玩法的曲线            |
 | 改心烦怎么涨落、哪件事算什么做法       | `src/content/stress.js`；性情顺着、违着哪些做法在 `src/content/traits.js`                               |
 | 加一件找上门、碰上的事（局面）         | 谁在场、什么性情、选项和后果在 `src/content/scenes.js`；什么时候冒出来在 `src/sim/plugins/scenes.js`    |
 | 改节令、年景                           | `src/content/almanac.js`（节日、年景的话和哪户受累），聚人和传话在 `src/sim/plugins/almanac.js`         |

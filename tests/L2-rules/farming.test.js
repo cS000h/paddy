@@ -103,10 +103,11 @@ test('水壶会空，挨着水缸、水井、水沟或溪水才能打满', () =>
 test('体力用完就干不动了，睡一觉恢复；睡得太晚回不满', () => {
   const g = newGame();
   let n = 0;
-  for (let y = 19; y <= 25 && g.ask('hero').energy > 0; y++)
-    for (let x = 6; x <= 17 && g.ask('hero').energy > 0; x++, n++)
+  const cost = () => g.ask('action.cost', 'hoe').value;
+  for (let y = 19; y <= 25 && g.ask('hero').energy >= cost(); y++)
+    for (let x = 6; x <= 17 && g.ask('hero').energy >= cost(); x++, n++)
       must(g, 'farm.till', { x, y, at: { x, y, dir: 'down' } });
-  assert.equal(g.ask('hero').energy, 0);
+  assert.ok(g.ask('hero').energy < cost());
   assert.equal(
     refused(g, 'farm.till', { x: 17, y: 25, at: { x: 17, y: 25, dir: 'down' } }),
     '太累了，回屋歇一歇吧',

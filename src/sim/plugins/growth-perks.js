@@ -102,14 +102,11 @@ export const growthPerks = {
     K.tap(
       'meal.preview',
       (r, { w, who }) => {
+        // 厨艺长的是手上的分寸（火候宽、滋味好），不是锅里多出来的分量
         const l = lv(w, 'cook', who);
-        if (l) {
-          r.full = Math.min(60, r.full + 2 * l);
-          r.notes.push(`厨艺${LEVEL_NAMES[l]}：饱腹 +${2 * l}`);
-        }
-        if (l >= 2 && r.ingredients.length === 3) {
-          r.servings = 3;
-          r.notes.push('三样食材，做出3份');
+        if (l >= 2) {
+          r.flavorBonus += 1;
+          r.notes.push(`厨艺${LEVEL_NAMES[l]}：调味有分寸，滋味多一分`);
         }
       },
       { priority: 40 },

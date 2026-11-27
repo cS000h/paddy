@@ -3,12 +3,12 @@
 // 这一锅的节拍由世界的种子和这户第几回烧火（fires）定，所以面板先问到的和出锅时判的是同一份。
 import { ITEMS, seasonal, inSeason, kindOf } from '../content/pantry.js';
 import { FINE_HEAT } from '../content/quality.js';
-import { METHODS, QUALITY, HEAT, CUTS } from '../content/recipes.js';
+import { METHODS, QUALITY, HEAT, CUTS, POT, FLAVOR } from '../content/recipes.js';
 import { BUFFS, buffUses } from '../content/body.js';
 import { dateOf } from '../content/calendar.js';
 import { dishName } from './cuisine-name.js';
 import { planFor, judge, goodLog, twistOf } from './cook-fire.js';
-import { buffOf, tasteOf } from './cuisine-taste.js';
+import { buffOf, tasteOf, flavorOf } from './cuisine-taste.js';
 import { refuse } from '../kernel/dispatch.js';
 export function previewMeal(w, input, compute, who, fires = 0) {
   const { items: picked = [], method = 'stew', spices = [], log = null, cut = null } = input;
@@ -40,10 +40,8 @@ export function previewMeal(w, input, compute, who, fires = 0) {
   const name = dishName(items, method, I, spices);
   const buff = buffOf(items, method, I, spices);
   const taste = tasteOf(items, method, I, spices);
-  let full = Math.min(
-    56,
-    items.reduce((n, k) => n + I(k).full, 0),
-  );
+  // 饱腹守恒：先算这一锅一共多少，最后才分到几份里
+  let full = items.reduce((n, k) => n + I(k).full, 0);
   if (season) full = Math.round(full * 1.1);
   const cutBonus = cut ? (CUTS[cut].fit.includes(method) ? 3 : -3) : 0;
   if (cutBonus > 0) full += 2;
@@ -75,7 +73,8 @@ export function previewMeal(w, input, compute, who, fires = 0) {
       why: buff.why,
       seasonal: season,
       meat,
-      servings: items.length >= 2 ? 2 : 1,
+      servings: POT.servings[items.length],
+      flavorBonus: 0,
       water: taste.water,
       taste: taste.words,
       tasteMood: taste.mood,
@@ -108,19 +107,37 @@ export function previewMeal(w, input, compute, who, fires = 0) {
   r.perfect = !!verdict?.perfect;
   r.beats = verdict?.beats || null;
   r.quality = q;
-  r.full = Math.round(r.full * counts.full);
+  const pot = r.full * counts.full;
   r.name = (twist ? twist.prefix : QUALITY[q].prefix) + r.base;
   if (twist) {
     r.twist = twist.id;
     r.servings = Math.max(1, r.servings + ('servings' in twist ? twist.servings : 0));
     r.tasteMood = Math.min(3, r.tasteMood + ('mood' in twist ? twist.mood : 0));
   }
+  r.full = Math.min(POT.cap, Math.round(pot / r.servings));
+  // 滋味：调料、火候、照菜谱、当季管好不好吃；三分的多一点心情、多管一回，一分的少一点
+  const flavor = flavorOf(items, method, I, spices, {
+    quality: twist ? 'plain' : q, // 砸了也有点意思的，滋味照家常算
+    named: name.named,
+    seasonal: season,
+    recipeSpices: name.spices || [],
+    bonus: r.flavorBonus,
+  });
+  const lift = flavor.stars - 2;
+  delete r.flavorBonus;
+  r.flavor = flavor.stars;
+  r.tasteMood = Math.max(-3, Math.min(3, r.tasteMood + lift));
+  r.notes.push(
+    `滋味${'★'.repeat(flavor.stars)}${'☆'.repeat(3 - flavor.stars)}${FLAVOR.words[flavor.stars]}` +
+      (flavor.why.length ? '：' + flavor.why.join('、') : ''),
+  );
   r.uses = buffUses(
     r.buff,
     Math.max(
       1,
       BUFFS[r.buff].base +
         counts.uses +
+        lift +
         compute.run('buff.uses', { w, who }, { value: 0, parts: [] }).value,
     ),
   );
