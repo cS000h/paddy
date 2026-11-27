@@ -596,11 +596,14 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await shot(p, session === desk ? 'river-desktop.png' : 'river-phone.png');
       await go(12, 4, 'creek');
       await go(12, 3, 'hill');
-      assert.ok(
-        await p.evaluate(() =>
-          window.__dao.world.scene().villagers.some(v => v.id === 'yun' && v.sprite.visible),
-        ),
+      // 云姑申时前在后山；机器慢、现实时间走过了申时她就下山去了溪边。
+      // 按作息查：该在这儿的人画出来了，不该在的没有。
+      const hill = await p.evaluate(() =>
+        window.__dao.world
+          .scene()
+          .villagers.map(v => [v.id, v.plan.visible && v.plan.map === 'hill', v.present]),
       );
+      for (const [id, due, shown] of hill) assert.equal(shown, due, `${id} 在不在后山`);
       await shot(p, session === desk ? 'hill-desktop.png' : 'hill-phone.png');
       await go(12, 20, 'creek');
       await go(1, 14, 'yard');

@@ -7,6 +7,7 @@ import { TILE, dirTo } from './logic.js';
 import { createStir } from './stir.js';
 import { createGroundFinds } from './ground-finds.js';
 import { createPrizeTraces } from './prize-traces.js';
+import { createChatter } from './chatter.js';
 
 /** 挂在 VillageScene 上的过客与小事实体管理，不占 scene.js 行数。 */
 export function createFieldExtras(scene) {
@@ -14,6 +15,7 @@ export function createFieldExtras(scene) {
   const ground = createGroundFinds(scene);
   const stir = createStir(scene);
   const traces = createPrizeTraces(scene);
+  const chatter = createChatter(scene, () => [...walkers.values()]);
   let eventMark = null;
   let eventRing = null;
   let eventTween = null;
@@ -238,6 +240,7 @@ export function createFieldExtras(scene) {
   function frame(delta) {
     stir.frame(delta);
     ground.frame(delta);
+    chatter.frame(delta);
   }
 
   function destroy() {

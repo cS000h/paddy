@@ -20,8 +20,12 @@ export const PASSER_TEXT = Object.freeze({ ...PASSER_TEXT_A, ...PASSER_TEXT_B, .
 export const PASSER_RULES = Object.freeze({
   from: 8 * 60, // 辰时到村
   until: 17 * 60, // 酉时走；话说到一半的等你说完
-  chance: 0.35, // 平常日子来一位的机会；集日来两位
-  rest: 6, // 同一位隔几天才再来
+  // 你试玩说村里冷清（2026-11-26）：平常日子从「三成多来一位」改成总来一位、六成再来一位，
+  // 集日从两位改成四位。十一位过客隔四天能再来，一天平均一位半多，名单够轮。
+  plain: 1, // 平常日子准来几位
+  chance: 0.6, // 平常日子再多来一位的机会
+  fair: 4, // 集日来几位（一天最多站四位，见 passer-state.js 的 today）
+  rest: 4, // 同一位隔几天才再来
   dc: 5, // 检定的坎：五项 5 点对半开，每差一点差 12 成，一条把握加项算一点
   near: 15, // 差不到这么些，告诉你差在哪儿
   tea: 2, // 受委屈的上门，递碗茶赔个不是

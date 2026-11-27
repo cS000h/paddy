@@ -3,6 +3,8 @@ import { TILE, tileOf, dirTo, findPath, exitToward, plotToll } from './logic.js'
 import { ResidentWork } from './resident-work.js';
 import { showEmote } from './emotes.js';
 import { GREET } from '../content/resident-work.js';
+import { HELLO, BARK_SLOTS } from '../content/barks.js';
+import { PEOPLE, ROUTINE_DAY } from '../content/people.js';
 import { frameOf, ensurePerson } from './textures.js';
 import { walkable } from '../content/maps/index.js';
 
@@ -243,7 +245,10 @@ export class Villager extends Walker {
     }
     if (this.follow(dt)) return;
     const near = Math.max(Math.abs(this.tile.x - hero.x), Math.abs(this.tile.y - hero.y)) <= 2;
-    if (near && this.present) this.greet();
+    if (near && this.present) {
+      this.greet();
+      this.bark();
+    }
     this.work.update(dt);
   }
 
@@ -261,6 +266,27 @@ export class Villager extends Walker {
     this.turnTo(scene.player);
     this.work.wait = 1.8;
     showEmote(scene, this, bond?.tier === 0 ? GREET.stranger : GREET[bond?.mood]);
+  }
+
+  /**
+   * 你走到跟前，他先开口说一句（content/barks.js 的 HELLO）：一天四段，每段一回。
+   * 还不认识你说生分的话，下雨天说雨。只是画面上的话，不记好感。
+   */
+  bark() {
+    const scene = this.scene;
+    const { game, shell } = scene.deps;
+    const minute = game.ask('clock').minute;
+    const slot = Math.max(0, ROUTINE_DAY.slots.filter(m => minute >= m).length - 1);
+    const key = `${this.id}:${scene.today}:${slot}`;
+    const said = scene.registry.get('barked') || new Set();
+    if (said.has(key) || !HELLO[this.id]) return;
+    scene.registry.set('barked', said.add(key));
+    const lines = HELLO[this.id];
+    const bond = game.ask('bonds').find(b => b.id === this.id);
+    const wet = scene.weather?.tags.includes('wet') && Math.random() < 0.5;
+    const pool = bond?.tier === 0 ? lines.stranger : wet ? lines.wet : lines[BARK_SLOTS[slot]];
+    const text = pool[Math.floor(Math.random() * pool.length)];
+    shell.toast(`${PEOPLE[this.id].name}：“${text}”`);
   }
 
   /** 转过身来对着某个人（说话的时候）。 */
