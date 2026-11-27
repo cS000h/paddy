@@ -94,9 +94,10 @@ export const cooking = {
       const stove = MAPS[p.map].objects.find(([k, x, y]) => k === 'stove' && near(p, { x, y }));
       if (!stove || !people.atHome(w)) refuse('回檐下灶台边才能做饭');
     };
-    const take = ctx.own((w, id, dishId) => {
+    // gate：满院飘香时站在院门口给门外的人盛，灶上的菜够得着（sim/plugins/aroma.js）
+    const take = ctx.own((w, id, dishId, gate = false) => {
       if (pack.dishes(w, id).some(d => d.id === dishId)) return pack.takeDish(w, id, dishId);
-      if (!people.atHome(w, id)) refuse('饭还在家里，先去灶台端上');
+      if (!gate && !people.atHome(w, id)) refuse('饭还在家里，先去灶台端上');
       const list = home(w).dishes,
         i = list.findIndex(d => d.id === dishId);
       if (i < 0) refuse('这份饭已经不在了');
@@ -142,6 +143,8 @@ export const cooking = {
         beats,
         ingredients: p.ingredients.length,
         items: [...p.ingredients],
+        // 下锅的有没有极品（菜里只记原来那样）：满院飘香看这个（sim/plugins/aroma.js）
+        fine: input.items.some(k => ITEMS[k]?.fine),
         first: first && p.named,
         ids,
         line: cookedLine(p, first && p.named),

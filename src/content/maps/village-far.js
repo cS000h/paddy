@@ -69,6 +69,11 @@ export const river = village(
     east: [22, 15, 'left'],
     'zhou.river': [15, 14, 'right'],
     north: [12, 5, 'down'],
+    // 集日比鱼时围过来看的人（sim/crowd.js），让开钓点和钓客跟前那几格
+    'crowd.0': [19, 17, 'down'],
+    'crowd.1': [20, 19, 'left'],
+    'crowd.2': [15, 20, 'up'],
+    'crowd.3': [14, 17, 'right'],
   },
 );
 

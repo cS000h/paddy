@@ -159,6 +159,13 @@ export const MODIFIERS = Object.freeze({
     desc: '断案不偏不倚，外村汉子都服你一句话，再断案时更服众，人情 +1',
     attrs: { renqing: 1 },
   },
+  aroma_cook: {
+    name: '稻乡头灶',
+    kind: 'good',
+    days: 10,
+    desc: '三回烧出香飘半村的好菜，街坊一闻炊烟便知是你掌勺，人情 +1',
+    attrs: { renqing: 1 },
+  },
   match_head: {
     name: '渡口头竿',
     kind: 'good',

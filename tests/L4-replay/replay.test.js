@@ -60,8 +60,8 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-// 人心的底子后半段（v27）：存档多了家底、见闻、心烦的记账、村民做事的记录；大开销换成 G-20 的那一池
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: 'ca045ac3' };
+// 成长和做饭的数值（v29）：经验按出力给、当天打折，一锅饭饱腹守恒、滋味、吃腻了
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '501fe3db' };
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};

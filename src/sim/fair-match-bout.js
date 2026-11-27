@@ -61,7 +61,8 @@ const echoOk = e =>
     Object.hasOwn(HOSTS, e.host) &&
     RESULTS.includes(e.result) &&
     idsOk(e.seen) &&
-    (e.rumor === null || Object.hasOwn(MATCH_RUMOR, e.rumor)));
+    (e.rumor === null || Object.hasOwn(MATCH_RUMOR, e.rumor)) &&
+    [null, 'caught', 'wronged', 'tea'].includes(e.how));
 
 export const matchValid = m =>
   check([

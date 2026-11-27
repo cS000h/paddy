@@ -18,11 +18,11 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
-  27(state) {
+  28(state) {
     // 本事的升级曲线拉长、经验改成按出力给并且当天边际递减（每门本事记一份今天长了多少）。
     // 旧档的经验照级换算到新曲线上：同一级、级内同样的进度，升上来不掉级。两张表都写死。
     const w = state.world;
-    w.meta.version = 28;
+    w.meta.version = 29;
     const OLD = [0, 4, 10, 18, 30, 45],
       NEW = [0, 20, 80, 200, 420, 760];
     const rescale = xp => {
@@ -37,6 +37,17 @@ export const MIGRATIONS = {
     }
     // 吃腻了：每户记最近吃的几道菜，旧档从空的记起
     for (const k of Object.values(w.kitchens)) k.recent = [];
+    return state;
+  },
+  27(state) {
+    // 集日收尾、小院翻修、满院飘香：钓客第二天上门答过没有、院里修好了哪几处、飘香的记录。
+    // 比鱼的回响多记一样「为什么上门」，旧档里的回响都当没什么特别的来由。
+    const w = state.world;
+    w.meta.version = 28;
+    if (w.match.echo) w.match.echo.how = null;
+    w.matchVisit = { day: 0 };
+    w.yardFix = { fixed: {}, trim: false, gifts: {} };
+    w.aroma = { today: null, echo: null, count: 0 };
     return state;
   },
   26(state) {

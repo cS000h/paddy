@@ -52,7 +52,8 @@ export const residents = {
       return compute.run(
         'resident.positions',
         { w, slot },
-        { value: places, parts: [], waiting: null },
+        // spots、doing：围观、进院做客的人站到别的站位上、说他在做什么（见 sim/crowd.js）
+        { value: places, parts: [], waiting: null, spots: {}, doing: {} },
       );
     }
 
@@ -98,18 +99,20 @@ export const residents = {
           name: PEOPLE[id].name,
           map,
           place,
-          ...spot(MAPS[map], `${id}.${place}`),
+          ...spot(MAPS[map], r.spots[id] || `${id}.${place}`),
           visible: true,
           waiting: r.waiting === id,
           atDoor: night,
           doing:
             r.waiting === id
               ? '在茶桌边等你赴约'
-              : night
-                ? '在自家门内应声'
-                : w.weather.now === 'snow' && RAIN_DOING[id]?.[place]
-                  ? '避着雪，停下来歇脚'
-                  : (situation.wet && RAIN_DOING[id]?.[place]) || DOING[id][place],
+              : r.doing[id] && !night
+                ? r.doing[id]
+                : night
+                  ? '在自家门内应声'
+                  : w.weather.now === 'snow' && RAIN_DOING[id]?.[place]
+                    ? '避着雪，停下来歇脚'
+                    : (situation.wet && RAIN_DOING[id]?.[place]) || DOING[id][place],
         };
       });
     }

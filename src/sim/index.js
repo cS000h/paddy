@@ -53,6 +53,9 @@ import { purse } from './plugins/purse.js';
 import { witness } from './plugins/witness.js';
 import { stress } from './plugins/stress.js';
 import { deeds } from './plugins/deeds.js';
+import { matchVisit } from './plugins/match-visit.js';
+import { yardFix } from './plugins/yard-fix.js';
+import { aroma } from './plugins/aroma.js';
 
 export { SAVE_VERSION };
 // 顺序有讲究：后面的插件建自己的数据时，可以读前面的（比如身体和行囊按“户里有谁”来建）。
@@ -100,6 +103,9 @@ export const PLUGINS = Object.freeze([
   witness,
   stress,
   deeds,
+  matchVisit,
+  yardFix,
+  aroma,
   wardrobe,
   interactions,
 ]);

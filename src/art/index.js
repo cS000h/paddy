@@ -202,6 +202,7 @@ export { ACTS, actFrame, actSheet } from './acts.js';
 export { EMOTES, emote } from './emotes.js';
 export { farmFrame } from './farm-frame.js';
 export { hen } from './acts-yard.js';
+export { yardFixArt, YARD_FIX_NAMES } from './yard-fix.js';
 export { seasonGrid } from './seasons.js';
 export { plotMark, PLOT_MARKS } from './plot-marks.js';
 export { cropSet } from './crops.js';

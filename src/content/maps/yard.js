@@ -166,6 +166,17 @@ export const yard = Object.freeze({
     start: [8, 11, 'down'],
     'hero.bed': [8, 10, 'down'],
     'shi.field': [23, 22, 'right'],
+    // 院门外围着的人（满院飘香、彩头台围观），让开院门正中那两格
+    'gate.0': [7, 15, 'up'],
+    'gate.1': [10, 15, 'up'],
+    'gate.2': [12, 15, 'up'],
+    'gate.3': [5, 15, 'up'],
+    // 修好的地方招进院来的人站在哪儿（content/yard-fix.js）
+    'guest.bench': [10, 12, 'up'],
+    'guest.well': [17, 18, 'right'],
+    'guest.coop': [12, 13, 'right'],
+    'guest.rack': [13, 15, 'up'],
+    'guest.shed': [12, 11, 'right'],
   }),
   // 自家的院子（篱笆以内）：[x0, y0, x1, y1]。站在这里面，才够得着家里存的东西
   home: Object.freeze([4, 10, 13, 13]),
