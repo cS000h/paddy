@@ -180,6 +180,12 @@ export function createPanels({
     if (!state.toast || state.toast === lastToast) return;
     lastToast = state.toast;
     captions.say(state.toast.text, state.toast.keep);
+    // 行囊满了：底下那排格子闪一下，看得出是哪儿满了
+    if (/行囊满/.test(state.toast.text)) {
+      el.slots.classList.remove('full');
+      void el.slots.offsetWidth;
+      el.slots.classList.add('full');
+    }
   }
 
   // 按钮要做的事出错（包括 async 的），交给 report，不让它变成页面上没人接的错
@@ -234,7 +240,7 @@ export function createPanels({
     },
   };
 
-  // 点击：按钮上写着 data-do（做什么）或 data-tool（选哪件工具）
+  // 点击：按钮上写着 data-do（做什么）、data-tool（选哪件农具）或 data-slot（拿起行囊里哪一格）
   root.addEventListener('click', event => {
     const button = event.target.closest('button');
     if (!button || button.disabled) {
@@ -244,6 +250,7 @@ export function createPanels({
     }
     platform.audio.unlock();
     if (button.dataset.tool) return intents.emit('tool', { id: button.dataset.tool });
+    if (button.dataset.slot) return intents.emit('hold', { key: button.dataset.slot });
     const what = button.dataset.do;
     if (LOCAL[what]) return run(() => LOCAL[what](button.dataset), what);
     if (what && actions[what]) return run(() => actions[what](button.dataset), what);

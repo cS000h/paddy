@@ -6,6 +6,7 @@
 //   act           对面前的东西做当前该做的事（说话、开门、用工具）
 //   tap {x, y}    点了世界里的某个位置（世界坐标，单位是像素）：走过去，能做事就做
 //   tool {id}     换工具
+//   hold {key | index} 拿起行囊里的一格（再点一下同一格就放下）
 //   tool.step {by} 往前或往后换一个工具（滚轮、手柄肩键）
 //   cancel        取消、关闭
 //   stick {phase, origin, knob}  触屏摇杆此刻在哪儿（start | move | end），只给面板画圈用，
@@ -13,7 +14,15 @@
 
 import { notifyAll } from './notify.js';
 
-export const INTENTS = Object.freeze(['act', 'tap', 'tool', 'tool.step', 'cancel', 'stick']);
+export const INTENTS = Object.freeze([
+  'act',
+  'tap',
+  'tool',
+  'hold',
+  'tool.step',
+  'cancel',
+  'stick',
+]);
 
 /**
  * @param {object} [options]

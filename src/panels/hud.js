@@ -1,8 +1,10 @@
 // 常驻在画面上的几块：左上的日期、天气和“下一步”，右上的身体四样、铜钱和几个按钮，下方的工具栏，
-// 右下那枚“做”的印（触屏时）。骨架只建一次，之后只改变了的字和数——原来每走一次时就把
+// 右下那枚“做”的印（触屏时）。下方那排是随身行囊，一格一样东西；在自家院里时左边多出四件农具。
+//骨架只建一次，之后只改变了的字和数——原来每走一次时就把
 // 工具栏整个重建，手机上会顿一下，手指正按着的按钮也会被换掉，点了没反应。
 import { TOOLS, ITEMS } from '../content/items.js';
 import { heroPortraitUrl, toolIconUrl, itemIconUrl } from './icons.js';
+import { servedImg } from './stove-picture.js';
 import { termOf } from '../content/calendar.js';
 import { esc } from './html.js';
 
@@ -31,9 +33,39 @@ const navKey = (
 ) => `<button class="menu-btn ${cls}" data-do="${id}" aria-label="${label}">
   <svg aria-hidden="true" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill-rule="evenodd" d="${glyphs[id]}"/></svg>${label}</button>`;
 
-const toolButton = (tool, i) =>
+const toolButton = tool =>
   `<button data-tool="${tool.id}" aria-label="${tool.name}"><img class="pixel" alt="" />` +
-  `<i class="badge"></i><span class="name">${tool.name}</span><em class="key">${i + 1}</em></button>`;
+  `<i class="badge"></i><span class="name">${tool.name}</span></button>`;
+
+// 行囊的一格：图、份数、数字键；鱼篓竹篮写着里头几样，带汤的饭菜占两格宽。
+function slotButton(slot, i) {
+  const img = slot.dish
+    ? servedImg(slot.dish)
+    : `<img class="pixel" alt="" src="${itemIconUrl(slot.icon)}" />`;
+  const inside = slot.members
+    ? `${slot.name}：${slot.members.map(m => `${m.name}×${m.n}`).join('、') || '空着'}`
+    : slot.name + (slot.n > 1 ? ` ×${slot.n}` : '');
+  const badge = slot.members ? `${slot.members.length}样` : slot.n > 1 ? String(slot.n) : '';
+  return (
+    `<button class="slot${slot.size > 1 ? ' wide' : ''}" data-slot="${esc(slot.key)}" ` +
+    `title="${esc(inside)}" aria-label="${esc(inside)}">${img}` +
+    `<i class="badge">${badge}</i><em class="key">${i + 1}</em></button>`
+  );
+}
+
+/** 行囊那排：变了才重画（份数、格子、拿着哪格的高亮在 syncToolbar 里改）。 */
+function syncSlots(el, pack) {
+  const sign = [
+    pack.cap,
+    ...pack.slots.map(s => [s.key, s.n, s.size, s.members?.length].join('|')),
+  ].join(';');
+  if (el.slots.dataset.sign === sign) return;
+  el.slots.dataset.sign = sign;
+  const empty = Math.max(0, pack.cap - pack.used);
+  el.slots.innerHTML =
+    pack.slots.map(slotButton).join('') + '<span class="slot empty"></span>'.repeat(empty);
+  attr(el.slots, 'aria-label', `行囊 ${pack.used}/${pack.cap} 格`);
+}
 
 /** 常驻几块的骨架；带 data-id 的元素由 renderHud 填。 */
 export const HUD_HTML = `
@@ -57,8 +89,9 @@ export const HUD_HTML = `
       ${navKey('journal', '手记')}${navKey('menu', '菜单')}
     </nav>
   </div>
-  <nav class="toolbar" data-id="toolbar">${TOOLS.map(toolButton).join('')}<span class="sep"></span>
-    <span class="tool-mode" data-id="mode" hidden>手选 · 再点解锁</span><button class="chip" data-do="seeds">选种</button><button class="chip" data-do="field">看地</button>
+  <nav class="toolbar" data-id="toolbar"><span class="farm" data-id="farm">${TOOLS.map(toolButton).join('')}
+    <span class="tool-mode" data-id="mode" hidden>手选 · 再点解锁</span><button class="chip" data-do="seeds">选种</button><button class="chip" data-do="field">看地</button><span class="sep"></span></span>
+    <span class="slots" data-id="slots" role="group"></span>
   </nav>`;
 
 /** 字变了才改，不变就不碰 DOM。 */
@@ -91,10 +124,16 @@ function syncTools(el, game, seed) {
   }
 }
 
-/** 工具栏上哪件工具拿在手里；面前那格地要照料时，“看地”点上一点朱砂。 */
+/** 工具栏上哪件工具拿在手里、行囊里拿起的是哪格；面前那格地要照料时，“看地”点上一点朱砂。 */
 export function syncToolbar(el, state) {
   el.mode.hidden = !state.manualTool;
   for (const button of el.toolbar.querySelectorAll('button')) {
+    if (button.dataset.slot) {
+      const held = button.dataset.slot === state.held;
+      button.classList.toggle('on', held);
+      attr(button, 'aria-pressed', String(held));
+      continue;
+    }
     const tool = button.dataset.tool;
     if (tool) {
       const active = tool === (state.manualTool ? state.tool : state.hint?.tool);
@@ -166,6 +205,9 @@ export function renderHud(el, { game, shell }) {
   }
   lowWords(el, body, clock.day, shell);
   put(el.coins, String(game.ask('home').coins));
+  const pack = game.ask('pack');
+  el.farm.hidden = !pack.atHome; // 农具只在自家院里摆出来
+  syncSlots(el, pack);
   syncTools(el, game, shell.get().seed);
   syncToolbar(el, shell.get());
 }

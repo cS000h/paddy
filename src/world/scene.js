@@ -16,7 +16,7 @@ import { weatherEffects } from './weather.js';
 import { fieldInspection } from './field-inspection.js';
 import { refreshPlots } from './plots.js';
 import { repeatField, bindAction, bindKeyboard, bindPointer } from './input.js';
-import { hintFor, touchThing, drawWater, poke } from './interactions.js';
+import { hintFor, touchThing, drawWater, poke, heldHint, eatHeld } from './interactions.js';
 import { swing } from './farm-motion.js';
 import { tapAt } from './tap.js';
 import { leaveByRoad } from './travel.js';
@@ -203,10 +203,10 @@ export class VillageScene extends Phaser.Scene {
   updateHint() {
     const { game, shell } = this.deps;
     const t = this.target();
-    const { tool, seed, manualTool } = shell.get();
-    const key = [t.kind, t.person?.id, t.x, t.y, tool, seed, manualTool, game.revision()].join(':');
-    if (key === this.hintKey) return;
-    this.hintKey = key;
+    const { tool, seed, manualTool, held } = shell.get();
+    const key = [t.kind, t.person?.id, t.x, t.y, tool, seed, manualTool, held, game.revision()];
+    if (key.join(':') === this.hintKey) return;
+    this.hintKey = key.join(':');
     const hint = hintFor(this, t);
     const old = shell.get().hint;
     if (
@@ -247,7 +247,7 @@ export class VillageScene extends Phaser.Scene {
     if (t.kind === 'thing') return this.touch(t.thing);
     if (t.kind === 'water') return drawWater(this, t);
     if (t.kind === 'decor') return poke(this, t.decor);
-    if (!farmable(this.map, t.x, t.y)) return undefined;
+    if (!farmable(this.map, t.x, t.y)) return eatHeld(this, heldHint(this));
     const action = hintFor(this, t);
     if (!action.ok) return this.refuse(action.text);
     const tool = action.tool;

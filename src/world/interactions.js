@@ -87,6 +87,30 @@ export function drawWater(scene, target) {
   scene.performer.play('refill', { target });
 }
 
+/** 手里拿着能吃的（零嘴、能生吃的、带着的饭菜），面前又没别的事：印上刻「吃」。 */
+export function heldHint(scene) {
+  const { game, shell } = scene.deps;
+  const key = shell.get().held;
+  if (!key) return null;
+  const slot = game.ask('pack', scene.at()).slots.find(s => s.key === key);
+  if (slot?.slot === 'dish') return { text: `吃${slot.name}`, verb: '吃', ok: true, dish: slot.id };
+  if (slot?.slot === 'item' && slot.eat)
+    return { text: `吃${slot.name}`, verb: '吃', ok: true, eat: slot.id };
+  return null;
+}
+
+/** 照 heldHint 吃下去；吃了什么由饮食那边的提示冒出来（app/diet.js）。 */
+export function eatHeld(scene, h) {
+  if (!h) return undefined;
+  const at = scene.at();
+  const out = h.dish
+    ? scene.deps.game.dispatch('dish.eat', { id: h.dish, at })
+    : scene.deps.game.dispatch('eat', { item: h.eat, at });
+  if (!out.ok) return scene.refuse(out.reason);
+  scene.deps.platform.audio.play('talk');
+  return out;
+}
+
 export function hintFor(scene, t) {
   const { game, shell } = scene.deps;
   if (t.kind === 'decor') {
@@ -122,7 +146,7 @@ export function hintFor(scene, t) {
       ok: true,
     };
   }
-  if (!farmable(scene.map, t.x, t.y)) return null;
+  if (!farmable(scene.map, t.x, t.y)) return heldHint(scene);
   const plot = game.ask('farm.detail', t.x, t.y);
   const state = shell.get();
   const tool = state.manualTool ? state.tool : fieldTool(plot);

@@ -220,6 +220,32 @@
   right: 6px;
   bottom: 106px;
 }
+/* 触屏：农具围着右下的印摆一圈，行囊那排在印的左边、贴着下沿 */
+.touch .toolbar .slots {
+  position: absolute;
+  right: 170px;
+  bottom: 0;
+  gap: 4px;
+  pointer-events: auto;
+}
+.touch .toolbar .slot {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+.touch .toolbar .slot.wide {
+  width: 88px;
+}
+.touch .toolbar .slot img {
+  width: 24px;
+  height: 24px;
+}
+.touch .toolbar .slot.on {
+  transform: none;
+  border: 2px solid #846a37;
+  background: #fff4d5;
+  box-shadow: 0 0 0 1px #e0bc64;
+}
 .touch .toolbar [data-tool].on {
   border: 2px solid #846a37;
   background: #fff4d5;

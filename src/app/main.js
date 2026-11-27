@@ -107,6 +107,9 @@ function start() {
   };
   const stopSaving = () => {
     saving = false;
+    // 拿着的那格吃完、卖光、送掉了：手里就空了
+    const held = shell.get().held;
+    if (held && !game.ask('pack').slots.some(s => s.key === held)) shell.set({ held: null });
     clearTimeout(saveTimer);
   };
 
@@ -158,6 +161,20 @@ function start() {
       shell.set({ tool: id, manualTool: !(shell.get().manualTool && shell.get().tool === id) });
   });
   intents.on('tool.step', data => !shell.paused() && shell.stepTool(data.by));
+  // 拿起行囊里的一格：种子拿在手里就是要播这一种；再点同一格是放下，空着手
+  intents.on('hold', data => {
+    if (shell.paused()) return;
+    const slots = game.ask('pack', here()).slots;
+    const slot = data.key ? slots.find(s => s.key === data.key) : slots[data.index];
+    const now = shell.get();
+    if (!slot || slot.key === now.held) {
+      const seedHeld = now.manualTool && now.tool === 'seed' && now.held;
+      return shell.set({ held: null, ...(seedHeld ? { manualTool: false } : {}) });
+    }
+    if (slot.slot === 'item' && slot.kind === 'seed')
+      return shell.set({ held: slot.key, seed: slot.id, tool: 'seed', manualTool: true });
+    return shell.set({ held: slot.key, manualTool: false });
+  });
 
   game.onCommit(facts => {
     // 到了新地方，让工具栏重新按面前的东西挑。

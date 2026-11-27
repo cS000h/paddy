@@ -3,7 +3,7 @@
 // 要支持手柄，就在这里再加一个 bindGamepad，世界本身不用改。
 import { stickState } from '../shell/stick.js';
 
-/** 键盘：WASD 或方向键走路；空格、E、回车、J 做事；1–4 选工具；Q、R 换工具；Esc 取消。 */
+/** 键盘：WASD 或方向键走路；空格、E、回车、J 做事；1–8 拿起行囊里的一格；Q、R 换农具；Esc 取消。 */
 export function bindKeyboard(scene, intents) {
   const keyboard = scene.input.keyboard;
   const keys = keyboard.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT');
@@ -22,8 +22,8 @@ export function bindKeyboard(scene, intents) {
     if (event.repeat) return;
     const key = event.key.toLowerCase();
     if (actKeys.includes(key)) intents.emit('act', { phase: 'down' });
-    else if (key.length === 1 && '1234'.includes(key))
-      intents.emit('tool', { index: Number(key) - 1 });
+    else if (key.length === 1 && '12345678'.includes(key))
+      intents.emit('hold', { index: Number(key) - 1 });
     else if (key === 'q') intents.emit('tool.step', { by: -1 });
     else if (key === 'r') intents.emit('tool.step', { by: 1 });
     else if (key === 'escape') intents.emit('cancel');
