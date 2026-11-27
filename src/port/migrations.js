@@ -18,6 +18,15 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  31(state) {
+    // 食为天：每人记近几天吃了哪几类、吃过哪些菜、哪几样状态已经说过。旧档从空的记起。
+    const w = state.world;
+    w.meta.version = 32;
+    w.diet = Object.fromEntries(
+      Object.keys(w.packs).map(id => [id, { log: [], tasted: [], seen: [] }]),
+    );
+    return state;
+  },
   30(state) {
     // 成就分档、贺喜、称号（G-31）：每人多记只数当天的那几样从哪天数起、哪件提过了、今天贺哪件、戴哪个称号。
     // 旧档里已经得了的都算提过了，读档后不会一下子冒出一串道喜。

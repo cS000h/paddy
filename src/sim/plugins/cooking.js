@@ -175,7 +175,14 @@ export const cooking = {
         d = take(w, id, input.id),
         k = home(w);
       // 吃腻了：最近几顿里这道菜吃过几回，饱腹打折、心情扣一点
-      const times = Math.min(TIRED.full.length - 1, k.recent.filter(n => n === d.base).length);
+      // 合口的菜腻得慢一点（sim/plugins/diet.js 接进 'meal.tired'）
+      const seen = k.recent.filter(n => n === d.base).length;
+      const eased = compute.run(
+        'meal.tired',
+        { w, who: id, items: d.ingredients, spices: d.spices },
+        { value: seen, parts: [] },
+      ).value;
+      const times = Math.max(0, Math.min(TIRED.full.length - 1, eased));
       const tired = TIRED.words[times];
       k.recent = [...k.recent, d.base].slice(-TIRED.window);
       body.feed(
@@ -201,6 +208,10 @@ export const cooking = {
         quality: d.quality,
         snack: false,
         tired,
+        times,
+        base: d.base,
+        items: [...d.ingredients],
+        spices: [...d.spices],
       });
     });
     queries.define('kitchen', (w, at) => ({

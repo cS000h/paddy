@@ -133,3 +133,11 @@ export function nearLevel(game, skill, level, off = -1) {
   saved.state.world.growth[hero].xp[skill] = LEVELS[level] + off;
   return createGame({ saved, debug: true });
 }
+
+/** 存档里往家里添些东西，读回来一局新的（测吃喝时不必先种、先买）。只经过存档。 */
+export function stocked(game, items) {
+  const saved = JSON.parse(JSON.stringify(game.save()));
+  const home = saved.state.world.households.home.items;
+  for (const [k, n] of Object.entries(items)) home[k] = (home[k] || 0) + n;
+  return createGame({ saved, debug: true });
+}

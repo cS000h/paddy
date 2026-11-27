@@ -129,6 +129,42 @@ export const MODIFIERS = Object.freeze({
     desc: '水底惊着了，今天钓鱼咬钩少些',
     bite: -0.12,
   },
+  // 膳食结构（content/diet.js、sim/plugins/diet.js）：每天清早照前几天吃的定，挂一天
+  diet_well: {
+    name: '气色好',
+    kind: 'good',
+    days: 1,
+    desc: '饮食匀称，体格 +1，睡醒多歇回 5 点体力，不容易着凉',
+    attrs: { tige: 1 },
+    sleep: 5,
+  },
+  diet_weak: {
+    name: '发虚',
+    kind: 'bad',
+    days: 1,
+    desc: '缺了主粮垫底，睡醒少歇回 10 点体力',
+    sleep: -10,
+  },
+  diet_fire: {
+    name: '上火',
+    kind: 'bad',
+    days: 1,
+    desc: '许久没见青菜，心浮气躁，人情 −1，一早心情就差',
+    attrs: { renqing: -1 },
+  },
+  diet_limp: {
+    name: '乏力',
+    kind: 'bad',
+    days: 1,
+    desc: '肚里没油水，干重活多费 1 点体力',
+    cost: 1,
+  },
+  diet_dry: {
+    name: '嘴燥',
+    kind: 'bad',
+    days: 1,
+    desc: '缺了清甜润口，吃饭心情少 1；吃个果子、喝口茶就好',
+  },
   // 集日比鱼赢来的称号（content/fair-match.js）
   // 外乡过客那儿挣来的名声（G-15，content/passers.js）
   passer_stove: {

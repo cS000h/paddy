@@ -16,6 +16,7 @@ import {
   giftable,
   basketTakes,
   plainOf,
+  kindOf,
 } from '../../content/pantry.js';
 import { BODY, SNACK_BUFF_USES, buffUses } from '../../content/body.js';
 
@@ -228,6 +229,8 @@ export const pack = {
         dish: item.name,
         buff: eat.buff,
         snack: true,
+        items: [kindOf(input.item)],
+        spices: [],
         line: `你吃了${item.name}。${eat.why}。`,
       });
       return undefined;

@@ -26,6 +26,7 @@ import { homeActions } from './home.js';
 import { marketActions } from './market.js';
 import { fieldActions } from './field.js';
 import { growthActions, growthNotices } from './growth.js';
+import { dietNotices } from './diet.js';
 import { pulseActions, pulseNotices } from './pulse.js';
 import { activityActions } from './activities.js';
 import { kitchenActions } from './kitchen.js';
@@ -145,6 +146,7 @@ function start() {
   document.getElementById('boot')?.remove();
 
   growthNotices(game, shell);
+  dietNotices(game, shell);
   pulseNotices(game, shell);
   if (!game.ask('growth').origin) actions.origin();
   if (loadProblem) actions.saves();
