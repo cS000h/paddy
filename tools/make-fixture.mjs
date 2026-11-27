@@ -40,9 +40,12 @@ for (let day = 0; day < 12 && !game.ask('farm.plots', 'yard').every(p => p.ripe)
 }
 run('farm.harvest', spot(6, 19));
 run('farm.harvest', spot(7, 19));
+run('farm.harvest', spot(8, 19)); // 第 28 版起本事长得慢，收菜不多给，三格都收
 run('talk', { to: 'shi' });
 run('gift', { to: 'gui', item: 'veg.qingcai' });
-run('basket.put', { item: 'veg.qingcai', n: 1 });
+// 收上来的可能是极品（另一个编号），身上有哪样放哪样
+const veg = game.ask('pack').items.find(i => i.id.startsWith('veg.qingcai'));
+run('basket.put', { item: veg.id, n: 1 });
 run('basket.order', { item: 'seed.qingcai', n: 4 });
 run('clock.advance', { minutes: 90 });
 // 路边翻一翻（第 20 版起）：院里头一处能翻的地方，从它四面能站人的一格翻

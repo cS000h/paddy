@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, refused, settle, FIELD, wait } from '../helpers.js';
+import { newGame, must, refused, settle, FIELD, wait, nearLevel } from '../helpers.js';
 import { createGame } from '../../src/port/game.js';
 const skill = (g, id) => g.ask('growth').skills.find(s => s.id === id);
 const traits = g =>
@@ -43,11 +43,15 @@ test('落脚单只填一次：性情一个随家里来、一个自己挑，旧�
   settle(flood, { reason: 'flood' });
   assert.equal(flood.ask('home').coins, Math.max(0, was - 16));
 });
-test('农事逐级省力，清晨做六次得早起；拒绝的动作不加经验', () => {
-  const g = newGame();
+test('农事逐级省力，清晨做六次得早起；拒绝的动作不加经验；一天里干多了长进打折', () => {
+  let g = newGame();
   for (let x = 6; x < 12; x++) must(g, 'farm.till', { x, y: 19, at: { x, y: 18 } });
-  assert.ok(skill(g, 'farm').level >= 2);
+  // 锄一格照基准体力给 4：头 12 点照给（3 格），后 3 格的 12 点只给两成，全天合计 14
+  assert.equal(skill(g, 'farm').xp, 14);
   assert.ok(traits(g).includes('earlybird'));
+  g = nearLevel(g, 'farm', 2);
+  must(g, 'farm.till', { x: 13, y: 19, at: { x: 13, y: 18 } });
+  assert.equal(skill(g, 'farm').level, 2);
   const q = g.ask('action.cost', 'hoe');
   assert.ok(q.parts.some(p => p.id === 'skill.farm'));
   assert.ok(q.parts.some(p => p.id === 'trait.earlybird'));
@@ -57,6 +61,11 @@ test('农事逐级省力，清晨做六次得早起；拒绝的动作不加经�
   const before = g.ask('hero').energy;
   must(g, 'farm.till', { x: 12, y: 19, at: { x: 12, y: 18 } });
   assert.equal(before - g.ask('hero').energy, q.value);
+  // 睡一觉，第二天又照给
+  must(g, 'sleep');
+  const fresh = skill(g, 'farm').xp;
+  must(g, 'farm.till', { x: 14, y: 19, at: { x: 14, y: 18 } });
+  assert.equal(skill(g, 'farm').xp, fresh + 4);
 });
 test('熟悉度与厨艺做出特质；获得后预览与出锅仍一致', () => {
   const g = newGame();
@@ -64,6 +73,7 @@ test('熟悉度与厨艺做出特质；获得后预览与出锅仍一致', () =>
   for (let i = 0; i < 5; i++) {
     must(g, 'talk', { to: 'shi' });
     must(g, 'talk', { to: 'gui' });
+    must(g, 'gather', { id: 'sticks', at: { x: 17, y: 7 } }); // 攒柴，后面做八回饭
     must(g, 'sleep');
   }
   assert.ok(traits(g).includes('familiar'));
@@ -81,11 +91,14 @@ test('熟悉度与厨艺做出特质；获得后预览与出锅仍一致', () =>
     ['egg', 'potato'],
   ])
     must(g, 'cook', { items, method: 'stew', at });
+  assert.ok(!traits(g).includes('hearth'), '灶边人数的是做了几回饭');
+  for (let i = 0; i < 4; i++) must(g, 'cook', { items: ['veg.qingcai'], method: 'stew', at });
   assert.ok(traits(g).includes('hearth'));
-  assert.equal(
-    g.ask('cook.preview', { items: ['rice', 'egg', 'herb'], method: 'stew' }).servings,
-    3,
-  );
+  // 厨艺长的是滋味，不是份数：三样还是两份
+  const cook2 = nearLevel(g, 'cook', 2, 0);
+  const p = cook2.ask('cook.preview', { items: ['rice', 'egg', 'herb'], method: 'stew' });
+  assert.equal(p.servings, 2);
+  assert.ok(p.notes.some(n => n.includes('调味有分寸')));
 });
 test('成就按事实计数，只落印一次；存取后进度和特质不丢', () => {
   const g = newGame(),
@@ -113,11 +126,11 @@ test('慢热歇息的加成、好问看天的经验、独行采集额外经验',
   assert.equal(g.ask('hero').energy, Math.min(100, e + 20));
   wait(g, 600);
   must(g, 'homestead', { id: 'stars', at: { x: 5, y: 13 } });
-  assert.ok(skill(g, 'sky').xp >= 2);
+  assert.ok(skill(g, 'sky').xp >= 12, '看天一回 1 点，好问再 1 点，看天的倍数是 6');
   const solo = newGame();
   settle(solo, { family: 'boat', own: 'shy' });
   must(solo, 'gather', { id: 'forage', at: { x: 35, y: 17 } });
-  assert.equal(skill(solo, 'forage').xp, 3);
+  assert.equal(skill(solo, 'forage').xp, 6, '沿溪找一回 5 体力给 5，独行再 1');
 });
 
 test('人物档案：落脚单给两个性情和出身线、第三个空着；村民照定下的；过客按编号推、再查一样；对口本事升级出身线跟着升', () => {
@@ -137,9 +150,10 @@ test('人物档案：落脚单给两个性情和出身线、第三个空着；�
   const vp = g.ask('persona', v.id);
   assert.equal(vp.unseen, 3);
   assert.deepEqual(g.ask('persona', v.id), vp);
-  for (let x = 6; x < 12; x++) must(g, 'farm.till', { x, y: 19, at: { x, y: 18 } });
-  assert.ok(skill(g, 'farm').level >= 2);
-  assert.equal(g.ask('persona').line.lv, 2);
+  const up = nearLevel(g, 'farm', 2);
+  must(up, 'farm.till', FIELD);
+  assert.equal(skill(up, 'farm').level, 2);
+  assert.equal(up.ask('persona').line.lv, 2);
 });
 
 test('别人的档案只给看你知道的：熟一层看出一个性情，熟络看出根骨，心烦只看自己的；六项明细不漏', () => {

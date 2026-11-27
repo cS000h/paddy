@@ -61,3 +61,50 @@ export const CUTS = {
     tip: '炒、煮、拌都行；烤着容易干',
   },
 };
+
+/**
+ * 一锅饭的份数和饱腹。饱腹守恒：一锅的饱腹是下锅食材加起来（再乘火候、当季），平分到几份里；
+ * 锅不会凭空多出粮食。放几样出几份写在 servings 里（下标是食材数），每份最多 cap。
+ */
+export const POT = Object.freeze({ servings: [0, 1, 1, 2], cap: 40 });
+
+/**
+ * 滋味：调料、火候、照不照菜谱管的是好不好吃，不管分量。分数照下面加减，再按 stars 换成一到三分：
+ * 分数到 stars[0] 是二分，到 stars[1] 是三分。三分的菜吃了心情多 1、增益多管 1 回，送人多一分情面；
+ * 一分的心情少 1、增益少管 1 回。
+ */
+export const FLAVOR = Object.freeze({
+  base: 1,
+  quality: Object.freeze({ great: 2, good: 1, plain: 0, under: -1, over: -1, raw: -2, burnt: -2 }),
+  named: 1, // 照菜谱做的
+  fit: 1, // 调料放得对路（放了两勺只算一回）
+  clash: -1, // 每一勺不对路的
+  seasonal: 1,
+  stars: Object.freeze([2, 4]),
+  words: Object.freeze(['', '寻常', '有滋味', '好滋味']),
+});
+
+/**
+ * 调料跟什么对路：做法对得上，并且食材里有一样带着这些标签（没写标签的不挑食材）。
+ * 照菜谱放的调料一律算对路。
+ */
+// prettier-ignore
+export const SPICE_FIT = Object.freeze({
+  soy:      { methods: ['stew', 'fry', 'roast'], tags: ['meat', 'umami', 'staple', 'soft', 'fishy'] },
+  vinegar:  { methods: ['fry', 'mix'], tags: ['green', 'crisp', 'raw', 'staple', 'fishy'] },
+  sugar:    { methods: ['fry', 'mix', 'roast', 'stew'], tags: ['sweet', 'sour', 'meat', 'fishy', 'crisp'] },
+  chili:    { methods: ['fry', 'stew', 'roast'], tags: ['meat', 'staple', 'green', 'umami', 'fishy'] },
+  scallion: { methods: ['fry', 'mix', 'stew'], tags: [] },
+  wine:     { methods: ['stew', 'fry', 'roast'], tags: ['meat', 'fishy'] },
+});
+
+/**
+ * 吃腻了：最近吃的 window 顿里，同一道菜（不算火候前缀）已经吃过几回，就照下标打折饱腹、扣心情。
+ * 换着花样吃不吃亏，一道菜吃到底会越吃越没味。
+ */
+export const TIRED = Object.freeze({
+  window: 6,
+  full: Object.freeze([1, 0.85, 0.7, 0.55]),
+  mood: Object.freeze([0, -1, -2, -3]),
+  words: Object.freeze(['', '又是这个', '有点吃腻了', '吃腻了']),
+});

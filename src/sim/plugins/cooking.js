@@ -9,7 +9,7 @@ import { registerResidentOptions } from '../resident-options.js';
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { MAPS } from '../../content/maps/index.js';
-import { RECIPES, QUALITY } from '../../content/recipes.js';
+import { RECIPES, QUALITY, TIRED } from '../../content/recipes.js';
 import { COOK_TEXT } from '../../content/life-text.js';
 import { FIRE_PERFECT, FIRE_QUALITY, FIRE_TWISTS } from '../../content/cook-fire.js';
 import { fireAt } from '../cook-fire.js';
@@ -66,13 +66,18 @@ export const cooking = {
     schema.slice('kitchens', {
       initial: (env, w) =>
         Object.fromEntries(
-          Object.keys(w.households).map(id => [id, { dishes: [], known: {}, fires: 0 }]),
+          Object.keys(w.households).map(id => [
+            id,
+            { dishes: [], known: {}, fires: 0, recent: [] },
+          ]),
         ),
       validate: (all, w) =>
         (is.keyedBy(all, Object.keys(w.households)) &&
           Object.values(all).every(
             k =>
               is.int(k.fires) &&
+              is.arr(k.recent, TIRED.window) &&
+              k.recent.every(n => is.str(n, 40)) &&
               is.arr(k.dishes, 40) &&
               k.dishes.every(validDish) &&
               is.obj(k.known) &&
@@ -164,19 +169,36 @@ export const cooking = {
       const w = draft.world;
       people.place(w, input.at);
       const id = people.who(w),
-        d = take(w, id, input.id);
-      body.feed(w, id, d.full, '吃了' + d.name);
+        d = take(w, id, input.id),
+        k = home(w);
+      // 吃腻了：最近几顿里这道菜吃过几回，饱腹打折、心情扣一点
+      const times = Math.min(TIRED.full.length - 1, k.recent.filter(n => n === d.base).length);
+      const tired = TIRED.words[times];
+      k.recent = [...k.recent, d.base].slice(-TIRED.window);
+      body.feed(
+        w,
+        id,
+        Math.round(d.full * TIRED.full[times]),
+        '吃了' + d.name + (tired ? `（${tired}）` : ''),
+      );
       people.restore(w, id, d.energy, '吃了' + d.name);
       body.mood(
         w,
         id,
-        3 + (d.seasonal ? 2 : 0) + (d.meat ? 1 : 0) + (d.spices.length ? 1 : 0) + d.tasteMood,
+        3 + (d.seasonal ? 2 : 0) + (d.meat ? 1 : 0) + d.tasteMood + TIRED.mood[times],
         '吃饱了',
       );
       if (d.water >= 0) body.drink(w, id, d.water, '喝汤');
       else body.dry(w, id, -d.water, '饭菜有点干');
       body.setBuff(w, id, d.buff, d.uses, d.why);
-      fact('meal.eaten', { who: id, dish: d.name, buff: d.buff, quality: d.quality, snack: false });
+      fact('meal.eaten', {
+        who: id,
+        dish: d.name,
+        buff: d.buff,
+        quality: d.quality,
+        snack: false,
+        tired,
+      });
     });
     queries.define('kitchen', (w, at) => ({
       dishes: people.atHome(w, people.who(w), at) ? home(w).dishes : [],

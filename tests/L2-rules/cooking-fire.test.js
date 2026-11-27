@@ -233,7 +233,7 @@ test('砸了也有点意思：扑了锅的浓汤少一份照样顶饱，炒过�
   assert.ok(end, '柴添太猛，总有一刻是扑了锅、熬过头');
   const thick = cooked(newGame(), STEW, [...stoked, [end, 'serve']]);
   assert.deepEqual([thick.quality, thick.twist], ['over', 'thick']);
-  assert.equal(thick.servings, plain.servings - 1);
+  assert.equal(thick.servings, Math.max(1, plain.servings - 1));
   assert.equal(thick.name, FIRE_TWISTS.thick.prefix + plain.base);
   assert.ok(thick.full > Math.round(plain.full * 0.85), '照样顶饱');
   assert.ok(thick.line.includes(FIRE_TWISTS.thick.line));

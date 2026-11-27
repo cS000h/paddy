@@ -18,6 +18,27 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  27(state) {
+    // 本事的升级曲线拉长、经验改成按出力给并且当天边际递减（每门本事记一份今天长了多少）。
+    // 旧档的经验照级换算到新曲线上：同一级、级内同样的进度，升上来不掉级。两张表都写死。
+    const w = state.world;
+    w.meta.version = 28;
+    const OLD = [0, 4, 10, 18, 30, 45],
+      NEW = [0, 20, 80, 200, 420, 760];
+    const rescale = xp => {
+      const lv = OLD.filter(n => xp >= n).length - 1;
+      if (lv >= OLD.length - 1) return NEW[lv] + Math.round((xp - OLD[lv]) * 10);
+      const part = (xp - OLD[lv]) / (OLD[lv + 1] - OLD[lv]);
+      return NEW[lv] + Math.floor(part * (NEW[lv + 1] - NEW[lv]));
+    };
+    for (const g of Object.values(w.growth)) {
+      for (const k of Object.keys(g.xp)) g.xp[k] = rescale(g.xp[k]);
+      g.today = Object.fromEntries(Object.keys(g.xp).map(k => [k, 0]));
+    }
+    // 吃腻了：每户记最近吃的几道菜，旧档从空的记起
+    for (const k of Object.values(w.kitchens)) k.recent = [];
+    return state;
+  },
   26(state) {
     // 人心的底子后半段：村里六户和铺子的家底（sim/plugins/purse.js）、见闻、心烦的记账、村民做事的记录。
     // 各户开局的钱写死在这里；年景都从平常起，换季那天才定。心烦的数原来就在人物档案里，不动。
