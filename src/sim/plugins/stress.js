@@ -23,12 +23,18 @@ import {
   SPLURGE,
   SOCIAL_TAGS,
   COPING_LEAN,
+} from '../../content/stress.js';
+import {
   UP_LINES,
   DOWN_LINES,
   LEVEL_LINES,
-  SNAP_LINE,
-  COPE_LINES,
-} from '../../content/stress.js';
+  SNAP_LINES,
+  COPE_TEXT,
+  OUTBURST_REPLY,
+  VENT_REPLY,
+  VILLAGER_SNAP,
+  rotate,
+} from '../../content/stress-lines.js';
 
 const IDS = [HERO, ...ON_MAP];
 const vexOk = (/** @type {any} */ v) =>
@@ -76,6 +82,16 @@ export const stress = {
       return v;
     };
     const level = n => LEVEL_LINES.filter(([at]) => n >= at).length;
+    /** 憋不住了给画面看的：那一段话、几个法子（按钮字、毛病名、代价）。 */
+    const snapView = (w, list) => ({
+      line: rotate(SNAP_LINES, w.clock.day),
+      choices: list.map(c => ({
+        id: c,
+        name: COPING[c].name,
+        note: COPING[c].note,
+        button: COPE_TEXT[c].button,
+      })),
+    });
 
     /** 憋不住了：主角给挑几个还没有的毛病，乡邻照性情自己染上一个；都没得挑就只泄掉一截。 */
     function snap(w, id, emit) {
@@ -89,14 +105,10 @@ export const stress = {
           .sort((a, b) => a.r - b.r)
           .map(x => x.c);
         v.snap = order.slice(0, STRESS.choices);
-        emit?.('stress.snapped', {
-          who: id,
-          line: SNAP_LINE,
-          choices: v.snap.map(c => ({ id: c, name: COPING[c].name, note: COPING[c].note })),
-        });
+        emit?.('stress.snapped', { who: id, ...snapView(w, v.snap) });
         return;
       }
-      const lean = p.tempers.flatMap(t => COPING_LEAN[t] || []);
+      const lean = [VILLAGER_SNAP[id]?.coping, ...p.tempers.flatMap(t => COPING_LEAN[t] || [])];
       const pick = [...lean, ...left].find(c => left.includes(c));
       if (pick) persona.addCoping(w, id, pick);
       persona.vex(w, id, -STRESS.snapDrop);
@@ -131,14 +143,20 @@ export const stress = {
       const before = p.stress;
       const after = persona.vex(w, id, total);
       if (id === people.who(w) && after !== before) {
-        const lines = total > 0 ? UP_LINES : DOWN_LINES;
-        const cross = level(after) > level(before) ? LEVEL_LINES[level(after) - 1][1] : null;
+        const said =
+          total > 0
+            ? rotate(UP_LINES[loud.t]?.[loud.tag] || [null], w.clock.day + after)
+            : DOWN_LINES[loud.t];
+        const cross =
+          level(after) > level(before)
+            ? rotate(/** @type {string[]} */ (LEVEL_LINES[level(after) - 1][1]), w.clock.day)
+            : null;
         emit?.('stress.changed', {
           who: id,
           tag: loud.tag,
           delta: after - before,
           value: after,
-          line: cross || lines[loud.t] || null,
+          line: cross || said || null,
           crossed: !!cross,
         });
       }
@@ -147,7 +165,7 @@ export const stress = {
     }
 
     /** 带着毛病的人用它解一回闷（一天一回）。 */
-    function relieve(w, id, coping, emit = null) {
+    function relieve(w, id, coping, emit = null, reply = null) {
       const p = persona.get(w, id),
         v = w.vexes[id];
       if (!p?.coping.includes(coping) || !v || v.coped === w.clock.day || !p.stress) return false;
@@ -160,8 +178,9 @@ export const stress = {
           tag: null,
           delta: after - before,
           value: after,
-          line: COPE_LINES[coping].relief,
+          line: rotate(COPE_TEXT[coping].relief, w.clock.day),
           crossed: false,
+          reply,
         });
       return true;
     }
@@ -181,7 +200,8 @@ export const stress = {
         who: id,
         coping: input.coping,
         name: c.name,
-        line: COPE_LINES[input.coping].pick,
+        line: COPE_TEXT[input.coping].pick,
+        first: COPE_TEXT[input.coping].first,
       });
     });
 
@@ -207,26 +227,32 @@ export const stress = {
     tagged('pulse.resolved', d => (d.seen?.length ? ['cheat'] : []));
 
     // 带着毛病的主角，做那件事就解一回闷。
-    const coped = (type, coping, when) =>
+    const coped = (type, coping, when, reply = (/** @type {any} */ d) => (d ? null : null)) =>
       reactions.on(
         type,
         (s, e, emit) => {
           if (me(s, e) && when(s.world, e.data))
-            relieve(s.world, people.who(s.world), coping, emit);
+            relieve(s.world, people.who(s.world), coping, emit, reply(e.data));
         },
         { priority: 81 },
       );
     coped('market.bought', 'drink', (w, d) => d.item === 'wine');
     coped('market.bought', 'spree', (w, d) => d.price >= 10);
     coped('meal.eaten', 'gluttony', () => true);
-    coped('person.talked', 'grumble', (w, d) => tierOf(social.familiar(w, d.to) || 0) >= 2);
+    coped(
+      'person.talked',
+      'grumble',
+      (w, d) => tierOf(social.familiar(w, d.to) || 0) >= 2,
+      d => VENT_REPLY[d.to] || null,
+    );
     reactions.on(
       'person.talked',
       (s, e, emit) => {
         const w = s.world,
           id = people.who(w);
         if (!me(s, e) || (persona.get(w, id)?.stress || 0) < STRESS.outburst) return;
-        if (relieve(w, id, 'outburst', emit)) opinion.note(w, e.data.to, id, 'outburst');
+        const reply = OUTBURST_REPLY[e.data.to] || null;
+        if (relieve(w, id, 'outburst', emit, reply)) opinion.note(w, e.data.to, id, 'outburst');
       },
       { priority: 81 },
     );
@@ -279,12 +305,7 @@ export const stress = {
       return {
         value: p?.stress ?? 0,
         level: level(p?.stress ?? 0),
-        snap: v?.snap
-          ? {
-              line: SNAP_LINE,
-              choices: v.snap.map(c => ({ id: c, name: COPING[c].name, note: COPING[c].note })),
-            }
-          : null,
+        snap: v?.snap ? snapView(w, v.snap) : null,
       };
     });
 

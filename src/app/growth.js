@@ -41,7 +41,7 @@ export function growthActions({ game, shell, run, debug = false }) {
     cope({ coping }) {
       const out = run('stress.cope', { coping });
       const f = out.ok && out.facts.find(x => x.type === 'stress.coped')?.data;
-      if (f) shell.toast(`染上了「${f.name}」：${f.line}`, true);
+      if (f) shell.toast(`染上了「${f.name}」。${f.first}`, true);
     },
     origin() {
       shell.set({ modal: { kind: 'origin', sheet: firstSheet(debug) } });
@@ -78,8 +78,8 @@ export function growthNotices(game, shell) {
     const vex = facts.find(
       f => f.type === 'stress.changed' && f.data.line && (f.data.crossed || !f.data.tag),
     );
-    if (vex) shell.toast(vex.data.line);
+    if (vex) shell.toast(vex.data.reply ? `${vex.data.line}${vex.data.reply}` : vex.data.line);
     const snapped = facts.find(f => f.type === 'stress.snapped');
-    if (snapped) shell.toast(snapped.data.line + '翻开册子的「人物」页，挑一个法子。', true);
+    if (snapped) shell.toast(snapped.data.line + '（翻开册子的「人物」页，挑一个法子）', true);
   });
 }

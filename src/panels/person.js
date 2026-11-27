@@ -69,7 +69,7 @@ export function personaBody(m, game, mods) {
     ? `<div class="folio-snap"><b>憋不住了</b><small>${esc(snap.line)}</small>${snap.choices
         .map(
           c =>
-            `<button data-do="cope" data-coping="${esc(c.id)}">${esc(c.name)}<small>${esc(c.note)}</small></button>`,
+            `<button data-do="cope" data-coping="${esc(c.id)}">${esc(c.button)}<small>染上「${esc(c.name)}」：${esc(c.note)}</small></button>`,
         )
         .join('')}</div>`
     : '';

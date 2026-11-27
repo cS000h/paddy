@@ -1,7 +1,7 @@
 // 心烦：0 到 100，攒出来的，和一天的心情分开。违着性情做事涨，顺着做、歇一夜降；满了「憋不住了」，
 // 从几个解闷毛病里挑一个，泄掉一大截，以后用这个毛病还能解闷。只有数据，规则在 sim/plugins/stress.js。
 // 哪个性情顺着、违着哪些做法标签，写在 content/traits.js 的 TEMPERS（likes、dislikes）。
-// 话先由 Claude 占位写着，等 G-21（心烦和毛病）交回来照它换。
+// 冒的话在 content/stress-lines.js（G-21）。
 
 /**
  * gain 违着一回涨多少（再乘性情的 gain 倍数），relief 顺着一回降多少（乘 relief 倍数）；
@@ -66,50 +66,10 @@ export const DAY_TAGS = Object.freeze({
   heavy: { field: ['wait'], tea: ['wait'], river: ['wait'], market: ['wait'], hill: ['wait'], creek: ['wait'] },
 });
 
-/** 乡邻憋不住了先染上哪个毛病（照性情，从前往后挑还没有的）。 */
+/** 乡邻憋不住了先染上哪个毛病（照性情，从前往后挑还没有的）；六位村民各自的先看 stress-lines.js 的 VILLAGER_SNAP。 */
 // prettier-ignore
 export const COPING_LEAN = Object.freeze({
   gregarious: ['grumble', 'spree'], shy: ['recluse', 'drink'], hasty: ['outburst', 'drink'], calm: ['drink', 'recluse'],
   stingy: ['gluttony', 'recluse'], generous: ['spree', 'gluttony'], ambitious: ['outburst', 'grumble'],
   paranoid: ['recluse', 'outburst'], content: ['gluttony', 'drink'], diligent: ['recluse', 'gluttony'],
-});
-
-/** 违着性情时冒的一句（按性情）。 */
-// prettier-ignore
-export const UP_LINES = Object.freeze({
-  lazy: '腰酸背疼，心里直犯嘀咕。', generous: '话说出口，自己先不痛快了。', stingy: '钱一出手，心口跟着一抽。',
-  shy: '跟生人说话，手心冒了汗。', honest: '心里像揣了块冷石头。', sly: '这口气咽得不顺。',
-  calm: '一时冲动，回过神来心里发虚。', hasty: '干等着，脚底下直发痒。', brave: '缩回来了，心里憋屈。',
-  craven: '心还在扑通扑通跳。', content: '贪了这一回，心里不踏实。', ambitious: '让了这一步，越想越不甘。',
-  trusting: '疑了人家，自己倒难受。', paranoid: '心里总悬着，放不下。',
-});
-
-/** 顺着性情时松一口气的一句。 */
-// prettier-ignore
-export const DOWN_LINES = Object.freeze({
-  diligent: '干了一身汗，心里踏实。', lazy: '歇下来，浑身都松了。', generous: '东西送出去，心里亮堂。',
-  stingy: '省下一笔，心里舒坦。', gregarious: '说说笑笑，闷气散了。', shy: '一个人待着，清净。',
-  honest: '帮了一把，心安。', sly: '话说得巧，心里有数。', calm: '慢慢来，心也静了。',
-  hasty: '赶在头里，痛快。', brave: '敢出这个头，心里畅快。', craven: '安安稳稳的，挺好。',
-  content: '一顿家常饭，知足了。', ambitious: '拔了头筹，心气顺了。', trusting: '信了人家，心里热乎。',
-  paranoid: '看穿了，心里才踏实。',
-});
-
-/** 心烦到三成、六成、九成时冒的一句。 */
-export const LEVEL_LINES = Object.freeze([
-  [30, '这几天心里有点堵。'],
-  [60, '心里乱糟糟的，做什么都不顺。'],
-  [90, '心里那根弦绷得紧紧的。'],
-]);
-
-/** 憋不住了：弹出时的那句；挑了某个毛病以后的那句；以后用它解闷时冒的那句。 */
-export const SNAP_LINE = '心里堵得慌，再也憋不住了。总得找个法子松一松。';
-// prettier-ignore
-export const COPE_LINES = Object.freeze({
-  drink:    { pick: '打一壶黄酒，闷头喝了。', relief: '一口酒下去，心里松了。' },
-  gluttony: { pick: '狠狠吃了一顿，才缓过来。', relief: '吃饱了，烦心事也淡了。' },
-  recluse:  { pick: '关上院门，谁也不想见。', relief: '一个人关着门，静下来了。' },
-  grumble:  { pick: '拉着人说了半天，痛快多了。', relief: '苦水倒出来，心里空了一块。' },
-  spree:    { pick: '花钱买了一堆用不上的东西。', relief: '买了点小玩意，心情好些了。' },
-  outburst: { pick: '一通火发出来，人倒是松了。', relief: '火气撒了出去，人也蔫了。' },
 });

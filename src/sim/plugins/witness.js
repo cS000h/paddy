@@ -8,6 +8,7 @@ import { is } from '../../kernel/schema.js';
 import { PEOPLE, ON_MAP } from '../../content/people.js';
 import { COPING } from '../../content/traits.js';
 import { MAPS } from '../../content/maps/index.js';
+import { VILLAGER_SNAP } from '../../content/stress-lines.js';
 import { DEEDS, OTHER_DOINGS, PLACE_WORDS, COPE_WORDS, WITNESS_KEEP } from '../../content/deeds.js';
 
 const IDS = Object.keys(PEOPLE);
@@ -31,6 +32,7 @@ const itemOk = (/** @type {any} */ x) =>
 
 /** 见闻的说法：{a} 做的人，{b} 对着的人，{place} 在哪儿，{coping} 用的哪个毛病。 */
 export function witnessLine(/** @type {any} */ x) {
+  if (x.act === 'snap' && VILLAGER_SNAP[x.who]) return VILLAGER_SNAP[x.who].aside;
   const place = x.place ? PLACE_WORDS[x.place] : MAPS[x.map].name;
   return ACTS[x.act].line
     .replace('{a}', x.who === 'hero' ? '你' : nameOf(x.who))

@@ -5,7 +5,7 @@
 //   服务 purse.houseOf(人) → 户、purse.coins(w, 户)、purse.short(w, 户)、purse.fortune(w, 户)、
 //        purse.move(w, 户, 加减, 缘由) → 实际动了多少（钱不够时只给到 0）
 //   查询 purse → 各户叫什么、什么营生、年景怎样、是不是手头紧（钱数只有自己家的看得见，在 home 里）
-//   事实 purse.spent {house, id, title, n, short}、purse.fortune {house, fortune, word}
+//   事实 purse.spent {house, id, title, n, short}、purse.fortune {house, fortune, word, line}
 import { is } from '../../kernel/schema.js';
 import { noise } from '../noise.js';
 import { dateOf, isFairDay } from '../../content/calendar.js';
@@ -18,6 +18,7 @@ import {
   SPENT_KEEP,
   fortuneWord,
 } from '../../content/purse.js';
+import { FORTUNE_LINES } from '../../content/purse-lines.js';
 
 const IDS = Object.keys(HOUSES);
 const MAX_COINS = 1e6;
@@ -127,7 +128,9 @@ export const purse = {
       const pool = Object.entries(/** @type {Record<string, any>} */ (EXPENSES))
         .filter(
           ([, e]) =>
-            (e.house === id || e.house === null) && (!e.seasons || e.seasons.includes(season)),
+            (e.house === id || e.house === null) &&
+            (!e.seasons || e.seasons.includes(season)) &&
+            (!e.poor || w.purses.houses[id].fortune <= -2),
         )
         .map(([k, e]) => [k, (e.house ? 2 : 1) * (wet && e.wet ? 2 : 1)]);
       const total = pool.reduce((n, [, x]) => n + x, 0);
@@ -148,7 +151,9 @@ export const purse = {
             const luck = Math.floor(noise(w.meta.seed, w.clock.day, 733, i) * 3) - 1;
             const n = fortuneOf(TRADES[HOUSES[id].trade], p.tally, d.season, luck);
             p.houses[id].fortune = n;
-            emit('purse.fortune', { house: id, fortune: n, word: fortuneWord(n) });
+            const say = n > 0 ? 'good' : n < 0 ? 'bad' : null;
+            const line = say ? FORTUNE_LINES[id][say] : null;
+            emit('purse.fortune', { house: id, fortune: n, word: fortuneWord(n), line });
           });
           p.tally = { wet: 0, heavy: 0 };
         }

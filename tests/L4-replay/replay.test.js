@@ -60,8 +60,8 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-// 人心的底子后半段（v27）：存档多了各户家底、见闻、心烦的记账、村民做事的记录，村民每段时辰自己做事
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '78c30090' };
+// 人心的底子后半段（v27）：存档多了家底、见闻、心烦的记账、村民做事的记录；大开销换成 G-20 的那一池
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: 'af202f5c' };
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};

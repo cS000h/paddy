@@ -7,7 +7,9 @@ import { newGame, must, refused, settle } from '../helpers.js';
 import { HOUSES, EXPENSES, EXPENSE_SIZE } from '../../src/content/purse.js';
 import { DEEDS } from '../../src/content/deeds.js';
 import { TEMPERS, TAGS, COPING } from '../../src/content/traits.js';
-import { FACT_TAGS, PLACE_TAGS, DAY_TAGS, UP_LINES, DOWN_LINES } from '../../src/content/stress.js';
+import { FACT_TAGS, PLACE_TAGS, DAY_TAGS } from '../../src/content/stress.js';
+import { UP_LINES, DOWN_LINES, COPE_TEXT } from '../../src/content/stress-lines.js';
+import { EXPENSE_TEXT } from '../../src/content/purse-lines.js';
 import { aiOf, scoreOf } from '../../src/sim/deeds.js';
 import { simulate, printLog } from '../../tools/village-sim.mjs';
 
@@ -44,7 +46,27 @@ test('数据对得上：做法标签、营生、开销、动作、心烦的话�
   ];
   assert.ok(tags.every(t => Object.hasOwn(TAGS, t)));
   // 违着有话的性情，都真有违着的做法；顺着同理
-  for (const t of Object.keys(UP_LINES)) assert.ok(TEMPERS[t].dislikes.length, t);
+  for (const [t, byTag] of Object.entries(UP_LINES))
+    for (const [tag, lines] of Object.entries(byTag)) {
+      assert.ok(TEMPERS[t].dislikes.includes(tag), `${t} 并不违着 ${tag}`);
+      assert.ok(
+        lines.every(l => l.length <= 20),
+        lines.join(),
+      );
+    }
+  // G-20：每笔开销都有开口借钱的两句、没借到怎么办、痕迹；G-21：每个毛病都有按钮字和话
+  for (const id of Object.keys(EXPENSES)) {
+    const t = EXPENSE_TEXT[id];
+    assert.ok(t && t.ask.length === 2 && t.fallback && t.trace, id);
+    assert.ok(
+      t.ask.every(l => l.length <= 32),
+      id,
+    );
+  }
+  for (const c of Object.keys(COPING)) {
+    const t = COPE_TEXT[c];
+    assert.ok(t && t.button.length <= 10 && t.pick && t.first && t.relief.length === 3, c);
+  }
   for (const t of Object.keys(DOWN_LINES)) assert.ok(TEMPERS[t].likes.length, t);
   for (const [t, def] of Object.entries(TEMPERS)) {
     if (def.dislikes.length) assert.ok(UP_LINES[t], `${t} 缺违着时的话`);
@@ -185,7 +207,7 @@ test('带着毛病的人做那件事能解一回闷：暴食吃一口，无名�
   assert.equal(ate.ok, true, ate.reason);
   assert.equal(g.ask('stress').value, 55);
   const line = ate.facts.find(x => x.type === 'stress.changed').data.line;
-  assert.match(line, /饱/);
+  assert.ok(COPE_TEXT.gluttony.relief.includes(line), line);
   // 一天一回：再吃不降
   const again = g.ask('pack').items.find(i => i.eat);
   if (again) g.dispatch('eat', { item: again.id });
@@ -198,6 +220,8 @@ test('带着毛病的人做那件事能解一回闷：暴食吃一口，无名�
   must(s, 'talk', { to: 'shi' });
   assert.equal(s.ask('stress').value, 45);
   assert.ok(s.ask('opinion', 'shi').parts.some(p => p.id === 'why.outburst'));
+  const flared = s.save().state.world.persona.hero.stress;
+  assert.equal(flared, 45);
 });
 
 test('村民按性情做事：每段时辰打一轮分，同一个种子结果相同；在场的人知道这件事', () => {
