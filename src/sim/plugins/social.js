@@ -279,7 +279,8 @@ export const social = {
         const twist = dish.twist ? FIRE_TWISTS[dish.twist] : null;
         const fan = !!twist && 'fan' in twist && twist.fan === to;
         liked = !spoiled && (favorite || fan || dish.buff === person.likes);
-        value = spoiled ? 1 : favorite ? 4 : liked ? 3 : 2;
+        // 三分滋味的菜送出去多一分情面（最多还是 4）
+        value = spoiled ? 1 : favorite || (liked && dish.flavor === 3) ? 4 : liked ? 3 : 2;
         line = spoiled
           ? GIFT_SPOILED[to]
           : favorite

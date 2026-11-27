@@ -1,4 +1,5 @@
 // 沿用0.12的性味评分与口味算法，平分按原表顺序。
+import { FLAVOR, SPICE_FIT } from '../content/recipes.js';
 const ORDER = ['alert', 'fresh', 'cool', 'treat', 'guest', 'warm', 'filling', 'hearty'];
 function buffOf(items, method, I, spices = []) {
   const it = items.map(k => I(k)),
@@ -118,3 +119,34 @@ function tasteOf(items, method, I, spices = []) {
 }
 
 export { buffOf, tasteOf };
+
+/** 滋味一到三分，和说明是哪几样加减的。 */
+function flavorOf(
+  items,
+  method,
+  I,
+  spices,
+  { quality, named, seasonal, recipeSpices = [], bonus = 0 },
+) {
+  const fits = spices.map(
+    k =>
+      recipeSpices.includes(k) ||
+      (SPICE_FIT[k].methods.includes(method) &&
+        (!SPICE_FIT[k].tags.length ||
+          items.some(i => SPICE_FIT[k].tags.some(t => I(i).tags.includes(t))))),
+  );
+  const why = [];
+  let n = FLAVOR.base + FLAVOR.quality[quality] + bonus;
+  if (named) ((n += FLAVOR.named), why.push('照菜谱'));
+  if (fits.some(Boolean)) ((n += FLAVOR.fit), why.push('调料对路'));
+  const clash = spices.filter((k, i) => !fits[i]);
+  if (clash.length) {
+    n += FLAVOR.clash * clash.length;
+    why.push(clash.map(k => I(k).name).join('、') + '放得不对路');
+  }
+  if (seasonal) ((n += FLAVOR.seasonal), why.push('当季'));
+  const stars = 1 + FLAVOR.stars.filter(s => n >= s).length;
+  return { stars, why };
+}
+
+export { flavorOf };

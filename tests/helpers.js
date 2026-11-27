@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { createGame } from '../src/port/game.js';
 import { bestLog } from '../src/sim/cook-fire.js';
+import { LEVELS } from '../src/content/growth.js';
 
 /** 新开一局，写入检查总是开着。 */
 export const newGame = (seed = 1) => createGame({ seed, debug: true });
@@ -120,4 +121,15 @@ export function fishOnce(game, at = FISH_SPOT, { bait = null, early = false } = 
 export function wait(game, minutes) {
   for (let left = minutes; left > 0; left -= 120)
     must(game, 'clock.advance', { minutes: Math.min(120, left) });
+}
+
+/**
+ * 存档里把主角某门本事的经验改到离第 level 级只差 1 点（off 给 0 就是刚到这一级），读回来一局新的：升级曲线拉长以后，
+ * 测「到了几级有什么好处」不必真的干上几十天活。只经过存档，不碰世界的数据结构。
+ */
+export function nearLevel(game, skill, level, off = -1) {
+  const saved = JSON.parse(JSON.stringify(game.save()));
+  const hero = saved.state.world.player?.controls ?? 'hero';
+  saved.state.world.growth[hero].xp[skill] = LEVELS[level] + off;
+  return createGame({ saved, debug: true });
 }

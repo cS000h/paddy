@@ -1,6 +1,7 @@
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
-import { SKILLS, TRAITS, LEVELS, LEVEL_NAMES } from '../../content/growth.js';
+import { SKILLS, TRAITS, LEVELS, LEVEL_NAMES, XP } from '../../content/growth.js';
+import { ACTIONS } from '../../content/actions.js';
 import { REASONS, KEEPSAKES, FAMILY, OLD_TIES } from '../../content/settle.js';
 import { CALENDAR } from '../../content/calendar.js';
 import { OLD_TRAITS, TEMPERS } from '../../content/traits.js';
@@ -18,6 +19,10 @@ const originOk = o =>
   (SETTLE_KEYS.every(k => o[k] === null) ||
     SETTLE_KEYS.every(k => typeof o[k] === 'string' && Object.hasOwn(TABLES[k], o[k])));
 export const level = xp => LEVELS.reduce((lv, need, i) => (xp >= need ? i : lv), 0);
+/** 今天这门本事已经长了 done（未打折的），再来 raw，实得多少：头 XP.fresh 点照给，往后打折。 */
+// 按全天累计算再取整，零碎的小事攒起来也算数，不会每件都被四舍五入吞掉
+const dayTotal = n => Math.floor(Math.min(n, XP.fresh) + Math.max(0, n - XP.fresh) * XP.over);
+export const credit = (done, raw) => dayTotal(done + raw) - dayTotal(done);
 export const growth = {
   id: 'sim.growth',
   provides: ['growth'],
@@ -58,6 +63,7 @@ export const growth = {
               xp: Object.fromEntries(Object.keys(SKILLS).map(k => [k, 0])),
               traits: [],
               counters: { wetOut: 0, cold: 0, hot: 0, dawn: 0, meals: 0 },
+              today: Object.fromEntries(Object.keys(SKILLS).map(k => [k, 0])),
               origin: null,
             },
           ]),
@@ -73,6 +79,8 @@ export const growth = {
               g.traits.every(k => Object.hasOwn(TRAITS, k) && !Object.hasOwn(OLD_TRAITS, k)) &&
               is.obj(g.counters) &&
               ['wetOut', 'cold', 'hot', 'dawn', 'meals'].every(k => is.int(g.counters[k])) &&
+              is.keyedBy(g.today, Object.keys(SKILLS)) &&
+              Object.values(g.today).every(n => is.int(n)) &&
               (g.origin === null || originOk(g.origin)),
           )) ||
         'growth',
@@ -90,9 +98,13 @@ export const growth = {
       const r = compute.run('xp.gain', { w, who: id, skill, source }, { value: n, parts: [] });
       if (r.parts.some(p => p.id === 'buff.alert')) body.useBuff(w, id, 'alert');
       const before = lv(w, skill, id);
-      g.xp[skill] += Math.max(0, r.value);
+      // 一天里头几回照给，往后打折：猛刷一整天和天天干一点，长进差不多
+      const raw = Math.max(0, r.value) * (XP.rate[skill] || 1),
+        got = credit(g.today[skill], raw);
+      g.today[skill] += raw;
+      g.xp[skill] += got;
       const after = lv(w, skill, id);
-      core.log(w, id, 'xp:' + skill, r.value, SKILLS[skill].name);
+      core.log(w, id, 'xp:' + skill, got, SKILLS[skill].name);
       if (after > before)
         emit('skill.leveled', {
           who: id,
@@ -147,11 +159,12 @@ export const growth = {
           social: 'social',
           farm: 'farm',
           forage: 'forage',
-          fish: 'forage',
           craft: 'craft',
           sky: 'sky',
         }[d.kind];
-        if (skill) gain(w, id, emit, skill, d.kind === 'sky' ? 1 : d.id === 'hand' ? 3 : 2, d.kind);
+        // 出多大力长多少本事：照这件事的基准体力，不看本事省下的那点；不花体力的（看天、闲坐）给 1
+        const n = d.id === 'hand' ? XP.harvest : Math.max(1, ACTIONS[d.id]?.energy ?? 2);
+        if (skill) gain(w, id, emit, skill, n, d.kind);
         if (d.kind === 'forage' && has(w, 'solitary', id))
           body.mood(w, id, 2, '独行：一个人在林子里自在');
         if (['rest', 'sky', 'social', 'chore'].includes(d.kind)) return;
@@ -177,23 +190,36 @@ export const growth = {
       },
       { priority: 60 },
     );
+    // 钓鱼按钓上来的给经验，甩竿不给：不然站在河边一直甩就能刷满
+    reactions.on(
+      'fish.caught',
+      (s, e, emit) => {
+        const d = e.data;
+        if (mine(s.world, d.who))
+          gain(s.world, d.who, emit, 'forage', XP.fish[d.thing ? 'thing' : d.grade] ?? 2, 'fish');
+      },
+      { priority: 60 },
+    );
+    reactions.on('day.started', s => {
+      for (const g of Object.values(s.world.growth)) for (const k in g.today) g.today[k] = 0;
+    });
     reactions.on(
       'meal.cooked',
       (s, e, emit) => {
         const w = s.world,
           d = e.data,
           id = d.who;
-        mine(w, id).counters.meals += d.servings;
+        mine(w, id).counters.meals += 1;
         gain(
           w,
           id,
           emit,
           'cook',
-          1 +
-            d.ingredients +
-            ({ great: 2, good: 1 }[d.quality] || 0) +
-            (d.first ? 2 : 0) +
-            (d.cut === 'shred' ? 1 : 0),
+          // 按火候和头一回给，不按放了几样：多放食材不该多长本事
+          XP.cook.base +
+            (XP.cook[d.quality] || 0) +
+            (d.first ? XP.cook.first : 0) +
+            (d.cut === 'shred' ? XP.cook.shred : 0),
           'cook',
         );
       },
