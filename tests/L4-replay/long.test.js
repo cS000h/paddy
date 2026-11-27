@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
 import { createChaos, askEverything } from '../chaos.js';
+import { bestFire } from '../helpers.js';
 
 const show = errors =>
   errors
@@ -36,7 +37,25 @@ test('玩过一年多：不出错、不卡住，存档不走样，也不会越�
   }
   // 能摆、能放生的彩头太稀罕，一年也未必碰上一样：从行囊和家里都放着几样的存档接着乱玩一阵
   // （乱玩的人见了就卖、就送、就往篮里放，只放一个转眼就没了）
-  const save = structuredClone(createGame({ seed: 24 }).save());
+  // 比完鱼第二天钓客上门、院门口聚着闻香来的人也难碰上：睡到第二天清早，昨天算比过一场，
+  // 再在灶上做一锅拿手的极品蛋炒饭
+  const first = structuredClone(createGame({ seed: 24 }).save());
+  Object.assign(first.state.world.people.hero, { map: 'yard', x: 10, y: 11, dir: 'up' });
+  first.state.world.packs.hero.items['egg.fine'] = 1;
+  const cook = createGame({ saved: first });
+  assert.ok(cook.dispatch('sleep', {}).ok);
+  const meal = { items: ['rice', 'egg.fine'], method: 'fry' };
+  const at = { x: 10, y: 11, dir: 'up' };
+  assert.ok(cook.dispatch('cook', { ...meal, log: bestFire(cook, meal), at }).ok);
+  const save = structuredClone(cook.save());
+  save.state.world.match.echo = {
+    day: 1,
+    host: 'he',
+    result: 'win',
+    seen: [],
+    rumor: null,
+    how: null,
+  };
   const prizes = { 'prize.pumpkinKing': 5, 'prize.doubleYolkEgg': 5, 'prize.goldenRedCarp': 5 };
   Object.assign(save.state.world.packs.hero.items, prizes);
   Object.assign(save.state.world.households.home.items, prizes);

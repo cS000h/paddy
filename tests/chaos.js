@@ -631,6 +631,10 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     // 比到一半的那一局多半接着比完（钓客申时就走，拖久了就作罢）
     if (['fishing', 'ready', 'suspect', 'after'].includes(game.ask('match')?.phase) && chance(0.5))
       return fairMatch();
+    // 钓客上门、院门口有闻香来的人：多半先去应一声（午时、两个钟头就散）
+    const v = game.ask('match.visit');
+    const gate = game.ask('residents').some(p => p.doing.includes('香味'));
+    if (((v && !v.done) || gate) && chance(0.5)) return yard();
     if (hostile && chance(hostile)) return rough();
     if (chance(0.002)) return origin(); // 选过以后再选，应该被拒绝
     let roll = r() * total;
