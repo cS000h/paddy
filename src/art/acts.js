@@ -1,12 +1,20 @@
 // 做活的动作总表：名字 → 一串帧。世界按名字取一条横排的帧（actSheet），在人站的地方一帧帧放，
-// 放完换回走路的样子。画法分在 acts-yard.js（院里）、acts-work.js（野外、集上）、acts-kitchen.js（灶前）。
+// 放完换回走路的样子。画法分在 acts-yard.js（院里）、acts-work.js（野外、集上）、acts-errand.js（钓鱼、买东西）、
+// acts-kitchen.js（灶前）。
 import { Grid } from './pixel.js';
 import { FIELD_ACTS } from './acts-field.js';
 import { YARD_ACTS } from './acts-yard.js';
 import { WORK_ACTS } from './acts-work.js';
+import { ERRAND_ACTS } from './acts-errand.js';
 import { KITCHEN_ACTS } from './acts-kitchen.js';
 
-export const ACTS = Object.freeze({ ...FIELD_ACTS, ...YARD_ACTS, ...WORK_ACTS, ...KITCHEN_ACTS });
+export const ACTS = Object.freeze({
+  ...FIELD_ACTS,
+  ...YARD_ACTS,
+  ...WORK_ACTS,
+  ...ERRAND_ACTS,
+  ...KITCHEN_ACTS,
+});
 
 /** 一个动作的第 f 帧（朝右）。 */
 export function actFrame(name, f, look = 'hero') {
