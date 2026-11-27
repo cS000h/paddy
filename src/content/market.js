@@ -39,3 +39,16 @@ export const TEA_DEEDS = Object.freeze({
   },
   listen: { label: '听茶客闲聊', act: '坐下', note: '不花时辰，每天一回' },
 });
+
+// 铺子收东西（规则在 sim/plugins/market.js）：钱从铺子的钱匣出，钱匣不够就收不了。
+// 每天每一类收几份照原价（TAKES），再多就只给半价，收满两倍就不收了。
+// 铺子收进的货第二天清早转手卖到外头，按当初给的钱多一成回到钱匣（RESALE）。
+// 茶摊只卖不收。
+export const TAKES = Object.freeze({ fish: 5, food: 8, snack: 4, craft: 3, whole: 2, other: 4 });
+export const RESALE = 1.1;
+export const TAKE_WORDS = Object.freeze({
+  tea: '茶摊只卖茶点，不收东西。卖东西去村口杂货铺',
+  broke: '铺子钱匣里没那么多现钱了，今儿收不动',
+  full: '这样东西今天铺子收够了，明天再来',
+  half: '今天收得多了，只给半价',
+});

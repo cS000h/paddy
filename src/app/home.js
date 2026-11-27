@@ -1,4 +1,4 @@
-// 身边的事：开行囊、吃喝、收拾行囊、打水、睡觉、送礼、收菜筐。
+// 身边的事：开行囊、吃喝、收拾行囊、打水、睡觉、送礼。
 // 过夜要拉一层纸盖住世界再揭开，所以睡觉也放在这里，而不是只发一条命令。
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -77,14 +77,6 @@ export function homeActions({ game, shell, run, here, world }) {
       const gifts = out.facts.filter(f => f.type === 'gift.returned').map(f => f.data);
       if (notes.length) shell.set({ modal: { kind: 'notes', day, notes, gifts } });
       else shell.toast(`第 ${day} 日的清早。`);
-    },
-    basketPut({ item, n }) {
-      if (run('basket.put', { item, n: Number(n), ...at() }).ok)
-        shell.set({ modal: { kind: 'basket' } });
-    },
-    basketOrder({ item, n }) {
-      if (run('basket.order', { item, n: Number(n), ...at() }).ok)
-        shell.set({ modal: { kind: 'basket' } });
     },
   };
 }

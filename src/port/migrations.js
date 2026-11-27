@@ -18,6 +18,22 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  33(state) {
+    // 收菜筐拆掉：筐里还没收走的东西、已经付了钱还没捎到的货，都收进自家橱柜。
+    // 铺子多记今天每类收了几份、给出去多少钱（转手卖的本钱），旧档从零记起。
+    const w = state.world;
+    w.meta.version = 34;
+    const QTY = { salt: 4, soy: 3, vinegar: 3, sugar: 3, chili: 3, scallion: 2, wine: 3 };
+    const items = w.households.home.items;
+    const add = (id, n) => (items[id] = Math.min(1e6, (items[id] || 0) + n));
+    for (const [id, n] of Object.entries(w.basket?.goods || {})) add(id, n);
+    for (const [id, n] of Object.entries(w.basket?.order || {})) add(id, n * (QTY[id] || 1));
+    delete w.basket;
+    w.shops.took = {};
+    w.shops.paid = 0;
+    w.deals = { day: 0, n: {} };
+    return state;
+  },
   32(state) {
     // 第 3 块：借、还、帮、传、拿。旧档里谁也不欠谁，也没人在院门口等着借钱。
     const w = state.world;

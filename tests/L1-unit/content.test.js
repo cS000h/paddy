@@ -47,10 +47,9 @@ import { CALENDAR, dateOf, timeOf } from '../../src/content/calendar.js';
 import {
   START_STORE,
   START_PACK,
-  BASKET_WARES,
   eatenAs,
   giftable,
-  basketTakes,
+  takeKind,
   seasonal,
   inSeason,
 } from '../../src/content/pantry.js';
@@ -155,11 +154,10 @@ test('物品总表：每样东西字段齐全，买卖价按基准价折算，�
     if (item.snack) assert.ok(!item.snack.buff || BUFFS[item.snack.buff], `${id} 的增益没登记`);
     if (item.kind === 'seed') assert.equal(item.sell, 0);
   }
-  assert.deepEqual([ITEMS['veg.qingcai'].sell, ITEMS['seed.qingcai'].buy], [6, 2]);
-  assert.deepEqual([ITEMS.rice.buy, ITEMS.rice.sell, ITEMS.fish.buy], [8, 6, 0]);
-  for (const id of [...Object.keys(START_STORE), ...Object.keys(START_PACK), ...BASKET_WARES])
+  assert.deepEqual([ITEMS['veg.qingcai'].sell, ITEMS['seed.qingcai'].buy], [4, 2]);
+  assert.deepEqual([ITEMS.rice.buy, ITEMS.rice.sell, ITEMS.fish.buy], [8, 4, 0]);
+  for (const id of [...Object.keys(START_STORE), ...Object.keys(START_PACK)])
     assert.ok(ITEMS[id], `${id} 不是登记过的物品`);
-  for (const id of BASKET_WARES) assert.ok(ITEMS[id].buy > 0, `${id} 没有买价`);
   for (const id of Object.keys(START_PACK)) assert.ok(ITEMS[id].carry);
   for (const id of ON_MAP)
     for (const gift of [...PEOPLE[id].treats, ...FESTIVE]) {
@@ -168,7 +166,7 @@ test('物品总表：每样东西字段齐全，买卖价按基准价折算，�
     }
 });
 
-test('物品的几个判断：能不能直接吃、当不当季、能不能送、阿满收不收', () => {
+test('物品的几个判断：能不能直接吃、当不当季、能不能送、铺子按哪类限量', () => {
   assert.deepEqual(eatenAs('cake'), { water: -3, ...ITEMS.cake.snack });
   assert.equal(eatenAs('cucumber').full, 4);
   assert.equal(eatenAs('cucumber').water, 5);
@@ -184,8 +182,8 @@ test('物品的几个判断：能不能直接吃、当不当季、能不能送�
     [true, true, false, false],
   );
   assert.deepEqual(
-    [basketTakes('veg.qingcai'), basketTakes('basket'), basketTakes('salt')],
-    [true, true, false],
+    [takeKind('fish'), takeKind('veg.qingcai'), takeKind('basket'), takeKind('salt')],
+    ['fish', 'food', 'craft', 'other'],
   );
 });
 

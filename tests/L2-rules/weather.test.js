@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, refused, growOne, FIELD, HOME, wait } from '../helpers.js';
+import { newGame, must, refused, growOne, FIELD, HOME, wait, stocked } from '../helpers.js';
 import { CROPS } from '../../src/content/items.js';
 
 test('看天每天一次：提高预报把握、增长看天本事，不能重复刷经验', () => {
@@ -17,8 +17,8 @@ test('看天每天一次：提高预报把握、增长看天本事，不能重�
 
 test('七种作物按时令下种，十四天换季', () => {
   for (const c of Object.values(CROPS)) {
-    const g = newGame(7);
-    must(g, 'basket.order', { item: c.seed, n: 1 });
+    const g = stocked(newGame(7), { [c.seed]: 1 });
+    must(g, 'pack.put', { item: c.seed, at: HOME });
     must(g, 'sleep');
     must(g, 'farm.till', FIELD);
     if (!c.seasons.includes(0))

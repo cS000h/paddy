@@ -7,7 +7,7 @@
 import { createGame } from '../src/port/game.js';
 import { MAPS, actAt, walkable, farmable, waterSource, isHome } from '../src/content/maps/index.js';
 import { ITEMS } from '../src/content/items.js';
-import { BASKET_WARES } from '../src/content/pantry.js';
+import { kindOf } from '../src/content/pantry.js';
 import { OUTDOOR, HOMEWORK } from '../src/content/activities.js';
 import { TEA_DEEDS } from '../src/content/market.js';
 import { REASONS, KEEPSAKES, FAMILY, OLD_TIES } from '../src/content/settle.js';
@@ -285,13 +285,6 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     }
   }
 
-  function basket(at) {
-    if (chance(0.5)) {
-      const it = pick(goods(at).filter(x => x.basket && x.n > 0));
-      if (it) send('basket.put', { item: it.id, n: int(1, it.n), at });
-    } else send('basket.order', { item: pick(BASKET_WARES), n: int(1, 3), at });
-  }
-
   function market(shop, at) {
     send('market.visit', { shop, at });
     const wares = game.ask('market', shop, at).wares;
@@ -334,7 +327,6 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     else if (t.act === 'housework') housework(t, at);
     else if (t.act === 'kitchen') kitchenWork(at);
     else if (t.act === 'store') store(at);
-    else if (t.act === 'basket') basket(at);
     else if (t.act === 'market') market(t.shop, at);
     else if (t.act === 'tea') tea(at);
     else if (t.act === 'cloth') cloth(at);
@@ -397,6 +389,11 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     // 约下了还没到日子，偶尔托人带话作罢（不然约定多半赴了，带话作罢一年也碰不上一回）
     if (date.active && !date.active.due && chance(0.1)) return send('visit.cancel', { at });
     if (chance(0.08)) return send('invite', { to: p.id, at });
+    // 乡邻今天想要的东西身上有：卖给他或者换（不要的、做够两回的，规则会拒绝）
+    const wants = game.ask('neighbor.wants', p.id).items;
+    const deal = pick(goods(at).filter(x => x.carried > 0 && wants.includes(kindOf(x.id))));
+    if (deal && chance(0.5))
+      return send(chance(0.6) ? 'neighbor.sell' : 'neighbor.swap', { to: p.id, item: deal.id, at });
     // 见面聊日常；有时再问问近况、安排、天色（问过的、天黑了问安排，规则会拒绝）
     if (chance(0.6))
       return send('talk', {

@@ -62,7 +62,6 @@ const objects = [
   ['table', 6, 12, { station: 'rest', label: '桃树下的长凳', look: 'bench' }],
   ['coop', 13, 12, { station: 'coop', label: '院角的鸡窝' }],
   ['haystack', 16, 11],
-  ['basket', 10, 13],
   ['flowers', 4, 13],
   ['flowers', 6, 13],
   ['flowers', 13, 13],

@@ -14,7 +14,6 @@ import {
   BASKET_GOODS,
   eatenAs,
   giftable,
-  basketTakes,
   plainOf,
   kindOf,
 } from '../../content/pantry.js';
@@ -274,7 +273,7 @@ export const pack = {
     }
 
     // 眼下够得着的每一样东西（身上的加上在院里时家里的），和它能拿来做什么。
-    // 送人、放进收菜筐、下锅，画面都从这一张单子里挑。
+    // 送人、卖、下锅，画面都从这一张单子里挑。
     queries.define('goods', (w, at) => {
       const id = people.who(w);
       const home = people.atHome(w, id, at || null);
@@ -286,7 +285,6 @@ export const pack = {
         carried: count(w, id, item),
         eat: eatenAs(item),
         gift: giftable(item),
-        basket: basketTakes(item),
       }));
     });
 

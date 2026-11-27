@@ -226,10 +226,18 @@ test('v15 升级：开局两选的旧特质换成性情和出身线，历练留�
   assert.deepEqual(world.persona.yun.tempers, ['diligent', 'shy', 'paranoid']);
 });
 
-test('v14 升级保留筐中的货和订单，从下一次清晨才记收据', () => {
+test('v33 升级：收菜筐拆了，筐里没收走的货和付了钱没捎到的货都收进橱柜', () => {
   const saved = JSON.parse(
-    readFileSync(new URL('../fixtures/save-v14.json', import.meta.url), 'utf8'),
+    readFileSync(new URL('../fixtures/save-v33.json', import.meta.url), 'utf8'),
   );
-  const g = createGame({ saved, debug: true });
-  assert.deepEqual(g.save().state.world.basket, { ...saved.state.world.basket, receipt: null });
+  const old = saved.state.world;
+  const g = createGame({ saved: JSON.parse(JSON.stringify(saved)), debug: true });
+  const w = g.save().state.world;
+  assert.equal(w.basket, undefined);
+  const before = old.households.home.items;
+  for (const [id, n] of Object.entries(old.basket.goods))
+    assert.equal(w.households.home.items[id], (before[id] || 0) + n, id);
+  for (const [id, n] of Object.entries(old.basket.order))
+    assert.ok(w.households.home.items[id] >= (before[id] || 0) + n, id);
+  assert.deepEqual([w.shops.took, w.shops.paid], [{}, 0]);
 });

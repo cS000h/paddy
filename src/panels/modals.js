@@ -15,7 +15,6 @@ import { kitchenView, recipesView } from './kitchen.js';
 import { fireView } from './fire.js';
 import { cookedView } from './cooked.js';
 import { bagView, storeView } from './bag.js';
-import { basketView } from './village.js';
 import { mapView } from './map.js';
 import * as n from './notices.js';
 import { actions, close, title, para } from './html.js';
@@ -42,7 +41,6 @@ const VIEWS = {
   water: n.waterView,
   talk: encounterView,
   sleep: n.sleepView,
-  basket: basketView,
   bag: bagView,
   store: storeView,
   sign: n.signView,
@@ -82,7 +80,7 @@ const PLACE = {
 export const placementOf = modal => PLACE[modal.kind] || 'side';
 
 // 内容多的小窗用宽一点的纸。
-const WIDE = new Set(['origin', 'store', 'basket', 'kitchen', 'recipes', 'market', 'map']);
+const WIDE = new Set(['origin', 'store', 'kitchen', 'recipes', 'market', 'map']);
 // 这几种小窗必须在里面做出选择，点纸外面不会关掉。
 const MUST_ANSWER = new Set(['origin', 'trouble', 'notes']);
 

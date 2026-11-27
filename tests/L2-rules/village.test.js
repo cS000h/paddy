@@ -1,8 +1,7 @@
-// L2 规则：时间、乡邻、收菜筐、手记。
+// L2 规则：时间、乡邻、乡邻买卖、手记。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, refused, growOne, carried, FIELD } from '../helpers.js';
-import { createGame } from '../../src/port/game.js';
+import { newGame, must, refused, growOne, carried, FIELD, stocked } from '../helpers.js';
 import { lifeLine } from '../../src/sim/talk.js';
 
 test('时间一小段一小段地过，到半夜停住不催人，睡一觉到第二天清早', () => {
@@ -101,21 +100,38 @@ test('送一把菜：对方记着，第二天早上留下回礼和便条', () =>
   assert.ok(!must(g, 'sleep').includes('gift.returned'), '回礼只给一次');
 });
 
-test('收菜筐：晚上放菜，清早换成钱；留钱托捎种子，清早送到', () => {
-  const g = newGame();
-  growOne(g);
-  must(g, 'farm.harvest', FIELD);
-  assert.equal(refused(g, 'basket.put', { item: 'seed.qingcai', n: 1 }), '阿满只收吃的和手艺活');
-  must(g, 'basket.put', { item: 'veg.qingcai', n: 1 });
-  must(g, 'basket.order', { item: 'seed.qingcai', n: 5 });
-  assert.equal(g.ask('home').coins, 24 - 10);
-  assert.equal(refused(g, 'basket.order', { item: 'seed.qingcai', n: 50 }), '钱不够');
-  const facts = must(g, 'sleep');
-  assert.ok(facts.includes('basket.sold') && facts.includes('basket.delivered'));
-  const home = g.ask('home');
-  assert.equal(home.coins, 24 - 10 + 6);
-  assert.equal(carried(g, 'seed.qingcai'), 11 + 5, '捎来的东西先放在身上');
-  assert.deepEqual(g.ask('basket').goods, []);
+test('乡邻买卖：每户每天想要一两样，走到跟前卖给他或者换他家的，一天两回，不要的不收', () => {
+  const g0 = newGame();
+  const wants = g0.ask('neighbor.wants', 'gui');
+  assert.equal(wants.items.length, 2);
+  assert.deepEqual(wants.swap, { item: 'egg', n: 1 });
+  const want = wants.items[0];
+  const g = stocked(g0, { [want]: 3, pebble: 1 });
+  const home = { x: 8, y: 11 };
+  must(g, 'pack.put', { item: want, n: 3, at: home });
+  must(g, 'pack.put', { item: 'pebble', at: home });
+  const gui = g.ask('residents').find(v => v.id === 'gui');
+  if (gui.map !== g.ask('hero').map) must(g, 'travel.to', { to: gui.map });
+  const at = { x: gui.x, y: gui.y };
+  const ask = g.ask('interaction.options', 'gui', at);
+  assert.match(ask.find(r => r.key.startsWith('wants.')).line, /收一点/);
+  assert.ok(ask.some(r => r.command === 'neighbor.sell' && r.input.item === want));
+  assert.equal(refused(g, 'neighbor.sell', { to: 'gui', item: 'pebble', at }), '他今天不要这个');
+  const coins = g.ask('home').coins;
+  const eggs = carried(g, 'egg');
+  must(g, 'neighbor.sell', { to: 'gui', item: want, at });
+  assert.ok(g.ask('home').coins > coins, '钱从桂嫂家出，到了自家');
+  must(g, 'neighbor.swap', { to: 'gui', item: want, at });
+  assert.equal(carried(g, 'egg'), eggs + 1);
+  assert.equal(
+    refused(g, 'neighbor.sell', { to: 'gui', item: want, at }),
+    '今天已经和他做过两回买卖了',
+  );
+  assert.equal(carried(g, want), 1);
+  assert.equal(
+    refused(g, 'neighbor.sell', { to: 'qiao', item: want, at }),
+    '他手头没闲钱，只换不买',
+  );
 });
 
 test('手记：做到一件记一件，每件只记一次', () => {
@@ -219,38 +235,6 @@ test('约定：熟人才约，约好的那天午前他在茶摊等，去了熟�
   assert.ok(g.ask('visits').history.at(-1).includes('没赶上'));
 });
 
-test('查账、确认订货和隔天收货：预览不留痕，重复旧订单不扣钱', () => {
-  const g = newGame();
-  const at = { x: 20, y: 19 };
-  const options = () => g.ask('interaction.options', 'aman', at);
-  const before = JSON.stringify(g.save());
-  assert.ok(g.ask('resident.greeting', 'aman'));
-  assert.ok(!options().some(c => c.key.startsWith('bill.')));
-  const order = options().find(
-    c => c.input?.item === 'seed.qingcai' && c.command === 'basket.order',
-  );
-  assert.ok(order.confirm);
-  assert.equal(JSON.stringify(g.save()), before);
-  must(g, order.command, { ...order.input, at });
-  const paid = g.ask('home').coins;
-  assert.match(refused(g, order.command, { ...order.input, at }), /单子变过/);
-  assert.equal(g.ask('home').coins, paid);
-  must(g, 'basket.put', { item: 'cake', n: 1, at: { x: 8, y: 11 } });
-  assert.ok(must(g, 'sleep').includes('basket.delivered'));
-  const receipt = g.ask('basket').receipt;
-  assert.deepEqual(receipt.goods, { cake: 1 });
-  assert.ok(receipt.coins > 0);
-  const line = options().find(c => c.key === 'bill.' + receipt.day).line;
-  assert.match(line, /^第 2 日/);
-  assert.ok(line.includes('米糕') && line.includes(receipt.coins + '文'));
-  const loaded = createGame({ saved: g.save(), debug: true });
-  assert.deepEqual(loaded.ask('basket').receipt, receipt);
-  assert.equal(
-    loaded.ask('interaction.options', 'aman', at).find(c => c.key === 'bill.' + receipt.day).line,
-    line,
-  );
-  assert.equal(loaded.ask('bonds').find(b => b.id === 'aman').known, 0);
-});
 test('石伯读指定田块；过客交付选项和实际交付共用库存', () => {
   const g = newGame();
   must(g, 'farm.till', FIELD);
@@ -283,7 +267,7 @@ test('六位乡邻按各自的工位读家当、菜畦、店货和采集次数',
   must(g, 'farm.sow', FIELD);
   must(g, 'pack.put', { item: 'rice', n: 1, at: { x: 8, y: 11 } });
   for (const [id, key] of [
-    ['aman', 'order.'],
+    ['aman', 'wants.'],
     ['shi', 'plot.'],
     ['gui', 'recipe.'],
     ['qiao', 'cloth'],

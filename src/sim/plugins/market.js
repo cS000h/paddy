@@ -5,7 +5,8 @@ import { refuse } from '../../kernel/dispatch.js';
 import { ITEMS } from '../../content/items.js';
 import { dateOf, isFairDay } from '../../content/calendar.js';
 import { MAPS, actAt } from '../../content/maps/index.js';
-import { STAPLES, SOMETIMES, FRESH } from '../../content/market.js';
+import { STAPLES, SOMETIMES, FRESH, TAKES, RESALE, TAKE_WORDS } from '../../content/market.js';
+import { takeKind } from '../../content/pantry.js';
 import { near } from './people.js';
 function qiao({ ask, person, at }) {
   if (person.place !== 'market') return [];
@@ -36,16 +37,31 @@ export const market = {
     'store',
     'weather',
     'compute',
+    'purse',
   ],
   writes: ['shops'],
   install(ctx) {
     registerResidentOptions(ctx, 'qiao', qiao);
-    const { schema, commands, queries, reactions, core, people, pack, store, weather, compute } =
-      ctx.services;
+    const {
+      schema,
+      commands,
+      queries,
+      reactions,
+      core,
+      people,
+      pack,
+      store,
+      weather,
+      compute,
+      purse,
+    } = ctx.services;
     schema.slice('shops', {
-      initial: () => ({ day: 0, wares: { market: [], tea: [] } }),
+      initial: () => ({ day: 0, wares: { market: [], tea: [] }, took: {}, paid: 0 }),
       validate: s =>
         (is.int(s.day) &&
+          is.obj(s.took) &&
+          Object.entries(s.took).every(([k, n]) => Object.hasOwn(TAKES, k) && is.int(n, 1, 999)) &&
+          is.int(s.paid, 0) &&
           is.keyedBy(s.wares, ['market', 'tea']) &&
           ['market', 'tea'].every(
             k =>
@@ -132,7 +148,9 @@ export const market = {
         if (si >= 2 && core.random(w) < 0.7) add('tea', 'lambLeg', 1, 1);
         if (si === 3 && core.random(w) < 0.5) add('tea', 'porkSlab', 1, 1);
       }
-      w.shops = { day: w.clock.day, wares };
+      // 昨天收进的货今早转手卖到外头，钱多一成回到钱匣
+      if (w.shops.paid) purse.move(w, 'shop', Math.round(w.shops.paid * RESALE), '收的货转手卖了');
+      w.shops = { day: w.clock.day, wares, took: {}, paid: 0 };
     }
     const stock = (w, shop) =>
       w.shops.wares[shop].map(x => {
@@ -178,21 +196,50 @@ export const market = {
         price: x.price,
       });
     });
+    /** 卖 n 份给铺子能拿多少：每天每类前几份原价，再多半价，收满两倍就不收（full）。 */
+    function quote(w, item, n) {
+      const kind = takeKind(item),
+        cap = TAKES[kind],
+        took = w.shops.day === w.clock.day ? w.shops.took[kind] || 0 : 0;
+      if (took + n > cap * 2) return { value: 0, half: 0, full: true };
+      const whole = Math.max(0, Math.min(n, cap - took));
+      const half = n - whole;
+      const price = ITEMS[item].sell;
+      return {
+        value: whole * price + half * Math.max(1, Math.floor(price / 2)),
+        half,
+        full: false,
+      };
+    }
     commands.register('market.sell', ({ draft, input, fact }) => {
       const w = draft.world;
+      if (input.shop === 'tea') refuse(TAKE_WORDS.tea);
       visit(w, input);
       const it = ITEMS[input.item];
       if (!it?.sell) refuse('铺子不收这样东西');
       const n = input.n ?? 1;
       if (!is.int(n, 1, 99)) refuse('一次卖一至九十九份');
+      const offer = quote(w, it.id, n);
+      if (offer.full) refuse(TAKE_WORDS.full);
       pack.use(w, people.who(w), it.id, n, '卖给铺子');
       const q = compute.run(
         'sale.price',
         { w, who: people.who(w), item: it.id },
-        { value: it.sell * n, parts: [] },
+        { value: offer.value, parts: [] },
       );
+      if (purse.coins(w, 'shop') < q.value) refuse(TAKE_WORDS.broke);
       store.earn(w, q.value, '卖' + it.name);
-      fact('market.sold', { who: people.who(w), shop: input.shop, item: it.id, n, coins: q.value });
+      const kind = takeKind(it.id);
+      w.shops.took[kind] = (w.shops.took[kind] || 0) + n;
+      w.shops.paid += q.value;
+      fact('market.sold', {
+        who: people.who(w),
+        shop: input.shop,
+        item: it.id,
+        n,
+        coins: q.value,
+        half: offer.half,
+      });
     });
     reactions.on('day.started', s => lay(s.world), { priority: 35 });
     reactions.on(
@@ -215,6 +262,17 @@ export const market = {
       ready: w.shops.day === w.clock.day,
       near: nearShop(w, shop, at),
       wares: stock(w, shop),
+      buys: shop === 'market',
+      /** 铺子今天每类还收几份原价、几份半价（kind → {full, half}）。 */
+      takes: Object.fromEntries(
+        Object.entries(TAKES).map(([k, cap]) => {
+          const took = w.shops.day === w.clock.day ? w.shops.took[k] || 0 : 0;
+          return [
+            k,
+            { full: Math.max(0, cap - took), half: Math.max(0, cap * 2 - Math.max(cap, took)) },
+          ];
+        }),
+      ),
     }));
   },
 };

@@ -6,7 +6,8 @@
 //          sour 酸、crisp 脆、spicy 辣、alert 提神、raw 能生吃、meat 肉、fishy 腥、cured 腌腊、soft 软
 //   snack  直接吃的效果 {full 饱腹, energy 体力, mood 心情, buff 增益, why 一句话, water 解渴(负数是口干)}
 //   keep   会放坏的东西能放几天（M5 之后才用）；size 在行囊里占几格；qty 买一回是几份
-// price 是 0.12 的基准价。这里一格地只收一棵菜，所以卖价按 3 倍、买价按 4 倍折算；种子照原价。
+// price 是 0.12 的基准价。买价按 4 倍折算，种子照原价；卖价鱼虾蟹按 1.5 倍、别的按 2 倍（SELL_RATE），
+// 勤快一天大约挣 30–50 文，村里人家一天才进三四文。
 // 数值都是游戏尺度，不是营养建议。
 import { PEOPLE } from './people.js';
 import { FINE_ITEMS, FINE_PRICE, fineId } from './quality.js';
@@ -165,6 +166,10 @@ const RAW = {
   worm: stuff('蚯蚓', 'bait', 0, { ...NO, text: '挂在钩上钓鱼：咬钩快，大鱼多。锄地、雨后翻石头能翻出来' }),
 };
 
+/** 卖价是基准价的几倍：鱼虾蟹好钓、一钓一串，压低一些。 */
+export const SELL_RATE = Object.freeze({ fish: 1.5, other: 2 });
+const watery = (id, d) => id === 'fish' || d.kin === 'fish' || !!d.creel;
+
 const finish = ([id, d]) => {
   const buyable = d.buy !== false && d.price > 0;
   const sellable = d.sell !== false && d.price > 0 && d.kind !== 'seed';
@@ -189,7 +194,9 @@ const finish = ([id, d]) => {
       ...d,
       tags: Object.freeze([...(d.tags || [])]),
       buy: buyable ? (d.kind === 'seed' ? d.price : d.price * 4) : 0,
-      sell: sellable ? d.price * 3 : 0,
+      sell: sellable
+        ? Math.max(1, Math.round(d.price * SELL_RATE[watery(id, d) ? 'fish' : 'other']))
+        : 0,
     }),
   ];
 };
@@ -212,6 +219,13 @@ const PRIZE = Object.entries(PRIZES).map(([id, d]) => {
 export const ITEMS = Object.freeze(
   Object.fromEntries([...Object.entries(RAW), ...FINE, ...PRIZE].map(finish)),
 );
+
+/** 铺子收东西时算哪一类（每类每天收几份见 content/market.js 的 TAKES）。 */
+export const takeKind = id => {
+  const d = ITEMS[id];
+  if (watery(id, d)) return 'fish';
+  return ['food', 'snack', 'craft', 'whole'].includes(d.kind) ? d.kind : 'other';
+};
 
 /** 极品认作原来那样（下锅配菜名、送人看合不合心意）；寻常的原样返回。 */
 export const plainOf = id => ITEMS[id]?.fine || id;
@@ -289,10 +303,6 @@ export const BASKET_GOODS = Object.freeze([
   'earthEar',
 ]);
 
-/** 阿满肯收的东西：能卖的吃食和手艺活。 */
-export const basketTakes = id =>
-  ['food', 'snack', 'craft'].includes(ITEMS[id]?.kind) && ITEMS[id].sell > 0;
-
 // 开局家里有的东西（0.12 的开局存粮），和身上带的。
 export const START_STORE = Object.freeze({
   rice: 3,
@@ -305,31 +315,3 @@ export const START_STORE = Object.freeze({
   salt: 4,
 });
 export const START_PACK = Object.freeze({ 'seed.qingcai': 12, cake: 2 });
-
-// 托阿满捎得到的东西（村口的杂货铺开张之前，买东西只有这一条路）。
-export const BASKET_WARES = Object.freeze([
-  'seed.qingcai',
-  'seedChive',
-  'seedCuke',
-  'seedBean',
-  'seedPumpkin',
-  'seedRadish',
-  'seedCabbage',
-  'rice',
-  'egg',
-  'potato',
-  'bean',
-  'tofu',
-  'ginger',
-  'wood',
-  'salt',
-  'soy',
-  'vinegar',
-  'sugar',
-  'chili',
-  'scallion',
-  'wine',
-  'cake',
-  'candy',
-  'flask',
-]);
