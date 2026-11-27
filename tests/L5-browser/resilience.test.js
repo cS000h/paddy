@@ -86,11 +86,10 @@ test('画面出错不定住、一直出错会提醒、听众出错照样存档�
       }),
     );
     await page.evaluate(() => window.__dao.game.dispatch('clock.advance', { minutes: 10 }));
-    await wait(700);
-    assert.equal(
-      await savedRevision(page),
-      await page.evaluate(() => window.__dao.game.revision()),
-    );
+    // 存档是停 0.4 秒再存；云端软件画图一帧几十毫秒，计时器会晚一点，最多等 3 秒
+    const want = await page.evaluate(() => window.__dao.game.revision());
+    for (let t = 0; t < 3000 && (await savedRevision(page)) !== want; t += 100) await wait(100);
+    assert.equal(await savedRevision(page), want);
 
     // —— 清早备份：睡两觉，退回到第一觉醒来的那天清早 ——
     await page.evaluate(() => window.__dao.game.dispatch('sleep', {}));
