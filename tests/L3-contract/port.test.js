@@ -62,6 +62,8 @@ const COMMANDS = [
   'match.visit',
   'yard.fix',
   'aroma.serve',
+  'leaning.answer',
+  'scene.choose',
 ];
 const QUERIES = [
   'persona',
@@ -122,6 +124,11 @@ const QUERIES = [
   'match.visit.options',
   'yard.fix',
   'yard.fixes',
+  'leaning',
+  'almanac',
+  'hopes',
+  'scenes',
+  'scene.options',
 ];
 
 test('端口对外只有这几样', () => {

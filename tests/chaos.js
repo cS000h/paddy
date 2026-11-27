@@ -5,7 +5,7 @@
 //   3. 可以混进一定比例的乱填输入（类型不对、越界、原型上的名字），看端口挡不挡得住。
 // 只通过端口发命令、问查询；content 只用来挑输入。
 import { createGame } from '../src/port/game.js';
-import { MAPS, actAt, walkable, farmable, waterSource } from '../src/content/maps/index.js';
+import { MAPS, actAt, walkable, farmable, waterSource, isHome } from '../src/content/maps/index.js';
 import { ITEMS } from '../src/content/items.js';
 import { BASKET_WARES } from '../src/content/pantry.js';
 import { OUTDOOR, HOMEWORK } from '../src/content/activities.js';
@@ -424,7 +424,13 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
         const how = PRIZE_TRACES[prize.id.slice(6)]?.how;
         const to = how === 'keep' ? 'yard' : how === 'release' ? pick(RELEASE_MAPS) : null;
         if (to && to !== hero().map && chance(0.8)) send('travel.to', { to, at: here() });
-        send('prize.use', { item: prize.id, at: here() });
+        // 摆彩头要站进院里（进院门那一格还在院外），多半站到屋前那一块
+        const inside = layout('yard').stand.filter(p => isHome(MAPS.yard, p.x, p.y));
+        const spot =
+          how === 'keep' && hero().map === 'yard' && chance(0.8)
+            ? { ...pick(inside), dir: pick(DIRS) }
+            : here();
+        send('prize.use', { item: prize.id, at: spot });
       }
     } else if (roll < 0.6) send('sip', { at });
     else if (roll < 0.75) send('sky.look', { at });
@@ -457,7 +463,8 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
       reason,
       keepsake: pick(Object.keys(KEEPSAKES)),
       family: pick(Object.keys(FAMILY)),
-      own: pick(Object.keys(TEMPERS)),
+      // 正式开局不挑自己的性子（头半个月做出来）；测试开局才给，一半给一半不给
+      own: chance(0.5) ? pick(Object.keys(TEMPERS)) : undefined,
       friend: REASONS[reason].friend ?? pick(Object.keys(OLD_TIES)),
     });
   }
@@ -596,8 +603,25 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
       const choice = rows.length ? pick(rows).input.choice : 'x';
       return send('match.visit', { at: { x: v.x, y: v.y - 1, dir: 'down' }, choice });
     }
+    // 修院子得在自家院里：多半先走回去
+    if (hero().map !== 'yard' && chance(0.8)) return send('travel.to', { to: 'yard', at });
     const rows = game.ask('yard.fix', at);
     send('yard.fix', { id: pick(rows).id, help: chance(0.3), at });
+  }
+
+  // 眼前的事：村里有人问认不认那个性情就答；挂着的局面去找演的那位，挑一个选项（偶尔乱挑，被拒也好）
+  function scene() {
+    if (game.ask('leaning').offer)
+      return send('leaning.answer', { take: chance(0.6) ? true : pick([false, 'x']) });
+    const live = game.ask('scenes').filter(e => e.now);
+    if (!live.length) return;
+    const e = pick(live);
+    const p = game.ask('residents').find(x => x.id === e.a);
+    if (!p?.visible) return;
+    if (hero().map !== p.map) return send('travel.to', { to: p.map, at: here() });
+    const rows = game.ask('scene.options', e.a, here());
+    const pickKey = rows.length && chance(0.9) ? pick(rows).input.pick : 'x';
+    return send('scene.choose', { id: e.id, pick: pickKey, at: here() });
   }
 
   const PLANS = [
@@ -613,6 +637,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     [3, pulseAndVisitors],
     [1, fairMatch],
     [1, yard],
+    [1, scene],
   ];
   const total = PLANS.reduce((sum, [w]) => sum + w, 0);
   let steps = 0;
@@ -629,12 +654,17 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     if (steps++ === 0 && chance(0.8)) return origin();
     if (game.ask('visits').active?.due && chance(0.5)) return date();
     // 比到一半的那一局多半接着比完（钓客申时就走，拖久了就作罢）
-    if (['fishing', 'ready', 'suspect', 'after'].includes(game.ask('match')?.phase) && chance(0.5))
-      return fairMatch();
+    const phase = game.ask('match')?.phase;
+    if (['fishing', 'ready', 'suspect', 'after'].includes(phase) && chance(0.5)) return fairMatch();
+    // 集日渡口立着木牌：偶尔过去接一局（不然一年也比不上几回，验鱼那一步碰不上）
+    if (phase === 'open' && chance(0.05)) return fairMatch();
     // 钓客上门、院门口有闻香来的人：多半先去应一声（午时、两个钟头就散）
     const v = game.ask('match.visit');
     const gate = game.ask('residents').some(p => p.doing.includes('香味'));
     if (((v && !v.done) || gate) && chance(0.5)) return yard();
+    // 有人问认不认性情、眼前挂着局面：有时先去应（局面一挂好几天，太勤了别的事就做不成）
+    if ((game.ask('leaning').offer || game.ask('scenes').some(e => e.now)) && chance(0.1))
+      return scene();
     if (hostile && chance(hostile)) return rough();
     if (chance(0.002)) return origin(); // 选过以后再选，应该被拒绝
     let roll = r() * total;

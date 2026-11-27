@@ -3,7 +3,7 @@
 // 以后进的钱先填它。换季那天按上一季的天气和一点运气重定年景。玩家在杂货铺买卖，钱从铺子的钱匣进出。
 // 随机都用「固定的随机」（sim/noise.js）：不动存档里的随机数，家底的事不会把别处的收成带偏。
 //   服务 purse.houseOf(人) → 户、purse.coins(w, 户)、purse.short(w, 户)、purse.fortune(w, 户)、
-//        purse.move(w, 户, 加减, 缘由) → 实际动了多少（钱不够时只给到 0）
+//        purse.move(w, 户, 加减, 缘由) → 实际动了多少（钱不够时只给到 0）、purse.shift(w, 户, 档) 年景压抬几档
 //   查询 purse → 各户叫什么、什么营生、年景怎样、是不是手头紧（钱数只有自己家的看得见，在 home 里）
 //   事实 purse.spent {house, id, title, n, short}、purse.fortune {house, fortune, word, line}
 import { is } from '../../kernel/schema.js';
@@ -199,6 +199,15 @@ export const purse = {
       }),
     );
 
-    ctx.provide('purse', Object.freeze({ houseOf, coins, short, fortune, move: ctx.own(move) }));
+    /** 年景压一档、抬一档（天时年景，sim/plugins/almanac.js），限在 −2 到 2。 */
+    function shift(w, id, n) {
+      const h = w.purses.houses[id];
+      if (h && Number.isInteger(n)) h.fortune = Math.max(-2, Math.min(2, h.fortune + n));
+    }
+
+    ctx.provide(
+      'purse',
+      Object.freeze({ houseOf, coins, short, fortune, move: ctx.own(move), shift: ctx.own(shift) }),
+    );
   },
 };

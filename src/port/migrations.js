@@ -18,6 +18,28 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  29(state) {
+    // 第 4 块：做事攒性情、天时年景和节令、村民的盼头、局面池。旧档的主角已经有落脚单上挑的两个性情，
+    // 第三个照新规矩攒；过了头半个月的档，下个清早按攒得的落定（多半空着）。年景从平常起，盼头都还没起念头。
+    const w = state.world;
+    w.meta.version = 30;
+    w.leaning = {
+      tally: {},
+      wait: {},
+      offer: null,
+      heard: [],
+      seen: null,
+      pulled: 0,
+      settled: false,
+    };
+    w.almanac = { year: 'plain', told: [], last: null, joined: 0 };
+    const idle = () => ({ state: 'idle', n: 0, stage: 0, told: -1, side: false, since: 0, at: 0 });
+    w.hopes = Object.fromEntries(
+      ['shi', 'aman', 'qiao', 'gui', 'zhou', 'yun'].map(id => [id, idle()]),
+    );
+    w.scenes = { live: [], done: {}, echo: [] };
+    return state;
+  },
   28(state) {
     // 本事的升级曲线拉长、经验改成按出力给并且当天边际递减（每门本事记一份今天长了多少）。
     // 旧档的经验照级换算到新曲线上：同一级、级内同样的进度，升上来不掉级。两张表都写死。

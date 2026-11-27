@@ -60,8 +60,8 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-// 成长和做饭的数值（v29）：经验按出力给、当天打折，一锅饭饱腹守恒、滋味、吃腻了
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '501fe3db' };
+// 攒性情、局面池、年景节令、盼头（v30）：村民逢节聚到茶摊渡口、局面里的人站到地方；乱玩多了答局面
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '692baf4f' };
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};

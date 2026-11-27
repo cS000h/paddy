@@ -73,11 +73,20 @@ export function personaBody(m, game, mods) {
         )
         .join('')}</div>`
     : '';
+  const lean = other ? null : game.ask('leaning');
+  const offer = lean?.offer;
+  const leaning = offer
+    ? `<div class="folio-snap"><b>大伙儿这么说你</b><small>${esc(offer.line)}</small>
+    <button data-do="leaningAnswer" data-take="yes">${esc(offer.take)}<small>${esc(offer.clash || offer.yes)}</small></button>
+    <button data-do="leaningAnswer" data-take="no">再看看<small>${esc(offer.wait)}</small></button></div>`
+    : lean && !lean.settled && lean.top.length
+      ? `<small>这几天显出来的：${lean.top.map(t => esc(t.name)).join('、')}（还有 ${lean.daysLeft} 天落定）</small>`
+      : '';
   return `<div class="folio"><section><header>${stamp('人物')}<details class="folio-picker"><summary>看谁 · ${esc(person.name)}</summary>
     <div>${options}</div></details></header>
     <div class="folio-identity">${portrait(person.look)}<div><h2>${esc(person.name)}</h2>
     ${line ? esc(line.name) + '<br>' + level + ' · ' + esc(line.title) : '出身未记'}</div></div>
-    <div class="folio-traits">${traits.join('')}</div><small>根骨天资 ${names(profile.innate)}　毛病 ${names(profile.coping)}${earned}</small>
+    <div class="folio-traits">${traits.join('')}</div><small>根骨天资 ${names(profile.innate)}　毛病 ${names(profile.coping)}${earned}</small>${leaning}
     ${n === null ? '' : `<div class="folio-stress">${uiIconImg('stress_' + bowl, 28)}心烦　${n} / 100</div>`}${cope}</section>
     <section><header>${stamp('六项')}<small>二十为满</small></header>${attributes(profile, m.attr)}${mods}</section></div>`;
 }
@@ -93,6 +102,11 @@ export function ledgerBody(m, game) {
     p => p.id.startsWith('same.') || p.id.startsWith('clash.') || p.id === 'unseen',
   );
   const reasons = opinion.parts.filter(p => p.id.startsWith('why.'));
+  const h = game.ask('hopes').find(x => x.who === person.id);
+  const hope =
+    h && h.state !== 'idle'
+      ? h.want + '　' + (h.state === 'done' ? '办成了' : h.state === 'failed' ? '没办成' : h.stage)
+      : '';
   const lines = reasons
     .slice(0, 3)
     .map(p => part(p) + ' · ' + (p.left == null ? '一直记着' : '余 ' + p.left + ' 天'));
@@ -113,7 +127,7 @@ export function ledgerBody(m, game) {
   return `<div class="folio folio-ledger"><section><header>${stamp('乡邻')}</header><nav>${roster}</nav></section>
     <section><header>${stamp('人情账')}</header><div class="folio-identity">${portrait(person.look)}
     <div><h2>${esc(person.name)}</h2>${esc(person.title || person.role)}</div><b class="folio-score">好感 ${signed(opinion.value)}</b></div>
-    ${group('相投相冲', affinity.map(part))}${person.title ? '' : group('好感来由', lines)}
+    ${hope ? group('盼头', [esc(hope)]) : ''}${group('相投相冲', affinity.map(part))}${person.title ? '' : group('好感来由', lines)}
     ${person.title ? '' : group('熟悉', opinion.parts.filter(p => p.id === 'known').map(part))}
     <button data-do="bookWho" data-who="${esc(person.id)}">看人</button></section></div>`;
 }
