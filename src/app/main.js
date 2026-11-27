@@ -5,6 +5,7 @@ import '../panels/style.css';
 import '../panels/play-hud.css';
 import '../panels/book.css';
 import '../panels/catalog.css';
+import '../panels/diet.css';
 import '../panels/fishing.css';
 import '../panels/fire.css';
 import '../panels/person.css';
