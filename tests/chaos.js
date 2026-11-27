@@ -435,6 +435,10 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   }
 
   function time() {
+    // 憋不住了就挑头一个解闷的法子。不抽随机数：别的稀有命令（彩头）靠的那串随机序列不跟着变；
+    // 没憋着时乱挑由 rough() 的乱填去试
+    const snap = game.ask('stress').snap;
+    if (snap) send('stress.cope', { coping: snap.choices[0].id });
     if (chance(0.25)) send('sleep', { at: here() });
     else send('clock.advance', { minutes: pick([10, 10, 10, 30, 60, 120]) });
   }

@@ -170,7 +170,13 @@ export const market = {
       store.pay(w, x.price, '买' + x.name);
       pack.receive(w, people.who(w), x.item, x.qty, '铺子买的');
       w.shops.wares[input.shop].find(a => a.item === x.item).left--;
-      fact('market.bought', { who: people.who(w), item: x.item, n: x.qty, price: x.price });
+      fact('market.bought', {
+        who: people.who(w),
+        shop: input.shop,
+        item: x.item,
+        n: x.qty,
+        price: x.price,
+      });
     });
     commands.register('market.sell', ({ draft, input, fact }) => {
       const w = draft.world;
@@ -186,7 +192,7 @@ export const market = {
         { value: it.sell * n, parts: [] },
       );
       store.earn(w, q.value, '卖' + it.name);
-      fact('market.sold', { who: people.who(w), item: it.id, n, coins: q.value });
+      fact('market.sold', { who: people.who(w), shop: input.shop, item: it.id, n, coins: q.value });
     });
     reactions.on('day.started', s => lay(s.world), { priority: 35 });
     reactions.on(

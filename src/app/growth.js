@@ -37,6 +37,12 @@ export function growthActions({ game, shell, run, debug = false }) {
     bookMod({ mod }) {
       edit({ mod });
     },
+    // 憋不住了：在册子的人物页挑一个解闷的法子
+    cope({ coping }) {
+      const out = run('stress.cope', { coping });
+      const f = out.ok && out.facts.find(x => x.type === 'stress.coped')?.data;
+      if (f) shell.toast(`染上了「${f.name}」。${f.first}`, true);
+    },
     origin() {
       shell.set({ modal: { kind: 'origin', sheet: firstSheet(debug) } });
     },
@@ -68,5 +74,12 @@ export function growthNotices(game, shell) {
       ...traits.map(f => '新特质：' + f.data.name),
     ];
     if (messages.length) shell.toast(messages.join('；'), true);
+    // 心烦：涨过一档、用毛病解了闷才说一句；顺着违着性子的那句留给以后的旁白（A-03）
+    const vex = facts.find(
+      f => f.type === 'stress.changed' && f.data.line && (f.data.crossed || !f.data.tag),
+    );
+    if (vex) shell.toast(vex.data.reply ? `${vex.data.line}${vex.data.reply}` : vex.data.line);
+    const snapped = facts.find(f => f.type === 'stress.snapped');
+    if (snapped) shell.toast(snapped.data.line + '（翻开册子的「人物」页，挑一个法子）', true);
   });
 }

@@ -100,6 +100,24 @@
 .folio-stress {
   margin-top: 6px;
 }
+/* 憋不住了：心烦满了，挑一个解闷的法子（一直带着） */
+.folio-snap {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px dashed var(--frame-2);
+}
+.folio-snap > small {
+  display: block;
+}
+.sheet .folio-snap button {
+  min-height: 44px;
+  text-align: left;
+}
+.folio-snap button small {
+  display: block;
+}
 .sheet .folio-stat,
 .sheet .folio-ledger nav button {
   display: flex;

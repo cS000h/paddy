@@ -18,6 +18,29 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  26(state) {
+    // 人心的底子后半段：村里六户和铺子的家底（sim/plugins/purse.js）、见闻、心烦的记账、村民做事的记录。
+    // 各户开局的钱写死在这里；年景都从平常起，换季那天才定。心烦的数原来就在人物档案里，不动。
+    const w = state.world;
+    w.meta.version = 27;
+    const COINS = { shi: 60, gui: 45, aman: 22, qiao: 14, zhou: 40, yun: 32, shop: 120 };
+    w.purses = {
+      houses: Object.fromEntries(
+        Object.entries(COINS).map(([id, coins]) => [id, { coins, fortune: 0, short: null }]),
+      ),
+      tally: { wet: 0, heavy: 0 },
+      spent: [],
+    };
+    w.witness = { seq: 0, list: [] };
+    const fresh = () => ({ day: 0, n: {}, quiet: 0, coped: 0, snap: null });
+    w.vexes = Object.fromEntries(
+      ['hero', 'shi', 'gui', 'aman', 'qiao', 'zhou', 'yun'].map(id => [id, fresh()]),
+    );
+    // 读档这一段算已经打过分（清晨 6 点、午前 9 点、午后 12 点、傍晚 15 点各一段），下一段起村民才做事
+    const slot = [540, 720, 900].filter(m => w.clock.minute >= m).length;
+    w.deeds = { at: w.clock.day * 4 + slot, day: 0, done: {} };
+    return state;
+  },
   25(state) {
     // 开局两选换成落脚单（content/settle.js）：选过两选的，落脚单五项都记成空的，不补发好处
     const w = state.world;

@@ -58,6 +58,9 @@ npm run art:sheet # 不开浏览器，把整张场景和素材导出到 .cache/ 
 | 让画面知道一件新的事                   | 规则里 `fact(...)` 发事实，或 `queries.define(...)` 定义查询；再更新 L3 的端口清单              |
 | 加一张地图、一种物件                   | `src/content/maps/`（数据）+ `src/art/`（画法，登记进 `art/index.js`）                          |
 | 换一张图的画法，或换成手绘图           | `src/art/index.js` 里换它的来源，别处不动                                                       |
+| 加一个村民会做的动作（借、帮、传……）   | 数和见闻的话在 `src/content/deeds.js`，能不能做、做了改什么在 `src/sim/deeds.js`                |
+| 改各户的营生、年景、大开销             | `src/content/purse.js`；跑 `node tools/village-sim.mjs` 看一季下来各户的钱                      |
+| 改心烦怎么涨落、哪件事算什么做法       | `src/content/stress.js`；性情顺着、违着哪些做法在 `src/content/traits.js`                       |
 | 让一件活在世界里演出来（采、劈、做饭） | 动作帧画在 `src/art/acts-*.js`（共用的小人在 `worker.js`）；演哪几步写在 `src/world/scripts.js` |
 | 支持一种新的输入设备（比如手柄）       | `src/world/input.js` 里加一个适配器，发的还是那几种意图                                         |
 | 上一个新的运行环境（桌面壳、小游戏）   | 照 `src/platform/web.js` 的形状再写一个平台                                                     |
