@@ -60,6 +60,8 @@ import { leaning } from './plugins/leaning.js';
 import { almanac } from './plugins/almanac.js';
 import { hopes } from './plugins/hopes.js';
 import { scenes } from './plugins/scenes.js';
+import { debts } from './plugins/debts.js';
+import { quietDeeds } from './plugins/quiet-deeds.js';
 
 export { SAVE_VERSION };
 // 顺序有讲究：后面的插件建自己的数据时，可以读前面的（比如身体和行囊按“户里有谁”来建）。
@@ -114,6 +116,8 @@ export const PLUGINS = Object.freeze([
   almanac,
   hopes,
   scenes,
+  debts,
+  quietDeeds,
   wardrobe,
   interactions,
 ]);

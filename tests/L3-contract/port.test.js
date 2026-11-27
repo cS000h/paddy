@@ -64,6 +64,8 @@ const COMMANDS = [
   'aroma.serve',
   'leaning.answer',
   'scene.choose',
+  'debt.do',
+  'gossip.tell',
 ];
 const QUERIES = [
   'persona',
@@ -129,6 +131,9 @@ const QUERIES = [
   'hopes',
   'scenes',
   'scene.options',
+  'debts',
+  'debts.options',
+  'gossip.options',
 ];
 
 test('端口对外只有这几样', () => {

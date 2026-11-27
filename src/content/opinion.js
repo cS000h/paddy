@@ -42,6 +42,16 @@ export const WHY = Object.freeze({
   pitched:   { label: '出力帮过他',     n: 8,   days: 40,   stack: 2 },
   backed:    { label: '帮他圆过心愿',   n: 12,  days: 90,   stack: 1 }, // 盼头（sim/plugins/hopes.js）
   hindered:  { label: '给他使过绊子',   n: -15, days: 60,   stack: 1 },
+  // 借、还、帮、传（sim/plugins/ledger.js）
+  lent:      { label: '手紧时借过钱',   n: 8,   days: 60,   stack: 2 },
+  repaid:    { label: '借了钱按日子还', n: 4,   days: 40,   stack: 2 },
+  refused:   { label: '开口借钱被回了', n: -4,  days: 20,   stack: 2 },
+  overdue:   { label: '欠钱过了日子',   n: -5,  days: 30,   stack: 1 },
+  welshed:   { label: '欠钱赖着不还',   n: -15, days: 60,   stack: 1 },
+  dunned:    { label: '上门讨过债',     n: -2,  days: 14,   stack: 2 },
+  relieved:  { label: '悄悄接济过',     n: 8,   days: 40,   stack: 2 },
+  confided:  { label: '跟他说过悄悄话', n: 3,   days: 14,   stack: 2 },
+  tattled:   { label: '在他跟前说人闲话', n: -4, days: 20,  stack: 2 },
   oldtie:    { label: '旧交情',         n: 12,  days: null, stack: 1 }, // 落脚单上的那一笔（content/settle.js）
   // 村民之间开局就有的交情，照台词里提到的事（见 STANDING），一直记着
   veggies:   { label: '常给他送菜',     n: 10,  days: null, stack: 1 },

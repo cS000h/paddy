@@ -18,6 +18,13 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  30(state) {
+    // 第 3 块：借、还、帮、传、拿。旧档里谁也不欠谁，也没人在院门口等着借钱。
+    const w = state.world;
+    w.meta.version = 31;
+    w.debts = { seq: 0, debts: [], ask: null, asked: {} };
+    return state;
+  },
   29(state) {
     // 第 4 块：做事攒性情、天时年景和节令、村民的盼头、局面池。旧档的主角已经有落脚单上挑的两个性情，
     // 第三个照新规矩攒；过了头半个月的档，下个清早按攒得的落定（多半空着）。年景从平常起，盼头都还没起念头。

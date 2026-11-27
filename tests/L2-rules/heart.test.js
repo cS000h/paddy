@@ -90,11 +90,16 @@ test('家底：六户和铺子各有钱，每天按营生进出；别人家有�
 });
 
 test('家底：碰上大开销，钱不够的那一截记成手头紧，以后进的钱先填它；换季重定年景', () => {
-  // 让阿满家只剩 1 文：碰上开销一定不够。换着种子睡一觉，直到碰上
+  // 让阿满家只剩 1 文：碰上开销一定不够。换着种子睡一觉，直到碰上。
+  // 别家也都穷得借不出钱（不然当天就找人借着填上了，见 L2-26）
   let g = null,
     spent = null;
+  const broke = w => {
+    for (const h of Object.values(w.purses.houses)) h.coins = 2;
+    w.purses.houses.aman.coins = 1;
+  };
   for (let seed = 1; seed < 400 && !spent; seed++) {
-    g = staged(w => (w.purses.houses.aman.coins = 1), seed);
+    g = staged(broke, seed);
     const facts = g.dispatch('sleep', {}).facts;
     spent = facts.find(f => f.type === 'purse.spent' && f.data.house === 'aman')?.data;
   }

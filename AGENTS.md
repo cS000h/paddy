@@ -49,33 +49,34 @@ npm run art:sheet # 不开浏览器，把整张场景和素材导出到 .cache/ 
 
 ## 改动放在哪儿
 
-| 想做的事                               | 改哪里                                                                                                  |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| 加一种作物、物品、台词，调数值         | `src/content/`                                                                                          |
-| 改乡邻去哪儿、几点回家                 | `src/content/people.js` 的 `ROUTINES`、`ROUTINE_DAY`                                                    |
-| 改做完一件事后的那段话                 | `src/content/life-text.js`；规则把它写进事实的 `line`，画面照着显示                                     |
-| 加一条玩法规则                         | `src/sim/plugins/` 里加一个插件，列进 `src/sim/index.js` 的 `PLUGINS`                                   |
-| 让画面知道一件新的事                   | 规则里 `fact(...)` 发事实，或 `queries.define(...)` 定义查询；再更新 L3 的端口清单                      |
-| 加一张地图、一种物件                   | `src/content/maps/`（数据）+ `src/art/`（画法，登记进 `art/index.js`）                                  |
-| 换一张图的画法，或换成手绘图           | `src/art/index.js` 里换它的来源，别处不动                                                               |
-| 加一个村民会做的动作（借、帮、传……）   | 数和见闻的话在 `src/content/deeds.js`，能不能做、做了改什么在 `src/sim/deeds.js`                        |
-| 有热闹时让村民围过去                   | 在自己插件的 `'resident.positions'` 接口里调 `src/sim/crowd.js` 的 `gather`，站位写进那张地图的 `spots` |
-| 院里加一处能修的地方、修好招谁进院     | 名单、材料、话和进院的人在 `src/content/yard-fix.js`，修好的图在 `src/art/yard-fix-sketches.js`         |
-| 改各户的营生、年景、大开销             | `src/content/purse.js`；跑 `node tools/village-sim.mjs` 看一季下来各户的钱                              |
-| 改本事长得快慢、升级要多少经验         | `src/content/growth.js` 的 `LEVELS`、`XP`；跑 `node tools/growth-curve.mjs` 看几种玩法的曲线            |
-| 改心烦怎么涨落、哪件事算什么做法       | `src/content/stress.js`；性情顺着、违着哪些做法在 `src/content/traits.js`                               |
-| 加一件找上门、碰上的事（局面）         | 谁在场、什么性情、选项和后果在 `src/content/scenes.js`；什么时候冒出来在 `src/sim/plugins/scenes.js`    |
-| 改节令、年景                           | `src/content/almanac.js`（节日、年景的话和哪户受累），聚人和传话在 `src/sim/plugins/almanac.js`         |
-| 改村民的盼头                           | `src/content/hopes.js`；你能插手的那一件在 `scenes.js` 的 `hope.*`                                      |
-| 改头半个月怎么攒出性情                 | `src/content/leaning.js`（攒多少冒一句、跟家里性情顶着的话）                                            |
-| 让一件活在世界里演出来（采、劈、做饭） | 动作帧画在 `src/art/acts-*.js`（共用的小人在 `worker.js`）；演哪几步写在 `src/world/scripts.js`         |
-| 支持一种新的输入设备（比如手柄）       | `src/world/input.js` 里加一个适配器，发的还是那几种意图                                                 |
-| 上一个新的运行环境（桌面壳、小游戏）   | 照 `src/platform/web.js` 的形状再写一个平台                                                             |
-| 加一种小窗                             | 在 `src/panels/` 写视图函数、登记进 `modals.js` 的 `VIEWS`，用 `panels/html.js` 拼                      |
-| 小窗按钮要做的事                       | `src/app/` 里按主题分的 `*Actions`（行囊吃喝在 `home.js`），`main.js` 只负责组装                        |
-| 世界提示条和面板都要说的话             | `src/shell/words.js`（例如体力价钱的写法）                                                              |
-| 程序出错时怎么记、怎么告诉玩家         | `src/app/problems.js`；画面一侧的保护在 `src/world/safety.js`                                           |
-| 换引擎或换镜头                         | 只动 `src/world/`                                                                                       |
+| 想做的事                               | 改哪里                                                                                                                                                   |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 加一种作物、物品、台词，调数值         | `src/content/`                                                                                                                                           |
+| 改乡邻去哪儿、几点回家                 | `src/content/people.js` 的 `ROUTINES`、`ROUTINE_DAY`                                                                                                     |
+| 改做完一件事后的那段话                 | `src/content/life-text.js`；规则把它写进事实的 `line`，画面照着显示                                                                                      |
+| 加一条玩法规则                         | `src/sim/plugins/` 里加一个插件，列进 `src/sim/index.js` 的 `PLUGINS`                                                                                    |
+| 让画面知道一件新的事                   | 规则里 `fact(...)` 发事实，或 `queries.define(...)` 定义查询；再更新 L3 的端口清单                                                                       |
+| 加一张地图、一种物件                   | `src/content/maps/`（数据）+ `src/art/`（画法，登记进 `art/index.js`）                                                                                   |
+| 换一张图的画法，或换成手绘图           | `src/art/index.js` 里换它的来源，别处不动                                                                                                                |
+| 加一个村民会做的动作（借、帮、传……）   | 数和见闻的话在 `src/content/deeds.js`，能不能做、做了改什么在 `src/sim/deeds.js`                                                                         |
+| 有热闹时让村民围过去                   | 在自己插件的 `'resident.positions'` 接口里调 `src/sim/crowd.js` 的 `gather`，站位写进那张地图的 `spots`                                                  |
+| 院里加一处能修的地方、修好招谁进院     | 名单、材料、话和进院的人在 `src/content/yard-fix.js`，修好的图在 `src/art/yard-fix-sketches.js`                                                          |
+| 改各户的营生、年景、大开销             | `src/content/purse.js`；跑 `node tools/village-sim.mjs` 看一季下来各户的钱                                                                               |
+| 改本事长得快慢、升级要多少经验         | `src/content/growth.js` 的 `LEVELS`、`XP`；跑 `node tools/growth-curve.mjs` 看几种玩法的曲线                                                             |
+| 改心烦怎么涨落、哪件事算什么做法       | `src/content/stress.js`；性情顺着、违着哪些做法在 `src/content/traits.js`                                                                                |
+| 加一件找上门、碰上的事（局面）         | 谁在场、什么性情、选项和后果在 `src/content/scenes.js`；什么时候冒出来在 `src/sim/plugins/scenes.js`                                                     |
+| 改节令、年景                           | `src/content/almanac.js`（节日、年景的话和哪户受累），聚人和传话在 `src/sim/plugins/almanac.js`                                                          |
+| 改村民的盼头                           | `src/content/hopes.js`；你能插手的那一件在 `scenes.js` 的 `hope.*`                                                                                       |
+| 改头半个月怎么攒出性情                 | `src/content/leaning.js`（攒多少冒一句、跟家里性情顶着的话）                                                                                             |
+| 改借钱还钱、接济、传闲话、顺手拿       | 数和答应不答应的话在 `src/content/debts.js`（开口借、还钱的话在 `purse-lines.js`）；借和还在 `src/sim/plugins/debts.js`，接济、拿、传在 `quiet-deeds.js` |
+| 让一件活在世界里演出来（采、劈、做饭） | 动作帧画在 `src/art/acts-*.js`（共用的小人在 `worker.js`）；演哪几步写在 `src/world/scripts.js`                                                          |
+| 支持一种新的输入设备（比如手柄）       | `src/world/input.js` 里加一个适配器，发的还是那几种意图                                                                                                  |
+| 上一个新的运行环境（桌面壳、小游戏）   | 照 `src/platform/web.js` 的形状再写一个平台                                                                                                              |
+| 加一种小窗                             | 在 `src/panels/` 写视图函数、登记进 `modals.js` 的 `VIEWS`，用 `panels/html.js` 拼                                                                       |
+| 小窗按钮要做的事                       | `src/app/` 里按主题分的 `*Actions`（行囊吃喝在 `home.js`），`main.js` 只负责组装                                                                         |
+| 世界提示条和面板都要说的话             | `src/shell/words.js`（例如体力价钱的写法）                                                                                                               |
+| 程序出错时怎么记、怎么告诉玩家         | `src/app/problems.js`；画面一侧的保护在 `src/world/safety.js`                                                                                            |
+| 换引擎或换镜头                         | 只动 `src/world/`                                                                                                                                        |
 
 ## 写一个规则插件
 
