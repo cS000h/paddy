@@ -218,3 +218,12 @@
   color: var(--ink-2);
   margin: 8px 0 2px;
 }
+
+/* 名字后头戴着的称号 */
+.folio-title {
+  margin-left: 6px;
+  color: #9b4a37;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}

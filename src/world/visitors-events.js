@@ -205,13 +205,26 @@ export function createFieldExtras(scene) {
   }
 
   /** 规则结算后把结果在世界里演出来：做动作、冒表情，状态与得失交给头顶飘字。 */
+  function nearestVillager(sc) {
+    const p = sc.player;
+    const near = sc.villagers.filter(v => v.present && Math.hypot(v.px - p.px, v.py - p.py) < 96);
+    return near.toSorted(
+      (a, b) => Math.hypot(a.px - p.px, a.py - p.py) - Math.hypot(b.px - p.px, b.py - p.py),
+    )[0];
+  }
+
   function onFacts(facts) {
     ground.onFacts(facts);
     const { platform } = scene.deps;
     let needSync = false;
     for (const f of facts) {
       const d = f.data;
-      if (f.type === 'pulse.resolved') {
+      if (f.type === 'achievement.earned' && d.tier !== 'first') {
+        // 攒着、大成：头上冒颗星；大成时跟前的乡邻也转过头来（G-31）
+        showEmote(scene, scene.player, 'star');
+        const near = d.tier === 'grand' && nearestVillager(scene);
+        if (near) showEmote(scene, near, 'exclaim');
+      } else if (f.type === 'pulse.resolved') {
         needSync = true;
         scene.player.setPose('raise');
         // guard 当场就跑传进去的函数，所以要包在回调里面，到点才收手

@@ -22,17 +22,39 @@ const skillRow = s => {
   return `<li><span class="what">${head}${s.perks.map(perkLine).join('')}</span></li>`;
 };
 
+const TIER_TAG = { first: '', grow: '攒着', grand: '大成' };
 const achievementRow = a => {
   const state = a.day
     ? `第${a.day}日达成`
     : a.future
       ? '等村里的节日开张'
-      : `${a.count} / ${a.goal}`;
+      : a.hidden
+        ? a.clue
+        : `${a.count} / ${a.goal}`;
+  const tag = a.hidden ? '暗' : TIER_TAG[a.tier];
+  const title = a.title ? `　称号「${a.day ? a.title : '？？'}」` : '';
+  const line = a.day && a.line ? `<em>${esc(a.line)}</em>` : '';
   return (
-    `<li><span class="achievement-mark ${a.day ? 'earned' : ''}">${achievementImg(a.kind, !!a.day)}</span>` +
-    `<span class="what"><b>${esc(a.name)}</b><small>${state}</small></span></li>`
+    `<li class="ach-${a.tier}"><span class="achievement-mark ${a.day ? 'earned' : ''}">${achievementImg(a.kind, !!a.day)}</span>` +
+    `<span class="what"><b>${esc(a.name)}${tag ? `<i class="ach-tier">${tag}</i>` : ''}</b>` +
+    `${line}<small>${esc(state)}${esc(title)}</small></span></li>`
   );
 };
+
+/** 成就页顶上：攒了几根稻穗、再几根村里有表示；挣到的称号挑一个戴。 */
+function boardBar(game) {
+  const b = game.ask('achievement.board');
+  const next = b.next ? `，再 ${b.next - b.rice} 根村里有一回表示` : '';
+  const titles = b.titles.length
+    ? `<span class="ach-titles">称号${b.titles
+        .map(
+          t =>
+            `<button class="${b.worn?.id === t.id ? 'on' : ''}" data-do="wearTitle" data-title="${esc(t.id)}">${esc(t.title)}</button>`,
+        )
+        .join('')}${b.worn ? '<button data-do="wearTitle" data-title="">摘下</button>' : ''}</span>`
+    : '';
+  return `<p class="ach-board"><b>稻穗 ${b.rice} 根</b><small>${next}</small>${titles}</p>`;
+}
 
 function modifiers(m, game) {
   const list = game.ask('modifiers').list;
@@ -131,7 +153,7 @@ export function bookView(m, game) {
   } else {
     const kind = tab === 'achievements' ? m.achKind || null : null;
     const book = paged(rowsOf(tab, game, kind), m.page || 0, 4, 'bookPage');
-    const bar = tab === 'achievements' ? kindBar(game, kind) : '';
+    const bar = tab === 'achievements' ? boardBar(game) + kindBar(game, kind) : '';
     body = `${title('稻乡小册', `${book.page + 1} / ${book.pages} 页`)}${bar}
       <ul class="items">${book.items.join('')}</ul>`;
     foot = actions(book.buttons, close('合上册子', false));

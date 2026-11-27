@@ -62,6 +62,7 @@ const COMMANDS = [
   'match.visit',
   'yard.fix',
   'aroma.serve',
+  'achievement.wear',
   'leaning.answer',
   'scene.choose',
 ];
@@ -78,6 +79,7 @@ const QUERIES = [
   'passer.options',
   'tea',
   'achievements',
+  'achievement.board',
   'action.cost',
   'basket',
   'body',
