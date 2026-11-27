@@ -18,11 +18,25 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
-  30(state) {
+  31(state) {
     // 第 3 块：借、还、帮、传、拿。旧档里谁也不欠谁，也没人在院门口等着借钱。
     const w = state.world;
-    w.meta.version = 31;
+    w.meta.version = 32;
     w.debts = { seq: 0, debts: [], ask: null, asked: {} };
+    return state;
+  },
+  30(state) {
+    // 成就分档、贺喜、称号（G-31）：每人多记只数当天的那几样从哪天数起、哪件提过了、今天贺哪件、戴哪个称号。
+    // 旧档里已经得了的都算提过了，读档后不会一下子冒出一串道喜。
+    const w = state.world;
+    w.meta.version = 31;
+    const day = w.clock.day;
+    for (const a of Object.values(w.achievements)) {
+      a.daily = {};
+      a.told = Object.fromEntries(Object.keys(a.earned).map(id => [id, day]));
+      a.herald = null;
+      a.title = null;
+    }
     return state;
   },
   29(state) {

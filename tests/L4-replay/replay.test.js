@@ -60,8 +60,8 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-// 借、还、帮、传、拿（v31）：村民手头紧互借、到日子还或赖、大方的接济、茶摊上传闲话
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: 'b7342aec' };
+// 借、还、帮、传、拿（v32）：村民手头紧互借、到日子还或赖、大方的接济、茶摊上传闲话
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: 'ca10f23a' };
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};
