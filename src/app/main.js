@@ -159,6 +159,13 @@ function start() {
   intents.on('tool.step', data => !shell.paused() && shell.stepTool(data.by));
 
   game.onCommit(facts => {
+    // 到了新地方，让工具栏重新按面前的东西挑。
+    const hero = game.ask('hero').id;
+    if (
+      shell.get().manualTool &&
+      facts.some(f => f.type === 'person.travelled' && f.data.who === hero)
+    )
+      shell.set({ manualTool: false });
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveNow, 400);
     // 刚醒来：另存一份“今天清早”，玩坏了能退回来
