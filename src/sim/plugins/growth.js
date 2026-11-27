@@ -12,11 +12,15 @@ const TABLES = {
   own: TEMPERS,
   friend: OLD_TIES,
 };
-/** 落脚单记下的五项：每项是表里的编号，或者都是空的（旧档的开局两选升上来的）。 */
+/**
+ * 落脚单记下的五项：每项是表里的编号，或者都是空的（旧档的开局两选升上来的）。
+ * 自己的性子（own）新开局里是空的：头半个月做出来（sim/plugins/leaning.js）；v28 以前的档和测试开局才有。
+ */
+const filled = (o, k) => typeof o[k] === 'string' && Object.hasOwn(TABLES[k], o[k]);
 const originOk = o =>
   is.keyedBy(o, SETTLE_KEYS) &&
   (SETTLE_KEYS.every(k => o[k] === null) ||
-    SETTLE_KEYS.every(k => typeof o[k] === 'string' && Object.hasOwn(TABLES[k], o[k])));
+    SETTLE_KEYS.every(k => filled(o, k) || (k === 'own' && o[k] === null)));
 export const level = xp => LEVELS.reduce((lv, need, i) => (xp >= need ? i : lv), 0);
 export const growth = {
   id: 'sim.growth',
@@ -121,14 +125,14 @@ export const growth = {
         family = pick(FAMILY, 'family'),
         own = pick(TEMPERS, 'own'),
         friend = pick(OLD_TIES, 'friend');
-      if (!reason || !keepsake || !family || !own || !friend) refuse('落脚单还没填齐');
+      if (!reason || !keepsake || !family || !friend) refuse('落脚单还没填齐');
       const home = FAMILY[family].temper;
-      if (TEMPERS[own].pair === TEMPERS[home].pair)
+      if (own && TEMPERS[own].pair === TEMPERS[home].pair)
         refuse(`「${TEMPERS[own].name}」和随家里来的「${TEMPERS[home].name}」合不到一个人身上`);
       const tie = REASONS[reason].friend;
       if (tie && tie !== friend) refuse('这一户的旧交情是定下的');
       g.origin = { reason, keepsake, family, own, friend };
-      persona.settle(w, id, [home, own], KEEPSAKES[keepsake].line, g.xp);
+      persona.settle(w, id, own ? [home, own] : [home], KEEPSAKES[keepsake].line, g.xp);
       const r = REASONS[reason];
       if (r.coins > 0) store.earn(w, r.coins, '落脚时带来的');
       if (r.coins < 0) store.pay(w, Math.min(store.coins(w), -r.coins), '落脚时手头紧');

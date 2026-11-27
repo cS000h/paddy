@@ -38,6 +38,11 @@ export function growthActions({ game, shell, run, debug = false }) {
       edit({ mod });
     },
     // 憋不住了：在册子的人物页挑一个解闷的法子
+    leaningAnswer({ take }) {
+      const out = run('leaning.answer', { take: take === 'yes' });
+      const f = out.ok && out.facts.find(x => x.type === 'leaning.answered')?.data;
+      if (f) shell.toast(f.line, true);
+    },
     cope({ coping }) {
       const out = run('stress.cope', { coping });
       const f = out.ok && out.facts.find(x => x.type === 'stress.coped')?.data;
@@ -79,6 +84,13 @@ export function growthNotices(game, shell) {
       f => f.type === 'stress.changed' && f.data.line && (f.data.crossed || !f.data.tag),
     );
     if (vex) shell.toast(vex.data.reply ? `${vex.data.line}${vex.data.reply}` : vex.data.line);
+    // 做事攒性情：冒出来问你认不认、满半个月落定、违着家里带来的性情心里冒一句
+    const offered = facts.find(f => f.type === 'leaning.offered');
+    if (offered) shell.toast(offered.data.line + '（翻开册子的「人物」页，认下或再看看）', true);
+    const settled = facts.find(f => f.type === 'leaning.settled');
+    if (settled) shell.toast(settled.data.lines.join(''), true);
+    const pulled = facts.find(f => f.type === 'leaning.pulled');
+    if (pulled) shell.toast(pulled.data.line);
     const snapped = facts.find(f => f.type === 'stress.snapped');
     if (snapped) shell.toast(snapped.data.line + '（翻开册子的「人物」页，挑一个法子）', true);
   });

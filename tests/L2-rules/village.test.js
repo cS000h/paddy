@@ -15,7 +15,7 @@ test('时间一小段一小段地过，到半夜停住不催人，睡一觉到�
   assert.equal(g.ask('clock').stopped, true);
   assert.equal(refused(g, 'clock.advance', { minutes: 10 }), '夜深了');
   // 清早村里各户也有自己的事（家底进出、乡邻做事），不在这里看
-  const own = must(g, 'sleep').filter(t => !/^(purse|deed)\./.test(t));
+  const own = must(g, 'sleep').filter(t => !/^(purse|deed|scene|hope|leaning|almanac)\./.test(t));
   assert.deepEqual(own, ['day.ended', 'day.started', 'weather.changed']);
   const c = g.ask('clock');
   assert.deepEqual([c.day, c.clock, c.period], [2, '06:00', '清晨']);

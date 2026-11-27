@@ -65,7 +65,8 @@ test('柜台当面买卖、钱货一起结算，库存不能靠重进或读档�
   const rice = g.ask('market').wares.find(i => i.item === 'rice');
   const money = g.ask('home').coins;
   must(g, 'market.buy', { shop, item: 'rice', at });
-  assert.equal(g.ask('home').coins, money - rice.price);
+  // 头三天头一回在铺子买东西，小乔多找三文（局面池的 door.coins）
+  assert.equal(g.ask('home').coins, money - rice.price + 3);
   assert.equal(g.ask('market').wares.find(i => i.item === 'rice').left, rice.left - 1);
   must(g, 'market.visit', { shop, at });
   const loaded = createGame({ saved: JSON.parse(JSON.stringify(g.save())), debug: true });
