@@ -18,6 +18,13 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  32(state) {
+    // 第 3 块：借、还、帮、传、拿。旧档里谁也不欠谁，也没人在院门口等着借钱。
+    const w = state.world;
+    w.meta.version = 33;
+    w.debts = { seq: 0, debts: [], ask: null, asked: {} };
+    return state;
+  },
   31(state) {
     // 食为天：每人记近几天吃了哪几类、吃过哪些菜、哪几样状态已经说过。旧档从空的记起。
     const w = state.world;

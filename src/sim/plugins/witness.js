@@ -2,7 +2,8 @@
 // 过些天淡掉。以后传闲话（M9）就是把一条见闻的「谁知道」加上一个人。
 // 在场：和做事的人在同一处的乡邻（作息表里的同一个去处），主角在同一张地图上也算。
 //   服务 witness.record(w, {who, to?, act, map, place?, coping?, seenBy?}) → 这条见闻；witness.knows(w, 人)
-//        witness.tell(w, 谁说, 对谁) → 说出去的那一条（谁说知道、对谁不知道、不是秘密的，挑最新的）或 null
+//        witness.tell(w, 谁说, 对谁, 秘密?) → 说出去的那一条（谁说知道、对谁不知道、不是秘密的，挑最新的；
+//        秘密为真时只挑不想让人知道的、不是自己做的）或 null
 //   查询 heard → 主角知道的事，新的在前：{id, day, act, who, to, line, secret, mine}
 //   反应 小事里昧下东西被人看见（pulse.resolved 带 seen）记一条
 import { is } from '../../kernel/schema.js';
@@ -102,9 +103,14 @@ export const witness = {
     const knows = (w, id) => w.witness.list.filter(x => x.knows.includes(id));
 
     // 顺嘴说一件：说的人知道、听的人还不知道、不是当事人想瞒着的；挑最近的一条
-    function tell(w, from, to) {
+    // secrets 为真：传闲话，专挑当事人不想让人知道的那几件（自己做的不说）
+    function tell(w, from, to, secrets = false) {
       const x = w.witness.list.findLast(
-        i => !i.secret && i.knows.includes(from) && !i.knows.includes(to) && i.who !== to,
+        i =>
+          (secrets ? i.secret && i.who !== from : !i.secret) &&
+          i.knows.includes(from) &&
+          !i.knows.includes(to) &&
+          i.who !== to,
       );
       if (!x) return null;
       x.knows.push(to);

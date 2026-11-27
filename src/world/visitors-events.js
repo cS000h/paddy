@@ -23,8 +23,25 @@ const SAY = [
   'hope.done',
   'hope.failed',
   'almanac.year',
+  'debt.asked',
+  'debt.done',
+  'debt.repaid',
+  'debt.welshed',
+  'gossip.heard',
+  'gossip.told',
 ];
-const IN_BUBBLE = ['aroma.served', 'yard.guest', 'scene.chosen'];
+const IN_BUBBLE = ['aroma.served', 'yard.guest', 'scene.chosen', 'debt.done', 'gossip.told'];
+// 钱和人情的事，村民头顶冒哪个记号（A-01 画的）
+const DEBT_MARK = {
+  'debt.asked': 'borrow',
+  'debt.repaid': 'repay',
+  'debt.welshed': 'shrug',
+  dun: 'dun',
+  lend: 'coin',
+  borrow: 'coin',
+  repay: 'repay',
+  relieve: 'basket',
+};
 
 /** 挂在 VillageScene 上的过客与小事实体管理，不占 scene.js 行数。 */
 export function createFieldExtras(scene) {
@@ -248,6 +265,10 @@ export function createFieldExtras(scene) {
         needSync = true;
         if (!IN_BUBBLE.includes(f.type) && d.line) scene.deps.shell.toast(d.line, true);
         for (const note of d.notes || []) scene.deps.shell.toast(note, true);
+        const mark = DEBT_MARK[f.type] || (f.type === 'debt.done' ? DEBT_MARK[d.kind] : null);
+        const who = scene.villagers?.find(v => v.id === (d.who || d.to));
+        if (who?.sprite?.visible && (mark || f.type.startsWith('gossip.')))
+          showEmote(scene, who, mark || 'whisper');
       } else if (f.type === 'match.visited' || f.type === 'crowd.gathered') {
         // 钓客上门、围过来看热闹：话冒在画面下方
         needSync = true;

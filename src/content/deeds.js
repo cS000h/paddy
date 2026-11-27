@@ -1,6 +1,7 @@
 // 动作：村民（以后也是玩家）能对谁做的事，和做了以后留下的见闻。只有数据；能不能做、多想做、
 // 做了改什么在 sim/deeds.js，谁什么时候打分在 sim/plugins/deeds.js。照执行方案 M8 第 8、9 步。
 // 第一批只有三样日常的：闲聊、送点吃的、躲清静。借、还、帮、传、拿是下一段（M9）加进这张表。
+import { LEDGER_DOINGS } from './debts.js';
 
 /**
  * 多想做 = base + 打分值 × ai 里的权重（八个打分值见 content/traits.js 的 AI_KEYS，各人三个性情加起来）
@@ -26,6 +27,7 @@ export const DEED_ROLL = Object.freeze({ threshold: 25, jitter: 12 });
 /** 不是动作、但也留见闻的事：玩家昧下东西被看见、谁憋不住了、谁用毛病解闷。 */
 // prettier-ignore
 export const OTHER_DOINGS = Object.freeze({
+  ...LEDGER_DOINGS,
   cheat: { line: '{a}昧下了人家的东西', fade: 30, secret: true },
   snap:  { line: '{a}心里憋不住了', fade: 10, secret: false },
   cope:  { line: '{a}{coping}', fade: 6, secret: true },

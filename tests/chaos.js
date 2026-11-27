@@ -628,6 +628,22 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     return send('scene.choose', { id: e.id, pick: pickKey, at: here() });
   }
 
+  // 钱和人情：门口有人开口就答，不然找个在同一张图上的村民借、还、讨、接济，或说件听来的事
+  function money() {
+    const ask = game.ask('debts').ask;
+    const people = game.ask('residents').filter(p => p.visible && p.map === hero().map);
+    const to =
+      ask && people.some(p => p.id === ask.who) ? ask.who : people.length ? pick(people).id : null;
+    if (!to) {
+      const any = game.ask('residents').filter(p => p.visible && p.map);
+      return any.length ? send('travel.to', { to: pick(any).map, at: here() }) : undefined;
+    }
+    if (chance(0.25)) return send('gossip.tell', { to: chance(0.9) ? to : 'x' });
+    const rows = game.ask('debts.options', to);
+    if (!rows.length || chance(0.05)) return send('debt.do', { kind: 'x', to });
+    return send('debt.do', pick(rows).input);
+  }
+
   const PLANS = [
     [4, travel],
     [3, rummage],
@@ -642,6 +658,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     [1, fairMatch],
     [1, yard],
     [1, scene],
+    [1, money],
   ];
   const total = PLANS.reduce((sum, [w]) => sum + w, 0);
   let steps = 0;

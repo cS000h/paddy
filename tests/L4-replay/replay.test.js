@@ -60,8 +60,8 @@ export function randomPlay(seed, steps) {
   return { text: JSON.stringify(game.save()), tally, game };
 }
 
-// 攒性情、局面池、年景节令、盼头（v30）；成就分档、贺喜、称号（v31，G-31）；食为天（v32）
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '383bfcc5' };
+// 借、还、帮、传、拿（v33）：村民手头紧互借、到日子还或赖、大方的接济、茶摊上传闲话
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: 'ee52ee3c' };
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};
