@@ -1,0 +1,84 @@
+/* 册子的饮食页（diet-page.js）：左边吃食和口味，右边乡邻 */
+.frame[data-kind='book']:has(.diet-page) {
+  width: min(860px, 96%);
+}
+.diet-page {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
+  color: var(--ink);
+}
+.diet-page h3 {
+  margin: 12px 0 6px;
+  font-size: 16px;
+}
+.diet-page section > h3:first-child {
+  margin-top: 0;
+}
+.diet-page table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.diet-page th,
+.diet-page td {
+  padding: 5px 2px;
+  border-bottom: 1px solid var(--frame-2);
+  text-align: center;
+}
+.diet-page th:first-child,
+.diet-neighbor {
+  text-align: left;
+}
+.diet-page th small,
+.diet-palate span {
+  display: block;
+}
+.diet-page th small,
+.diet-total {
+  color: var(--ink-3);
+  font-weight: normal;
+}
+.diet-quiet {
+  color: var(--ink-3);
+  background: var(--mist);
+}
+.diet-grains {
+  display: inline-flex;
+  gap: 3px;
+}
+.diet-grains i {
+  width: 6px;
+  height: 10px;
+  border-radius: 70% 20%;
+  background: var(--straw);
+}
+.diet-state {
+  color: var(--sprout);
+}
+.diet-state.bad {
+  color: #955634;
+}
+.diet-state summary {
+  cursor: pointer;
+  padding: 6px 0;
+}
+.diet-state p {
+  margin: 0 0 6px;
+}
+.diet-neighbor {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--frame-2);
+}
+.diet-neighbor span {
+  display: block;
+}
+.diet-total,
+.diet-empty p {
+  grid-column: 1 / -1;
+}
+.narrow .diet-page {
+  column-gap: 12px;
+}

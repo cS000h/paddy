@@ -1,6 +1,7 @@
 // 实体书签式「稻乡小册」（人物三层、本事、性情、成就、只读熟人册）。性情页在 temper-page.js。
 import { personaBody, ledgerBody } from './person.js';
 import { temperPage } from './temper-page.js';
+import { dietPage } from './diet-page.js';
 import { catalogBody } from './catalog.js';
 import { uiIconImg, achievementImg } from './icons.js';
 import { ACHIEVEMENT_KINDS } from '../content/achievements.js';
@@ -89,6 +90,7 @@ const TABS = [
   ['traits', '性情', 'tab_traits'],
   ['achievements', '成就', 'tab_achievements'],
   ['catalog', '图鉴', 'tab_catalog'],
+  ['diet', '饮食', 'tab_catalog'],
 ];
 
 function rowsOf(tab, game, kind = null) {
@@ -140,6 +142,9 @@ export function bookView(m, game) {
   if (tab === 'catalog') {
     body = catalogBody(m, game);
     foot = '';
+  } else if (tab === 'diet') {
+    body = dietPage(game);
+    foot = actions(close('合上册子', false));
   } else if (tab === 'traits') {
     const page = temperPage(m, game);
     body = `${title('稻乡小册', '性情')}${page.body}`;

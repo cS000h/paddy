@@ -437,6 +437,15 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       assert.equal(await p.locator('.folio-identity h2').textContent(), visitor.name);
       await p.locator('[data-do="bookTab"][data-tab="traits"]').click();
       assert.match(await p.locator('.sheet').textContent(), /随家里来.*歇息时多恢复4体力/s);
+      await p.locator('[data-do="bookTab"][data-tab="diet"]').click();
+      const foods = p.locator('.diet-page tbody th');
+      assert.deepEqual(await foods.evaluateAll(rows => rows.map(r => r.firstChild.textContent)), [
+        '谷',
+        '菜',
+        '荤',
+        '果',
+      ]);
+      if (session === desk) await shot(p, 'a11-diet-desktop.png');
       await p.locator('[data-do="bookTab"][data-tab="achievements"]').click();
       assert.ok((await p.locator('.achievement-mark.earned').count()) > 0);
       await p.waitForTimeout(250);
