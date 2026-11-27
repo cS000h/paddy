@@ -632,6 +632,58 @@
   filter: none;
 }
 
+/* 成就的档（G-31）：攒着、大成、暗成就在名字后头标一个小字；得了的底下有那一行小话 */
+.ach-tier {
+  margin-left: 6px;
+  padding: 0 4px;
+  border: 1px solid var(--frame-2);
+  border-radius: 3px;
+  color: var(--ink-3);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  vertical-align: 2px;
+}
+.ach-grand .ach-tier {
+  border-color: #9b4a37;
+  color: #9b4a37;
+}
+.items .what em {
+  display: block;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-style: normal;
+}
+/* 顶上一行：稻穗几根、挣到的称号挑一个戴 */
+.ach-board {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 0 0 4px;
+}
+.ach-titles {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+.ach-titles button {
+  padding: 1px 8px;
+  border: 1px solid var(--frame-2);
+  border-radius: 3px;
+  background: var(--mist);
+  color: var(--ink);
+  font: inherit;
+}
+.ach-titles button.on {
+  border-color: #9b4a37;
+  background: #f6e3d3;
+}
+
 /* 成就页顶上按类筛的那排小页签 */
 .ach-kinds {
   display: flex;

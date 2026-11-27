@@ -66,6 +66,10 @@ npm run art:sheet # 不开浏览器，把整张场景和素材导出到 .cache/ 
 | 改食材归哪一类、膳食结构、口味         | `src/content/diet.js`（数和话）；规则在 `src/sim/plugins/diet.js`，口味怎么判在 `src/sim/taste.js`      |
 | 改没有菜谱的菜怎么起名                 | `src/sim/cuisine-words.js`；有名有姓的菜谱在 `src/content/recipes.js` 的 `RECIPES`                      |
 | 改心烦怎么涨落、哪件事算什么做法       | `src/content/stress.js`；性情顺着、违着哪些做法在 `src/content/traits.js`                               |
+| 加一件找上门、碰上的事（局面）         | 谁在场、什么性情、选项和后果在 `src/content/scenes.js`；什么时候冒出来在 `src/sim/plugins/scenes.js`    |
+| 改节令、年景                           | `src/content/almanac.js`（节日、年景的话和哪户受累），聚人和传话在 `src/sim/plugins/almanac.js`         |
+| 改村民的盼头                           | `src/content/hopes.js`；你能插手的那一件在 `scenes.js` 的 `hope.*`                                      |
+| 改头半个月怎么攒出性情                 | `src/content/leaning.js`（攒多少冒一句、跟家里性情顶着的话）                                            |
 | 让一件活在世界里演出来（采、劈、做饭） | 动作帧画在 `src/art/acts-*.js`（共用的小人在 `worker.js`）；演哪几步写在 `src/world/scripts.js`         |
 | 支持一种新的输入设备（比如手柄）       | `src/world/input.js` 里加一个适配器，发的还是那几种意图                                                 |
 | 上一个新的运行环境（桌面壳、小游戏）   | 照 `src/platform/web.js` 的形状再写一个平台                                                             |

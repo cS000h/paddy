@@ -33,6 +33,15 @@ export const WHY = Object.freeze({
   bought:    { label: '买过你一碗菜',   n: 3,   days: 20,   stack: 2 },
   treated:   { label: '单给他盛过一碗', n: 10,  days: 40,   stack: 1 },
   snubbed:   { label: '站门口白闻了香', n: -4,  days: 14,   stack: 2 },
+  // 局面里你怎么做的（sim/plugins/scenes.js）
+  warm:      { label: '跟他聊得投机',   n: 6,   days: 30,   stack: 2 },
+  fair:      { label: '说过公道话',     n: 6,   days: 40,   stack: 2 },
+  praised:   { label: '当众给过他面子', n: 3,   days: 20,   stack: 3 },
+  cool:      { label: '没顺着他',       n: -3,  days: 14,   stack: 2 },
+  shunned:   { label: '犯难时你装没看见', n: -5, days: 20,   stack: 2 },
+  pitched:   { label: '出力帮过他',     n: 8,   days: 40,   stack: 2 },
+  backed:    { label: '帮他圆过心愿',   n: 12,  days: 90,   stack: 1 }, // 盼头（sim/plugins/hopes.js）
+  hindered:  { label: '给他使过绊子',   n: -15, days: 60,   stack: 1 },
   oldtie:    { label: '旧交情',         n: 12,  days: null, stack: 1 }, // 落脚单上的那一笔（content/settle.js）
   // 村民之间开局就有的交情，照台词里提到的事（见 STANDING），一直记着
   veggies:   { label: '常给他送菜',     n: 10,  days: null, stack: 1 },

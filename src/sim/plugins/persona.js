@@ -145,6 +145,17 @@ export const persona = {
       };
     }
 
+    /**
+     * 认下一个性情（sim/plugins/leaning.js 查过能认）：drop 给了就顶掉那一个（和家里带来的对着的那一样），
+     * 不给就添在后面。最多三个，同一对里只留一个。
+     */
+    function take(w, id, temper, drop = null) {
+      const p = w.persona[id];
+      const i = drop ? p.tempers.indexOf(drop) : -1;
+      if (i >= 0) p.tempers[i] = temper;
+      else if (p.tempers.length < 3) p.tempers.push(temper);
+    }
+
     // 主角的对口本事升了级，出身线跟着看要不要升（只升不降）。
     reactions.on('skill.leveled', (s, e) => {
       const p = s.world.persona[e.data.who];
@@ -232,6 +243,7 @@ export const persona = {
         get,
         hasOld,
         settle: ctx.own(settle),
+        take: ctx.own(take),
         attrs,
         visible,
         vex: ctx.own(vex),

@@ -20,13 +20,13 @@ const earnedRow = t =>
   `<b>${t.owned ? '已得' : '未得'} · ${esc(t.name)}</b>` +
   `<small>${esc(t.effect)}</small><small>${esc(t.need)}</small></span></li>`;
 
-/** 性情从哪儿来：落脚单上随家里来的、自己挑的；旧档（开局两选）升上来的说不清，就不写。 */
+/** 性情从哪儿来：落脚单上随家里来的、头半个月做出来的；旧档（开局两选）升上来的说不清，就不写。 */
 function whence(origin, id) {
   if (!origin?.family) return '';
   const fam = FAMILY[origin.family];
   if (fam.temper === id) return `随家里来：${fam.from}。${fam.text}`;
   if (origin.own === id) return '你自己的性子';
-  return '';
+  return '头半个月做出来的，你认下了';
 }
 
 export function temperPage(m, game) {
@@ -36,7 +36,11 @@ export function temperPage(m, game) {
     card(uiIconImg('temper_' + t.id, 32), t.name, [whence(origin, t.id), ...temperNotes(t.id)]),
   );
   for (let i = me.tempers.length; i < 3; i++)
-    mine.push(card('<i class="folio-blank"></i>', '还没定下', ['往后的日子里慢慢显出来']));
+    mine.push(
+      card('<i class="folio-blank"></i>', '还没定下', [
+        '头半个月做的事慢慢攒出来，攒够了村里人会说，你认下才算；满半个月还空着的按最显的落定',
+      ]),
+    );
   const line = me.line;
   const keep = origin?.keepsake ? KEEPSAKES[origin.keepsake] : null;
   const lineCard = line

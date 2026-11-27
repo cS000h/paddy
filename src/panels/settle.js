@@ -31,7 +31,6 @@ export function settleView(m) {
     line = LINES_OF_ORIGIN[keep.line],
     fam = FAMILY[s.family],
     home = TEMPERS[fam.temper],
-    own = TEMPERS[s.own],
     tie = OLD_TIES[s.friend];
   const temperIcon = id => uiIconImg('temper_' + id, 24);
   const rows = [
@@ -44,7 +43,6 @@ export function settleView(m) {
       fam.text,
       ...temperNotes(fam.temper),
     ]),
-    row(s, 'own', '自己的性子', temperIcon(s.own), own.name, temperNotes(s.own)),
     row(s, 'friend', '旧交情', '', PEOPLE[s.friend].name, [
       tie.note,
       locked(s, 'friend') ? '这一户定下的　好感 +12' : '好感 +12',
@@ -52,6 +50,6 @@ export function settleView(m) {
   ];
   return `${title('落脚单', '看一眼就进院子')}
     <ul class="items settle">${rows.join('')}</ul>
-    ${para('第三个性情还空着，往后的日子里慢慢显出来。落脚以后，这些在册子的「性情」页都查得到。', 'aside')}
+    ${para('另外两个性情还空着，头半个月做的事慢慢攒出来，攒够了村里人会说，你认下才算。落脚以后，这些在册子的「性情」页都查得到。', 'aside')}
     ${actions(button('originRoll', '换一户'), button('originSettle', '就这样落脚', { main: true }))}`;
 }

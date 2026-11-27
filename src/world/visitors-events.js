@@ -11,7 +11,20 @@ import { createYardFixes } from './yard-fixes.js';
 import { createChatter } from './chatter.js';
 
 // 冒字的院里的事；aroma.served、yard.guest 的那句话在对话气泡里，只冒旁白
-const SAY = ['yard.fixed', 'yard.guest', 'aroma.spread', 'aroma.served', 'aroma.returned'];
+// 局面（scene.chosen）那句也在对话气泡里；碰上局面、盼头办成没办成、换季的年景只冒旁白
+const SAY = [
+  'yard.fixed',
+  'yard.guest',
+  'aroma.spread',
+  'aroma.served',
+  'aroma.returned',
+  'scene.opened',
+  'scene.chosen',
+  'hope.done',
+  'hope.failed',
+  'almanac.year',
+];
+const IN_BUBBLE = ['aroma.served', 'yard.guest', 'scene.chosen'];
 
 /** 挂在 VillageScene 上的过客与小事实体管理，不占 scene.js 行数。 */
 export function createFieldExtras(scene) {
@@ -192,13 +205,26 @@ export function createFieldExtras(scene) {
   }
 
   /** 规则结算后把结果在世界里演出来：做动作、冒表情，状态与得失交给头顶飘字。 */
+  function nearestVillager(sc) {
+    const p = sc.player;
+    const near = sc.villagers.filter(v => v.present && Math.hypot(v.px - p.px, v.py - p.py) < 96);
+    return near.toSorted(
+      (a, b) => Math.hypot(a.px - p.px, a.py - p.py) - Math.hypot(b.px - p.px, b.py - p.py),
+    )[0];
+  }
+
   function onFacts(facts) {
     ground.onFacts(facts);
     const { platform } = scene.deps;
     let needSync = false;
     for (const f of facts) {
       const d = f.data;
-      if (f.type === 'pulse.resolved') {
+      if (f.type === 'achievement.earned' && d.tier !== 'first') {
+        // 攒着、大成：头上冒颗星；大成时跟前的乡邻也转过头来（G-31）
+        showEmote(scene, scene.player, 'star');
+        const near = d.tier === 'grand' && nearestVillager(scene);
+        if (near) showEmote(scene, near, 'exclaim');
+      } else if (f.type === 'pulse.resolved') {
         needSync = true;
         scene.player.setPose('raise');
         // guard 当场就跑传进去的函数，所以要包在回调里面，到点才收手
@@ -220,8 +246,7 @@ export function createFieldExtras(scene) {
       } else if (SAY.includes(f.type)) {
         // 院里的事（修院子、进院的客人、满院飘香）：旁白、门口的人说的一句一句冒在画面下方
         needSync = true;
-        if (f.type !== 'aroma.served' && f.type !== 'yard.guest')
-          scene.deps.shell.toast(d.line, true);
+        if (!IN_BUBBLE.includes(f.type) && d.line) scene.deps.shell.toast(d.line, true);
         for (const note of d.notes || []) scene.deps.shell.toast(note, true);
       } else if (f.type === 'match.visited' || f.type === 'crowd.gathered') {
         // 钓客上门、围过来看热闹：话冒在画面下方

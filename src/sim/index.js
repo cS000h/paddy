@@ -57,6 +57,10 @@ import { deeds } from './plugins/deeds.js';
 import { matchVisit } from './plugins/match-visit.js';
 import { yardFix } from './plugins/yard-fix.js';
 import { aroma } from './plugins/aroma.js';
+import { leaning } from './plugins/leaning.js';
+import { almanac } from './plugins/almanac.js';
+import { hopes } from './plugins/hopes.js';
+import { scenes } from './plugins/scenes.js';
 
 export { SAVE_VERSION };
 // 顺序有讲究：后面的插件建自己的数据时，可以读前面的（比如身体和行囊按“户里有谁”来建）。
@@ -108,6 +112,10 @@ export const PLUGINS = Object.freeze([
   matchVisit,
   yardFix,
   aroma,
+  leaning,
+  almanac,
+  hopes,
+  scenes,
   wardrobe,
   interactions,
 ]);
