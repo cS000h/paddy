@@ -29,6 +29,9 @@ export const OTHER_DOINGS = Object.freeze({
   cheat: { line: '{a}昧下了人家的东西', fade: 30, secret: true },
   snap:  { line: '{a}心里憋不住了', fade: 10, secret: false },
   cope:  { line: '{a}{coping}', fade: 6, secret: true },
+  match: { line: '{a}在渡口跟外乡钓客比了一场鱼', fade: 10, secret: false },
+  aroma: { line: '{a}院里飘出饭菜香，院门口围了人', fade: 8, secret: false },
+  fix:   { line: '{a}动手拾掇了院子', fade: 12, secret: false },
 });
 
 /** 用毛病解闷时，见闻里的说法。 */

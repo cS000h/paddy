@@ -18,6 +18,17 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  27(state) {
+    // 集日收尾、小院翻修、满院飘香：钓客第二天上门答过没有、院里修好了哪几处、飘香的记录。
+    // 比鱼的回响多记一样「为什么上门」，旧档里的回响都当没什么特别的来由。
+    const w = state.world;
+    w.meta.version = 28;
+    if (w.match.echo) w.match.echo.how = null;
+    w.matchVisit = { day: 0 };
+    w.yardFix = { fixed: {}, trim: false, gifts: {} };
+    w.aroma = { today: null, echo: null, count: 0 };
+    return state;
+  },
   26(state) {
     // 人心的底子后半段：村里六户和铺子的家底（sim/plugins/purse.js）、见闻、心烦的记账、村民做事的记录。
     // 各户开局的钱写死在这里；年景都从平常起，换季那天才定。心烦的数原来就在人物档案里，不动。
