@@ -18,11 +18,11 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
-  29(state) {
+  30(state) {
     // 成就分档、贺喜、称号（G-31）：每人多记只数当天的那几样从哪天数起、哪件提过了、今天贺哪件、戴哪个称号。
     // 旧档里已经得了的都算提过了，读档后不会一下子冒出一串道喜。
     const w = state.world;
-    w.meta.version = 30;
+    w.meta.version = 31;
     const day = w.clock.day;
     for (const a of Object.values(w.achievements)) {
       a.daily = {};
@@ -30,6 +30,28 @@ export const MIGRATIONS = {
       a.herald = null;
       a.title = null;
     }
+    return state;
+  },
+  29(state) {
+    // 第 4 块：做事攒性情、天时年景和节令、村民的盼头、局面池。旧档的主角已经有落脚单上挑的两个性情，
+    // 第三个照新规矩攒；过了头半个月的档，下个清早按攒得的落定（多半空着）。年景从平常起，盼头都还没起念头。
+    const w = state.world;
+    w.meta.version = 30;
+    w.leaning = {
+      tally: {},
+      wait: {},
+      offer: null,
+      heard: [],
+      seen: null,
+      pulled: 0,
+      settled: false,
+    };
+    w.almanac = { year: 'plain', told: [], last: null, joined: 0 };
+    const idle = () => ({ state: 'idle', n: 0, stage: 0, told: -1, side: false, since: 0, at: 0 });
+    w.hopes = Object.fromEntries(
+      ['shi', 'aman', 'qiao', 'gui', 'zhou', 'yun'].map(id => [id, idle()]),
+    );
+    w.scenes = { live: [], done: {}, echo: [] };
     return state;
   },
   28(state) {

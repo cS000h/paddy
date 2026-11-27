@@ -11,7 +11,20 @@ import { createYardFixes } from './yard-fixes.js';
 import { createChatter } from './chatter.js';
 
 // 冒字的院里的事；aroma.served、yard.guest 的那句话在对话气泡里，只冒旁白
-const SAY = ['yard.fixed', 'yard.guest', 'aroma.spread', 'aroma.served', 'aroma.returned'];
+// 局面（scene.chosen）那句也在对话气泡里；碰上局面、盼头办成没办成、换季的年景只冒旁白
+const SAY = [
+  'yard.fixed',
+  'yard.guest',
+  'aroma.spread',
+  'aroma.served',
+  'aroma.returned',
+  'scene.opened',
+  'scene.chosen',
+  'hope.done',
+  'hope.failed',
+  'almanac.year',
+];
+const IN_BUBBLE = ['aroma.served', 'yard.guest', 'scene.chosen'];
 
 /** 挂在 VillageScene 上的过客与小事实体管理，不占 scene.js 行数。 */
 export function createFieldExtras(scene) {
@@ -233,8 +246,7 @@ export function createFieldExtras(scene) {
       } else if (SAY.includes(f.type)) {
         // 院里的事（修院子、进院的客人、满院飘香）：旁白、门口的人说的一句一句冒在画面下方
         needSync = true;
-        if (f.type !== 'aroma.served' && f.type !== 'yard.guest')
-          scene.deps.shell.toast(d.line, true);
+        if (!IN_BUBBLE.includes(f.type) && d.line) scene.deps.shell.toast(d.line, true);
         for (const note of d.notes || []) scene.deps.shell.toast(note, true);
       } else if (f.type === 'match.visited' || f.type === 'crowd.gathered') {
         // 钓客上门、围过来看热闹：话冒在画面下方

@@ -258,13 +258,14 @@ export const stress = {
     );
 
     // 一天过完：没跟人打过交道的，算独处一天（闭门谢客的人解一回闷）；爱扎堆的人闷着的天数加一。
+    // 反应跑的时候钟已经拨到第二天了：看的是刚过完那一天（e.data.day）记下的标签。
     reactions.on(
       'day.ended',
       (s, e, emit) => {
         const w = s.world;
         for (const id of IDS) {
-          const v = today(w, id);
-          const social = SOCIAL_TAGS.some(t => v.n[t]);
+          const v = w.vexes[id];
+          const social = v.day === e.data.day && SOCIAL_TAGS.some(t => v.n[t]);
           v.quiet = social ? 0 : Math.min(999, v.quiet + 1);
           if (social || id !== people.who(w)) continue;
           apply(w, id, ['alone'], emit);

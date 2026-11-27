@@ -7,7 +7,7 @@
       "meta": {
         "version": 30,
         "seed": 3677044283,
-        "nextId": 10
+        "nextId": 11
       },
       "notes": {
         "list": [
@@ -20,20 +20,20 @@
           {
             "id": 2,
             "day": 2,
-            "title": "昨天",
-            "text": "昨天得了「第一锄」「春种」。"
-          },
-          {
-            "id": 3,
-            "day": 2,
             "title": "院里院外",
             "text": "清早溪湾、竹影、渡口鱼口好。"
           },
           {
-            "id": 4,
+            "id": 3,
             "day": 3,
             "title": "清早的天色",
             "text": "阴，13°上下。看云色，明天可能多云（把握50%）。"
+          },
+          {
+            "id": 4,
+            "day": 3,
+            "title": "节令",
+            "text": "过几天就是春社，樟树下要摆长桌吃社饭。"
           },
           {
             "id": 5,
@@ -49,6 +49,12 @@
           },
           {
             "id": 9,
+            "day": 4,
+            "title": "石伯的盼头",
+            "text": "雨天石伯没下地，坐在草棚下揉膝盖，望着水口长长叹了口气。"
+          },
+          {
+            "id": 10,
             "day": 4,
             "title": "院里院外",
             "text": "夜里菜地熟了3畦，能收了。清早溪湾、竹影、渡口鱼口好。"
@@ -605,19 +611,15 @@
             "water20": 3,
             "trait4": 1,
             "days7": 3,
-            "days60": 3,
             "harvest1": 1,
             "harvest30": 3,
-            "harvest120": 3,
             "book.garden1": 1,
             "book.garden7": 1,
             "book.gold7": 1,
             "level5": 1,
             "talk10": 1,
             "gift1": 1,
-            "gift10": 1,
-            "gift40": 1,
-            "h.sixGifts": 1
+            "gift10": 1
           },
           "earned": {
             "soil1": 1,
@@ -625,13 +627,7 @@
             "harvest1": 4,
             "book.garden1": 4,
             "gift1": 4
-          },
-          "daily": {
-            "h.sixGifts": 4
-          },
-          "told": {},
-          "herald": null,
-          "title": null
+          }
         }
       },
       "fishing": {
@@ -1258,7 +1254,7 @@
             "farm": 1,
             "chat": 1
           },
-          "quiet": 3,
+          "quiet": 0,
           "coped": 0,
           "snap": null
         },
@@ -1277,7 +1273,7 @@
             "farm": 1,
             "chat": 1
           },
-          "quiet": 3,
+          "quiet": 0,
           "coped": 0,
           "snap": null
         },
@@ -1326,6 +1322,85 @@
         "today": null,
         "echo": null,
         "count": 0
+      },
+      "leaning": {
+        "tally": {
+          "diligent": 1,
+          "shy": 3
+        },
+        "wait": {},
+        "offer": null,
+        "heard": [],
+        "seen": null,
+        "pulled": 0,
+        "settled": false
+      },
+      "almanac": {
+        "year": "plain",
+        "told": [],
+        "last": null,
+        "joined": 0
+      },
+      "hopes": {
+        "shi": {
+          "state": "saving",
+          "n": 0,
+          "stage": 0,
+          "told": 0,
+          "side": false,
+          "since": 4,
+          "at": 0
+        },
+        "aman": {
+          "state": "idle",
+          "n": 0,
+          "stage": 0,
+          "told": -1,
+          "side": false,
+          "since": 0,
+          "at": 0
+        },
+        "qiao": {
+          "state": "idle",
+          "n": 0,
+          "stage": 0,
+          "told": -1,
+          "side": false,
+          "since": 0,
+          "at": 0
+        },
+        "gui": {
+          "state": "idle",
+          "n": 0,
+          "stage": 0,
+          "told": -1,
+          "side": false,
+          "since": 0,
+          "at": 0
+        },
+        "zhou": {
+          "state": "idle",
+          "n": 0,
+          "stage": 0,
+          "told": -1,
+          "side": false,
+          "since": 0,
+          "at": 0
+        },
+        "yun": {
+          "state": "idle",
+          "n": 0,
+          "stage": 0,
+          "told": -1,
+          "side": false,
+          "since": 0,
+          "at": 0
+        }
+      },
+      "scenes": {
+        "live": [],
+        "done": {},
+        "echo": []
       },
       "wardrobe": {
         "worn": {

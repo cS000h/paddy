@@ -59,6 +59,8 @@ test('玩过一年多：不出错、不卡住，存档不走样，也不会越�
   const prizes = { 'prize.pumpkinKing': 5, 'prize.doubleYolkEgg': 5, 'prize.goldenRedCarp': 5 };
   Object.assign(save.state.world.packs.hero.items, prizes);
   Object.assign(save.state.world.households.home.items, prizes);
+  // 修院子的材料也难攒齐：家里放够修院角彩头台的（不用检定）
+  Object.assign(save.state.world.households.home.items, { pebble: 4, straw: 8 });
   // 心烦满了、憋着没挑毛病的样子也难碰上：一并放进去
   save.state.world.persona.hero.stress = 100;
   save.state.world.vexes.hero.snap = ['drink', 'spree', 'recluse'];
