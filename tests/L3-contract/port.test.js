@@ -118,6 +118,7 @@ const QUERIES = [
   'heard',
   'stress',
   'deeds',
+  'diet',
   'match.visit',
   'match.visit.options',
   'yard.fix',

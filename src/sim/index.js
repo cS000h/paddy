@@ -44,6 +44,7 @@ import { guide } from './plugins/guide.js';
 import { visits } from './plugins/visits.js';
 import { opinion } from './plugins/opinion.js';
 import { modifiers } from './plugins/modifiers.js';
+import { diet } from './plugins/diet.js';
 import { events } from './plugins/events.js';
 import { visitors } from './plugins/visitors.js';
 import { fairMatch } from './plugins/fair-match.js';
@@ -95,6 +96,7 @@ export const PLUGINS = Object.freeze([
   visits,
   opinion,
   modifiers,
+  diet,
   events,
   visitors,
   fairMatch,

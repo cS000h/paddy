@@ -43,6 +43,20 @@ export const RECIPES=[
   ['腊肉炒笋','fry',['bacon','shoot']],['腊肉焖饭','stew',['rice','bacon']],['腊肉炒青菜','fry',['bacon','veg.qingcai']],['蒸咸鱼','stew',['saltfish']],['咸鱼焖饭','stew',['rice','saltfish']],
   ['酸辣土豆丝','fry',['potato'],['vinegar','chili']],['糖醋萝卜','mix',['radish'],['sugar','vinegar']],['拍黄瓜','mix',['cucumber'],['vinegar']],['葱花炒蛋','fry',['egg'],['scallion']],
   ['辣炒豆角','fry',['longbean'],['chili']],['酱香芋头','stew',['taro'],['soy']],
+  // G-30 补的家常搭配（和已有的重了的、拿姜当调料的照游戏里的改过；马兰头不能生拌，那道没收）
+  ['河蚌豆腐汤','stew',['mussel','tofu','ginger'],['wine']],['腌笃鲜','stew',['bacon','shoot','pork'],['wine']],
+  ['芋头烧肉','stew',['pork','taro'],['soy','sugar']],['番茄炖土豆','stew',['tomato','potato'],['scallion','sugar']],
+  ['桃胶野桃甜羹','stew',['peachGum','wildPeach'],['sugar']],['莲蓬菱角甜汤','stew',['lotusPod','caltrop'],['sugar']],
+  ['咸鱼炖豆腐','stew',['saltfish','tofu','ginger'],['chili']],['荠菜鸡蛋汤','stew',['shepherd','egg'],['scallion']],
+  ['豆子炖肉','stew',['bean','pork'],['soy','wine']],['辣炒螺蛳','fry',['snail'],['chili','wine']],
+  ['葱油河虾','fry',['shrimp'],['scallion','wine']],['青菜炒菌子','fry',['veg.qingcai','mushroom'],['soy']],
+  ['肉末炒豆角','fry',['pork','longbean'],['soy','chili']],['地耳炒蛋','fry',['earthEar','egg'],['scallion']],
+  ['腊肉炒蕨菜','fry',['bacon','brake'],['chili']],['姜葱炒毛蟹','fry',['crab','ginger'],['scallion']],
+  ['腊肉菜饭','fry',['rice','bacon','veg.qingcai'],['soy']],['土豆炒肉片','fry',['potato','pork'],['soy','scallion']],
+  ['葱香煎豆腐','fry',['tofu'],['soy','scallion']],['香辣烤鱼','roast',['fish','ginger'],['chili']],
+  ['香辣烤羊肉','roast',['mutton'],['chili','scallion']],['糖烤芋头','roast',['taro'],['sugar']],
+  ['糖烤栗子','roast',['chestnut'],['sugar']],['酱烤春笋','roast',['shoot'],['soy']],
+  ['酸辣拍黄瓜','mix',['cucumber'],['vinegar','chili']],
 ];
 
 // 刀工沿用 0.12：合适的切法放宽火候三格；切丝多花一点体力。

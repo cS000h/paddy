@@ -196,6 +196,12 @@ export const modifiers = {
       };
     });
 
-    ctx.provide('modifiers', Object.freeze({ add, has, active }));
+    // 去掉一条（嘴燥吃到果就消）
+    const drop = ctx.own((w, who, id) => {
+      const list = w.modifiers[who];
+      if (list) w.modifiers[who] = list.filter(m => m.id !== id);
+    });
+
+    ctx.provide('modifiers', Object.freeze({ add, has, active, drop }));
   },
 };

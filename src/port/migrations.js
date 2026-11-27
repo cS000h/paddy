@@ -18,6 +18,15 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  29(state) {
+    // 食为天：每人记近几天吃了哪几类、吃过哪些菜、哪几样状态已经说过。旧档从空的记起。
+    const w = state.world;
+    w.meta.version = 30;
+    w.diet = Object.fromEntries(
+      Object.keys(w.packs).map(id => [id, { log: [], tasted: [], seen: [] }]),
+    );
+    return state;
+  },
   28(state) {
     // 本事的升级曲线拉长、经验改成按出力给并且当天边际递减（每门本事记一份今天长了多少）。
     // 旧档的经验照级换算到新曲线上：同一级、级内同样的进度，升上来不掉级。两张表都写死。
