@@ -3,7 +3,8 @@
 //   清早：到期的守信的自己还（凑不齐先还一点），不守信的拖两天，拖过宽限就是赖账、见闻传开；
 //     手头紧的找肯借的借，跟你更近乎（或村里没人借得出）就站到你院门口，见面先开口（'talk.news'）
 //   你也能：开口借钱、上门还钱、上门讨债、借给门口那位、接济手头紧的（命令 debt.do）
-//   事实 debt.asked、debt.done {kind, who, n, line, notes}、debt.repaid {who, n, line}、debt.welshed
+//   欠你的不赖账：还时常捎点东西，拖过宽限就拿东西抵了账；村民之间的才会赖
+//   事实 debt.asked、debt.done {kind, who, n, line, notes}、debt.repaid {who, n, line}
 //   查询 debts → 你欠谁、谁欠你、今天谁在门口等；debts.options(w, 谁) 接话里的几行
 import { refuse } from '../../kernel/dispatch.js';
 import { is } from '../../kernel/schema.js';
@@ -11,12 +12,14 @@ import { KINDS, debtOk, askOk, fill, debtsView } from '../debts.js';
 import { noise } from '../noise.js';
 import { ON_MAP, PEOPLE } from '../../content/people.js';
 import { EXPENSES } from '../../content/purse.js';
-import { EXPENSE_TEXT, REPAY_LINES } from '../../content/purse-lines.js';
+import { EXPENSE_TEXT } from '../../content/purse-lines.js';
+import { ITEMS } from '../../content/pantry.js';
 import {
   LEDGER as L,
   LEDGER_GROUP,
   LEND_REPLY,
   ASK_REPLY,
+  PAY_YOU,
   PAID_BACK,
   YOU_LATE,
   DOOR_NOTES,
@@ -121,7 +124,7 @@ export const debts = {
       });
     }
 
-    /** 守信的到期就还；不守信的拖两天才还（钱够的话）；拖过宽限就是赖账。 */
+    /** 守信的到期就还；不守信的拖两天；拖过宽限，欠你的拿东西抵，欠村里的就是赖账。 */
     function dueDay(w, d, emit) {
       const day = w.clock.day,
         b = d.borrower;
@@ -139,18 +142,20 @@ export const debts = {
         }
         return;
       }
-      if (day < d.due) return;
       const ai = aiOf(persona.get(w, b));
       const wait = ai.honor < 0 ? 2 : 0;
       if (day < d.due || d.state === 'bad') return;
       const has = day >= d.due + wait ? coinsOf(w, b) : 0;
+      const pay = PAY_YOU[b],
+        toMe = d.lender === HERO;
+      const gift = (k, why) => (store.add(w, pay.gift, k, why), ITEMS[pay.gift].name);
       if (has >= d.n) {
         const n = d.n;
         settle(w, d, '还' + name(d.lender) + '的钱');
         opinion.note(w, d.lender, b, 'repaid');
-        if (d.lender === HERO) {
-          const line = REPAY_LINES[b].repay;
-          postNote(w, 'repay', { a: name(b), n, line });
+        if (toMe) {
+          const line = fill(pay.repay, { n });
+          postNote(w, 'repay', { a: name(b), gift: gift(1, name(b) + '还钱捎的'), line });
           emit('debt.repaid', { who: b, n, line: `${name(b)}：${line}` });
         }
         return;
@@ -162,19 +167,26 @@ export const debts = {
       }
       if (d.state === 'open') {
         d.state = 'late';
-        if (d.lender === HERO)
-          postNote(w, 'late', { a: name(b), n: d.n, line: REPAY_LINES[b].late });
+        const line = fill(pay.late[0], { due: '第' + d.due + '天' });
+        if (toMe) postNote(w, 'late', { a: name(b), line });
       }
-      // 拖过宽限就是赖账；厚道的人一直认这笔账，只是慢
-      if (day > d.due + L.grace && ai.honor < 30) {
+      if (day <= d.due + L.grace) return;
+      // 欠你的拖过宽限：有多少还多少，余下拿东西抵了，这笔就算清了
+      if (toMe) {
+        const n = d.n,
+          got = Math.min(n, Math.max(0, coinsOf(w, b)));
+        if (got) pass(w, b, HERO, got, '还你的钱');
+        w.debts.debts = w.debts.debts.filter(x => x !== d);
+        const line = pay.late[1];
+        postNote(w, 'stopgap', { a: name(b), n, gift: gift(2, name(b) + '抵账的'), line });
+        emit('debt.repaid', { who: b, n: got, line: `${name(b)}：${line}` });
+        return;
+      }
+      // 村民之间：拖过宽限就是赖账；厚道的人一直认这笔账，只是慢
+      if (ai.honor < 30) {
         d.state = 'bad';
         opinion.note(w, d.lender, b, 'welshed');
         witness.record(w, { who: b, to: d.lender, act: 'welsh', map: mapOf(w, b), seenBy: [] });
-        if (d.lender === HERO) {
-          const line = fill(DOOR_NOTES.welsh.text, { a: name(b), n: d.n });
-          postNote(w, 'welsh', { a: name(b), n: d.n });
-          emit('debt.welshed', { who: b, line });
-        }
       }
     }
 
@@ -188,6 +200,7 @@ export const debts = {
         const n = Math.min(L.ask.max, sh.n);
         const canAsk =
           !G.ask &&
+          !Object.values(G.asked).some(d => day - d < L.ask.gap) &&
           day >= L.ask.from &&
           !(G.asked[id] && day - G.asked[id] < L.ask.again) &&
           opinion.of(w, id, HERO).value >= L.ask.opinion &&
@@ -273,18 +286,17 @@ export const debts = {
         input: { kind, to, ...input },
         result: 'debt.done',
       });
+      const poor = m => (store.coins(w) < m ? `钱不够，要${m}文` : '');
       if (G.ask?.who === to && G.ask.day === w.clock.day) {
         const n = G.ask.n,
           half = Math.ceil(n / 2);
-        const poor = m => (store.coins(w) < m ? `钱不够，要${m}文` : '');
         out.push(row('lend', fill(LABEL.lendFull, { n }), { n }, poor(n)));
         if (half < n) out.push(row('lend', LABEL.lendHalf, { n: half }, poor(half)));
         out.push(row('lend', LABEL.lendNone, { n: 0 }));
       }
       const mine = owes(w, HERO, to);
       if (mine) {
-        const reason = store.coins(w) < mine.n ? `钱不够，要${mine.n}文` : '';
-        out.push(row('repay', fill(LABEL.repay, { n: mine.n }), {}, reason));
+        out.push(row('repay', fill(LABEL.repay, { n: mine.n }), {}, poor(mine.n)));
       } else if (!shortOf(w, to)) {
         for (const n of L.hero) out.push(row('borrow', fill(LABEL.borrow, { n }), { n }));
       }
@@ -293,14 +305,7 @@ export const debts = {
         out.push(row('dun', fill(LABEL.dun, { n: theirs.n }), {}));
       if (shortOf(w, to)) {
         const n = L.relief.hero;
-        out.push(
-          row(
-            'relieve',
-            fill(LABEL.relieve, { n }),
-            {},
-            store.coins(w) < n ? `钱不够，要${n}文` : '',
-          ),
-        );
+        out.push(row('relieve', fill(LABEL.relieve, { n }), {}, poor(n)));
       }
       return out;
     }
@@ -349,8 +354,8 @@ export const debts = {
         if (coinsOf(w, to) >= d.n) {
           n = d.n;
           settle(w, d, '还你的钱');
-          line = REPAY_LINES[to].paid;
-        } else line = REPAY_LINES[to].broke;
+          line = fill(PAY_YOU[to].repay, { n });
+        } else line = PAY_YOU[to].dunned;
         stress.apply(w, HERO, ['confront'], fact);
       } else if (kind === 'lend') {
         const a = G.ask;
@@ -360,17 +365,14 @@ export const debts = {
         if (![a.n, half, 0].includes(n)) refuse('借多少说不清');
         if (store.coins(w) < n) refuse(`钱不够，要${n}文`);
         const say = n === a.n ? 'full' : n ? 'half' : 'none';
-        line = ASK_REPLY[to][say];
+        line = fill(ASK_REPLY[to][say], { m: n });
         if (n) {
           pass(w, HERO, to, n, '借给' + name(to));
           addDebt(w, HERO, to, n, a.why);
           opinion.note(w, to, HERO, 'lent');
           stress.apply(w, HERO, ['help'], fact);
           notes.push(`借出${n}文，${L.term}天后到期`);
-        } else {
-          opinion.note(w, to, HERO, 'refused');
-          stress.apply(w, HERO, ['refuse'], fact);
-        }
+        } else stress.apply(w, HERO, ['refuse'], fact);
         G.ask = null;
       } else {
         n = L.relief.hero;

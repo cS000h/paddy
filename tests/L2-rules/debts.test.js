@@ -1,5 +1,6 @@
 // L2-28 借、还、帮、传、拿（第 3 块，执行方案 M9）：你能找处得来的村民借钱、按日子还；手头紧的村民
-// 先找你或村里人借，站到你院门口开口，你借足、借一半或不借；守信的到日子自己送来，不守信的拖、拖久了赖账传开；
+// 先找你或村里人借，站到你院门口开口（全村隔几天才有一回），你借足、借一半或不借，不借不记仇；
+// 欠你的到日子自己送来、还捎点东西，不守信的拖着，拖过宽限拿东西抵了账；村民之间拖久了才赖账；
 // 大方的悄悄接济；心烦又缺钱、不守信的趁铺子没人顺手拿，厚道的从不拿；茶摊上的闲话你听得到，也能说给人听。
 // 一律通过端口发命令、问查询；要搭的场面从存档里摆好再读进来。
 import { test } from 'node:test';
@@ -11,10 +12,13 @@ import {
   LEND_REPLY,
   ASK_REPLY,
   PAID_BACK,
+  PAY_YOU,
   YOU_LATE,
+  LISTEN,
   LEDGER_DOINGS,
 } from '../../src/content/debts.js';
-import { EXPENSE_TEXT, REPAY_LINES } from '../../src/content/purse-lines.js';
+import { EXPENSE_TEXT } from '../../src/content/purse-lines.js';
+import { ITEMS } from '../../src/content/pantry.js';
 import { WHY } from '../../src/content/opinion.js';
 import { ON_MAP } from '../../src/content/people.js';
 
@@ -48,6 +52,7 @@ const sleepDays = (g, n) => {
   for (let i = 0; i < n; i++) facts.push(...act(g, 'sleep').facts);
   return facts;
 };
+const itemN = (g, id) => g.ask('home').items.find(x => x.id === id)?.n || 0;
 const witnessed = (g, act2) => g.save().state.world.witness.list.filter(x => x.act === act2);
 /** 除了这几户，别家都穷得借不出钱。 */
 const poorBut = (w, keep = []) => {
@@ -57,7 +62,8 @@ const poorBut = (w, keep = []) => {
 test('数据对得上：六位村民的话都齐，来由都在好感表里', () => {
   for (const id of ON_MAP) {
     for (const t of [LEND_REPLY, ASK_REPLY]) assert.equal(Object.keys(t[id]).length, 3, id);
-    assert.ok(PAID_BACK[id] && YOU_LATE[id] && REPAY_LINES[id].repay, id);
+    assert.ok(PAID_BACK[id] && YOU_LATE[id] && PAY_YOU[id].repay && PAY_YOU[id].dunned, id);
+    assert.ok(ITEMS[PAY_YOU[id].gift] && PAY_YOU[id].late.length === 2, id);
   }
   for (const k of [
     'lent',
@@ -134,7 +140,12 @@ test('阿满手头紧、村里没人借得出：清早站到你院门口开口�
     .filter(r => r.input.kind === 'lend')
     .map(r => r.input.n);
   assert.deepEqual(kinds, [n, Math.ceil(n / 2), 0]);
+  // 不借也不记仇
+  const no = beside(g, 'aman');
+  act(no, 'debt.do', { kind: 'lend', to: 'aman', n: 0 });
+  assert.ok(!no.ask('opinion', 'aman').parts.some(p => p.id === 'why.refused'));
   const coins = h.ask('home').coins;
+  const cabbage = itemN(h, 'cabbage');
   const out = act(h, 'debt.do', { kind: 'lend', to: 'aman', n });
   assert.equal(fact(out, 'debt.done').line, ASK_REPLY.aman.full);
   assert.equal(h.ask('home').coins, coins - n);
@@ -149,9 +160,24 @@ test('阿满手头紧、村里没人借得出：清早站到你院门口开口�
   assert.equal(repaid.data.n, n);
   assert.equal(rich.ask('home').coins, coins);
   assert.deepEqual(rich.ask('debts').owed, []);
+  assert.equal(itemN(rich, 'cabbage'), cabbage + 1, '还钱没捎白菜');
 });
 
-test('小乔借了钱不守信：到日子拖着，你上门讨她还不上；拖过宽限就是赖账', () => {
+test('上门借钱不扎堆：两家同时手头紧，一周里也只有一位来开口', () => {
+  let g = fresh();
+  sleepDays(g, 3);
+  g = staged(g, w => {
+    poorBut(w, ['aman', 'qiao']);
+    for (const id of ['aman', 'qiao']) {
+      w.purses.houses[id].coins = 0;
+      w.purses.houses[id].short = { id: 'wheelOff', n: 16, day: w.clock.day };
+    }
+  });
+  const asks = sleepDays(g, LEDGER.ask.gap - 1).filter(f => f.type === 'debt.asked');
+  assert.ok(asks.length <= 1, `来了${asks.length}回`);
+});
+
+test('小乔借了钱不守信：到日子拖着，你上门讨她还不上；拖过宽限拿东西抵了账，不赖你的', () => {
   let g = fresh();
   sleepDays(g, 3);
   g = staged(g, w => {
@@ -169,10 +195,38 @@ test('小乔借了钱不守信：到日子拖着，你上门讨她还不上；�
   assert.equal(h.ask('debts').owed[0].state, 'late');
   const at = beside(h, 'qiao');
   const dun = act(at, 'debt.do', { kind: 'dun', to: 'qiao' });
-  assert.equal(fact(dun, 'debt.done').line, REPAY_LINES.qiao.broke);
+  assert.equal(fact(dun, 'debt.done').line, PAY_YOU.qiao.dunned);
+  const candy = itemN(at, 'candy');
   const facts = sleepDays(at, LEDGER.grace);
-  assert.ok(facts.some(f => f.type === 'debt.welshed' && f.data.who === 'qiao'));
-  assert.ok(at.ask('heard').some(x => x.act === 'welsh' && x.who === 'qiao'));
+  assert.ok(facts.some(f => f.type === 'debt.repaid' && f.data.who === 'qiao'));
+  assert.deepEqual(at.ask('debts').owed, []);
+  assert.equal(itemN(at, 'candy'), candy + 2);
+  assert.ok(!at.ask('heard').some(x => x.act === 'welsh' && x.who === 'qiao'));
+  assert.ok(at.ask('notes').some(n => /抵了账/.test(n.title)));
+});
+
+test('村民之间欠钱：不守信的拖过宽限就是赖账，见闻传开', () => {
+  const g = staged(fresh(), w => {
+    poorBut(w);
+    const day = w.clock.day;
+    w.debts.seq = 1;
+    w.debts.debts = [
+      {
+        id: 1,
+        lender: 'gui',
+        borrower: 'qiao',
+        n: 900,
+        day,
+        due: day + 1,
+        why: null,
+        state: 'open',
+      },
+    ];
+  });
+  sleepDays(g, LEDGER.grace + 2);
+  const d = g.save().state.world.debts.debts.find(x => x.borrower === 'qiao');
+  assert.equal(d?.state, 'bad');
+  assert.ok(witnessed(g, 'welsh').some(x => x.who === 'qiao' && x.to === 'gui'));
 });
 
 test('村民之间：手头紧的找肯借的借，到日子还；大方的悄悄接济手头紧的那户', () => {
@@ -246,7 +300,7 @@ test('顺手拿：心烦又缺钱的小乔趁铺子没人拿几文，第二天�
   assert.ok(!took.some(x => x.who === 'shi'), '石伯不该拿');
   assert.ok(g.save().state.world.purses.houses.shop.coins < shop);
   assert.ok(!g.ask('heard').some(x => x.act === 'take'), '没人看见，你不知道是谁');
-  assert.ok(g.ask('notes').some(n => /钱匣/.test(n.title)));
+  assert.ok(g.ask('notes').some(n => /钱匣/.test(n.title) && /少了\d+文/.test(n.text)));
 });
 
 test('传闲话：茶摊上小乔把别人不想让人知道的事说给你听；你也能说给人听，厚道的人皱眉', () => {
@@ -272,14 +326,14 @@ test('传闲话：茶摊上小乔把别人不想让人知道的事说给你听�
   const out = act(t, 'tea.do', { kind: 'listen', at: { x: 17, y: 11 } });
   const heard = fact(out, 'gossip.heard');
   assert.ok(heard, '没听到闲话');
-  assert.match(heard.line, /阿满向桂嫂借了钱/);
+  assert.match(heard.line, /凑过来说：.*阿满.*桂嫂/);
   assert.ok(t.ask('heard').some(x => x.act === 'borrow' && x.who === 'aman'));
   // 说给石伯（厚道）听：他皱眉，记你一笔
   const s = beside(t, 'shi');
   const told = act(s, 'gossip.tell', { to: 'shi' });
   const d = fact(told, 'gossip.told');
   assert.ok(d.secret);
-  assert.match(d.notes[0], /背后说人/);
+  assert.ok(d.notes[0].endsWith(LISTEN.honest.replace('{who}', '阿满')), d.notes[0]);
   assert.ok(s.ask('opinion', 'shi').parts.some(p => p.id === 'why.tattled'));
   assert.match(refused(beside(fresh(), 'zhou'), 'gossip.tell', { to: 'zhou' }), /没什么/);
 });

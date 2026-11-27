@@ -11,6 +11,9 @@ import {
   GOSSIP_GROUP,
   DOOR_NOTES,
   GOSSIP_LEAD,
+  GOSSIP_SAY,
+  GOSSIP_THING,
+  LISTEN,
   LEDGER_LABELS as LABEL,
 } from '../../content/debts.js';
 import { aiOf } from '../deeds.js';
@@ -46,7 +49,11 @@ export const quietDeeds = {
       purse.move(w, purse.houseOf(to), n, why);
     };
     const mapOf = (w, id) => residents.positions(w).find(p => p.id === id)?.map || 'yard';
-    const postNote = (w, key) => core.post(w, { ...DOOR_NOTES[key] });
+    const postNote = (w, key, map = {}) =>
+      core.post(w, {
+        title: fill(DOOR_NOTES[key].title, map),
+        text: fill(DOOR_NOTES[key].text, map),
+      });
     function near(w, to) {
       const p = residents.positions(w).find(x => x.id === to);
       return !!p?.visible && p.map === people.me(w).map;
@@ -84,7 +91,7 @@ export const quietDeeds = {
         if (!got) continue;
         purse.move(w, purse.houseOf(a), got, '顺手拿的');
         witness.record(w, { who: a, act: 'take', map: me.map, place: 'market', seenBy: [] });
-        postNote(w, 'shopShort');
+        postNote(w, 'shopShort', { n: got });
         return;
       }
     }
@@ -116,13 +123,21 @@ export const quietDeeds = {
           const ai = aiOf(persona.get(w, id));
           return ai.social > 0 && ai.honor < 30;
         });
+    /** 说的人照自己的性情怎么说这件事；稿里没写到的那几件用见闻那一句。 */
+    function gossipLine(w, a, x) {
+      const t = persona.get(w, a).tempers.find(k => GOSSIP_SAY[k]);
+      const act = x.act === 'reliefQuiet' ? 'relief' : x.act;
+      const say = t && GOSSIP_SAY[t][act];
+      if (!say) return fill(GOSSIP_LEAD.lead, { a: name(a), line: witnessLine(x) });
+      return fill(say, { who: name(x.who), whom: name(x.to), thing: GOSSIP_THING[act] || '' });
+    }
     reactions.on('tea.done', (s, e, emit) => {
       if (e.data.kind !== 'listen') return;
       const w = s.world;
       for (const a of gossipers(w)) {
         const x = witness.tell(w, a, HERO, true);
         if (!x) continue;
-        const line = fill(GOSSIP_LEAD.heard, { a: name(a), line: witnessLine(x) });
+        const line = fill(GOSSIP_LEAD.heard, { a: name(a), line: gossipLine(w, a, x) });
         core.post(w, { title: '茶摊上的闲话', text: line });
         emit('gossip.heard', { line });
         return;
@@ -141,9 +156,8 @@ export const quietDeeds = {
       opinion.note(w, to, HERO, honest && x.secret ? 'tattled' : 'confided');
       stress.apply(w, HERO, x.secret ? ['gossip'] : ['chat'], fact);
       const told = fill(GOSSIP_LEAD.told, { a: name(to), line: witnessLine(x) });
-      const back = fill(honest && x.secret ? GOSSIP_LEAD.honest : GOSSIP_LEAD.keen, {
-        a: name(to),
-      });
+      const t = persona.get(w, to).tempers.find(k => LISTEN[k]) || 'gregarious';
+      const back = `${name(to)}：${fill(LISTEN[t], { who: name(x.who) })}`;
       fact('gossip.told', { to, secret: x.secret, line: told, notes: [back] });
     });
 
