@@ -29,6 +29,27 @@ function attributes(profile, selected) {
   );
 }
 
+function stressBlock({ value, level, snap }) {
+  const tier = Math.min(level, 2);
+  const bowl = ['low', 'mid', 'high'][tier];
+  const labels = ['平', '烦', '快憋不住']
+    .map((label, i) => `<small aria-current="${i === tier}">${label}</small>`)
+    .join('');
+  const stamp = snap ? '<b class="stress-stamp">憋不住了</b>' : '';
+  const choices = snap
+    ? `<div class="folio-snap stress-choices"><small>${esc(snap.line)}</small>${snap.choices
+        .map(
+          c => `<button data-do="cope" data-coping="${esc(c.id)}">${esc(c.button)}
+          <small>染上「${esc(c.name)}」：${esc(c.note)}</small></button>`,
+        )
+        .join('')}</div>`
+    : '';
+  return `<div class="folio-stress">${uiIconImg('stress_' + bowl, 28)}
+    <span>心烦 <b>${value}</b> / 100 ${stamp}</span>
+    <div class="stress-levels">${labels}</div>
+    <div class="stress-track"><i style="width:${value}%"></i></div></div>${choices}`;
+}
+
 function rosterOf(game) {
   const villagers = game.ask('bonds').map(b => ({ ...b, look: PEOPLE[b.id].look }));
   const { active, book } = game.ask('visitors');
@@ -65,17 +86,6 @@ export function personaBody(m, game, mods) {
     ? ''
     : '　历练 ' +
       names(game.ask('growth').traits.filter(t => t.owned && !Object.hasOwn(OLD_TRAITS, t.id)));
-  const n = profile.stress;
-  const bowl = n < 40 ? 'low' : n < 70 ? 'mid' : 'high';
-  const snap = other ? null : game.ask('stress').snap;
-  const cope = snap
-    ? `<div class="folio-snap"><b>憋不住了</b><small>${esc(snap.line)}</small>${snap.choices
-        .map(
-          c =>
-            `<button data-do="cope" data-coping="${esc(c.id)}">${esc(c.button)}<small>染上「${esc(c.name)}」：${esc(c.note)}</small></button>`,
-        )
-        .join('')}</div>`
-    : '';
   const lean = other ? null : game.ask('leaning');
   const offer = lean?.offer;
   const leaning = offer
@@ -90,7 +100,7 @@ export function personaBody(m, game, mods) {
     <div class="folio-identity">${portrait(person.look)}<div><h2>${esc(person.name)}${worn}</h2>
     ${line ? esc(line.name) + '<br>' + level + ' · ' + esc(line.title) : '出身未记'}</div></div>
     <div class="folio-traits">${traits.join('')}</div><small>根骨天资 ${names(profile.innate)}　毛病 ${names(profile.coping)}${earned}</small>${leaning}
-    ${n === null ? '' : `<div class="folio-stress">${uiIconImg('stress_' + bowl, 28)}心烦　${n} / 100</div>`}${cope}</section>
+    ${profile.stress === null ? '' : stressBlock(game.ask('stress'))}</section>
     <section><header>${stamp('六项')}<small>二十为满</small></header>${attributes(profile, m.attr)}${mods}</section></div>`;
 }
 
