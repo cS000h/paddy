@@ -22,9 +22,9 @@ import {
 import { GREETING_REPLY } from '../../content/encounters.js';
 import { TOPICS, tierOf, tierWord } from '../../content/talk.js';
 import { TIER_OPINION } from '../../content/opinion.js';
-import { GIFT_DISH, GIFT_ITEM, GIFT_FAVORITE, GIFT_SPOILED } from '../../content/gift-lines.js';
+import { GIFT_ITEM } from '../../content/gift-lines.js';
+import { judgeDish } from '../gift-dish.js';
 import { FOUND_OWNERS } from '../../content/fish-catch.js';
-import { FIRE_TWISTS } from '../../content/cook-fire.js';
 import { ITEMS, CROPS, SOIL, kindOf } from '../../content/items.js';
 import { dateOf } from '../../content/calendar.js';
 import { giftable } from '../../content/pantry.js';
@@ -35,7 +35,6 @@ const homeGrown = item => Object.values(CROPS).some(crop => crop.produce === ite
 // 开场和应答有时只差引号前的动作；同一句话应当只说一次。
 const spoken = line => line.slice(Math.max(0, line.indexOf('“')));
 const sameSpeech = (a, b) => spoken(a) === spoken(b);
-const SPOILED = ['raw', 'burnt'];
 
 export const social = {
   id: 'sim.social',
@@ -273,21 +272,8 @@ export const social = {
         value,
         line;
       if (dish) {
-        favorite = person.favorite === dish.base;
-        const spoiled = SPOILED.includes(dish.quality);
-        // 砸了也有点意思：有人偏爱这一口（阿满爱啃焦壳），送他算合心意
-        const twist = dish.twist ? FIRE_TWISTS[dish.twist] : null;
-        const fan = !!twist && 'fan' in twist && twist.fan === to;
-        liked = !spoiled && (favorite || fan || dish.buff === person.likes);
-        // 三分滋味的菜送出去多一分情面（最多还是 4）
-        value = spoiled ? 1 : favorite || (liked && dish.flavor === 3) ? 4 : liked ? 3 : 2;
-        line = spoiled
-          ? GIFT_SPOILED[to]
-          : favorite
-            ? GIFT_FAVORITE[to]
-            : fan && 'fanLine' in twist
-              ? twist.fanLine
-              : withGesture(to, band, GIFT_DISH[to][liked ? 'yes' : 'no'](dish.name), key);
+        const taste = compute.run('gift.taste', { w, to, dish }, { value: 0, parts: [] }).value;
+        ({ favorite, liked, value, line } = judgeDish({ dish, to, band, key, taste }));
         if (favorite) {
           moods.cheer(w, to, 8);
           b.favs[to] = true;

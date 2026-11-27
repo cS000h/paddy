@@ -1061,6 +1061,13 @@
       "modifiers": {
         "hero": []
       },
+      "diet": {
+        "hero": {
+          "log": [],
+          "tasted": [],
+          "seen": []
+        }
+      },
       "pulse": {
         "active": {
           "id": "morning_rice_damp",
@@ -1417,12 +1424,6 @@
         "live": [],
         "done": {},
         "echo": []
-      },
-      "debts": {
-        "seq": 0,
-        "debts": [],
-        "ask": null,
-        "asked": {}
       },
       "wardrobe": {
         "worn": {
