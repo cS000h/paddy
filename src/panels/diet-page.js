@@ -1,4 +1,5 @@
-import { esc } from './html.js';
+// 册子里的饮食页：近三日吃了哪几类、眼下挂着的气色和小毛病、自己和乡邻的口味。
+import { esc, title } from './html.js';
 
 function foodRow(group, days) {
   const counts = days.map(day => day[group.id]);
@@ -20,7 +21,8 @@ function tastes({ likes, dislikes }) {
 export function dietPage(game) {
   const { groups, days, states, palate, villagers, tasted } = game.ask('diet');
   if (!tasted && !days.some(day => groups.some(g => day[g.id])))
-    return '<p>灶火才刚生起，这几日还没正经吃过什么。</p>';
+    return `${title('稻乡小册', '饮食')}<div class="diet-page diet-empty">
+      <p>灶火才刚生起，这几日还没正经吃过什么。</p></div>`;
   const current = states.map(
     s =>
       `<details class="diet-state ${s.kind === 'bad' ? 'bad' : 'good'}">
@@ -31,12 +33,14 @@ export function dietPage(game) {
       `<div class="diet-neighbor"><b>${esc(v.name)}</b><div>
       ${v.known ? tastes(v) : '还不算熟络，摸不清爱吃哪一口。'}</div></div>`,
   );
-  return `<div class="diet-page"><section><h3>近三日吃食</h3>
+  // 生吃果子、零嘴不算「道菜」，还没做过菜时不写「吃过 0 道菜」
+  const total = tasted ? `<small class="diet-total">吃过 ${tasted} 道菜</small>` : '';
+  return `${title('稻乡小册', '饮食')}<div class="diet-page"><section><h3>近三日吃食</h3>
     <table><thead><tr><td></td><th scope="col">前天</th><th scope="col">昨天</th>
     <th scope="col">今天</th></tr></thead><tbody>${groups.map(g => foodRow(g, days)).join('')}
     </tbody></table>
     ${current.length ? '<h3>眼下</h3>' + current.join('') : ''}
     <h3>我的口味</h3><div class="diet-palate">${tastes(palate)}</div></section>
     <section><h3>乡邻爱吃</h3>${neighbors.join('')}</section>
-    <small class="diet-total">吃过 ${tasted} 道菜</small></div>`;
+    ${total}</div>`;
 }
