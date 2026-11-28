@@ -65,3 +65,21 @@ test('摆设贴的物件，画那边和规则那边说的是同一个', () => {
   for (const [slot, d] of Object.entries(DECOR))
     assert.equal(DECOR_OBJECT_OF[slot], d.object, slot);
 });
+
+test('床铺合不合时令：夏天睡凉席醒来心情好两分、睡厚棉被差两分，原样木板床不加不减', () => {
+  // 存档里把床换成某一样、日子拨到春天最后一天，睡一夜进夏天，比醒来的心情
+  const woke = style => {
+    const saved = JSON.parse(JSON.stringify(newGame().save()));
+    saved.state.world.clock.day = 14;
+    if (style) {
+      saved.state.world.decor = { owned: [`bed.${style}`], on: { bed: style } };
+    }
+    const g = createGame({ saved, debug: true });
+    must(g, 'sleep');
+    return g.ask('body').mood;
+  };
+  const plain = woke(null);
+  assert.equal(woke('bamboo') - plain, 2);
+  assert.equal(woke('quilt') - plain, -2);
+  assert.equal(woke('canopy'), plain, '纱帐床不管时令');
+});

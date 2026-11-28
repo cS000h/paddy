@@ -14,7 +14,10 @@ import {
   WELL,
   stocked,
   VAT,
+  travel,
 } from '../helpers.js';
+import { createGame } from '../../src/port/game.js';
+import { NAP_LINES } from '../../src/content/body.js';
 
 const eaten = out => out.facts.find(f => f.type === 'meal.eaten').data;
 const drunk = out => out.facts.find(f => f.type === 'water.drunk').data;
@@ -290,4 +293,46 @@ test('天黑以后早早睡下，醒来心情好；自家人之外的人没有�
   assert.equal(g.ask('hero').energy, 100);
   assert.deepEqual(Object.keys(g.save().state.world.vitals), ['hero']);
   assert.deepEqual(Object.keys(g.save().state.world.packs), ['hero']);
+});
+
+test('白天上床歇晌：屋里、十一点到四点、一天一回；歇一个时辰或躺到傍晚，回体力不过天', () => {
+  // 存档里把力气改成 40，好看出回了多少
+  const tired = () => {
+    const saved = JSON.parse(JSON.stringify(newGame().save()));
+    const w = saved.state.world;
+    w.people[w.player.controls].energy = 40;
+    return createGame({ saved, debug: true });
+  };
+  const bed = { x: 3, y: 7, dir: 'up' };
+  const g = tired();
+  assert.equal(refused(g, 'nap', { mode: 'hour', at: HOME }), NAP_LINES.where);
+  travel(g, 'cottage');
+  assert.equal(refused(g, 'nap', { mode: 'hour', at: bed }), NAP_LINES.early);
+  assert.equal(g.ask('nap').why, NAP_LINES.early);
+  wait(g, 11 * 60 - g.ask('clock').minute);
+  assert.deepEqual(g.ask('nap'), { ok: true, why: null });
+  const day = g.ask('clock').day;
+  const mood = g.ask('body').mood;
+  const out = g.dispatch('nap', { mode: 'hour', at: bed });
+  assert.equal(out.ok, true);
+  const taken = out.facts.find(f => f.type === 'nap.taken').data;
+  assert.deepEqual([taken.minutes, taken.energy, taken.line], [120, 30, NAP_LINES.hour]);
+  assert.equal(g.ask('clock').day, day, '不过天');
+  assert.equal(g.ask('clock').minute, 13 * 60);
+  assert.ok(g.ask('hero').energy >= 65, '回了 30 点（两个钟头里饿了渴了也就扣一点）');
+  assert.ok(g.ask('body').mood >= mood, '心情不降');
+  assert.equal(refused(g, 'nap', { mode: 'dusk', at: bed }), NAP_LINES.again);
+  must(g, 'sleep', { at: bed });
+  wait(g, 11 * 60 - g.ask('clock').minute);
+  assert.equal(g.ask('nap').ok, true, '第二天又能歇一回');
+
+  // 躺到傍晚：从三点躺到五点，按躺了多久回力气，封顶 30
+  const h = tired();
+  travel(h, 'cottage');
+  wait(h, 15 * 60 - h.ask('clock').minute);
+  const dusk = h.dispatch('nap', { mode: 'dusk', at: bed }).facts.find(f => f.type === 'nap.taken');
+  assert.deepEqual([dusk.data.minutes, dusk.data.energy], [120, 30]);
+  assert.equal(h.ask('clock').minute, 17 * 60);
+  assert.equal(refused(h, 'nap', { mode: 'hour', at: bed }), NAP_LINES.late);
+  assert.equal(refused(h, 'nap', { mode: 'long', at: bed }), '歇多久没说清');
 });

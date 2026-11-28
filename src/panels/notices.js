@@ -20,8 +20,15 @@ export function sleepView(modal, game) {
   const hungry = game.ask('body').hunger < 20;
   let note = clock.late ? '天已经很晚了，明早起来怕是歇不过来。' : '浇过水的菜，明早会长一截。';
   if (hungry) note += '空着肚子睡，明早歇不回来——先吃点东西吧。';
+  const nap = game.ask('nap');
+  if (nap.ok) note = '日头还高，歇个晌也行；' + note;
   return `${title('回屋歇息', `${clock.period} ${clock.clock}`)}${para('今天就到这儿吗？' + note)}
-    ${actions(close('再待一会儿', false), button('sleep', '歇下', { main: true }))}`;
+    ${actions(
+      close('再待一会儿', false),
+      button('napHour', '歇一个时辰', { disabled: !nap.ok }),
+      button('napDusk', '躺到傍晚', { disabled: !nap.ok }),
+      button('sleep', '睡到天亮', { main: true }),
+    )}`;
 }
 
 // 回礼在过夜事务里已经送到。这里显示实际去处，关窗和重画都只读。

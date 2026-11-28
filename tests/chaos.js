@@ -355,8 +355,11 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     else if (t.act === 'cloth') cloth(at);
     else if (t.act === 'wardrobe') dress(at);
     else if (t.act === 'water') send(pick(['drink', 'farm.refill']), { x: t.x, y: t.y, at });
-    else if (t.act === 'sleep') send('sleep', { at });
-    else send('person.place', at);
+    else if (t.act === 'sleep') {
+      // 白天上床先歇个晌（不抽随机数），歇不了就睡到天亮
+      if (game.ask('nap').ok) send('nap', { mode: hero().energy < 50 ? 'dusk' : 'hour', at });
+      else send('sleep', { at });
+    } else send('person.place', at);
   }
 
   function farm() {
