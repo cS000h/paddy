@@ -10,6 +10,10 @@ import { dishName } from './cuisine-name.js';
 import { planFor, judge, goodLog, twistOf } from './cook-fire.js';
 import { buffOf, tasteOf, flavorOf } from './cuisine-taste.js';
 import { refuse } from '../kernel/dispatch.js';
+/** n 分成 k 份：整数商，余数从头一份起各多 1。 */
+export const split = (n, k) =>
+  Array.from({ length: k }, (_, i) => Math.floor(n / k) + (i < n % k ? 1 : 0));
+
 export function previewMeal(w, input, compute, who, fires = 0) {
   const { items: picked = [], method = 'stew', spices = [], log = null, cut = null } = input;
   // 极品照原来那样配菜名、算味道，各种鱼都算「鱼」；用了几样极品，火候就宽几截
@@ -114,7 +118,22 @@ export function previewMeal(w, input, compute, who, fires = 0) {
     r.servings = Math.max(1, r.servings + ('servings' in twist ? twist.servings : 0));
     r.tasteMood = Math.min(3, r.tasteMood + ('mood' in twist ? twist.mood : 0));
   }
-  r.full = Math.min(POT.cap, Math.round(pot / r.servings));
+  // 一锅拨几份：小砂锅一份，大铁锅二到四份。粮食多少照下锅几样本来出几份（plenty）算，
+  // 整锅的饱腹、体力按整数商加余数分下去（17 分 4 份是 5、4、4、4），切小份刷不出更多
+  const plenty = r.servings;
+  const portions = input.servings ?? plenty;
+  if (!Number.isInteger(portions) || portions < 1 || portions > POT.most)
+    refuse(`一锅拨 1 到 ${POT.most} 份`);
+  const total = Math.round(pot);
+  if (portions > 1 && Math.floor(total / portions) < POT.thin)
+    refuse(`这点料拨不出${portions}份，少拨一份吧`);
+  const fulls = split(total, portions);
+  const energies = split(r.energy * plenty, portions);
+  r.shares = fulls.map((f, i) => ({ full: Math.min(POT.cap, f), energy: energies[i] }));
+  r.plenty = plenty;
+  r.servings = portions;
+  r.full = r.shares[0].full;
+  r.energy = r.shares[0].energy;
   // 滋味：调料、火候、照菜谱、当季管好不好吃；三分的多一点心情、多管一回，一分的少一点
   const flavor = flavorOf(items, method, I, spices, {
     quality: twist ? 'plain' : q, // 砸了也有点意思的，滋味照家常算

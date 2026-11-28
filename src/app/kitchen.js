@@ -13,6 +13,7 @@ export function kitchenActions({ game, shell, run, here, world }) {
       spices: m.spices || [],
       method: m.method || 'stew',
       cut: m.cut || null,
+      ...(m.servings ? { servings: m.servings } : {}),
       at: here(),
     };
   };
@@ -25,6 +26,7 @@ export function kitchenActions({ game, shell, run, here, world }) {
       // 合上小窗，在灶前把这顿饭做一遍给人看：切菜、添柴生火、翻炒、盛出来；做完翻出「出锅了」那一张
       const stove = m.x !== undefined ? { x: m.x, y: m.y } : null;
       const { items, spices, method, cut } = input();
+      const servings = m.servings || null;
       const back = {
         kind: 'cooked',
         cooked: {
@@ -41,7 +43,7 @@ export function kitchenActions({ game, shell, run, here, world }) {
           servings: c.servings,
           line: c.line,
         },
-        picks: { items, spices, method, cut },
+        picks: { items, spices, method, cut, servings },
         servedId: c.ids[0],
         x: m.x,
         y: m.y,
@@ -61,7 +63,13 @@ export function kitchenActions({ game, shell, run, here, world }) {
       const r = game.ask('kitchen', here()).recipes.find(r => r.name === name);
       if (r)
         shell.set({
-          modal: { kind: 'kitchen', items: r.items, spices: r.spices, method: r.method },
+          modal: {
+            kind: 'kitchen',
+            items: r.items,
+            spices: r.spices,
+            method: r.method,
+            servings: shell.get().servings,
+          },
         });
     },
     cookPick({ item }) {
@@ -77,6 +85,11 @@ export function kitchenActions({ game, shell, run, here, world }) {
     },
     cookClearSpice() {
       edit({ spices: [] });
+    },
+    /** 选锅拨份：小砂锅一份、大铁锅二到四份，记着下回还是这样；'' 是照下锅几样定。 */
+    cookServings({ n }) {
+      shell.set({ servings: Number(n) || null });
+      edit({ servings: Number(n) || null });
     },
     cookMethod({ method }) {
       edit({ method });

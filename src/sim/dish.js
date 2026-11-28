@@ -29,4 +29,5 @@ export const validDish = d =>
   is.int(d.tasteMood, -3, 3) &&
   typeof d.seasonal === 'boolean' &&
   (d.twist === undefined || Object.hasOwn(FIRE_TWISTS, d.twist)) &&
-  (d.flavor === undefined || is.int(d.flavor, 1, 3));
+  (d.flavor === undefined || is.int(d.flavor, 1, 3)) &&
+  (d.pot === undefined || is.int(d.pot, 1));

@@ -58,7 +58,9 @@ export class HeldItem {
     const { game, shell } = this.scene.deps;
     const player = this.scene.player;
     // 手上端着热菜时，双手捧着那一碗，底栏选了什么都先不画
-    const dish = game.ask('table').hands.length > 0;
+    const t = game.ask('table');
+    // 端着菜、抱着一摞脏碗，手上都画一只碗
+    const dish = t.hands.length > 0 || t.ware.stack.bowl + t.ware.stack.plate > 0;
     const held = dish ? 'hands:dish' : shell.get().held;
     if (held !== this.key) {
       this.key = held;

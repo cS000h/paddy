@@ -67,9 +67,10 @@ test('头一回吃到一道菜有一句；合口的菜腻得慢一点', () => {
     tired = [];
   g.on('diet.ate', e => ate.push(e.data));
   g.on('meal.eaten', e => tired.push(e.data.tired));
-  for (let i = 0; i < 3; i++) must(g, 'cook', { items: ['rice'], method: 'stew', at });
-  for (const d of [...g.ask('kitchen', at).dishes]) {
-    dine(g, [d.id]);
+  // 一天煮一碗吃一碗（剩菜放过两天就馊了）
+  for (let i = 0; i < 3; i++) {
+    must(g, 'cook', { items: ['rice'], method: 'stew', at });
+    dine(g, [g.ask('kitchen', at).dishes[0].id]);
     must(g, 'sleep');
   }
   assert.equal(ate[0].fresh, true);

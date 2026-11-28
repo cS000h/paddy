@@ -45,17 +45,25 @@ function diningPicks(game, here) {
         html: `<b>坐下吃饭</b><small>桌上${t.dishes.length}样一起吃，算一顿</small>`,
       })
     : '';
+  const dirty = t.ware.dirty.bowl + t.ware.dirty.plate;
+  const clear = dirty
+    ? button('dishClear', '', {
+        html: `<b>收碗</b><small>桌上${dirty}只脏碗盘一次抱走，去院里水缸边洗</small>`,
+      })
+    : '';
   const packed = game
     .ask('kitchen', here)
     .carried.filter(d => !hands.has(d.id))
     .map(d => dish('dishEat', '吃', d))
     .join('');
-  return set + eat + lift + packed;
+  return set + eat + clear + lift + packed;
 }
 
 function diningNote(game, here) {
   const t = game.ask('table', here);
-  if (t.dishes.length) return `桌上摆着${t.dishes.length}样（最多${t.seats}样）`;
+  const dirty = t.ware.dirty.bowl + t.ware.dirty.plate;
+  if (t.dishes.length || dirty)
+    return `桌上摆着${t.dishes.length}样${dirty ? `、${dirty}只脏碗` : ''}（最多${t.seats}样）`;
   return t.hands.length ? '把手上的菜放下' : '去院里灶台端一样热菜进来';
 }
 

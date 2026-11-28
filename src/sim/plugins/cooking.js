@@ -20,7 +20,7 @@ import { fill } from '../../content/text.js';
 import { previewMeal } from '../cuisine.js';
 import { validDish } from '../dish.js';
 import { near } from './people.js';
-import { handheld, mealLine, TABLE_LINES } from '../../content/table.js';
+import { handheld, mealLine, TABLE_LINES, STALE } from '../../content/table.js';
 
 // 出锅的一段话（沿用 0.12）：凉拌是摆上桌，其余先说火候再说出锅；头一回做、用了时令菜各添一句。
 // 火候那一句照做法分开说（G-11）；掌火全中、砸了也有点意思，换那一句。
@@ -72,13 +72,25 @@ export const cooking = {
     'pack',
     'body',
     'compute',
+    'reactions',
     'table',
   ],
   writes: ['kitchens'],
   install(ctx) {
     registerResidentOptions(ctx, 'gui', gui);
-    const { schema, commands, queries, core, people, store, pack, body, compute, table } =
-      ctx.services;
+    const {
+      schema,
+      commands,
+      queries,
+      core,
+      people,
+      store,
+      pack,
+      body,
+      compute,
+      reactions,
+      table,
+    } = ctx.services;
     schema.slice('kitchens', {
       initial: (env, w) =>
         Object.fromEntries(
@@ -161,6 +173,8 @@ export const cooking = {
       const mood = (d.seasonal ? 2 : 0) + (d.meat ? 1 : 0) + d.tasteMood + TIRED.mood[times];
       return { times, tired, mood };
     }
+    /** 这一份带不带增益：一锅拨几份的，只有头一份带。 */
+    const buffing = d => !d.pot || d.pot === d.id;
     const RANK = ['burnt', 'raw', 'under', 'over', 'plain', 'good', 'great'];
     commands.register('cook', ({ draft, input, fact }) => {
       const w = draft.world;
@@ -180,9 +194,13 @@ export const cooking = {
       for (const item of [...input.items, ...p.spices]) pack.use(w, id, item, 1, '做' + p.base);
       const ids = [];
       // 这一锅的节拍、每一拍怎样只在出锅这一下用，不跟着饭菜存
-      const { plan, beats, perfect, fire, ...meal } = p;
-      for (let i = 0; i < p.servings; i++) {
-        const dish = { ...meal, id: core.nextId(w), day: w.clock.day };
+      const { plan, beats, perfect, fire, shares, plenty, ...meal } = p;
+      // 一锅拨几份，每份照分到的饱腹、体力；增益跟着这一锅，只落在头一份上（pot 记头一份的 id）
+      let pot = 0;
+      for (const share of shares) {
+        const dish = { ...meal, ...share, id: core.nextId(w), day: w.clock.day };
+        pot ||= dish.id;
+        if (shares.length > 1) dish.pot = pot;
         k.dishes.push(dish);
         ids.push(dish.id);
       }
@@ -198,6 +216,9 @@ export const cooking = {
       fact('meal.cooked', {
         who: id,
         ...meal,
+        // 「做满 30 份」照粮食算份数，拨小份不多算
+        servings: plenty,
+        portions: p.servings,
         perfect,
         beats,
         ingredients: p.ingredients.length,
@@ -250,11 +271,11 @@ export const cooking = {
       const d = take(w, id, input.id);
       const c = course(w, id, d, k);
       body.mood(w, id, 3 + c.mood, '吃饱了');
-      body.setBuff(w, id, d.buff, d.uses, d.why);
+      if (buffing(d)) body.setBuff(w, id, d.buff, d.uses, d.why);
       fact('meal.eaten', {
         who: id,
         dish: d.name,
-        buff: d.buff,
+        buff: buffing(d) ? d.buff : null,
         quality: d.quality,
         snack: false,
         tired: c.tired,
@@ -276,13 +297,13 @@ export const cooking = {
       // 一桌算一顿：心情底数只给一回，每样添的加起来；增益挑管得最久的那一样
       const extra = courses.reduce((n, c) => n + c.mood, 0);
       body.mood(w, id, 3 + extra, '坐下吃了一顿');
-      const best = [...dishes].sort((a, b) => b.uses - a.uses)[0];
-      body.setBuff(w, id, best.buff, best.uses, best.why);
+      const best = [...dishes].filter(buffing).sort((a, b) => b.uses - a.uses)[0];
+      if (best) body.setBuff(w, id, best.buff, best.uses, best.why);
       const top = [...dishes].sort((a, b) => RANK.indexOf(b.quality) - RANK.indexOf(a.quality))[0];
       fact('meal.eaten', {
         who: id,
         dish: dishes.map(d => d.name).join('、'),
-        buff: best.buff,
+        buff: best?.buff || null,
         quality: top.quality,
         snack: false,
         tired: courses[0].tired,
@@ -299,6 +320,24 @@ export const cooking = {
         line: mealLine(dishes),
       });
     });
+    // 灶上锅里的剩菜也照出锅那天算，放过两天的倒掉（手上、桌上的由 table 插件管）
+    reactions.on(
+      'day.started',
+      (s, e, emit) => {
+        const w = s.world,
+          k = home(w);
+        const gone = k.dishes.filter(d => w.clock.day - d.day >= STALE.spoiled);
+        if (!gone.length) return;
+        k.dishes = k.dishes.filter(d => !gone.includes(d));
+        const names = [...new Set(gone.map(d => d.name))];
+        emit('dish.spoiled', {
+          who: people.who(w),
+          names,
+          line: fill(TABLE_LINES.spoiled, { name: names.join('、') }),
+        });
+      },
+      { priority: 30 },
+    );
     queries.define('kitchen', (w, at) => ({
       dishes: people.atHome(w, people.who(w), at) ? home(w).dishes : [],
       // 身上的：手上端着的在前，行囊里的在后

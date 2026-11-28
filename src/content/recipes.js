@@ -79,8 +79,14 @@ export const CUTS = {
 /**
  * 一锅饭的份数和饱腹。饱腹守恒：一锅的饱腹是下锅食材加起来（再乘火候、当季），平分到几份里；
  * 锅不会凭空多出粮食。放几样出几份写在 servings 里（下标是食材数），每份最多 cap。
+ * 拨份（G-36、Astra 回执）：小砂锅一份，大铁锅二到 most 份，拨多了每份就少；
+ * 每份不到 thin 饱腹就不让拨（免得拨成四碗清汤）。
  */
-export const POT = Object.freeze({ servings: [0, 1, 1, 2], cap: 40 });
+export const POT = Object.freeze({ servings: [0, 1, 1, 2], cap: 40, most: 4, thin: 8 });
+export const POTS = Object.freeze({
+  small: { name: '一人小砂锅', servings: [1], line: '小砂锅盛一碗刚好，热乎还不剩菜。' },
+  big: { name: '双耳大铁锅', servings: [2, 3, 4], line: '大铁锅敞亮，多炒两份留着吃也宽裕。' },
+});
 
 /**
  * 滋味：调料、火候、照不照菜谱管的是好不好吃，不管分量。分数照下面加减，再按 stars 换成一到三分：

@@ -19,6 +19,18 @@ export const HANDHELD = Object.freeze([
 ]);
 export const handheld = dish => HANDHELD.includes(dish.base);
 
+// 碗盘（G-36 第一节、第 5 步后半）：开局一只海碗、两只浅盘，晾在屋里小竹碗架上。
+// 带汤的（煮的）盛海碗，别的热菜盛浅盘，能随手吃的不占碗盘。灶上锅里的不占碗，从锅里盛一份端走才占。
+// 吃完的碗盘脏着搁在桌上、占着桌位；「收碗」一次全抱走，到院里水缸边洗净，自己回到碗架上。
+// 门口给闻香来的人盛的是他们自带的碗，送人、端给过客的连碗带回来（不记欠碗）。
+export const WARE = Object.freeze({
+  start: Object.freeze({ bowl: 1, plate: 2 }),
+  names: Object.freeze({ bowl: '素白海碗', plate: '粗陶浅盘' }),
+});
+export const wareOf = dish => (handheld(dish) ? null : dish.method === 'stew' ? 'bowl' : 'plate');
+// 剩菜照出锅那天算：D 日做，D+1 是隔夜的，D+2 清早馊掉（灶上、手上、桌上一个算法）
+export const STALE = Object.freeze({ overnight: 1, spoiled: 2 });
+
 // prettier-ignore
 export const TABLE_LINES = Object.freeze({
   // 放下时：桌上原来空着、已有一样、摆到三四样
@@ -48,6 +60,24 @@ export const TABLE_LINES = Object.freeze({
   empty: '桌上还空着，先去院里灶台端一样来。',
   nothing: '手上没端着菜。',
   where: '走到屋里窗下饭桌边才好放。',
+  // 有脏碗占着桌位还想摆
+  dirty: ['桌上还搁着上顿的脏碗，先抱去水缸边涮了再摆吧。', '没空地方下盘子了，把油碗收走擦一把就利索。'],
+  // 碗架上没有干净的
+  noWare: {
+    bowl: '碗架上没有干净海碗了，带汤的盛不走，先把脏碗洗了。',
+    plate: '碗架上没有干净浅盘了，先把脏盘子洗了。',
+  },
+  cleared: '一摞脏碗盘叠好抱在手上，去水缸边洗吧。',
+  noDirty: '桌上没有脏碗。',
+  stack: '手上抱着一摞脏碗，先去水缸边洗了。',
+  noStack: '手上没有脏碗要洗。',
+  wash: {
+    sun: '井水冰凉，碗盘涮得透亮，晾在架上晒太阳正好。',
+    rain: '雨点打在水缸边，三两下把碗冲净，手背沾了一层凉。',
+    night: '借着屋檐下一点灯影涮完碗，夜风一吹，手掌凉丝丝的。',
+  },
+  overnight: '隔夜',
+  spoiled: '放了两天的{name}馊了，只好倒掉。',
 });
 
 /** 坐下吃这一桌，旁白挑哪一句。dishes 是桌上的几样。 */

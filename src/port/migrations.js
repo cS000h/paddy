@@ -1,9 +1,13 @@
 // 存档的逐级升级：MIGRATIONS[n] 把版本 n 的 state 变成版本 n+1 的。读档、版本号在 save.js。
 // 升级里的数值一律写死，不引用 content 里“现在”的数：旧档升到某一版的结果不能跟着以后的调整变。
-// v21 那时图鉴里有的东西（写死，以后图鉴加了东西也不改这一份）
 import { EARLY } from './migrations-early.js';
 
 const words = text => text.trim().split(/\s+/);
+// v43 那时能随手吃、不占碗盘的熟食（写死）
+const HANDHELD_V43 = words(
+  `烤栗子 糖烤栗子 炭烤土豆 香草烤土豆 烤南瓜 糖烤芋头 茶叶蛋 姜茶 香草茶`,
+);
+// v21 那时图鉴里有的东西（写死，以后图鉴加了东西也不改这一份）
 const CATALOG_V21 = [
   ...words(`
   bleak crucian yellowcat carp grass mandarin sleeper bitterling topmouth bream culter yellowtail
@@ -28,6 +32,30 @@ const v40Moved = (map, x, y) =>
   (map === 'yard' && (inV40Yard(x, y) || V40_YARD_TAKEN.includes(`${x},${y}`)));
 
 export const MIGRATIONS = {
+  42(state) {
+    // 碗盘和剩菜：每户开局的一只海碗、两只浅盘都干净；已经盛着菜在手上、桌上的碗盘不够数就补上。
+    // 灶上、手上、桌上的剩菜从升级这天起算，免得一升级就馊掉一灶台。
+    const w = state.world;
+    w.meta.version = 43;
+    const kind = d =>
+      HANDHELD_V43.includes(d.base) ? null : d.method === 'stew' ? 'bowl' : 'plate';
+    const busy = [...Object.values(w.hands).flat(), ...Object.values(w.tables).flat()];
+    const used = k => busy.filter(d => kind(d) === k).length;
+    w.wares = Object.fromEntries(
+      Object.keys(w.households).map(id => [
+        id,
+        {
+          own: { bowl: Math.max(1, used('bowl')), plate: Math.max(2, used('plate')) },
+          dirty: { bowl: 0, plate: 0 },
+          stack: { bowl: 0, plate: 0 },
+        },
+      ]),
+    );
+    const fresh = d => (d.day = Math.max(d.day, w.clock.day));
+    for (const k of Object.values(w.kitchens)) k.dishes.forEach(fresh);
+    busy.forEach(fresh);
+    return state;
+  },
   41(state) {
     // 饭桌：热菜端在手上、摆上屋里饭桌。旧档手上、桌上都空着；行囊里本来装着的热饭留着，照旧哪儿都能吃，
     // 灶台上的一份不动。
