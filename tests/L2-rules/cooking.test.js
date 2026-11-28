@@ -160,12 +160,12 @@ test('吃腻了：最近几顿同一道菜吃得越多，饱腹越打折、心�
   const g = newGame();
   const eaten = [];
   g.on('meal.eaten', e => eaten.push(e.data.tired));
-  for (let i = 0; i < 3; i++) must(g, 'cook', { items: ['rice'], method: 'stew', at });
-  must(g, 'cook', { items: ['veg.qingcai'], method: 'stew', at });
   const gains = [];
-  for (const d of [...g.ask('kitchen', at).dishes]) {
+  // 一天煮一锅吃一锅（剩菜放过两天就馊了）
+  for (const item of ['rice', 'rice', 'rice', 'veg.qingcai']) {
+    must(g, 'cook', { items: [item], method: 'stew', at });
     const hungry = g.ask('body').hunger;
-    dine(g, [d.id]);
+    dine(g, [g.ask('kitchen', at).dishes[0].id]);
     gains.push(g.ask('body').hunger - hungry);
     must(g, 'sleep');
   }

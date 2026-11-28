@@ -1,5 +1,6 @@
-// L2 规则：饭桌（第 5 步前半）。热菜端在手上、摆上屋里饭桌、坐下按整桌吃；在外头不能吃，能送人、端给过客、
-// 院门口分尝；能随手吃的照旧进行囊；旧档行囊里的热饭照旧能吃。一律通过端口发命令。
+// L2 规则：饭桌（第 5 步）。热菜端在手上、摆上屋里饭桌、坐下按整桌吃；在外头不能吃，能送人、
+// 端给过客、院门口分尝；能随手吃的照旧进行囊；旧档行囊里的热饭照旧能吃。一锅拨几份，碗盘吃完要洗，
+// 剩菜照出锅那天算两天馊。一律通过端口发命令。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -10,8 +11,10 @@ import {
   travel,
   dine,
   bestFire,
+  wares,
   STOVE,
   TABLE,
+  VAT,
 } from '../helpers.js';
 import { createGame } from '../../src/port/game.js';
 import { RECIPES } from '../../src/content/recipes.js';
@@ -45,13 +48,78 @@ test('第一天不买东西：用开局的米和柴煮一碗白粥，端进屋�
   assert.equal(meal.courses.length, 1);
   assert.ok(g.ask('body').hunger > hunger);
   assert.equal(refused(g, 'table.eat', { at: TABLE }), TABLE_LINES.empty);
+  // 只有一只海碗：吃完的脏着搁在桌上，再煮一碗盛不走；收碗、到水缸边洗了才行
+  assert.deepEqual(g.ask('table').ware.dirty, { bowl: 1, plate: 0 });
   travel(g, 'yard');
   must(g, 'cook', { items: ['rice'], method: 'stew', at });
-  dine(g, [g.ask('kitchen', at).dishes[0].id]);
+  const second = g.ask('kitchen', at).dishes[0].id;
+  assert.equal(refused(g, 'dish.carry', { id: second, at }), TABLE_LINES.noWare.bowl);
+  assert.equal(refused(g, 'dish.wash', { at: VAT }), TABLE_LINES.noStack);
+  travel(g, 'cottage');
+  const cleared = g.dispatch('dish.clear', { at: TABLE });
+  assert.equal(cleared.facts.find(f => f.type === 'dish.cleared').data.bowl, 1);
+  assert.equal(refused(g, 'dish.clear', { at: TABLE }), TABLE_LINES.noDirty);
+  travel(g, 'yard');
+  assert.equal(refused(g, 'dish.carry', { id: second, at }), TABLE_LINES.stack, '抱着脏碗腾不出手');
+  const washed = g.dispatch('dish.wash', { at: VAT });
+  assert.ok(Object.values(TABLE_LINES.wash).includes(washed.facts.at(-1).data.line));
+  assert.equal(g.ask('table').ware.clean.bowl, 1);
+  dine(g, [second]);
+});
+
+test('一锅拨几份：大铁锅拨二到四份，整锅饱腹体力不多不少按整数分；增益只跟着头一份', () => {
+  const g = stocked(newGame(), { rice: 4, pork: 2, wood: 4 });
+  const pot = { items: ['rice', 'pork', 'egg'], method: 'stew' };
+  const total = n => {
+    const p = g.ask('cook.preview', { ...pot, servings: n });
+    return [p.shares.reduce((a, s) => a + s.full, 0), p.shares.reduce((a, s) => a + s.energy, 0)];
+  };
+  const base = total(undefined);
+  for (const n of [1, 2, 3, 4]) {
+    const p = g.ask('cook.preview', { ...pot, servings: n });
+    assert.equal(p.shares.length, n);
+    if (n > 1) assert.deepEqual(total(n), base, `拨 ${n} 份，一锅的总数不变`);
+    const fulls = p.shares.map(s => s.full);
+    assert.ok(Math.max(...fulls) - Math.min(...fulls) <= 1, '余数从头一份起各多一点');
+  }
+  assert.match(
+    g.ask('cook.preview', { items: ['egg'], method: 'stew', servings: 4 }).reason,
+    /拨不出/,
+  );
+  const out = g.dispatch('cook', { ...pot, servings: 3, at });
+  const cooked = out.facts.find(f => f.type === 'meal.cooked').data;
+  assert.equal(cooked.portions, 3);
+  assert.equal(cooked.servings, 2, '「做满 30 份」照粮食算，拨小份不多算');
+  const [a, b] = g.ask('kitchen', at).dishes;
+  assert.equal(dine(g, [a.id]).buff, a.buff, '头一份带着这一锅的增益');
+  assert.equal(dine(g, [b.id]).buff, null, '同一锅的第二份不再给一回');
+});
+
+test('剩菜照出锅那天算：第二天还能吃，第三天清早馊掉倒了，盛着的碗盘脏着', () => {
+  const g = stocked(newGame(), { rice: 2, wood: 2 });
+  must(g, 'cook', { items: ['rice'], method: 'stew', at });
+  must(g, 'cook', { items: ['rice'], method: 'fry', at });
+  const [soup, fried] = g.ask('kitchen', at).dishes;
+  must(g, 'dish.carry', { id: fried.id, at });
+  travel(g, 'cottage');
+  must(g, 'dish.set', { at: TABLE });
+  must(g, 'sleep');
+  assert.equal(g.ask('table').dishes.length, 1, '隔夜的还在桌上');
+  travel(g, 'yard');
+  assert.equal(g.ask('kitchen', at).dishes.length, 1, '隔夜的还在锅里');
+  const spoiled = [];
+  g.on('dish.spoiled', e => spoiled.push(...e.data.names));
+  must(g, 'sleep');
+  assert.deepEqual(spoiled.sort(), [soup.name, fried.name].sort());
+  assert.equal(g.ask('kitchen', at).dishes.length, 0);
+  assert.equal(g.ask('table').dishes.length, 0);
+  assert.deepEqual(g.ask('table').ware.dirty, { bowl: 0, plate: 1 }, '桌上那只盘子脏着');
+  assert.deepEqual(reload(g).save(), g.save());
 });
 
 test('一桌几样：手上一次端一样，桌上摆四样；坐下按一顿算，几样各记头一回吃到，旁白看搭配', () => {
-  const g = stocked(newGame(), { pork: 1, 'veg.qingcai': 1, rice: 3, wood: 4 });
+  // 摆满一桌四碗粥，得多添几只海碗
+  const g = wares(stocked(newGame(), { pork: 1, 'veg.qingcai': 1, rice: 3, wood: 4 }), { bowl: 4 });
   const cook = items => must(g, 'cook', { ...items, at }) && g.ask('kitchen', at).dishes.at(-1).id;
   const soup = cook({ items: ['pork'], method: 'stew' });
   const egg = cook({ items: ['egg'], method: 'fry' });

@@ -79,6 +79,12 @@ export function activityActions({ game, shell, run, here, world }) {
     dishLift({ id }) {
       run('dish.lift', { id: Number(id), at: here() });
     },
+    dishClear() {
+      const out = run('dish.clear', { at: here() });
+      if (!out.ok) return;
+      shell.set({ modal: null });
+      shell.toast(out.facts.find(f => f.type === 'dish.cleared').data.line);
+    },
     tableEat() {
       const out = run('table.eat', { at: here() });
       if (!out.ok) return;

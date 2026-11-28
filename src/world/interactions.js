@@ -67,9 +67,13 @@ const TOOL_STAMP = { hoe: '锄地', seed: '播种', can: '浇水', hand: '采收
  * 面前那一格的提示：{text, verb, ok, care}；没什么可做是 null。
  * text 是提示条上的一句话，verb 是印上的字，ok 为 false 时 text 写着为什么不行。
  */
-function waterOptions(scene, { x, y }) {
+function waterOptions(scene, { x, y, kind, thing }) {
   const { game } = scene.deps;
   const at = scene.at();
+  // 抱着一摞脏碗走到水缸边：先洗碗
+  const stack = game.ask('table').ware.stack;
+  if (stack.bowl + stack.plate > 0 && (kind || thing?.kind) === 'vat')
+    return { wash: true, text: '把抱着的脏碗洗了' };
   const drink = !game.ask('drink.why', x, y, at) && game.ask('body').thirst < BODY.notThirsty;
   const reason = game.ask('farm.why', 'refill', x, y, at);
   return {
@@ -80,7 +84,13 @@ function waterOptions(scene, { x, y }) {
 }
 
 export function drawWater(scene, target) {
-  const { drink, refill, text } = waterOptions(scene, target);
+  const { drink, refill, wash, text } = waterOptions(scene, target);
+  if (wash) {
+    const out = scene.send('dish.wash', target);
+    if (!out.ok) return;
+    scene.deps.shell.toast(out.facts.find(f => f.type === 'dish.washed').data.line);
+    return scene.performer.play('refill', { target });
+  }
   if (!drink && !refill) return scene.deps.shell.toast(text);
   if (drink && !scene.send('drink', target).ok) return;
   if (refill && !scene.send('farm.refill', target).ok) return;
@@ -93,7 +103,10 @@ export function drawWater(scene, target) {
 /** 手里拿着能吃的（零嘴、能生吃的、带着的饭菜），面前又没别的事：印上刻「吃」。 */
 export function heldHint(scene) {
   const { game, shell } = scene.deps;
-  const hand = game.ask('table').hands[0];
+  const t = game.ask('table');
+  const hand = t.hands[0];
+  if (t.ware.stack.bowl + t.ware.stack.plate)
+    return { text: '抱着一摞脏碗，去院里水缸边洗', verb: '抱着', ok: false };
   if (hand) return { text: `端着${hand.name}，进屋摆上饭桌再吃`, verb: '端着', ok: false };
   const key = shell.get().held;
   if (!key) return null;
@@ -108,7 +121,10 @@ export function heldHint(scene) {
 function heldGift(scene) {
   const { game, shell } = scene.deps;
   // 手上端着热菜：递过去的就是这一碗
-  const hand = game.ask('table').hands[0];
+  const t = game.ask('table');
+  const hand = t.hands[0];
+  if (t.ware.stack.bowl + t.ware.stack.plate)
+    return { text: '抱着一摞脏碗，去院里水缸边洗', verb: '抱着', ok: false };
   if (hand) return { name: hand.name, input: { dish: hand.id } };
   const key = shell.get().held;
   const slot = key && game.ask('pack', scene.at()).slots.find(s => s.key === key);
@@ -190,7 +206,8 @@ export function hintFor(scene, t) {
     return { text: `和${t.visitor.visitor.name}说话`, verb: '说话', ok: true };
   if (t.kind === 'pulse') return { text: `看看${t.pulse.title}`, verb: '看看', ok: true };
   if (t.kind === 'water' || t.thing?.act === 'water') {
-    const { drink, refill, text } = waterOptions(scene, t);
+    const { drink, refill, wash, text } = waterOptions(scene, t);
+    if (wash) return { text, verb: '洗碗', ok: true };
     return { text, verb: drink ? '喝水' : '打水', ok: drink || refill };
   }
   if (t.kind === 'thing') {
@@ -272,7 +289,15 @@ export function touchThing(scene, thing) {
   }[thing.act];
   if (kind)
     return shell.set({
-      modal: { kind, shop: thing.shop, label: thing.label, x: thing.x, y: thing.y },
+      modal: {
+        kind,
+        shop: thing.shop,
+        label: thing.label,
+        x: thing.x,
+        y: thing.y,
+        // 灶台记着上回一锅拨几份
+        ...(kind === 'kitchen' ? { servings: shell.get().servings } : {}),
+      },
     });
   return shell.set({
     modal: { kind: 'sign', text: thing.text || '门虚掩着，屋里飘出饭菜的香味。桂嫂大概在灶上忙。' },

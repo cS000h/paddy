@@ -36,6 +36,8 @@ const CARE = ['weed', 'bugs', 'drain', 'manure'];
 
 // 每张地图算一次：能站的格、能互动的物件、菜地、水边，各带上旁边能站的格。
 const layouts = new Map();
+const sum = c => Object.values(c).reduce((a, b) => a + b, 0);
+
 function layout(mapId) {
   if (layouts.has(mapId)) return layouts.get(mapId);
   const map = MAPS[mapId];
@@ -196,6 +198,10 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     if (t.dining) {
       const tb = game.ask('table', at);
       if (tb.hands.length) return send('dish.set', { at });
+      // 桌上有脏碗、手上空着：收走（不抽随机数）
+      const w = tb.ware;
+      if (w.dirty.bowl + w.dirty.plate && w.stack.bowl + w.stack.plate === 0)
+        return send('dish.clear', { at });
       // 摆着菜：端起头一样挪一挪再放下，然后坐下吃
       if (tb.dishes.length) {
         send('dish.lift', { id: tb.dishes[0].id, at });
@@ -232,7 +238,18 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
       method = pick(Object.keys(METHODS));
       if (chance(0.5)) cut = pick(Object.keys(CUTS));
     }
-    send('cook', { items, spices, method, cut, log: fireLog({ items, spices, method, cut }), at });
+    const log = fireLog({ items, spices, method, cut });
+    // 偶尔拿大铁锅多拨几份（料少拨不出的，规则会拒绝）
+    const servings = chance(0.2) ? int(1, 4) : undefined;
+    const out = send('cook', { items, spices, method, cut, log, servings, at });
+    // 刚出锅多半趁热端走（剩菜放两天就馊了，等下回再来灶前多半已经倒了）
+    const fresh = out.ok && game.ask('kitchen', at).dishes.at(-1);
+    if (fresh && chance(0.7)) {
+      const loose = handheld(fresh);
+      if (loose && game.ask('pack', at).room < 1) send('dish.eat', { id: fresh.id, at });
+      else send(loose ? 'dish.pack' : 'dish.carry', { id: fresh.id, at });
+    }
+    return out;
   }
 
   /** 掌火：多半照这一锅的节拍按，手有早有晚、偶尔漏按；有时稳稳做（不掌火），偶尔按出一份乱的记录。 */
@@ -376,8 +393,12 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     else if (t.act === 'tea') tea(at);
     else if (t.act === 'cloth') cloth(at);
     else if (t.act === 'wardrobe') dress(at);
-    else if (t.act === 'water') send(pick(['drink', 'farm.refill']), { x: t.x, y: t.y, at });
-    else if (t.act === 'sleep') {
+    else if (t.act === 'water') {
+      // 抱着脏碗到了水缸边就洗（不抽随机数）
+      const w = game.ask('table').ware;
+      if (w.stack.bowl + w.stack.plate) send('dish.wash', { at });
+      else send(pick(['drink', 'farm.refill']), { x: t.x, y: t.y, at });
+    } else if (t.act === 'sleep') {
       // 白天上床先歇个晌（不抽随机数），歇不了就睡到天亮
       if (game.ask('nap').ok) send('nap', { mode: hero().energy < 50 ? 'dusk' : 'hour', at });
       else send('sleep', { at });
@@ -648,12 +669,40 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
       return send('match.after', { at, choice: pick(['again', 'tea', 'leave', 'x']) });
   }
 
+  // 托阿满捎一件县城家具：钱够、他今天在村里，就走到他跟前（不然一年也托不上一回）
+  function errand(item) {
+    const a = game.ask('residents').find(p => p.id === 'aman');
+    if (!a?.visible) return null;
+    if (hero().map !== a.map) return send('travel.to', { to: a.map, at: here() });
+    const close = layout(a.map).stand.filter(p => Math.abs(p.x - a.x) + Math.abs(p.y - a.y) === 1);
+    if (!close.length) return null;
+    return send('town.ask', { item: item.id, at: { ...pick(close), dir: pick(DIRS) } });
+  }
+
+  // 饭桌一圈：抱着脏碗去院里水缸边洗；端着菜、桌上有菜或脏碗，就进屋到饭桌边（放下、坐下吃、收碗）
+  function supper() {
+    const stack = game.ask('table').ware.stack;
+    const go = map => (hero().map === map ? null : send('travel.to', { to: map, at: here() }));
+    if (stack.bowl + stack.plate) {
+      const vat = layout('yard').things.find(t => t.kind === 'vat');
+      return go('yard') || send('dish.wash', { at: standBy(vat) });
+    }
+    const desk = layout('cottage').things.find(t => t.dining);
+    return go('cottage') || housework(desk, standBy(desk));
+  }
+
   // 集日菜摊比大瓜：身上带着上得了秤的菜就走到摊子跟前比一把（不然一年也碰不上几回）
   function fairWeigh(crop) {
     if (hero().map !== 'market') return send('travel.to', { to: 'market', at: here() });
-    const spot = game.ask('stalls').indexOf('veg');
-    const stall = layout('market').things.find(t => t.act === 'stall' && t.spot === spot);
-    return send('fair.weigh', { item: crop.id, at: standBy(stall) });
+    const at = id => {
+      const spot = game.ask('stalls').indexOf(id);
+      const stall = layout('market').things.find(t => t.act === 'stall' && t.spot === spot);
+      return stall ? standBy(stall) : here();
+    };
+    // 肉摊也摆着就顺手猜一把斤两
+    if (!game.ask('fair.game', 'meat').reason && (!crop || chance(0.5)))
+      return send('fair.guess', { choice: pick(['light', 'right', 'heavy']), at: at('meat') });
+    return send('fair.weigh', { item: crop?.id || 'pumpkin', at: at('veg') });
   }
 
   // 院里的事：门口有闻香来的人就端菜，钓客上门就答他，不然随手修一处（材料不够、站错地方的会被拒）
@@ -760,8 +809,16 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     const carried = pack.items.find(scale);
     if (isFairDay(game.ask('clock').day) && crop && !carried && pack.room > 0)
       if (game.ask('hero').atHome) return send('pack.put', { item: crop.id, n: 1 });
-    if (carried && pack.room > 0 && !game.ask('fair.game', 'veg').reason && chance(0.3))
-      return fairWeigh(carried);
+    const veg = carried && pack.room > 0 && !game.ask('fair.game', 'veg').reason;
+    if ((veg || !game.ask('fair.game', 'meat').reason) && chance(0.3)) return fairWeigh(carried);
+    const town = game.ask('town');
+    const coins = game.ask('home').coins;
+    const want = !town.away && town.room > 0 && town.offer.find(o => !o.had && o.coins <= coins);
+    if (want && chance(0.03)) return errand(want);
+    // 手上端着菜、桌上摆着菜或脏碗、抱着脏碗：多半先把这一顿收拾完（不然碗盘都卡在半路）
+    const tb = game.ask('table');
+    const busy = tb.hands.length + tb.dishes.length + sum(tb.ware.dirty) + sum(tb.ware.stack);
+    if (busy && chance(0.4)) return supper();
     if (hostile && chance(hostile)) return rough();
     if (chance(0.002)) return origin(); // 选过以后再选，应该被拒绝
     let roll = r() * total;

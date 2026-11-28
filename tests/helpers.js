@@ -220,6 +220,18 @@ export function dine(game, ids) {
   travel(game, 'cottage');
   const out = game.dispatch('table.eat', { at: TABLE });
   assert.equal(out.ok, true, `坐下吃饭应该成功：${out.reason}`);
+  // 吃完收碗，回院里水缸边洗了，碗盘回到碗架上
+  const dirty = game.ask('table').ware.dirty;
+  if (dirty.bowl + dirty.plate) must(game, 'dish.clear', { at: TABLE });
   travel(game, 'yard');
+  if (dirty.bowl + dirty.plate) must(game, 'dish.wash', { at: VAT });
   return out.facts.find(f => f.type === 'meal.eaten').data;
+}
+
+/** 家里多添几只碗盘（集上买、阿满捎回来的样子），返回读档后的新一局。 */
+export function wares(game, more) {
+  const saved = JSON.parse(JSON.stringify(game.save()));
+  const own = saved.state.world.wares.home.own;
+  for (const [k, n] of Object.entries(more)) own[k] += n;
+  return createGame({ saved, debug: true });
 }

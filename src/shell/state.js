@@ -14,6 +14,7 @@ export function createShellState({ onError = null } = {}) {
     tool: TOOLS[0].id, // 当前工具
     manualTool: false,
     held: null, // 拿在手里的是行囊里哪一格（pack 查询里 slots 的 key），null 是空着手
+    servings: null, // 灶台上一锅拨几份，记着上回选的；null 是照下锅几样定
     modal: null, // 弹着的东西：null，或 {kind: 'talk' | 'sleep' | 'sign' | 'notes', …}
     hint: null, // 面前这一格能做什么：{text, ok}
     toast: null, // 一句短提示：{text, id, keep}；keep 是要紧的话，说着时别的话排队

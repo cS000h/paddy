@@ -1,16 +1,16 @@
 // 灶台、菜谱册，以及几个小窗共用的“做好的饭菜”一行。亲自掌火的小窗在 fire.js。
 import { itemImg } from './icons.js';
-import { METHODS, CUTS } from '../content/recipes.js';
+import { METHODS, CUTS, POTS } from '../content/recipes.js';
 import { ITEMS } from '../content/items.js';
 import { button, actions, close, title, para, itemRow, esc, paged } from './html.js';
 import { stovePicture, servedImg } from './stove-picture.js';
-import { handheld } from '../content/table.js';
+import { handheld, wareOf, WARE, TABLE_LINES } from '../content/table.js';
 
 /**
  * 做好的饭菜，一份一行。where：stove 灶上（热菜端起、能随手吃的吃或装进行囊）、hands 手上端着（放回灶台）、
  * pack 行囊里（吃、放回灶台）。热菜要端进屋摆上饭桌才吃得了。
  */
-export const dishRows = (dishes, where = 'stove') =>
+export const dishRows = (dishes, where = 'stove', today = 0) =>
   dishes
     .map(d => {
       const loose = handheld(d);
@@ -25,8 +25,12 @@ export const dishRows = (dishes, where = 'stove') =>
       const at = { stove: '灶上', hands: '端着', pack: '行囊里' }[where];
       return itemRow({
         image: servedImg(d),
-        name: d.name,
-        notes: [`饱腹 +${d.full} · ${d.buffText || ''} · ${at}${loose ? '' : ' · 上桌吃'}`],
+        name: d.name + (today > d.day ? `（${TABLE_LINES.overnight}）` : ''),
+        // 一锅拨几份的，增益只跟着头一份
+        notes: [
+          `饱腹 +${d.full} · ${!d.pot || d.pot === d.id ? d.buffText || '' : '同锅的增益给过了'}` +
+            ` · ${at}${loose ? '' : ' · 上桌吃'}`,
+        ],
         acts,
       });
     })
@@ -78,17 +82,35 @@ function picker(m, goods) {
 }
 
 /** 右半边：先看会做出什么，再决定稳稳地做还是亲自掌火。 */
-function preview(m, game, goods) {
+function preview(m, game, goods, servings) {
   const method = m.method || 'stew';
   const input = { items: m.items || [], spices: m.spices || [], method, cut: m.cut || null };
+  if (servings) input.servings = servings;
   const p = game.ask('cook.preview', input);
   const wood = goods.find(i => i.id === 'wood')?.n || 0;
   const fire = method === 'mix' ? '凉拌不用柴' : `每锅用一根柴 · 家里和身上共${wood}根`;
+  const per = p.ok && p.servings > 1 ? '每份' : '';
   const summary = p.ok
-    ? `<p>${p.servings}份 · 饱腹 +${p.full} · 体力 +${p.energy}<br>` +
+    ? `<p>${p.servings}份 · ${per}饱腹 +${p.full} · 体力 +${p.energy}<br>` +
       `${esc(p.why)}——${esc(p.buffText)}</p>${para(p.notes.join('；'), 'aside')}`
     : para(p.reason);
-  return `<section><h3>${p.ok ? esc(p.name) : '等你下锅'}</h3>${stovePicture({ ...input, base: p.base }, 'prep', p.ok)}${summary}${para(fire, 'aside')}
+  const ware = p.ok ? wareOf(p) : null;
+  const clean = ware ? game.ask('table').ware.clean[ware] : 0;
+  const bowls = ware
+    ? para(`盛${WARE.names[ware]}端上桌 · 碗架上干净的还有${clean}只`, 'aside')
+    : '';
+  const pots = choices([
+    button('cookServings', '看料定份', { data: { n: '' }, chosen: !servings }),
+    ...Object.values(POTS).flatMap(pot =>
+      pot.servings.map(n =>
+        button('cookServings', `${pot.name.slice(-3)}·${n}份`, {
+          data: { n: String(n) },
+          chosen: servings === n,
+        }),
+      ),
+    ),
+  ]);
+  return `<section><h3>${p.ok ? esc(p.name) : '等你下锅'}</h3>${pots}${stovePicture({ ...input, base: p.base }, 'prep', p.ok)}${summary}${bowls}${para(fire, 'aside')}
     ${actions(
       button('cookPlain', '稳稳做家常饭', { disabled: !p.ok }),
       button('cookHeat', method === 'mix' ? '拌匀装盘' : '亲自掌火', {
@@ -103,7 +125,7 @@ export function carriedRows(game, kitchen) {
   const hands = game.ask('table').hands;
   const ids = new Set(hands.map(d => d.id));
   return (
-    dishRows(hands, 'hands') +
+    dishRows(hands, 'hands', game.ask('clock').day) +
     dishRows(
       kitchen.carried.filter(d => !ids.has(d.id)),
       'pack',
@@ -118,9 +140,9 @@ export function kitchenView(m, game, here) {
   return `${title('家里的灶台', '挑一至三样食材，做一顿自己的饭')}
     ${served ? `<p class="activity-story cooked-story">${servedImg(served)}${esc(m.line)}</p>` : para(m.line, 'activity-story')}
     <nav class="tabs">${button('recipes', '翻菜谱')}${close('离开灶台', false)}</nav>
-    <div class="two kitchen-layout">${picker(m, goods)}${preview(m, game, goods)}</div>
+    <div class="two kitchen-layout">${picker(m, goods)}${preview(m, game, goods, m.servings || null)}</div>
     <h3>做好的饭菜</h3>
-    <ul class="items">${dishRows(kitchen.dishes)}${carriedRows(game, kitchen)}</ul>`;
+    <ul class="items">${dishRows(kitchen.dishes, 'stove', game.ask('clock').day)}${carriedRows(game, kitchen)}</ul>`;
 }
 
 export function recipesView(m, game, here) {
