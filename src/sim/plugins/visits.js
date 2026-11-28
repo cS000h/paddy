@@ -11,6 +11,7 @@ import { PEOPLE, ON_MAP } from '../../content/people.js';
 import { MEET } from '../../content/talk-lines.js';
 
 const SLOT = 1; // 午前
+const MEET_WAITING = '茶摊那杯茶还等着你呢，回来再歇吧。';
 const PLACE = 'tea';
 
 export const visits = {
@@ -157,6 +158,12 @@ export const visits = {
       core.post(w, { title: '这回没碰上', text });
       emit('appointment.missed', { npc: a.npc });
     }
+    // 坐下歇、躺下歇晌之前问一句：一觉醒来会不会误了今天午前的约
+    compute.tap('rest.keep', (r, { w, until }) => {
+      const a = w.visits.active;
+      if (!a || a.day !== w.clock.day || slotNow(w) > a.slot) return;
+      if (ctx.services.residents.slotOf(until) > a.slot) r.value = MEET_WAITING;
+    });
     reactions.on(
       'time.passed',
       (s, e, emit) => {

@@ -93,18 +93,19 @@ export const LEDGER_LABELS = Object.freeze({
   stuffed: '撑',
 });
 
-// 白天歇晌（上床三选一里的后两样）：只走时辰、回体力，不过天。占位数，等 Astra 算过再定。
-//   from–to   这段钟点里才歇得了晌（早了精神正足，晚了就该直接睡）
+// 白天歇晌（上床三选一里的后两样）：只走时辰、回体力，不过天。数照 Astra 回执：两个钟头回 24，
+// 比长凳（三个钟头 16）划算，但不至于天天非睡不可。
+//   from–to   这段钟点里才躺得下（11:00 起、16:00 前；早了精神正足，晚了就该直接睡）
 //   hour      「歇一个时辰」躺多久；dusk 「躺到傍晚」躺到几点
 //   perHour   每躺一个钟头回多少体力，一回最多 max；mood 歇完心情加多少
-// 一天只歇一回晌。
+// 两样共用一天一回；醒来会误了约就不让躺（visits 插件接 rest.keep 管道）。
 export const NAP = Object.freeze({
   from: 11 * 60,
   to: 16 * 60,
   hour: 120,
   dusk: 17 * 60,
-  perHour: 15,
-  max: 30,
+  perHour: 12,
+  max: 24,
   mood: 1,
 });
 

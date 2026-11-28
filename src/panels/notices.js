@@ -15,6 +15,11 @@ export function waterView(modal, game, here) {
     )}`;
 }
 
+const hhmm = m =>
+  `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+/** 歇晌按钮上写明睡到几点、回多少体力。 */
+const napLabel = (name, p) => (p.ok ? `${name}（到 ${hhmm(p.until)}，回 ${p.energy} 体力）` : name);
+
 export function sleepView(modal, game) {
   const clock = game.ask('clock');
   const hungry = game.ask('body').hunger < 20;
@@ -22,11 +27,12 @@ export function sleepView(modal, game) {
   if (hungry) note += '空着肚子睡，明早歇不回来——先吃点东西吧。';
   const nap = game.ask('nap');
   if (nap.ok) note = '日头还高，歇个晌也行；' + note;
+  else if (nap.why && clock.minute >= 11 * 60 && clock.minute < 16 * 60) note = nap.why + note;
   return `${title('回屋歇息', `${clock.period} ${clock.clock}`)}${para('今天就到这儿吗？' + note)}
     ${actions(
       close('再待一会儿', false),
-      button('napHour', '歇一个时辰', { disabled: !nap.ok }),
-      button('napDusk', '躺到傍晚', { disabled: !nap.ok }),
+      button('napHour', napLabel('歇一个时辰', nap.hour), { disabled: !nap.hour.ok }),
+      button('napDusk', napLabel('躺到傍晚', nap.dusk), { disabled: !nap.dusk.ok }),
       button('sleep', '睡到天亮', { main: true }),
     )}`;
 }
