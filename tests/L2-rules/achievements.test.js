@@ -193,7 +193,7 @@ test('稻穗攒到十根，第二天清早村里来一回表示', () => {
   assert.ok(!today().some(n => n.title === RICE_MARKS[0].title));
 });
 
-test('得了对口的成就，院里摆出那件摆件；稻穗够数第二天门上挂纪念；石伯在院外看不见摆件', () => {
+test('得了对口的成就，院里摆出那件摆件；稻穗够数第二天门上挂纪念；进院的人再搭话时看见了说一句', () => {
   const g = newGame();
   assert.deepEqual(g.ask('yard.keepsakes', 'yard'), []);
   for (const k of KEEPSAKES) {
@@ -232,8 +232,24 @@ test('得了对口的成就，院里摆出那件摆件；稻穗够数第二天�
     assert.equal(outside.ask('residents').find(p => p.id === 'shi').map, 'yard');
     assert.notEqual(outside.ask('resident.greeting', 'shi'), hoe.look);
   }
-  // 进院的客人头一句总是进院那件事（yard-fix 的 talk.news 先占），摆件那句目前轮不上；
-  // 下一步（小屋小院重排）改成客人当天再搭话时提，到时候在这里补上「看见了说一句」。
+  // 修好竹挂架，晴天清早每三天他进院按一回门闩（content/yard-fix.js）：头一句说门闩，
+  // 再搭话时两天里有一天提锄头架
+  const said = [6, 9].map(day => {
+    const x = reload(got, w => {
+      w.clock.day = day;
+      w.clock.minute = 7 * 60;
+      w.weather.now = w.weather.today = 'sunny';
+      w.yardFix.fixed.rack = 1;
+      w.bonds.known.shi = 5;
+      w.bonds.talked.shi = 0;
+    });
+    const shi = x.ask('residents').find(p => p.id === 'shi');
+    assert.equal(shi.doing, '顺手替你按紧门闩');
+    assert.notEqual(x.ask('resident.greeting', 'shi'), hoe.look);
+    must(x, 'talk', { to: 'shi', at: { x: shi.x + 1, y: shi.y, dir: 'left' } });
+    return x;
+  });
+  assert.equal(said.filter(x => x.ask('resident.greeting', 'shi') === hoe.look).length, 1);
 });
 
 test('旧档已过满一年的清早还没得「四季安居」，读档就补上', () => {

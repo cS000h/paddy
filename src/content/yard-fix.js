@@ -15,7 +15,7 @@
 // prettier-ignore
 export const YARD_FIX = Object.freeze({
   bench: {
-    name: '檐下长凳', cost: { camphorWood: 3, wood: 1 }, coins: 2, check: 'tige', at: [10, 11],
+    name: '檐下长凳', cost: { camphorWood: 3, wood: 1 }, coins: 2, check: 'tige', at: [10, 9],
     open: '雨点顺檐角直淌，若在檐下搭条长凳垂帘，雨天也有处歇脚。',
     help: '“好一块樟木！我替你推两刨子，省一半木料还稳当。”',
     fail: '凳腿略晃了半寸，回头还得垫块木楔再紧一紧。',
@@ -33,7 +33,7 @@ export const YARD_FIX = Object.freeze({
     passer: ['gui', '“井边铺了鹅卵石清爽多了！明儿我端筐萝卜来借水洗洗！”'],
   },
   coop: {
-    name: '竹编鸡窝', cost: { strip: 3, straw: 3, wood: 1 }, coins: 0, check: 'chijia', at: [13, 12],
+    name: '竹编鸡窝', cost: { strip: 3, straw: 3, wood: 1 }, coins: 0, check: 'chijia', at: [16, 12],
     open: '旧鸡窝草顶塌了一角，里头潮乎乎的，得拿竹篾编个结实顶棚。',
     help: '“小活一桩，我帮你把木框钉牢，刮大风也吹不歪。”',
     fail: '顶棚扎得略松，再顺两根竹篾压紧就好。',
@@ -42,7 +42,7 @@ export const YARD_FIX = Object.freeze({
     passer: ['shi', '“竹顶密实稻草干爽，这鸡窝搭得像个过日子的样儿。”'],
   },
   platform: {
-    name: '院角彩头台', cost: { pebble: 1, straw: 3 }, coins: 0, check: null, at: [11, 12],
+    name: '院角彩头台', cost: { pebble: 1, straw: 3 }, coins: 0, check: null, at: [11, 10],
     extra: 'shard', // 有青瓷片就嵌一圈边，没有也能修
     open: '院角空着可惜，垒石台垫稻草，收了彩头正好摆上。',
     help: '“台角我给你收齐了，摆再沉的瓜王也压不塌！”',
@@ -60,7 +60,7 @@ export const YARD_FIX = Object.freeze({
     passer: ['yun', '“篱笆门编得真齐整……架上挂上艾草，风一吹满路清香。”'],
   },
   shed: {
-    name: '灶边柴棚', cost: { wood: 3, straw: 3, camphorWood: 1 }, coins: 0, check: 'tige', at: [13, 11],
+    name: '灶边柴棚', cost: { wood: 3, straw: 3, camphorWood: 1 }, coins: 0, check: 'tige', at: [13, 9],
     open: '柴堆直接搁地上容易返潮，灶边搭个架空小柴棚，雨天烧火才利索。',
     help: '“坡顶斜度给你算好了，大雨浇下来一滴不漏进柴里。”',
     fail: '草顶铺得略薄，得多添两把稻草压严实。',

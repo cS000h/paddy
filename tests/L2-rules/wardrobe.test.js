@@ -4,9 +4,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
 import { createSim, PLUGINS } from '../../src/sim/index.js';
-import { newGame, must, refused, fishOnce } from '../helpers.js';
+import { newGame, must, refused, fishOnce, MIRROR, HOME } from '../helpers.js';
 
-const MIRROR = { x: 8, y: 5, dir: 'up' };
 const STALL = { x: 19, y: 11, dir: 'up' };
 const have = (g, kind) =>
   g
@@ -73,7 +72,7 @@ test('野外做活时碰上：钓鱼碰上一件旧蓑衣，那段话写在事�
     }
     // 钓上来的鱼收进橱柜，行囊满了下不了竿
     for (const it of g.ask('pack').items.filter(i => i.id.startsWith('fish.')))
-      must(g, 'pack.take', { item: it.id, n: 'all', at: { x: 8, y: 11, dir: 'down' } });
+      must(g, 'pack.take', { item: it.id, n: 'all', at: HOME });
     must(g, 'sleep');
   }
   assert.ok(found, '钓了这么多回总该碰上一回');

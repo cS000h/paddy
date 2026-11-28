@@ -1,7 +1,17 @@
 // L2 规则：时间、乡邻、乡邻买卖、手记。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, refused, growOne, carried, FIELD, stocked } from '../helpers.js';
+import {
+  newGame,
+  must,
+  refused,
+  growOne,
+  carried,
+  FIELD,
+  stocked,
+  HOME,
+  STOVE,
+} from '../helpers.js';
 import { lifeLine } from '../../src/sim/talk.js';
 import { createGame } from '../../src/port/game.js';
 import { ITEMS } from '../../src/content/items.js';
@@ -109,7 +119,7 @@ test('乡邻买卖：每户每天想要一两样，走到跟前卖给他或者�
   assert.equal(wants.items.length, 2);
   const want = wants.items[0];
   const g = stocked(g0, { [want]: 3, pebble: 1 });
-  const home = { x: 8, y: 11 };
+  const home = HOME;
   must(g, 'pack.put', { item: want, n: 3, at: home });
   must(g, 'pack.put', { item: 'pebble', at: home });
   const gui = g.ask('residents').find(v => v.id === 'gui');
@@ -263,9 +273,9 @@ test('石伯读指定田块；过客交付选项和实际交付共用库存', ()
   assert.match(plots().line, /缺水/);
   must(g, 'farm.water', FIELD);
   assert.match(plots().line, /水分够/);
-  must(g, 'cook', { items: ['rice'], method: 'stew', at: { x: 10, y: 11 } });
-  const dish = g.ask('kitchen', { x: 10, y: 11 }).dishes[0];
-  must(g, 'dish.pack', { id: dish.id, at: { x: 10, y: 11 } });
+  must(g, 'cook', { items: ['rice'], method: 'stew', at: STOVE });
+  const dish = g.ask('kitchen', STOVE).dishes[0];
+  must(g, 'dish.pack', { id: dish.id, at: STOVE });
   const v = g.ask('visitors').active[0];
   must(g, 'travel.to', { to: v.map });
   const at = { x: v.x, y: v.y };
@@ -284,7 +294,7 @@ test('六位乡邻按各自的工位读家当、菜畦、店货和采集次数',
   const g = newGame();
   must(g, 'farm.till', FIELD);
   must(g, 'farm.sow', FIELD);
-  must(g, 'pack.put', { item: 'rice', n: 1, at: { x: 8, y: 11 } });
+  must(g, 'pack.put', { item: 'rice', n: 1, at: HOME });
   for (const [id, key] of [
     ['aman', 'wants.'],
     ['shi', 'plot.'],

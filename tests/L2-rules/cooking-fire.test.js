@@ -2,10 +2,10 @@
 // 这一锅的节拍由世界的种子和这户第几回烧火定；按的记录 log 交给规则判火候。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, refused, bestFire } from '../helpers.js';
+import { newGame, refused, bestFire, STOVE } from '../helpers.js';
 import { FIRE, FIRE_PERFECT, FIRE_QUALITY, FIRE_TWISTS } from '../../src/content/cook-fire.js';
 
-const at = { x: 10, y: 11, dir: 'up' };
+const at = STOVE;
 const FRY = { items: ['rice', 'egg'], method: 'fry' };
 const STEW = { items: ['potato', 'bean'], method: 'stew' };
 const ROAST = { items: ['potato'], method: 'roast' };

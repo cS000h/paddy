@@ -213,7 +213,7 @@ test('院里用火用水，屋里收纳起居，两边的家什各有去处', ()
     assert.ok(!other.objects.some(([k]) => k === kind));
   }
   assert.deepEqual(
-    [drinkSource(map, 18, 18), drinkSource(map, 12, 10), drinkSource(map, 38, 14)],
+    [drinkSource(map, 18, 18), drinkSource(map, 12, 8), drinkSource(map, 38, 14)],
     ['well', 'vat', 'creek'],
   );
   assert.deepEqual([drinkSource(map, 24, 22), drinkSource(map, 8, 11)], [null, null]);

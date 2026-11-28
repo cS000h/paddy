@@ -1,9 +1,26 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, wait, stored, carried, growOne, fishOnce, FIELD } from '../helpers.js';
+import {
+  newGame,
+  must,
+  wait,
+  stored,
+  carried,
+  growOne,
+  fishOnce,
+  FIELD,
+  BENCH,
+  STOVE,
+  WORKBENCH,
+  COOP,
+  WOOD,
+  near,
+  travel,
+  fetchBamboo,
+} from '../helpers.js';
 import { createGame } from '../../src/port/game.js';
 const at = { x: 35, y: 17 };
-const bench = { x: 5, y: 12 };
+const bench = WORKBENCH;
 test('溪边采集每天两次，远处拒绝，拿来的食材能煮成饭', () => {
   const g = newGame();
   assert.equal(g.dispatch('gather', { id: 'forage' }).ok, false);
@@ -13,27 +30,27 @@ test('溪边采集每天两次，远处拒绝，拿来的食材能煮成饭', ()
   assert.match(g.dispatch('gather', { id: 'forage', at }).reason, /今天/);
   assert.deepEqual(g.save(), before);
   const ingredient = g.ask('pack').items.find(i => i.cook).id;
-  must(g, 'cook', { items: [ingredient], method: 'stew', at: { x: 10, y: 11 } });
+  must(g, 'cook', { items: [ingredient], method: 'stew', at: STOVE });
   must(g, 'dish.eat', {
-    id: g.ask('kitchen', { x: 10, y: 11 }).dishes[0].id,
-    at: { x: 10, y: 11 },
+    id: g.ask('kitchen', STOVE).dishes[0].id,
+    at: STOVE,
   });
   must(g, 'sleep');
   assert.equal(g.ask('outings', 'forage', at).options[0].left, 2);
 });
 test('林边捡柴、砍木回家劈柴；竹篾编篮；鸡窝按户喂养产蛋', () => {
   const g = newGame();
-  must(g, 'gather', { id: 'sticks', at: { x: 17, y: 7 } });
-  must(g, 'gather', { id: 'logs', at: { x: 17, y: 7 } });
+  must(g, 'gather', { id: 'sticks', at: WOOD });
+  must(g, 'gather', { id: 'logs', at: WOOD });
   must(g, 'homestead', { id: 'split', at: bench });
   assert.equal(carried(g, 'wood'), 5);
   // 回家放下再出门，给竹篾留空间。
   for (const i of g.ask('pack').items)
     if (i.id !== 'seed.qingcai') must(g, 'pack.take', { item: i.id, n: 'all', at: bench });
-  must(g, 'gather', { id: 'bamboo', at: { x: 16, y: 9 } });
+  fetchBamboo(g);
   must(g, 'homestead', { id: 'weave', at: bench });
   assert.equal(carried(g, 'basket'), 1);
-  const coop = { x: 12, y: 11 };
+  const coop = COOP;
   must(g, 'homestead', { id: 'buildCoop', at: coop });
   must(g, 'homestead', { id: 'buyHen', at: coop });
   must(g, 'homestead', { id: 'feedHens', at: coop });
@@ -48,33 +65,40 @@ test('林边捡柴、砍木回家劈柴；竹篾编篮；鸡窝按户喂养产�
 });
 test('时令与雨后限制显示在同一份提示里；背篓、夜晚不能重复领取', () => {
   const g = newGame();
-  assert.match(g.ask('outings', 'chestnut', { x: 26, y: 7 }).options[0].reason, /时节/);
-  assert.match(g.ask('outings', 'mushroom', { x: 19, y: 8 }).options[0].reason, /雨后/);
-  must(g, 'gather', { id: 'bamboo', at: { x: 16, y: 9 } });
+  travel(g, 'creek');
+  travel(g, 'hill');
+  assert.match(g.ask('outings', 'chestnut', near('hill', 'chestnut')).options[0].reason, /时节/);
+  assert.match(g.ask('outings', 'mushroom', near('hill', 'mushroom')).options[0].reason, /雨后/);
+  travel(g, 'creek');
+  must(g, 'gather', { id: 'bamboo', at: near('creek', 'bamboo') });
+  travel(g, 'yard');
   must(g, 'sleep');
   // 找到一个不打雷的日子。
   for (let i = 0; i < 20 && g.ask('weather').tags.includes('storm'); i++) must(g, 'sleep');
-  must(g, 'gather', { id: 'bamboo', at: { x: 16, y: 9 } });
+  fetchBamboo(g);
   must(g, 'homestead', { id: 'bigbasket', at: bench });
   assert.equal(g.ask('pack').cap, 8);
   assert.equal(g.dispatch('homestead', { id: 'bigbasket', at: bench }).ok, false);
   wait(g, 800);
-  must(g, 'homestead', { id: 'stars', at: { x: 5, y: 13 } });
-  assert.equal(g.dispatch('homestead', { id: 'stars', at: { x: 5, y: 13 } }).ok, false);
+  must(g, 'homestead', { id: 'stars', at: BENCH });
+  assert.equal(g.dispatch('homestead', { id: 'stars', at: BENCH }).ok, false);
 });
 
 test('腌菜确实扣三份菜和一份盐，雨后菌子可采', () => {
   const g = newGame(22);
   growOne(g);
   must(g, 'farm.harvest', FIELD);
-  must(g, 'homestead', { id: 'pickle', at: { x: 13, y: 11 } });
+  must(g, 'homestead', { id: 'pickle', at: near('yard', 'pickle') });
   assert.equal(carried(g, 'pickle'), 3);
   assert.equal(stored(g, 'salt'), 3);
   assert.equal(stored(g, 'veg.qingcai') + carried(g, 'veg.qingcai'), 0);
+  travel(g, 'creek');
+  travel(g, 'hill');
+  const shrooms = near('hill', 'mushroom');
   for (let i = 0; i < 40; i++) {
-    const q = g.ask('outings', 'mushroom', { x: 19, y: 8 }).options[0];
+    const q = g.ask('outings', 'mushroom', shrooms).options[0];
     if (!q.reason) {
-      must(g, 'gather', { id: 'mushroom', at: { x: 19, y: 8 } });
+      must(g, 'gather', { id: 'mushroom', at: shrooms });
       assert.ok(
         carried(g, 'mushroom') + carried(g, 'mushroom.fine') >= 2,
         '采到的菌子（可能是极品）',
@@ -95,17 +119,16 @@ test('做完的事带着给玩家看的那段话：找到什么、劈柴、歇�
     return out.facts.find(f => facts.includes(f.type)).data.line;
   };
   assert.match(said('gather', { id: 'forage', at }, 'forage.finished'), /已收好）$/);
-  const wood = { x: 17, y: 7 };
+  const wood = WOOD;
   assert.match(said('gather', { id: 'sticks', at: wood }, 'forage.finished'), /（柴 ×\d，已收好）/);
   said('gather', { id: 'logs', at: wood }, 'forage.finished');
   assert.match(said('homestead', { id: 'split', at: bench }, 'home.worked'), /咔/);
-  assert.match(said('homestead', { id: 'rest', at: { x: 5, y: 13 } }, 'home.worked'), /坐/);
+  assert.match(said('homestead', { id: 'rest', at: BENCH }, 'home.worked'), /坐/);
   // 钓鱼：钓没钓上，那段话都在事实里（细的在 L2 钓鱼那一组）
   const out = fishOnce(g);
   const fished = out.facts.find(f => f.type.startsWith('fish.')).data.line;
   assert.match(fished, /鱼|浮漂|钩|饵/);
-  const stove = { x: 10, y: 11 };
-  const cook = { items: ['rice'], method: 'stew', at: stove };
+  const cook = { items: ['rice'], method: 'stew', at: STOVE };
   assert.match(said('cook', cook, 'meal.cooked'), /份白粥出锅了。/);
 });
 test('清早便条多三样：夜里刚熟的菜、鸡窝里的蛋、清早哪儿鱼口好', () => {
@@ -119,8 +142,8 @@ test('清早便条多三样：夜里刚熟的菜、鸡窝里的蛋、清早哪�
       .join('');
   assert.match(text(), /熟了1畦/);
   assert.match(text(), /鱼口好/);
-  const coop = { x: 12, y: 11 };
-  must(g, 'gather', { id: 'bamboo', at: { x: 16, y: 9 } });
+  const coop = COOP;
+  fetchBamboo(g);
   must(g, 'homestead', { id: 'buildCoop', at: coop });
   must(g, 'homestead', { id: 'buyHen', at: coop });
   for (let i = 0; i < 8 && !g.ask('homestead', 'coop').eggs; i++) must(g, 'sleep');

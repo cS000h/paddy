@@ -2,7 +2,18 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
 import { MAPS, walkable } from '../../src/content/maps/index.js';
-import { newGame, must, refused, wait, stocked, carried } from '../helpers.js';
+import {
+  newGame,
+  must,
+  refused,
+  wait,
+  stocked,
+  carried,
+  STOVE,
+  CUPBOARD,
+  HOME,
+  near,
+} from '../helpers.js';
 import { STALLS, STALL_TAKES } from '../../src/content/stalls.js';
 function travel(g, to) {
   const map = MAPS[g.ask('hero').map],
@@ -20,12 +31,12 @@ function travel(g, to) {
 }
 test('檐下做饭，进屋收纳睡觉；存档留在屋里，出门饭菜不丢', () => {
   const g = newGame();
-  assert.match(refused(g, 'travel', { x: 8, y: 9, at: { x: 20, y: 15 } }), /门边/);
-  must(g, 'cook', { items: ['rice'], method: 'stew', at: { x: 10, y: 11 } });
+  assert.match(refused(g, 'travel', { x: 8, y: 7, at: { x: 20, y: 15 } }), /门边/);
+  must(g, 'cook', { items: ['rice'], method: 'stew', at: STOVE });
   travel(g, 'cottage');
-  must(g, 'pack.put', { item: 'rice', at: { x: 12, y: 7 } });
+  must(g, 'pack.put', { item: 'rice', at: CUPBOARD });
   assert.match(
-    refused(g, 'cook', { items: ['rice'], method: 'stew', at: { x: 15, y: 8 } }),
+    refused(g, 'cook', { items: ['rice'], method: 'stew', at: near('cottage', 'bookshelf') }),
     /檐下灶台/,
   );
   must(g, 'sleep');
@@ -96,7 +107,7 @@ test('柜台当面买卖、钱货一起结算，库存不能靠重进或读档�
 });
 test('铺子收东西从钱匣里付：每天每类前几份原价、再多半价、收满就不收；茶摊不收；收的货隔天转手回本', () => {
   const g = stocked(newGame(), { 'fish.carp': 12 });
-  must(g, 'pack.put', { item: 'fish.carp', n: 12, at: { x: 8, y: 11 } });
+  must(g, 'pack.put', { item: 'fish.carp', n: 12, at: HOME });
   travel(g, 'market');
   const at = { x: 14, y: 11 },
     shop = 'market';
@@ -129,7 +140,7 @@ test('铺子钱匣见底就收不动', () => {
   saved.state.world.purses.houses.shop.coins = 5;
   saved.state.world.households.home.items['fish.carp'] = 2;
   const g = createGame({ saved, debug: true });
-  must(g, 'pack.put', { item: 'fish.carp', n: 2, at: { x: 8, y: 11 } });
+  must(g, 'pack.put', { item: 'fish.carp', n: 2, at: HOME });
   travel(g, 'market');
   const at = { x: 14, y: 11 };
   assert.match(refused(g, 'market.sell', { shop: 'market', item: 'fish.carp', at }), /钱匣/);
@@ -194,8 +205,8 @@ test('路南的摊子：各卖各的货、只收自己要的；集日鱼摊收�
   const spot = out.indexOf('fish');
   const cap = STALL_TAKES.fair;
   const g = stocked(g0, { 'fish.crucian': cap * 2 + 1, rice: 1 });
-  must(g, 'pack.put', { item: 'fish.crucian', n: cap * 2 + 1, at: { x: 8, y: 11 } });
-  must(g, 'pack.put', { item: 'rice', at: { x: 8, y: 11 } });
+  must(g, 'pack.put', { item: 'fish.crucian', n: cap * 2 + 1, at: HOME });
+  must(g, 'pack.put', { item: 'rice', at: HOME });
   travel(g, 'market');
   const at = { x: [8, 14, 20][spot], y: 17 };
   const shop = 'stall.fish';

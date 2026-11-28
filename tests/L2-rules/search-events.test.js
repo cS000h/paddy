@@ -11,7 +11,7 @@ import { EVENTS, SEARCH_EVENTS, FISHING_EVENTS, STOVE_EVENTS } from '../../src/c
 import { MODIFIERS } from '../../src/content/modifiers.js';
 import { FOUND_OWNERS, FISH_SPOTS } from '../../src/content/fishing.js';
 import { ITEMS } from '../../src/content/items.js';
-import { newGame, must, carried, fishOnce } from '../helpers.js';
+import { newGame, must, carried, fishOnce, STOVE } from '../helpers.js';
 
 const SIDES = [
   [0, 1, 'up'],
@@ -227,7 +227,7 @@ test('换条新蚯蚓：身上没有蚯蚓做不了，有就用掉一条', () =>
 
 test('灶边五件：出一锅偶尔碰上，对得上做法和锅里有没有鱼；一天最多一件', () => {
   assert.equal(Object.keys(STOVE_EVENTS).length, 5);
-  const stove = { x: 10, y: 11, dir: 'up' };
+  const stove = STOVE;
   let hits = 0;
   for (let seed = 1; seed <= 30; seed++) {
     const save = JSON.parse(JSON.stringify(newGame(seed).save()));

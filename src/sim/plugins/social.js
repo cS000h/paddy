@@ -191,6 +191,9 @@ export const social = {
       const fresh = w.bonds.talked[to] !== w.clock.day;
       const news = fresh && compute.run('talk.news', { w, to }, { value: '', parts: [] }).value;
       if (news) return news;
+      // 今天已经说过话了，再搭话时顺口提一句眼前的东西（计算管道 'talk.aside'，比如院里的摆件）
+      const aside = !fresh && compute.run('talk.aside', { w, to }, { value: '', parts: [] }).value;
+      if (aside) return aside;
       if (fresh && w.bonds.gifted[to] === w.clock.day - 1) return AFTER_RETURN[to];
       return lifeLine(to, c, w.clock.day + c.slot + mark(to));
     }

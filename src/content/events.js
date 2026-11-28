@@ -17,7 +17,7 @@ export const EVENTS = Object.freeze({
   morning_swallow: {
     id: 'morning_swallow',
     trigger: 'morning',
-    spot: { map: 'yard', x: 8, y: 11, place: '屋檐下', hint: '屋檐下好像有鸟雀在动' },
+    spot: { map: 'yard', x: 8, y: 9, place: '屋檐下', hint: '屋檐下好像有鸟雀在动' },
     title: '檐下新泥',
     text: '屋檐角多了一小团湿泥，有鸟雀来回叼草，像要在檐下做窝。',
     choices: [
@@ -44,7 +44,7 @@ export const EVENTS = Object.freeze({
   morning_rice_damp: {
     id: 'morning_rice_damp',
     trigger: 'morning',
-    spot: { map: 'cottage', x: 12, y: 7, place: '屋里橱柜边', hint: '屋里米缸边好像有点潮味' },
+    spot: { map: 'cottage', x: 10, y: 6, place: '屋里橱柜边', hint: '屋里米缸边好像有点潮味' },
     title: '米缸受潮',
     text: '掀开橱柜边的小缸盖，闻到一点潮气，缸底的米像是受了湿。',
     choices: [
@@ -185,7 +185,7 @@ export const EVENTS = Object.freeze({
   delay_swallow: {
     id: 'delay_swallow',
     trigger: 'delayed',
-    spot: { map: 'yard', x: 8, y: 11, place: '屋檐下', hint: '屋檐下叫个不停，去看看吧' },
+    spot: { map: 'yard', x: 8, y: 9, place: '屋檐下', hint: '屋檐下叫个不停，去看看吧' },
     title: '檐下有了新邻居',
     text: '前几天挡过雨的小窝搭好了，院里鸟声清脆，地里的虫子也少了些。',
     choices: [

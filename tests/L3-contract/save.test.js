@@ -8,7 +8,7 @@ import path from 'node:path';
 import { createGame } from '../../src/port/game.js';
 import { SAVE_FORMAT } from '../../src/port/save.js';
 import { SAVE_VERSION } from '../../src/sim/index.js';
-import { newGame, must, growOne, carried, FIELD } from '../helpers.js';
+import { newGame, must, growOne, carried, FIELD, MIRROR } from '../helpers.js';
 
 const fixtures = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'fixtures');
 
@@ -84,7 +84,7 @@ test('第4日的初版存档升级后仍停在第4日，钱、种下的菜和乡
 
 test('衣镜只换得上衣箱里有的，拒绝无效选项，读档保留人物外观', () => {
   const g = newGame();
-  const wear = { coat: 'field', hair: 'loose', at: { x: 8, y: 5 } };
+  const wear = { coat: 'field', hair: 'loose', at: MIRROR };
   assert.equal(g.dispatch('wardrobe.wear', wear).ok, false);
   must(g, 'travel.to', { to: 'cottage' });
   must(g, 'wardrobe.wear', wear);

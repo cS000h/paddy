@@ -13,6 +13,7 @@ import {
   HOME,
   WELL,
   stocked,
+  VAT,
 } from '../helpers.js';
 
 const eaten = out => out.facts.find(f => f.type === 'meal.eaten').data;
@@ -154,7 +155,7 @@ test('水井、水缸、溪边都能喝，喝饱了就喝不下；水田的水�
   const creek = g.dispatch('drink', { x: 38, y: 14, at: { x: 37, y: 14, dir: 'right' } });
   assert.equal(drunk(creek).source, 'creek');
   wait(g, 360);
-  const vat = g.dispatch('drink', { x: 12, y: 10, at: { x: 12, y: 11, dir: 'up' } });
+  const vat = g.dispatch('drink', { x: VAT.x, y: VAT.y - 1, at: VAT });
   assert.equal(drunk(vat).source, 'vat');
 });
 

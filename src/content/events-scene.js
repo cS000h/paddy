@@ -62,7 +62,7 @@ export const SCENE_MAP = Object.freeze({
   scene_cook_aroma: {
     id: 'scene_cook_aroma',
     trigger: 'cook',
-    spot: { map: 'yard', x: 10, y: 11, place: '灶台边', hint: '灶台边飘出的饭香引来了人' },
+    spot: { map: 'yard', x: 10, y: 9, place: '灶台边', hint: '灶台边飘出的饭香引来了人' },
     title: '灶香飘出院墙',
     text: '锅盖一掀，热气带着饭菜香飘出篱笆，路过的孩子停在门口探头看。',
     choices: [
