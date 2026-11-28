@@ -206,7 +206,8 @@ export function renderHud(el, { game, shell }) {
   lowWords(el, body, clock.day, shell);
   put(el.coins, String(game.ask('home').coins));
   const pack = game.ask('pack');
-  el.farm.hidden = !pack.atHome; // 农具只在自家院里摆出来
+  // 农具在自家院子这张图上（篱笆里和菜地）摆出来，出了门收起
+  el.farm.hidden = game.ask('hero').map !== 'yard';
   syncSlots(el, pack);
   syncTools(el, game, shell.get().seed);
   syncToolbar(el, shell.get());

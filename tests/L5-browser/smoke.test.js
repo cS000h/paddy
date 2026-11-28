@@ -266,18 +266,18 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     for (const session of [desk, wide]) {
       const p = session.page;
       await p.evaluate(() => window.__dao.shell.set({ modal: null }));
-      await tap(p, 8, 9);
+      await tap(p, 8, 7);
       await until(p, () => window.__dao.world.scene().map.id === 'cottage');
       // 新开一局的种子是随机的，进屋时可能先碰上一件小事（米缸受潮之类）：关上再去橱柜
       const shelf = 'button[data-do="packPut"][data-item="rice"]';
-      await tap(p, 12, 6);
+      await tap(p, 9, 5);
       await until(
         p,
         `!!document.querySelector('${shelf}') || window.__dao.shell.get().modal?.kind === 'event'`,
       );
       if (!(await p.locator(shelf).count())) {
         await p.evaluate(() => window.__dao.shell.set({ modal: null }));
-        await tap(p, 12, 6);
+        await tap(p, 9, 5);
         await until(p, `!!document.querySelector('${shelf}')`);
       }
       const before = await p.evaluate(() => window.__dao.game.ask('body').hunger);
@@ -290,10 +290,10 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       assert.ok(box.y >= 0 && box.y + box.height <= p.viewportSize().height);
       await shot(p, session === desk ? 'm1-store-desktop.png' : 'm1-store-phone.png');
       await p.locator('button[data-do="close"]').click();
-      await tap(p, 9, 14);
+      await tap(p, 8, 12);
       await frames(p, 900);
       await p.waitForFunction(() => window.__dao.world.scene().map.id === 'yard');
-      await tap(p, 12, 10);
+      await tap(p, 12, 8);
       await frames(p, 300);
       // 喝上了：小窗合上，人在水缸边舀一瓢（演完才能接着做别的）
       const can = await p.evaluate(() => window.__dao.game.ask('home'));
@@ -309,7 +309,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     // M2：从灶台选食材，键盘/手指收火，端走和吃饭，翻菜谱。
     for (const session of [desk, wide]) {
       const p = session.page;
-      await tap(p, 10, 10);
+      await tap(p, 10, 8);
       await frames(p, 500);
       await p.locator('[data-do="cookPick"][data-item="rice"]').click();
       await p.locator('[data-do="cookPick"][data-item="egg"]').click();
@@ -328,8 +328,10 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await p.waitForSelector('[data-do="cookedPack"]');
       assert.match(await p.locator('.sheet h2').textContent(), /出锅了/);
       await p.locator('[data-do="cookedPack"]').click();
-      assert.equal(await p.evaluate(() => window.__dao.game.ask('pack').dishes.length), 1);
-      await p.locator('[data-do="dishEat"]').first().click();
+      // 热菜端在手上，不进行囊；再放回灶台
+      assert.equal(await p.evaluate(() => window.__dao.game.ask('table').hands.length), 1);
+      await p.locator('[data-do="dishStore"]').first().click();
+      assert.equal(await p.evaluate(() => window.__dao.game.ask('table').hands.length), 0);
       await p.locator('[data-do="recipes"]').click();
       assert.match(await p.locator('h2').last().textContent(), /做过 1/);
       await p.locator('[data-do="recipePage"]').last().click();
@@ -340,7 +342,10 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
     // M3：走到竹林、工作台和钓点，在两种设备上操作。
     for (const session of [desk, wide]) {
       const p = session.page;
-      await tap(p, 16, 8);
+      // 竹林在溪径上：从院子东北角的路口过去
+      await tap(p, 19, 4);
+      await until(p, () => window.__dao.world.scene().map.id === 'creek', 4000);
+      await tap(p, 8, 8);
       await frames(p, 1200);
       await p.locator('[data-do="activity"][data-id="bamboo"]').click();
       assert.ok(
@@ -349,7 +354,9 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       // 挑了活，小窗合上，人在竹林边抡起柴刀；演到一半点一下能快进
       assert.ok(await p.evaluate(() => window.__dao.world.scene().performer.active));
       await performed(p);
-      await tap(p, 4, 12);
+      await tap(p, 1, 14);
+      await until(p, () => window.__dao.world.scene().map.id === 'yard', 4000);
+      await tap(p, 4, 10);
       await frames(p, 1200);
       await p.locator('[data-do="activity"][data-id="weave"]').click();
       assert.ok(
@@ -388,10 +395,10 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       assert.equal(await p.evaluate(() => window.__dao.game.ask('fishing').bout), null);
       assert.equal(await p.evaluate(() => window.__dao.shell.get().modal), null);
       // 路边翻一翻：点院里的一丛野花，走过去就翻；行囊满了、太累了只说一句，不出错
-      await tap(p, 13, 13);
+      await tap(p, 13, 11);
       await frames(p, 1200);
       const why = await p.evaluate(() =>
-        window.__dao.game.ask('search.why', { x: 13, y: 13 }, window.__dao.world.heroAt()),
+        window.__dao.game.ask('search.why', { x: 13, y: 11 }, window.__dao.world.heroAt()),
       );
       assert.ok(['今天翻过了', '行囊满了，腾个地方再翻', '太累了，先歇歇'].includes(why), why);
       assert.deepEqual(session.errors, []);
@@ -500,7 +507,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
         await frames(p, 30);
         assert.equal(await p.evaluate(() => window.__dao.game.ask('hero').map), id);
       };
-      await go(8, 9, 'cottage');
+      await go(8, 7, 'cottage');
       // 游戏时辰跟着真实时间走：云端机器慢时，走到这儿已过了晌午，后面照作息找的村民
       // （茶摊柜台前的小乔、后山的云姑）就对不上。那就先睡到第二天清早再逛。
       if (await p.evaluate(() => window.__dao.game.ask('clock').minute > 12 * 60)) {
@@ -512,7 +519,7 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
         await p.evaluate(() => window.__dao.shell.set({ modal: null }));
       }
       await shot(p, session === desk ? 'cottage-desktop.png' : 'cottage-phone.png');
-      await tap(p, 8, 4);
+      await tap(p, 6, 5);
       await frames(p, 400);
       // 可穿的衣服直接可选，未取得的衣服另列出处。
       await p.locator('[data-do="fittingMissing"]').click();
@@ -543,16 +550,16 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
         return [walked, s.performer.active, s.player.path.length, s.player.sprite.alpha];
       });
       assert.deepEqual(handoff, [true, false, 0, 1]);
-      await tap(p, 15, 7);
+      await tap(p, 14, 8);
       await frames(p, 400);
       await p.locator('[data-do="bookTab"]').first().waitFor();
       await p.locator('[data-do="close"]').click();
-      await tap(p, 9, 9);
+      await tap(p, 11, 7);
       await frames(p, 400);
       assert.match(await p.locator('.sheet').textContent(), /窗下饭桌/);
       assert.equal(await p.locator('[data-do="activity"][data-id="stars"]').count(), 0);
       await p.locator('[data-do="close"]').click();
-      await go(9, 14, 'yard');
+      await go(8, 12, 'yard');
       await go(2, 14, 'market');
       await tap(p, 14, 10);
       await frames(p, 400);
@@ -621,8 +628,8 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await shot(p, session === desk ? 'hill-desktop.png' : 'hill-phone.png');
       await go(12, 20, 'creek');
       await go(1, 14, 'yard');
-      await go(8, 9, 'cottage');
-      await tap(p, 8, 4);
+      await go(8, 7, 'cottage');
+      await tap(p, 6, 5);
       await frames(p, 400);
       await p.locator('[data-do="fittingTab"][data-tab="hair"]').click();
       await p.locator('[data-do="fittingPick"][data-id="pony"]').click();

@@ -355,9 +355,7 @@
       },
       "households": {
         "home": {
-          "members": [
-            "hero"
-          ],
+          "members": ["hero"],
           "coins": 24,
           "items": {
             "rice": 3,
@@ -399,12 +397,7 @@
       "weather": {
         "now": "sunny",
         "today": "sunny",
-        "history": [
-          "sunny",
-          "cloudy",
-          "overcast",
-          "sunny"
-        ],
+        "history": ["sunny", "cloudy", "overcast", "sunny"],
         "tomorrow": "sunny",
         "forecast": "sunny",
         "acc": 50,
@@ -455,17 +448,8 @@
       },
       "search": {
         "hero": {
-          "cues": [
-            "yard:19,7",
-            "creek:9,5",
-            "market:20,6",
-            "tea:25,3",
-            "hill:25,8",
-            "river:6,3"
-          ],
-          "done": [
-            "yard:4,8"
-          ],
+          "cues": ["yard:19,7", "creek:9,5", "market:20,6", "tea:25,3", "hill:25,8", "river:6,3"],
+          "done": ["yard:4,8"],
           "miss": 1,
           "found": {},
           "lost": {}
@@ -651,10 +635,7 @@
       },
       "persona": {
         "hero": {
-          "tempers": [
-            "honest",
-            "gregarious"
-          ],
+          "tempers": ["honest", "gregarious"],
           "line": {
             "id": "hunter",
             "lv": 1
@@ -664,11 +645,7 @@
           "stress": 0
         },
         "shi": {
-          "tempers": [
-            "diligent",
-            "honest",
-            "stingy"
-          ],
+          "tempers": ["diligent", "honest", "stingy"],
           "line": {
             "id": "farmer",
             "lv": 3
@@ -678,27 +655,17 @@
           "stress": 0
         },
         "gui": {
-          "tempers": [
-            "gregarious",
-            "generous",
-            "ambitious"
-          ],
+          "tempers": ["gregarious", "generous", "ambitious"],
           "line": {
             "id": "cook",
             "lv": 3
           },
-          "innate": [
-            "gourmet"
-          ],
+          "innate": ["gourmet"],
           "coping": [],
           "stress": 3
         },
         "aman": {
-          "tempers": [
-            "gregarious",
-            "honest",
-            "hasty"
-          ],
+          "tempers": ["gregarious", "honest", "hasty"],
           "line": {
             "id": "peddler",
             "lv": 2
@@ -708,11 +675,7 @@
           "stress": 3
         },
         "qiao": {
-          "tempers": [
-            "gregarious",
-            "sly",
-            "ambitious"
-          ],
+          "tempers": ["gregarious", "sly", "ambitious"],
           "line": {
             "id": "teahouse",
             "lv": 2
@@ -722,27 +685,17 @@
           "stress": 3
         },
         "zhou": {
-          "tempers": [
-            "calm",
-            "content",
-            "trusting"
-          ],
+          "tempers": ["calm", "content", "trusting"],
           "line": {
             "id": "boatman",
             "lv": 4
           },
-          "innate": [
-            "steady"
-          ],
+          "innate": ["steady"],
           "coping": [],
           "stress": 0
         },
         "yun": {
-          "tempers": [
-            "diligent",
-            "shy",
-            "paranoid"
-          ],
+          "tempers": ["diligent", "shy", "paranoid"],
           "line": {
             "id": "herbalist",
             "lv": 2
@@ -762,9 +715,7 @@
             "sky": 0,
             "craft": 0
           },
-          "traits": [
-            "earlybird"
-          ],
+          "traits": ["earlybird"],
           "counters": {
             "wetOut": 0,
             "cold": 0,
@@ -935,10 +886,7 @@
             "x": 11,
             "y": 13,
             "dir": "down",
-            "traits": [
-              "爱吃",
-              "爱说话"
-            ],
+            "traits": ["爱吃", "爱说话"],
             "until": 6,
             "rel": 0,
             "talkedDay": 0,
@@ -953,10 +901,7 @@
             "x": 11,
             "y": 12,
             "dir": "down",
-            "traits": [
-              "爱说话",
-              "爱茶"
-            ],
+            "traits": ["爱说话", "爱茶"],
             "until": 6,
             "rel": 0,
             "talkedDay": 0,
@@ -1184,12 +1129,7 @@
               "item": "bacon",
               "left": 1,
               "price": 49,
-              "why": [
-                [
-                  "货少",
-                  1
-                ]
-              ]
+              "why": [["货少", 1]]
             },
             {
               "item": "egg",
@@ -1207,11 +1147,7 @@
         },
         "took": {},
         "paid": 0,
-        "out": [
-          null,
-          "meat",
-          null
-        ],
+        "out": [null, "meat", null],
         "stallTook": {}
       },
       "deals": {
@@ -1442,16 +1378,8 @@
         },
         "owned": {
           "home": {
-            "coat": [
-              "plain",
-              "field"
-            ],
-            "hair": [
-              "plain",
-              "short",
-              "tail",
-              "loose"
-            ]
+            "coat": ["plain", "field"],
+            "hair": ["plain", "short", "tail", "loose"]
           }
         }
       }

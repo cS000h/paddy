@@ -59,7 +59,7 @@ test('单文件离线运行：手机做饭、导出导入、旧档升级、坏�
     await page.goto(url);
     await ready(page);
     await page.locator('[data-do="originSettle"]').tap();
-    await page.evaluate(() => window.__dao.intents.emit('tap', { x: 10 * 16 + 8, y: 10 * 16 + 8 }));
+    await page.evaluate(() => window.__dao.intents.emit('tap', { x: 10 * 16 + 8, y: 8 * 16 + 8 }));
     await frames(page);
     await page.locator('[data-do="recipes"]').tap();
     await page.locator('[data-do="cookRecipe"][data-name="蛋炒饭"]').tap();
@@ -168,7 +168,7 @@ test('单文件离线运行：手机做饭、导出导入、旧档升级、坏�
 test('离线小屋读档即呈雨夜，早雾散去时室内曝光逐步改变', async () => {
   const game = createGame({ seed: 1 });
   game.dispatch('origin.settle', FIRST_SHEET);
-  assert.ok(game.dispatch('travel', { x: 8, y: 9, at: { x: 8, y: 10, dir: 'up' } }).ok);
+  assert.ok(game.dispatch('travel', { x: 8, y: 7, at: { x: 8, y: 8, dir: 'up' } }).ok);
   const browser = await chromium.launch(CHROME);
   try {
     for (const [minute, weather] of [
