@@ -32,7 +32,8 @@ export const MIGRATIONS = {
     delete w.basket;
     w.shops.took = {};
     w.shops.paid = 0;
-    w.deals = { day: 0, n: {} };
+    // 乡邻今天想要什么照这颗种子挑，一整天不变（清早再换）
+    w.deals = { day: w.clock.day, seed: w.meta.seed, n: {} };
     return state;
   },
   32(state) {

@@ -240,4 +240,11 @@ test('v33 升级：收菜筐拆了，筐里没收走的货和付了钱没捎到�
   for (const [id, n] of Object.entries(old.basket.order))
     assert.ok(w.households.home.items[id] >= (before[id] || 0) + n, id);
   assert.deepEqual([w.shops.took, w.shops.paid], [{}, 0]);
+  assert.equal(w.deals.day, w.clock.day);
+  // 橱柜里快满了（一样最多 9999 份）再把筐里的并进来，封顶，不让存档读不进来
+  const full = JSON.parse(JSON.stringify(saved));
+  for (const id of Object.keys(old.basket.goods)) full.state.world.households.home.items[id] = 9998;
+  const g2 = createGame({ saved: full, debug: true });
+  for (const id of Object.keys(old.basket.goods))
+    assert.equal(g2.save().state.world.households.home.items[id], 9999);
 });

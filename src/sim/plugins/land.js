@@ -117,7 +117,7 @@ export const land = {
         if (!crop) return '没有这种菜种';
         if (!crop.seasons.includes(dateOf(w.clock.day).season)) return `这个时节种不了${crop.name}`;
         if (pack.count(w, id, seed) > 0) return null;
-        if (store.count(w, seed) < 1) return '种子用完了，托阿满捎一些来';
+        if (store.count(w, seed) < 1) return '种子用完了，去村口杂货铺买一些';
         return home ? null : '菜种在家里的橱柜里，先回去拿上';
       }
       if (action === 'can') {

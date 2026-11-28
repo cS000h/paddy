@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newGame, must, refused, growOne, carried, FIELD, stocked } from '../helpers.js';
 import { lifeLine } from '../../src/sim/talk.js';
+import { createGame } from '../../src/port/game.js';
 
 test('时间一小段一小段地过，到半夜停住不催人，睡一觉到第二天清早', () => {
   const g = newGame();
@@ -121,6 +122,7 @@ test('乡邻买卖：每户每天想要一两样，走到跟前卖给他或者�
   const eggs = carried(g, 'egg');
   must(g, 'neighbor.sell', { to: 'gui', item: want, at });
   assert.ok(g.ask('home').coins > coins, '钱从桂嫂家出，到了自家');
+  assert.ok(g.ask('guide').find(q => q.id === 'sell').done, '卖给乡邻也算「卖一回东西」');
   must(g, 'neighbor.swap', { to: 'gui', item: want, at });
   assert.equal(carried(g, 'egg'), eggs + 1);
   assert.equal(
@@ -132,6 +134,20 @@ test('乡邻买卖：每户每天想要一两样，走到跟前卖给他或者�
     refused(g, 'neighbor.sell', { to: 'qiao', item: want, at }),
     '他手头没闲钱，只换不买',
   );
+});
+
+test('乡邻今天想要的一整天不变：存档里的随机数中途被抽过（钓鱼、翻找）也不变，睡一觉才换', () => {
+  const g = newGame();
+  const before = ['gui', 'shi', 'zhou'].map(id => g.ask('neighbor.wants', id).items);
+  const saved = JSON.parse(JSON.stringify(g.save()));
+  saved.state.world.meta.seed = (saved.state.world.meta.seed + 12345) >>> 0;
+  const later = createGame({ saved });
+  assert.deepEqual(
+    ['gui', 'shi', 'zhou'].map(id => later.ask('neighbor.wants', id).items),
+    before,
+  );
+  must(later, 'sleep');
+  assert.equal(later.save().state.world.deals.day, 2);
 });
 
 test('手记：做到一件记一件，每件只记一次', () => {

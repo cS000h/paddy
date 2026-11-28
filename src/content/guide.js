@@ -37,7 +37,7 @@ export const GOALS = Object.freeze([
   { id: 'gift', on: 'gift.given', text: '送一把自己种的菜', hint: '手里有菜的时候找人说话' },
   {
     id: 'sell',
-    on: 'market.sold',
+    on: ['market.sold', 'neighbor.sold'],
     text: '卖一回东西',
     hint: '把菜拿到村口杂货铺，或者卖给想要的乡邻',
   },

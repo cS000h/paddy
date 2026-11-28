@@ -36,7 +36,10 @@ export function marketView(m, game, here) {
         icon: item.id,
         name: item.name,
         count: item.n,
-        notes: [`每份${item.sell}文起`, left],
+        notes: [
+          t.full ? `每份${item.sell}文起` : `半价每份${Math.max(1, Math.floor(item.sell / 2))}文`,
+          left,
+        ],
         acts: button('marketSell', '卖一份', {
           data: { item: item.id },
           disabled: !t.full && !t.half,

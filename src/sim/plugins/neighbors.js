@@ -1,6 +1,7 @@
 // 乡邻买卖：每户每天按自家营生想要一两样东西，走到跟前可以卖给这家（钱从这家钱匣出），
-// 也可以拿去换他家有的。卖和换都不加好感，和送礼分开。今天想要什么只看日子和种子（sim/noise.js），不进存档；
-// 存档只记今天跟谁做了几回。
+// 也可以拿去换他家有的。卖和换都不加好感，和送礼分开。今天想要什么照「今天清早的种子」挑（sim/noise.js）：
+// 存档里的 meta.seed 每抽一回签就变（钓鱼、翻找都会抽），所以清早把它抄进 deals.seed，一整天都照这个挑。
+// 存档记今天的日子、清早的种子、跟谁做了几回。
 //   neighbor.sell {to, item, at} → neighbor.sold {to, house, item, coins, line}
 //   neighbor.swap {to, item, at} → neighbor.swapped {to, house, item, give, n, line}
 import { is } from '../../kernel/schema.js';
@@ -19,10 +20,12 @@ const IDS = Object.keys(NEIGHBORS);
 /** 这户今天想要哪几样（照季节挑，同一天同一局总是一样）。 */
 export function wantsToday(w, id) {
   const season = dateOf(w.clock.day).season;
+  // 今天清早抄下的种子；旧档升级当天还没抄过，就用眼下的（升级时已经抄好，这里只是兜底）
+  const seed = w.deals?.day === w.clock.day ? w.deals.seed : w.meta.seed;
   const pool = NEIGHBORS[id].wants.filter(k => inSeason(k, season));
   const picked = [];
   for (let k = 0; picked.length < Math.min(R.perDay, pool.length) && k < 20; k++) {
-    const i = Math.floor(noise(w.meta.seed, w.clock.day, 919, IDS.indexOf(id), k) * pool.length);
+    const i = Math.floor(noise(seed, w.clock.day, 919, IDS.indexOf(id), k) * pool.length);
     if (!picked.includes(pool[i])) picked.push(pool[i]);
   }
   return picked;
@@ -41,18 +44,24 @@ export const neighbors = {
     'purse',
     'compute',
     'residents',
+    'reactions',
   ],
   writes: ['deals'],
   install(ctx) {
-    const { schema, commands, people, pack, store, purse, compute, residents } = ctx.services;
+    const { schema, commands, people, pack, store, purse, compute, residents, reactions } =
+      ctx.services;
     schema.slice('deals', {
-      initial: () => ({ day: 0, n: {} }),
+      initial: env => ({ day: 1, seed: env.seed >>> 0, n: {} }),
       validate: d =>
         (is.int(d.day, 0) &&
+          is.int(d.seed, 0, 0xffffffff) &&
           is.obj(d.n) &&
           Object.entries(d.n).every(([k, n]) => IDS.includes(k) && is.int(n, 1, 99))) ||
         'deals',
     });
+    // 清早抄下当天的种子，记数从零起
+    const fresh = w => (w.deals = { day: w.clock.day, seed: w.meta.seed, n: {} });
+    reactions.on('day.started', s => fresh(s.world), { priority: 35 });
     const dealsToday = (w, id) => (w.deals.day === w.clock.day ? w.deals.n[id] || 0 : 0);
     const priceOf = (w, item) =>
       compute.run(
@@ -73,7 +82,7 @@ export const neighbors = {
       if (!ITEMS[input.item] || !wantsToday(w, to).includes(kindOf(input.item)))
         refuse(W.notWanted);
       pack.use(w, people.who(w), input.item, 1, '卖给乡邻');
-      if (w.deals.day !== w.clock.day) w.deals = { day: w.clock.day, n: {} };
+      if (w.deals.day !== w.clock.day) fresh(w);
       w.deals.n[to] = dealsToday(w, to) + 1;
       return { to, house: purse.houseOf(to), name: ITEMS[input.item].name };
     }
