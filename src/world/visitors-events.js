@@ -14,6 +14,7 @@ import { createSignposts } from './signposts.js';
 import { HeldItem } from './held.js';
 import { syncStalls } from './stalls.js';
 import { createFairCrowd } from './fair-crowd.js';
+import { syncDecor } from './decor.js';
 
 // 冒字的院里的事；aroma.served、yard.guest 的那句话在对话气泡里，只冒旁白
 // 局面（scene.chosen）那句也在对话气泡里；碰上局面、盼头办成没办成、换季的年景只冒旁白
@@ -89,6 +90,7 @@ export function createFieldExtras(scene) {
   /** 按规则里的最新状态，把当前地图上的过客与小事记号摆出来。 */
   function sync() {
     syncStalls(scene);
+    syncDecor(scene);
     ground.sync();
     traces.sync();
     fixes.sync();

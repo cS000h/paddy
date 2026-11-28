@@ -331,6 +331,14 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     market('stall.' + id, at);
   }
 
+  // 小屋里换摆设：有钱就托人置办一样，不然在收着的里头换（买过的、县城货、钱不够，规则会拒绝）
+  function furnish(at) {
+    const slots = Object.entries(game.ask('decor'));
+    const [slot, d] = pick(slots);
+    const s = pick(d.styles);
+    send(s.owned ? 'decor.set' : 'decor.buy', { slot, style: s.id, at });
+  }
+
   function useThing() {
     const things = layout(hero().map).things.filter(t => !t.to);
     if (!things.length) return;
@@ -342,6 +350,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     else if (t.act === 'store') store(at);
     else if (t.act === 'market') market(t.shop, at);
     else if (t.act === 'stall') stall(t, at);
+    else if (t.act === 'furnish') furnish(at);
     else if (t.act === 'tea') tea(at);
     else if (t.act === 'cloth') cloth(at);
     else if (t.act === 'wardrobe') dress(at);

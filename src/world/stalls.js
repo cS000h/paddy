@@ -11,11 +11,17 @@ export function syncStalls(scene) {
     const spot = scene.map.objects.find(([k, x, y]) => k === 'stall' && x === s.x && y === s.y)?.[3]
       ?.spot;
     const look = spot !== undefined && out[spot] ? out[spot] + fair : 'empty';
-    if (s.look === look) continue;
-    s.look = look;
-    const a = scene.anchors[s.key + '@' + look];
-    s.sprite.setOrigin(a.ox, a.oy);
-    if (scene.season !== null) scene.dress(s);
-    else s.sprite.setTexture(s.key + '@' + look);
+    setLook(scene, s, look);
   }
+}
+
+/** 把地图上一个物件换成另一副样子（look 为 null 是平常的样子）。 */
+export function setLook(scene, s, look) {
+  if (s.look === look) return;
+  s.look = look;
+  const texture = look ? s.key + '@' + look : s.key;
+  const a = scene.anchors[texture];
+  s.sprite.setOrigin(a.ox, a.oy);
+  if (scene.season !== null) scene.dress(s);
+  else s.sprite.setTexture(texture);
 }

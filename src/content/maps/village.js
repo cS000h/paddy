@@ -23,6 +23,7 @@ export const cottage = {
     ['bed', 4, 7],
     ['roomWindow', 6, 4],
     ['roomWindow', 14, 4],
+    ['sill', 14, 4],
     ['scroll', 10, 4],
     ['dresser', 8, 4, { label: '小屋衣镜' }],
     ['hangings', 17, 4],

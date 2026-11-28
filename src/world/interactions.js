@@ -27,6 +27,7 @@ export const ACT_HINT = {
   wardrobe: '照衣镜',
   cloth: '看看布摊上的衣裳',
   stall: '看看摊子上的货',
+  furnish: '换换屋里的摆设',
 };
 
 // 印上刻的字：一到两个字，竖着排，一眼看出按下去做什么
@@ -45,6 +46,7 @@ const STAMP = {
   wardrobe: '换装',
   cloth: '布摊',
   stall: '买卖',
+  furnish: '摆设',
 };
 const STATION_STAMP = {
   forage: '找菜',
@@ -261,6 +263,7 @@ export function touchThing(scene, thing) {
     sleep: 'sleep',
     tea: 'tea',
     market: 'market',
+    furnish: 'furnish',
   }[thing.act];
   if (kind)
     return shell.set({
