@@ -15,6 +15,7 @@ const ALL = DECOR_SLOTS.flatMap(slot =>
 
 export const decor = {
   id: 'sim.decor',
+  provides: ['decor'],
   requires: ['schema', 'commands', 'queries', 'people', 'store'],
   writes: ['decor'],
   install(ctx) {
@@ -72,6 +73,19 @@ export const decor = {
       put(w, input.slot, input.style);
       fact('decor.changed', { slot: input.slot, style: input.style, bought: false, line: s.line });
     });
+
+    // 县城货是阿满捎回来、县城大单送的（sim/plugins/town.js），不经过付钱
+    ctx.provide(
+      'decor',
+      Object.freeze({
+        owns: (w, id) => w.decor.owned.includes(id),
+        grant: ctx.own((w, id) => {
+          if (!ALL.includes(id) || w.decor.owned.includes(id)) return false;
+          w.decor.owned.push(id);
+          return true;
+        }),
+      }),
+    );
 
     // 各处摆设：{slot: {name, object, on, styles: [{id, name, desc, from, maker, price, owned, on}]}}
     queries.define('decor', w =>

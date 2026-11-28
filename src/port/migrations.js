@@ -18,6 +18,13 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  38(state) {
+    // 阿满进县城：多记托捎的货、县城大单，旧档从没托过、没接过单子记起。
+    const w = state.world;
+    w.meta.version = 39;
+    w.town = { errands: [], order: null, last: 0, done: 0 };
+    return state;
+  },
   37(state) {
     // 小屋里六处摆设能换：多记买下了哪几样、每处摆的哪样，旧档全是原样。
     const w = state.world;
