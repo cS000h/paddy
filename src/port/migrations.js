@@ -25,7 +25,8 @@ export const MIGRATIONS = {
     w.meta.version = 34;
     const QTY = { salt: 4, soy: 3, vinegar: 3, sugar: 3, chili: 3, scallion: 2, wine: 3 };
     const items = w.households.home.items;
-    const add = (id, n) => (items[id] = Math.min(1e6, (items[id] || 0) + n));
+    // 橱柜里一样东西最多 9999 份（household 的校验），满了就不再往上加
+    const add = (id, n) => (items[id] = Math.min(9999, (items[id] || 0) + n));
     for (const [id, n] of Object.entries(w.basket?.goods || {})) add(id, n);
     for (const [id, n] of Object.entries(w.basket?.order || {})) add(id, n * (QTY[id] || 1));
     delete w.basket;
