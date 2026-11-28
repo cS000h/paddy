@@ -202,7 +202,7 @@ export function fetchBamboo(game) {
   travel(game, 'yard');
 }
 
-/** 屋里窗下饭桌跟前。 */
+/** 屋里饭桌跟前。 */
 export const TABLE = near('cottage', 'table');
 
 /**

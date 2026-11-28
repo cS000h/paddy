@@ -28,6 +28,11 @@ export const OBJECTS = Object.freeze({
   hangings: { floor: true }, // 后墙上挂的干辣椒、玉米
   rug: { floor: true },
   dresser: { act: 'wardrobe', foot: [0, 0, 0, 0] },
+  // A-39 整屋图新添的三件：先只摆着好看，碗架跟着干净碗盘的多少换样子；挂钩、木箱的用处等后面那步再接
+  dishRack: { foot: [0, 0, 0, 0] }, // 后墙脚的竹碗架
+  hook: { foot: [0, 0, 0, 0] }, // 门边墙上挂蓑衣斗笠的木钉
+  chest: { foot: [0, 0, 0, 0] }, // 床尾的旧木箱
+  desk: { foot: [0, 0, 1, 0] }, // 右前角的矮书案，读书仍到书架跟前
   boat: {},
   route: { act: 'travel' },
   teaCounter: { foot: [-1, 0, 1, 0], act: 'tea' },

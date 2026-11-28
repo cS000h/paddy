@@ -1,5 +1,5 @@
-// G-34 回稿的小屋家具字符画（6 处，每处 4 张；原样那张只有窗台用，别的原样照旧画法）。照稿原样抄，改的话改稿再抄。
-// 调色板字符同 art/items-kit.js 的 INK 加 yard-fix 的几个（art/furniture.js 的 LEGEND）。
+// A-39b 回稿的小屋家具字符画（6 处，每处 4 张）。原样那张只有窗台、挂轴用，别的原样用 A-39a（room-sketches.js）。
+// 照稿原样抄，改的话改稿再抄。字符同 art/room-kit.js 的 ROOM_LEGEND，'_' 是接地影。
 import { SKETCHES_A } from './furniture-sketches-a.js';
 import { SKETCHES_B } from './furniture-sketches-b.js';
 import { SKETCHES_C } from './furniture-sketches-c.js';
