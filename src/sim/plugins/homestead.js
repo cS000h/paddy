@@ -19,6 +19,10 @@ function choreLine(id, map, wet, eggs) {
   return fill(ACTIVITY_TEXT[id] || '', { n: eggs });
 }
 
+// 长凳上坐一回三个钟头；半夜以后不让坐（时辰到头了，坐多久都不过时间）
+const REST_MINUTES = 180;
+const REST_LATE = '夜深了，别在外头坐着，回屋睡吧。';
+
 export const homestead = {
   id: 'sim.homestead',
   requires: [
@@ -94,6 +98,12 @@ export const homestead = {
       if (a.id === 'eggs' && !h.eggs) return '窝里还没有蛋';
       if (a.id === 'bigbasket' && pack.big(w, id)) return '已经有大背篓了';
       if (a.id === 'rest' && people.me(w).energy >= 100) return '精神正足，不用歇';
+      if (a.id === 'rest' && w.clock.minute >= CALENDAR.dayEnd) return REST_LATE;
+      if (a.id === 'rest') {
+        const until = Math.min(CALENDAR.dayEnd, w.clock.minute + REST_MINUTES);
+        const keep = compute.run('rest.keep', { w, until }, { value: '' }).value;
+        if (keep) return keep;
+      }
       if (a.id === 'stars' && people.me(w).map === 'cottage') return '到屋外坐坐才能看天色';
       if (a.id === 'stars' && (w.clock.minute < CALENDAR.dark || outings.count(w, 'stars') > 0))
         return '天黑以后再来，每夜看一回';
@@ -153,10 +163,12 @@ export const homestead = {
         fact('pack.upgraded', { who: id, cap: 8 });
       }
       if (a.id === 'rest') {
+        // 坐满三个钟头回满数；快到半夜坐不满，按坐了多久折算（不然半夜能一直坐着回体力）
         const r = compute.run('rest.restore', { w, who: id }, { value: 16, mood: 2, parts: [] });
-        people.restore(w, id, r.value, '歇了一会儿');
-        body.mood(w, id, r.mood, '歇口气，心里松快');
-        clock.elapse(w, 180, fact);
+        const minutes = Math.min(REST_MINUTES, CALENDAR.dayEnd - w.clock.minute);
+        people.restore(w, id, Math.round((r.value * minutes) / REST_MINUTES), '歇了一会儿');
+        body.mood(w, id, Math.round((r.mood * minutes) / REST_MINUTES), '歇口气，心里松快');
+        clock.elapse(w, minutes, fact);
       }
       // 做完的一段话按坐下那一刻算：在哪儿歇、下没下雨。
       const line = choreLine(a.id, people.me(w).map, weather.has(w, 'wet'), eggs) + fineEgg;

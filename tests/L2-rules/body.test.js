@@ -14,7 +14,11 @@ import {
   WELL,
   stocked,
   VAT,
+  travel,
+  BENCH,
 } from '../helpers.js';
+import { createGame } from '../../src/port/game.js';
+import { NAP_LINES } from '../../src/content/body.js';
 
 const eaten = out => out.facts.find(f => f.type === 'meal.eaten').data;
 const drunk = out => out.facts.find(f => f.type === 'water.drunk').data;
@@ -290,4 +294,87 @@ test('天黑以后早早睡下，醒来心情好；自家人之外的人没有�
   assert.equal(g.ask('hero').energy, 100);
   assert.deepEqual(Object.keys(g.save().state.world.vitals), ['hero']);
   assert.deepEqual(Object.keys(g.save().state.world.packs), ['hero']);
+});
+
+test('白天上床歇晌：屋里、十一点到四点、一天一回；歇一个时辰或躺到傍晚，回体力不过天', () => {
+  // 存档里把力气改成 40，好看出回了多少
+  const tired = () => {
+    const saved = JSON.parse(JSON.stringify(newGame().save()));
+    const w = saved.state.world;
+    w.people[w.player.controls].energy = 40;
+    return createGame({ saved, debug: true });
+  };
+  const bed = { x: 3, y: 7, dir: 'up' };
+  const g = tired();
+  assert.equal(refused(g, 'nap', { mode: 'hour', at: HOME }), NAP_LINES.where);
+  travel(g, 'cottage');
+  assert.equal(refused(g, 'nap', { mode: 'hour', at: bed }), NAP_LINES.early);
+  assert.equal(g.ask('nap').why, NAP_LINES.where, '还站在屋门口');
+  must(g, 'person.place', bed);
+  assert.equal(g.ask('nap').why, NAP_LINES.early);
+  wait(g, 11 * 60 - g.ask('clock').minute);
+  const ask = g.ask('nap');
+  assert.deepEqual([ask.ok, ask.why, ask.hour.until, ask.hour.energy], [true, null, 13 * 60, 24]);
+  assert.deepEqual([ask.dusk.until, ask.dusk.energy], [17 * 60, 24]);
+  assert.equal(refused(g, 'nap', { mode: 'hour', at: { x: 9, y: 9, dir: 'up' } }), NAP_LINES.where);
+  const day = g.ask('clock').day;
+  const mood = g.ask('body').mood;
+  const out = g.dispatch('nap', { mode: 'hour', at: bed });
+  assert.equal(out.ok, true);
+  const taken = out.facts.find(f => f.type === 'nap.taken').data;
+  assert.deepEqual([taken.minutes, taken.energy, taken.line], [120, 24, NAP_LINES.hour]);
+  assert.equal(g.ask('clock').day, day, '不过天');
+  assert.equal(g.ask('clock').minute, 13 * 60);
+  assert.ok(g.ask('hero').energy >= 60, '回了 24 点（两个钟头里饿了渴了也就扣一点）');
+  assert.ok(g.ask('body').mood >= mood, '心情不降');
+  assert.equal(refused(g, 'nap', { mode: 'dusk', at: bed }), NAP_LINES.again);
+  must(g, 'sleep', { at: bed });
+  wait(g, 11 * 60 - g.ask('clock').minute);
+  assert.equal(g.ask('nap').ok, true, '第二天又能歇一回');
+
+  // 躺到傍晚：从三点躺到五点，按躺了多久回力气，封顶 24
+  const h = tired();
+  travel(h, 'cottage');
+  wait(h, 15 * 60 - h.ask('clock').minute);
+  const dusk = h.dispatch('nap', { mode: 'dusk', at: bed }).facts.find(f => f.type === 'nap.taken');
+  assert.deepEqual([dusk.data.minutes, dusk.data.energy], [120, 24]);
+  assert.equal(h.ask('clock').minute, 17 * 60);
+  assert.equal(refused(h, 'nap', { mode: 'hour', at: bed }), NAP_LINES.late);
+  assert.equal(refused(h, 'nap', { mode: 'long', at: bed }), '歇多久没说清');
+});
+
+test('有约的那天，坐下歇、躺下歇晌会误了午前的茶就不让歇；半夜不让在长凳上一直坐着回体力', () => {
+  const g = newGame();
+  must(g, 'talk', { to: 'shi' });
+  must(g, 'invite', { to: 'shi' });
+  must(g, 'sleep');
+  // 清早七点坐三个钟头到十点，还赶得上；十点再坐就到一点了。先锄一格地花点力气，好坐下歇
+  must(g, 'farm.till', FIELD);
+  wait(g, 60);
+  must(g, 'homestead', { id: 'rest', at: BENCH });
+  const meet = '茶摊那杯茶还等着你呢，回来再歇吧。';
+  must(g, 'farm.till', { ...FIELD, x: FIELD.x + 1, at: { ...FIELD.at, x: FIELD.x + 1 } });
+  assert.equal(refused(g, 'homestead', { id: 'rest', at: BENCH }), meet);
+  travel(g, 'cottage');
+  wait(g, 11 * 60 - g.ask('clock').minute);
+  const bed = { x: 3, y: 7, dir: 'up' };
+  assert.equal(refused(g, 'nap', { mode: 'hour', at: bed }), meet);
+  assert.equal(refused(g, 'nap', { mode: 'dusk', at: bed }), meet);
+  must(g, 'person.place', bed);
+  assert.equal(g.ask('nap').why, meet);
+
+  // 半夜：十一点坐下只坐得了一个钟头，按一个钟头折算；十二点以后不让坐
+  const saved = JSON.parse(JSON.stringify(newGame().save()));
+  const w = saved.state.world;
+  w.people[w.player.controls].energy = 20;
+  const h = createGame({ saved, debug: true });
+  wait(h, 23 * 60 - h.ask('clock').minute);
+  const before = h.ask('hero').energy;
+  must(h, 'homestead', { id: 'rest', at: BENCH });
+  assert.equal(h.ask('clock').minute, 24 * 60);
+  assert.equal(h.ask('hero').energy - before, 5, '16 × 60 / 180 ≈ 5');
+  assert.equal(
+    refused(h, 'homestead', { id: 'rest', at: BENCH }),
+    '夜深了，别在外头坐着，回屋睡吧。',
+  );
 });

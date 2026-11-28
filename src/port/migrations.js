@@ -28,6 +28,13 @@ const v40Moved = (map, x, y) =>
   (map === 'yard' && (inV40Yard(x, y) || V40_YARD_TAKEN.includes(`${x},${y}`)));
 
 export const MIGRATIONS = {
+  40(state) {
+    // 白天能歇晌了：每人记一个「哪天歇过晌」，旧档从没歇过记起。
+    const w = state.world;
+    w.meta.version = 41;
+    w.naps = Object.fromEntries(Object.keys(w.packs).map(id => [id, -1]));
+    return state;
+  },
   39(state) {
     // 小屋收紧、小院扩大：站在屋里或篱笆里的人挪回床边、屋门口，当天冒出来的野物和翻找点
     // 落在重摆范围里的不要了（第二天照常重冒、重抽）。菜地一格没动。

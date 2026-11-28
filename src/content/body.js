@@ -92,3 +92,46 @@ export const LEDGER_LABELS = Object.freeze({
   coins: '钱',
   stuffed: '撑',
 });
+
+// 白天歇晌（上床三选一里的后两样）：只走时辰、回体力，不过天。数照 Astra 回执：两个钟头回 24，
+// 比长凳（三个钟头 16）划算，但不至于天天非睡不可。
+//   from–to   这段钟点里才躺得下（11:00 起、16:00 前；早了精神正足，晚了就该直接睡）
+//   hour      「歇一个时辰」躺多久；dusk 「躺到傍晚」躺到几点
+//   perHour   每躺一个钟头回多少体力，一回最多 max；mood 歇完心情加多少
+// 两样共用一天一回；醒来会误了约就不让躺（visits 插件接 rest.keep 管道）。
+export const NAP = Object.freeze({
+  from: 11 * 60,
+  to: 16 * 60,
+  hour: 120,
+  dusk: 17 * 60,
+  perHour: 12,
+  max: 24,
+  mood: 1,
+});
+
+export const NAP_LINES = Object.freeze({
+  hour: '合眼歇了一个时辰，醒来窗纸上的日影挪了一截，身上松快多了。',
+  dusk: '一觉躺到日头偏西，院里的鸡都回窝了，人倒是缓过劲来。',
+  early: '天还早，精神头正足，躺下也睡不着。',
+  late: '这个时辰再躺，干脆睡到天亮吧。',
+  again: '今天已经歇过一回晌了。',
+  where: '回屋里床上才歇得了晌。',
+});
+
+// 床铺合不合时令（床的样子见 content/furniture.js）：合的那一季睡得舒坦，不合的那一季睡不踏实。
+// 只管心情，不管体力：一觉本来就能歇满，越贵越好那种事不做。季节 0 春 1 夏 2 秋 3 冬。
+export const BED_SEASON = Object.freeze({
+  bamboo: Object.freeze({
+    fit: [1],
+    miss: [3],
+    good: '竹席凉丝丝的，一夜睡得踏实',
+    bad: '冬夜睡凉席，冻醒了好几回',
+  }),
+  quilt: Object.freeze({
+    fit: [3],
+    miss: [1],
+    good: '厚棉被裹着，一夜暖到脚底',
+    bad: '大热天盖厚被，捂出一身汗',
+  }),
+  mood: 2,
+});
