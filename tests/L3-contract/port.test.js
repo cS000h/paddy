@@ -156,6 +156,7 @@ const QUERIES = [
   'yard.keepsakes',
   'leaning',
   'almanac',
+  'attire',
   'hopes',
   'scenes',
   'shelf',

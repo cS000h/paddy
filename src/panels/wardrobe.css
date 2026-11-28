@@ -48,6 +48,19 @@
   font-weight: 400;
   color: var(--ink-2);
 }
+.fitting-say {
+  margin: 8px 2px 0;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+  color: var(--ink-2);
+}
+.fitting-say.warn {
+  color: var(--ink);
+}
+.fitting-say small {
+  margin-top: 4px;
+}
 .cloth-tabs {
   display: flex;
   gap: 6px;
