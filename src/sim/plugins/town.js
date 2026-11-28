@@ -140,12 +140,11 @@ export const town = {
       { priority: 36 },
     );
 
-    // 进城那天阿满不在村里；茶摊上有人说起他
+    // 进城那天阿满整天不在村里（夜里也在城里歇）；茶摊上有人说起他
     compute.tap(
       'resident.positions',
       (r, { w, slot }) => {
-        if (slot !== null && isTripDay(w.clock.day) && Object.hasOwn(r.value, 'aman'))
-          r.value.aman = null;
+        if (isTripDay(w.clock.day) && Object.hasOwn(r.value, 'aman')) r.value.aman = null;
       },
       { priority: 30 },
     );
