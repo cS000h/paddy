@@ -74,8 +74,7 @@ export const aroma = {
   writes: ['aroma'],
   install(ctx) {
     const { schema, commands, reactions, compute, core, people, store, pack, body } = ctx.services;
-    const { kitchen, opinion, persona, purse, modifiers, residents, witness, table } =
-      ctx.services;
+    const { kitchen, opinion, persona, purse, modifiers, residents, witness, table } = ctx.services;
 
     schema.slice('aroma', {
       initial: () => ({ today: null, echo: null, count: 0 }),

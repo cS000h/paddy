@@ -131,7 +131,8 @@ export const cooking = {
       if (i < 0) refuse(why);
       return list.splice(i, 1)[0];
     };
-    const outside = d => (d.method === 'stew' ? TABLE_LINES.outside.soup : TABLE_LINES.outside.plate);
+    const outside = d =>
+      d.method === 'stew' ? TABLE_LINES.outside.soup : TABLE_LINES.outside.plate;
     /**
      * 吃下一样：吃腻了打折的饱腹、体力、汤水；记进最近几顿。心情、增益由一顿饭统一算。
      * 返回这一样的 {seen 吃腻了几档, tired 那两个字, mood 这一样添的心情}。

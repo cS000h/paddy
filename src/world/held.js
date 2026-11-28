@@ -15,7 +15,7 @@ const HAND = {
 };
 
 // 一只小碗：碗口一圈白，里头一点饭菜色，墨线描边。端着的饭菜都画成它，太细的器型在手上看不清。
-function bowl() {
+export function bowl() {
   const g = new art.Grid(12, 9);
   g.ellipse(6, 3, 5, 2, P.l0).ellipse(6, 3, 4, 1, P.y1);
   g.rect(2, 4, 9, 2, P.l0).ellipse(6, 6, 4, 2, P.l0).hline(4, 8, 8, P.l1);
@@ -57,10 +57,14 @@ export class HeldItem {
   frame() {
     const { game, shell } = this.scene.deps;
     const player = this.scene.player;
-    const held = shell.get().held;
+    // 手上端着热菜时，双手捧着那一碗，底栏选了什么都先不画
+    const dish = game.ask('table').hands.length > 0;
+    const held = dish ? 'hands:dish' : shell.get().held;
     if (held !== this.key) {
       this.key = held;
-      const slot = held && game.ask('pack', this.scene.at()).slots.find(s => s.key === held);
+      const slot = dish
+        ? { slot: 'dish' }
+        : held && game.ask('pack', this.scene.at()).slots.find(s => s.key === held);
       this.look = slot ? lookOf(slot) : null;
       if (this.look) {
         const { key, make, scale } = this.look;
