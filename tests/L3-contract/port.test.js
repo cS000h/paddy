@@ -6,8 +6,6 @@ import { createGame, MALFORMED_REASON } from '../../src/port/game.js';
 import { newGame, must, FIELD } from '../helpers.js';
 
 const COMMANDS = [
-  'basket.order',
-  'basket.put',
   'clock.advance',
   'cook',
   'dish.eat',
@@ -42,6 +40,8 @@ const COMMANDS = [
   'travel',
   'travel.to',
   'market.visit',
+  'neighbor.sell',
+  'neighbor.swap',
   'market.buy',
   'market.sell',
   'match.after',
@@ -83,7 +83,6 @@ const QUERIES = [
   'achievements',
   'achievement.board',
   'action.cost',
-  'basket',
   'body',
   'bonds',
   'catalog',
@@ -117,6 +116,7 @@ const QUERIES = [
   'prize.traces',
   'visits',
   'modifiers',
+  'neighbor.wants',
   'events',
   'visitors',
   'wardrobe',

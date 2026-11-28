@@ -237,10 +237,9 @@ test('离线小屋读档即呈雨夜，早雾散去时室内曝光逐步改变',
   }
 });
 
-test('点阿满预览不涨关系；订种先确认再扣款，成交收据可原地查看', async () => {
+test('点阿满预览不涨关系；他今天想要什么在「买卖」里说得出来', async () => {
   const game = createGame({ seed: 1 });
   game.dispatch('origin.settle', FIRST_SHEET);
-  assert.ok(game.dispatch('basket.put', { item: 'cake', n: 1 }).ok);
   assert.ok(game.dispatch('sleep', {}).ok);
   const saved = game.save();
   const browser = await chromium.launch(CHROME);
@@ -279,20 +278,12 @@ test('点阿满预览不涨关系；订种先确认再扣款，成交收据可�
         await page.evaluate(() => window.__dao.game.ask('bonds').find(b => b.id === 'aman').known),
         0,
       );
-      await click('[data-key^="bill."]');
-      assert.match(await page.locator('.say').textContent(), /米糕.*文/);
+      await click('[data-group="买卖"]');
+      await click('[data-key^="wants."]');
+      const wants = await page.evaluate(() => window.__dao.game.ask('neighbor.wants', 'aman'));
+      assert.ok(wants.items.length > 0);
       await page.locator('.npc-bubble .unsaid').waitFor({ state: 'detached' });
-      await page.screenshot({ path: path.join(root, '.cache', 'npc-receipt-' + width + '.png') });
-      await click('[data-group="托他捎货"]');
-      await click('[data-key*=".seed.qingcai."]');
-      const coins = () => page.evaluate(() => window.__dao.game.ask('home').coins);
-      const before = await coins();
-      await click('[data-do="encounterMenu"][data-group="托他捎货"]');
-      assert.equal(await coins(), before);
-      await click('[data-key*=".seed.qingcai."]');
-      await click('[data-confirm="yes"]');
-      assert.equal(await coins(), before - 2);
-      assert.match(await page.locator('.say').textContent(), /明早/);
+      await page.screenshot({ path: path.join(root, '.cache', 'npc-wants-' + width + '.png') });
       assert.deepEqual(errors, []);
       await ctx.close();
     }

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
 import { MAPS, walkable } from '../../src/content/maps/index.js';
-import { newGame, must, refused, wait } from '../helpers.js';
+import { newGame, must, refused, wait, stocked, carried } from '../helpers.js';
 function travel(g, to) {
   const map = MAPS[g.ask('hero').map],
     row = map.objects.find(o => o[3]?.to === to);
@@ -78,6 +78,47 @@ test('柜台当面买卖、钱货一起结算，库存不能靠重进或读档�
   const before = JSON.stringify(g.save());
   assert.match(refused(g, 'market.sell', { shop, item: 'lambLeg', at }), /羊腿/);
   assert.equal(JSON.stringify(g.save()), before);
+});
+test('铺子收东西从钱匣里付：每天每类前几份原价、再多半价、收满就不收；茶摊不收；收的货隔天转手回本', () => {
+  const g = stocked(newGame(), { 'fish.carp': 12 });
+  must(g, 'pack.put', { item: 'fish.carp', n: 12, at: { x: 8, y: 11 } });
+  travel(g, 'market');
+  const at = { x: 14, y: 11 },
+    shop = 'market';
+  must(g, 'market.visit', { shop, at });
+  const carp = 9; // 鲤鱼基准价 6，鱼按 1.5 倍
+  const coins = () => g.ask('home').coins;
+  let money = coins();
+  for (let i = 0; i < 5; i++) must(g, 'market.sell', { shop, item: 'fish.carp', at });
+  assert.equal(coins(), money + 5 * carp);
+  assert.deepEqual(g.ask('market').takes.fish, { full: 0, half: 5 });
+  money = coins();
+  must(g, 'market.sell', { shop, item: 'fish.carp', at });
+  assert.equal(coins(), money + Math.floor(carp / 2), '收得多了只给半价');
+  for (let i = 0; i < 4; i++) must(g, 'market.sell', { shop, item: 'fish.carp', at });
+  assert.equal(
+    refused(g, 'market.sell', { shop, item: 'fish.carp', at }),
+    '这样东西今天铺子收够了，明天再来',
+  );
+  assert.equal(carried(g, 'fish.carp'), 2);
+  travel(g, 'tea');
+  assert.match(
+    refused(g, 'market.sell', { shop: 'tea', item: 'fish.carp', at: { x: 17, y: 11 } }),
+    /茶摊/,
+  );
+  must(g, 'sleep');
+  assert.deepEqual(g.ask('market').takes.fish, { full: 5, half: 5 }, '第二天重新收');
+});
+test('铺子钱匣见底就收不动', () => {
+  const saved = JSON.parse(JSON.stringify(newGame().save()));
+  saved.state.world.purses.houses.shop.coins = 5;
+  saved.state.world.households.home.items['fish.carp'] = 2;
+  const g = createGame({ saved, debug: true });
+  must(g, 'pack.put', { item: 'fish.carp', n: 2, at: { x: 8, y: 11 } });
+  travel(g, 'market');
+  const at = { x: 14, y: 11 };
+  assert.match(refused(g, 'market.sell', { shop: 'market', item: 'fish.carp', at }), /钱匣/);
+  assert.equal(carried(g, 'fish.carp'), 2, '没卖成，鱼还在身上');
 });
 test('茶摊喝茶补水，听闲话每天一次；集日有肉摊，下棋长交际', () => {
   const g = newGame();

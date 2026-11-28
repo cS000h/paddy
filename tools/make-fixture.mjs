@@ -14,7 +14,7 @@ if (existsSync(file)) {
   process.exit(0);
 }
 
-// 玩出一个“什么都沾一点”的世界：种着菜、认识了人、欠着回礼、筐里有货、托了种子。
+// 玩出一个“什么都沾一点”的世界：种着菜、认识了人、欠着回礼。（第 34 版起收菜筐拆了）
 const game = createGame({ seed: 20261113 });
 const spot = (x, y) => ({ x, y, at: { x, y: y - 1, dir: 'down' } });
 const run = (type, input) => {
@@ -43,10 +43,6 @@ run('farm.harvest', spot(7, 19));
 run('farm.harvest', spot(8, 19)); // 第 28 版起本事长得慢，收菜不多给，三格都收
 run('talk', { to: 'shi' });
 run('gift', { to: 'gui', item: 'veg.qingcai' });
-// 收上来的可能是极品（另一个编号），身上有哪样放哪样
-const veg = game.ask('pack').items.find(i => i.id.startsWith('veg.qingcai'));
-run('basket.put', { item: veg.id, n: 1 });
-run('basket.order', { item: 'seed.qingcai', n: 4 });
 run('clock.advance', { minutes: 90 });
 // 路边翻一翻（第 20 版起）：院里头一处能翻的地方，从它四面能站人的一格翻
 const sides = [

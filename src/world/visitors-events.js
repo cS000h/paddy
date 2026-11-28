@@ -10,6 +10,7 @@ import { createPrizeTraces } from './prize-traces.js';
 import { createYardFixes } from './yard-fixes.js';
 import { createChatter } from './chatter.js';
 import { createSignposts } from './signposts.js';
+import { HeldItem } from './held.js';
 
 // 冒字的院里的事；aroma.served、yard.guest 的那句话在对话气泡里，只冒旁白
 // 局面（scene.chosen）那句也在对话气泡里；碰上局面、盼头办成没办成、换季的年景只冒旁白
@@ -53,6 +54,7 @@ export function createFieldExtras(scene) {
   const fixes = createYardFixes(scene);
   const chatter = createChatter(scene, () => [...walkers.values()]);
   const signs = createSignposts(scene);
+  const held = new HeldItem(scene);
   let eventMark = null;
   let eventRing = null;
   let eventTween = null;
@@ -234,6 +236,7 @@ export function createFieldExtras(scene) {
 
   function onFacts(facts) {
     ground.onFacts(facts);
+    if (facts.length) held.refresh();
     const { platform } = scene.deps;
     let needSync = false;
     for (const f of facts) {
@@ -311,12 +314,14 @@ export function createFieldExtras(scene) {
     ground.frame(delta);
     chatter.frame(delta);
     signs.frame();
+    if (scene.player) held.frame();
   }
 
   function destroy() {
     ground.destroy();
     fixes.destroy();
     signs.destroy();
+    held.destroy();
     clearEvent();
     for (const w of walkers.values()) destroyWalker(w);
     walkers.clear();
