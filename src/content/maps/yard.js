@@ -160,7 +160,7 @@ export const yard = Object.freeze({
     east: [42, 15, 'left'],
     'creek.entry': [17, 5, 'down'],
     'aman.field': [20, 20, 'left'],
-    'shi.yard': [8, 12, 'right'],
+    'shi.yard': [21, 13, 'right'], // 石伯没有自家院子，傍晚在院外老樟树下编筐，不进你的篱笆
     'gui.yard': [30, 10, 'down'],
     start: [8, 11, 'down'],
     'hero.bed': [8, 10, 'down'],

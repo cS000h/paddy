@@ -35,7 +35,7 @@ test('檐下做饭，进屋收纳睡觉；存档留在屋里，出门饭菜不�
   travel(loaded, 'yard');
   assert.equal(loaded.ask('kitchen').dishes.length, 1);
 });
-test('全部村路能往返，采集点在新地图可用，居民逐时段各有去处', () => {
+test('全部村路能往返，采集点在新地图可用，居民逐时段各有去处、平日不进你的院子', () => {
   const g = newGame();
   travel(g, 'creek');
   must(g, 'gather', { id: 'bamboo', at: { x: 8, y: 9 } });
@@ -55,6 +55,11 @@ test('全部村路能往返，采集点在新地图可用，居民逐时段各�
     }
     must(g, 'sleep');
   }
+  // 乡邻平日的去处不能落在你家篱笆里：进院得有由头（翻修、飘香、做客），不是作息
+  const [x0, y0, x1, y1] = MAPS.yard.home;
+  for (const [name, [x, y]] of Object.entries(MAPS.yard.spots))
+    if (/^[a-z]+\.(yard|field)$/.test(name))
+      assert.ok(x < x0 || x > x1 || y < y0 || y > y1, `${name}落在自家院里`);
 });
 test('柜台当面买卖、钱货一起结算，库存不能靠重进或读档刷新，傍晚鲜货降价', () => {
   const g = newGame();
