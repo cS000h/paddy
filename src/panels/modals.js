@@ -12,6 +12,7 @@ import { eventView } from './pulse.js';
 import { activityView } from './activities.js';
 import { fishingView } from './fishing.js';
 import { kitchenView, recipesView } from './kitchen.js';
+import { shelfView } from './shelf.js';
 import { fireView } from './fire.js';
 import { cookedView } from './cooked.js';
 import { bagView, storeView } from './bag.js';
@@ -37,6 +38,7 @@ const VIEWS = {
   activity: activityView,
   fishing: fishingView,
   kitchen: kitchenView,
+  shelf: shelfView,
   recipes: recipesView,
   heat: fireView,
   cooked: cookedView,

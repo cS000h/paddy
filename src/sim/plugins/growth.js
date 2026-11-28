@@ -149,7 +149,7 @@ export const growth = {
       if (r.coins > 0) store.earn(w, r.coins, '落脚时带来的');
       if (r.coins < 0) store.pay(w, Math.min(store.coins(w), -r.coins), '落脚时手头紧');
       for (const [item, n] of Object.entries(r.items)) store.add(w, item, n, '落脚时带来的');
-      fact('origin.settled', { who: id, reason, friend, line: r.first });
+      fact('origin.settled', { who: id, reason, keepsake, friend, line: r.first });
     });
     reactions.on(
       'action.performed',
@@ -201,6 +201,15 @@ export const growth = {
         const d = e.data;
         if (mine(s.world, d.who))
           gain(s.world, d.who, emit, 'forage', XP.fish[d.thing ? 'thing' : d.grade] ?? 2, 'fish');
+      },
+      { priority: 60 },
+    );
+    // 读完一本讲农事、草木、看天的书：长一点那门本事（sim/plugins/reading.js）
+    reactions.on(
+      'book.finished',
+      (s, e, emit) => {
+        const d = e.data;
+        if (d.skill && mine(s.world, d.who)) gain(s.world, d.who, emit, d.skill, d.xp, 'book');
       },
       { priority: 60 },
     );

@@ -68,6 +68,7 @@ import { hopes } from './plugins/hopes.js';
 import { scenes } from './plugins/scenes.js';
 import { debts } from './plugins/debts.js';
 import { quietDeeds } from './plugins/quiet-deeds.js';
+import { reading } from './plugins/reading.js';
 
 export { SAVE_VERSION };
 // 顺序有讲究：后面的插件建自己的数据时，可以读前面的（比如身体和行囊按“户里有谁”来建）。
@@ -130,6 +131,7 @@ export const PLUGINS = Object.freeze([
   scenes,
   debts,
   quietDeeds,
+  reading,
   wardrobe,
   interactions,
 ]);
