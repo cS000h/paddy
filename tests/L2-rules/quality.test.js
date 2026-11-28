@@ -22,7 +22,7 @@ function water(g, s) {
 
 /** 种下一排青菜，照料到熟，一格格收；返回每一格收菜的事实。 */
 // 收一排菜要有寻常的也有极品：极品看抽签，换了规则抽签次序就变，挑一颗收出来两样都有的种子
-const ROW_SEED = 2;
+const ROW_SEED = 1;
 
 function harvestRow(g) {
   for (const s of SPOTS) {

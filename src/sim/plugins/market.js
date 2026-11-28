@@ -7,7 +7,14 @@ import { dateOf, isFairDay } from '../../content/calendar.js';
 import { MAPS, actAt } from '../../content/maps/index.js';
 import { STAPLES, SOMETIMES, FRESH, TAKES, RESALE, TAKE_WORDS } from '../../content/market.js';
 import { takeKind } from '../../content/pantry.js';
-import { STALLS, STALL_IDS, FAIR_NOTES, stallShop, stallOf } from '../../content/stalls.js';
+import {
+  STALLS,
+  STALL_IDS,
+  STALL_FIRST_DAY,
+  FAIR_NOTES,
+  stallShop,
+  stallOf,
+} from '../../content/stalls.js';
 import { fill } from '../../content/text.js';
 import { pickStalls, layStall, stallTakes, stallLeft, stallQuote } from '../stall-rules.js';
 import { near } from './people.js';
@@ -82,7 +89,8 @@ export const market = {
         wares: { market: [], tea: [] },
         took: {},
         paid: 0,
-        out: [null, null, null],
+        // 开局那天还没摆过（day 0），中间先占好菜苗摊，头一回进集场就看得见
+        out: [null, STALL_FIRST_DAY, null],
         stallTook: {},
       }),
       validate: s =>
@@ -172,7 +180,8 @@ export const market = {
       if (si >= 2) add('tea', 'yam', 2, 4);
       if (core.random(w) < 0.4) add('tea', 'candy', 2, 3);
       // 路南的摊子：平常一个，集日三个，各摆各的货
-      const out = pickStalls(fair, () => core.random(w));
+      const picked = pickStalls(fair, () => core.random(w));
+      const out = w.shops.day === 0 ? w.shops.out : picked; // 开局那天照占好的摆
       for (const id of out.filter(Boolean)) {
         wares[stallShop(id)] = [];
         layStall(id, { fair, season: si, random: () => core.random(w), add });
@@ -188,6 +197,9 @@ export const market = {
       if (w.shops.paid) purse.move(w, 'shop', Math.round(w.shops.paid * RESALE), '收的货转手卖了');
       w.shops = { day: w.clock.day, wares, took: {}, paid: 0, out, stallTook: {} };
     }
+    /** 今天三个摊位上各是谁；开局那天还没摆过也算上占好的那个。 */
+    const today = w =>
+      w.shops.day === w.clock.day || w.shops.day === 0 ? w.shops.out : [null, null, null];
     const stock = (w, shop) =>
       (w.shops.wares[shop] || []).map(x => {
         const it = ITEMS[x.item],
@@ -319,6 +331,21 @@ export const market = {
       });
     }
     reactions.on('day.started', s => lay(s.world), { priority: 35 });
+    // 摊主是村里人（云姑）的，出摊那天清早到傍晚站在自己摊子旁边
+    compute.tap(
+      'resident.positions',
+      (r, { w, slot }) => {
+        if (slot === null || slot > 2) return;
+        for (const [i, id] of today(w).entries()) {
+          const who = id && STALLS[id].resident;
+          if (!who || !Object.hasOwn(r.value, who)) continue;
+          r.value[who] = 'market';
+          r.spots[who] = `${who}.stall${i}`;
+          r.doing[who] = '在路南摆' + STALLS[id].name;
+        }
+      },
+      { priority: 40 },
+    );
     reactions.on(
       'time.passed',
       (s, e) => {
@@ -353,8 +380,6 @@ export const market = {
       ),
     }));
     /** 今天三个摊位上各是哪个摊子（摊子编号或 null），画面照这个摆摊棚。 */
-    queries.define('stalls', w =>
-      w.shops.day === w.clock.day ? [...w.shops.out] : [null, null, null],
-    );
+    queries.define('stalls', w => [...today(w)]);
   },
 };

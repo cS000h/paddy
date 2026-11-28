@@ -258,5 +258,9 @@ export const market = village(
     'aman.market': [12, 12, 'right'],
     'gui.market': [16, 12, 'up'],
     'qiao.market': [15, 11, 'left'],
+    // 云姑出摊时站在自己摊子左手边（三个摊位从西往东）
+    'yun.stall0': [6, 18, 'right'],
+    'yun.stall1': [12, 18, 'right'],
+    'yun.stall2': [18, 18, 'right'],
   },
 );

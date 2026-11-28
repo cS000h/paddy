@@ -5,10 +5,12 @@
 //   wares：卖什么（物品编号）；count：平常 / 集日摆几样；takes：收哪几类（kindOf 认的类，各种鱼都是 fish）
 //   drop：傍晚收摊前鲜货降一文（照 market.js 的傍晚处理）；fairOnly：只在集日来
 //   stripe：篷布两色（art/stalls.js 的字符）；lines：吆喝和买卖时的话
+//   resident：摊主就是村里的乡邻（云姑）。出摊那天白天她站在自己摊子旁边，不在后山
 
 export const STALL_SPOTS = 3; // 集场路南三个摊位（地图 market 上的 stall，从西往东 0、1、2）
 export const STALL_MIDDLE = 1; // 平常日子摆在中间那个
 export const STALL_TAKES = Object.freeze({ normal: 3, fair: 6 }); // 每摊每天原价收几份
+export const STALL_FIRST_DAY = 'veg'; // 开局头一天中间摆菜苗摊：刚落脚的人先买得到菜种
 
 export const STALLS = Object.freeze({
   meat: {
@@ -62,6 +64,7 @@ export const STALLS = Object.freeze({
     takes: ['mugwort', 'mushroom', 'pinecone', 'cicadaShell', 'malan'],
     drop: false,
     fairOnly: true,
+    resident: 'yun',
     stripe: ['2', 'W'],
     lines: {
       hawk: ['后山新炒的茶叶……还有晒干的艾草香草。', '刚采的菌子和栗子，需要的过来看看吧。'],

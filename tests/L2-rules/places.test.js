@@ -180,6 +180,7 @@ test('照着全村地图走过去：沿路一段段走，每段花十分钟；�
 
 test('路南的摊子：各卖各的货、只收自己要的；集日鱼摊收鱼最多，收满给半价再收满不收；赶集前一天和当天有便条', () => {
   const g0 = newGame();
+  assert.deepEqual(g0.ask('stalls'), [null, 'veg', null], '开局头一天进集场，中间已经摆着菜苗摊');
   for (let n = 1; n < 4; n++) must(g0, 'sleep');
   assert.ok(g0.ask('notes', 4).some(x => x.title === '明天赶集'));
   must(g0, 'sleep');
@@ -210,4 +211,20 @@ test('路南的摊子：各卖各的货、只收自己要的；集日鱼摊收�
   const ware = g.ask('market', shop).wares.find(i => i.left > 0);
   must(g, 'market.buy', { shop, item: ware.item, at });
   assert.match(refused(g, 'market.visit', { shop: 'stall.' + 'nope', at }), /柜台/);
+});
+
+test('云姑出摊那天白天站在自己摊子旁边，不在后山；收摊后照常去溪边', () => {
+  const g = newGame();
+  const yun = () => g.ask('residents').find(p => p.id === 'yun');
+  let spot = -1;
+  for (let n = 0; n < 60 && spot < 0; n++) {
+    must(g, 'sleep');
+    spot = g.ask('stalls').indexOf('tea');
+  }
+  assert.ok(spot >= 0, '几个集日里总有一回轮到山货茶摊');
+  const at = yun();
+  assert.equal(at.map, 'market');
+  assert.deepEqual([at.x, at.y], [[6, 12, 18][spot], 18]);
+  wait(g, 1080 - g.ask('clock').minute);
+  assert.notEqual(yun().map, 'market', '傍晚收了摊就走');
 });

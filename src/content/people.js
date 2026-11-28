@@ -81,7 +81,7 @@ export const ROUTINES = Object.freeze({
     { go: ['river', 'river', 'river', 'tea'] },
   ],
   yun: [
-    { when: ['fair', 'wet'], go: ['hill', 'hill', 'tea', 'hill'] }, // 集日去摆茶叶摊
+    { when: ['fair', 'wet'], go: ['hill', 'hill', 'tea', 'hill'] }, // 集日午后去茶摊坐坐；抽到出摊那天由 market.js 改到摊子旁
     { when: ['fair'], go: ['hill', 'hill', 'tea', 'creek'] },
     { when: ['wet'], go: ['hill', 'hill', 'hill', 'hill'] },
     { go: ['hill', 'hill', 'hill', 'creek'] },
