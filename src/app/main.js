@@ -32,6 +32,7 @@ import { dietNotices } from './diet.js';
 import { pulseActions, pulseNotices } from './pulse.js';
 import { activityActions } from './activities.js';
 import { kitchenActions } from './kitchen.js';
+import { readingActions } from './reading.js';
 import { travelActions } from './travel.js';
 
 const platform = createWebPlatform(document.getElementById('app'));
@@ -127,6 +128,7 @@ function start() {
     ...pulseActions(deps),
     ...activityActions(deps),
     ...kitchenActions(deps),
+    ...readingActions(deps),
     ...travelActions(deps),
     reload() {
       saveNow();

@@ -393,6 +393,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     else if (t.act === 'tea') tea(at);
     else if (t.act === 'cloth') cloth(at);
     else if (t.act === 'wardrobe') dress(at);
+    else if (t.act === 'shelf') shelf(at);
     else if (t.act === 'water') {
       // 抱着脏碗到了水缸边就洗（不抽随机数）
       const w = game.ask('table').ware;
@@ -403,6 +404,15 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
       if (game.ask('nap').ok) send('nap', { mode: hero().energy < 50 ? 'dusk' : 'hour', at });
       else send('sleep', { at });
     } else send('person.place', at);
+  }
+
+  // 书架：多半坐下读一本，有时随手翻、看见闻、托老陈捎一本（钱不够、夜深了的会被拒）
+  function shelf(at) {
+    const s = game.ask('shelf', at);
+    if (s.buy.length && chance(0.15)) return send('book.buy', { id: pick(s.buy).id, at });
+    if (chance(0.2)) return send('news.look', { at });
+    if (chance(0.3) || !s.books.length) return send('book.skim', { at });
+    return send('book.read', { id: pick(s.books).id, at });
   }
 
   function farm() {

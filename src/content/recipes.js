@@ -57,6 +57,10 @@ export const RECIPES=[
   ['香辣烤羊肉','roast',['mutton'],['chili','scallion']],['糖烤芋头','roast',['taro'],['sugar']],
   ['糖烤栗子','roast',['chestnut'],['sugar']],['酱烤春笋','roast',['shoot'],['soy']],
   ['酸辣拍黄瓜','mix',['cucumber'],['vinegar','chili']],
+  // G-37 书教的新菜：读完那本书才会（content/books.js 的 BOOK_RECIPES）
+  ['鲜笋炖豆腐','stew',['shoot','tofu']],['菌菇蒸蛋','stew',['mushroom','egg']],
+  ['豆角炒蛋','fry',['longbean','egg']],
+  ['酒糟焖溪鱼','stew',['fish','ginger'],['wine']],
 ];
 
 // 刀工沿用 0.12：合适的切法放宽火候三格；切丝多花一点体力。

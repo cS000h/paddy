@@ -32,6 +32,19 @@ const v40Moved = (map, x, y) =>
   (map === 'yard' && (inV40Yard(x, y) || V40_YARD_TAKEN.includes(`${x},${y}`)));
 
 export const MIGRATIONS = {
+  43(state) {
+    // 书架：每人架上开局一本《稻乡旧历》；落脚单带了半旧诗册的，诗册也摆上（都还没读）。
+    const w = state.world;
+    w.meta.version = 44;
+    w.books = Object.fromEntries(
+      Object.keys(w.packs).map(id => {
+        const have = { almanac: 0 };
+        if (w.growth?.[id]?.origin?.keepsake === 'poems') have.poems = 0;
+        return [id, { have, done: {}, letters: [], news: 0 }];
+      }),
+    );
+    return state;
+  },
   42(state) {
     // 碗盘和剩菜：每户开局的一只海碗、两只浅盘都干净；已经盛着菜在手上、桌上的碗盘不够数就补上。
     // 灶上、手上、桌上的剩菜从升级这天起算，免得一升级就馊掉一灶台。
@@ -365,23 +378,6 @@ export const MIGRATIONS = {
     const w = state.world;
     w.meta.version = 18;
     w.quality = Object.fromEntries(Object.keys(w.packs).map(id => [id, { miss: {}, found: {} }]));
-    return state;
-  },
-  16(state) {
-    // 好感（sim/plugins/opinion.js）：一条条来由存进存档。村民之间开局就有的几条交情照 2026-11-24 定的写进来；
-    // 以前送过的东西、说过的话没留来由，从这一版起记。
-    const w = state.world;
-    w.meta.version = 17;
-    const old = (from, to, why, n) => ({ from, to, why, n, until: null });
-    w.opinion = {
-      notes: [
-        old('aman', 'zhou', 'veggies', 10),
-        old('zhou', 'aman', 'fed', 10),
-        old('aman', 'gui', 'pickles', 8),
-        old('gui', 'qiao', 'raised', 8),
-        old('yun', 'qiao', 'uphill', 8),
-      ],
-    };
     return state;
   },
   ...EARLY,

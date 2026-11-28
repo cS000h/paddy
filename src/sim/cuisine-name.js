@@ -3,9 +3,11 @@ import { RECIPES } from '../content/recipes.js';
 import { plainName } from './cuisine-words.js';
 const sameSet = (a, b) => a.length === b.length && a.every(x => b.includes(x));
 // The named recipe for these ingredients and seasonings: all its seasonings must be in; the one that uses the most wins.
-function findRecipe(items, method, spices = []) {
+// hidden 是还没学会的书上菜（content/books.js），不算菜谱
+function findRecipe(items, method, spices = [], hidden = []) {
   let best = null;
   for (const r of RECIPES) {
+    if (hidden.includes(r[0])) continue;
     const sea = r[3] || [];
     if (
       r[1] === method &&
@@ -41,8 +43,8 @@ const SPICE_PREFIX = (sp, method) =>
               : sp.includes('wine')
                 ? '酒香'
                 : '';
-function dishName(items, method, I, spices = []) {
-  const r = findRecipe(items, method, spices);
+function dishName(items, method, I, spices = [], hidden = []) {
+  const r = findRecipe(items, method, spices, hidden);
   if (r) return { name: r[0], named: true, spices: r[3] || [] };
   const pre = SPICE_PREFIX(spices, method);
   const plain = plainName(items, method, I);

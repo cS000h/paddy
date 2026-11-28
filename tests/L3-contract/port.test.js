@@ -6,6 +6,9 @@ import { createGame, MALFORMED_REASON } from '../../src/port/game.js';
 import { newGame, must, FIELD } from '../helpers.js';
 
 const COMMANDS = [
+  'book.buy',
+  'book.read',
+  'book.skim',
   'clock.advance',
   'cook',
   'dish.carry',
@@ -43,6 +46,7 @@ const COMMANDS = [
   'sky.look',
   'sleep',
   'nap',
+  'news.look',
   'talk',
   'travel',
   'travel.to',
@@ -154,6 +158,7 @@ const QUERIES = [
   'almanac',
   'hopes',
   'scenes',
+  'shelf',
   'scene.options',
   'debts',
   'debts.options',

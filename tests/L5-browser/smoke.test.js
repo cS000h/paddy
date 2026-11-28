@@ -552,6 +552,13 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       assert.deepEqual(handoff, [true, false, 0, 1]);
       await tap(p, 14, 8);
       await frames(p, 400);
+      await p.locator('[data-do="shelfTab"]').first().waitFor();
+      await p.locator('[data-do="bookRead"][data-id="almanac"]').click();
+      assert.ok(
+        await p.evaluate(() => window.__dao.game.ask('shelf').books.find(b => b.done)),
+        '书架上坐下读完了旧历',
+      );
+      await p.locator('.sheet [data-do="book"]').click();
       await p.locator('[data-do="bookTab"]').first().waitFor();
       await p.locator('[data-do="close"]').click();
       await tap(p, 11, 7);

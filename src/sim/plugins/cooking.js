@@ -21,6 +21,7 @@ import { previewMeal } from '../cuisine.js';
 import { validDish } from '../dish.js';
 import { near } from './people.js';
 import { handheld, mealLine, TABLE_LINES, STALE } from '../../content/table.js';
+import { BOOK_RECIPES } from '../../content/books.js';
 
 // 出锅的一段话（沿用 0.12）：凉拌是摆上桌，其余先说火候再说出锅；头一回做、用了时令菜各添一句。
 // 火候那一句照做法分开说（G-11）；掌火全中、砸了也有点意思，换那一句。
@@ -338,19 +339,25 @@ export const cooking = {
       },
       { priority: 30 },
     );
+    const hidden = w =>
+      compute.run('recipes.hidden', { w, who: people.who(w) }, { value: Object.keys(BOOK_RECIPES) })
+        .value;
     queries.define('kitchen', (w, at) => ({
       dishes: people.atHome(w, people.who(w), at) ? home(w).dishes : [],
       // 身上的：手上端着的在前，行囊里的在后
       carried: [...table.hands(w, people.who(w)), ...pack.dishes(w, people.who(w))],
       fires: home(w).fires,
-      recipes: RECIPES.map(([name, method, items, spices = []]) => ({
-        name,
-        method,
-        items,
-        spices,
-        ...home(w).known[name],
-        known: !!home(w).known[name],
-      })),
+      // 书上的菜读完那本才列进菜谱册
+      recipes: RECIPES.filter(([name]) => !hidden(w).includes(name)).map(
+        ([name, method, items, spices = []]) => ({
+          name,
+          method,
+          items,
+          spices,
+          ...home(w).known[name],
+          known: !!home(w).known[name],
+        }),
+      ),
     }));
     // 掌火时画面每一帧问一回：照这一锅的节拍和到现在按的记录，此刻锅里什么样子
     queries.define('cook.fire', (w, input = {}, log = [], t = 0) => {

@@ -10,6 +10,7 @@ import { dishName } from './cuisine-name.js';
 import { planFor, judge, goodLog, twistOf } from './cook-fire.js';
 import { buffOf, tasteOf, flavorOf } from './cuisine-taste.js';
 import { refuse } from '../kernel/dispatch.js';
+import { BOOK_RECIPES } from '../content/books.js';
 /** n 分成 k 份：整数商，余数从头一份起各多 1。 */
 export const split = (n, k) =>
   Array.from({ length: k }, (_, i) => Math.floor(n / k) + (i < n % k ? 1 : 0));
@@ -41,7 +42,13 @@ export function previewMeal(w, input, compute, who, fires = 0) {
   const si = dateOf(w.clock.day).season;
   const season = items.some(k => seasonal(k, si)) && items.every(k => inSeason(k, si));
   const meat = items.filter(k => I(k).tags.includes('meat')).length;
-  const name = dishName(items, method, I, spices);
+  // 书上的菜没读完那本书不算菜谱（sim/plugins/reading.js 接进 'recipes.hidden'）
+  const hidden = compute.run(
+    'recipes.hidden',
+    { w, who },
+    { value: Object.keys(BOOK_RECIPES) },
+  ).value;
+  const name = dishName(items, method, I, spices, hidden);
   const buff = buffOf(items, method, I, spices);
   const taste = tasteOf(items, method, I, spices);
   // 饱腹守恒：先算这一锅一共多少，最后才分到几份里
