@@ -45,6 +45,6 @@ test('路口一截路都算出口：路牌两边各一格、往里一格；门�
   assert.equal(to('market', 3, 14), null, '离路口两格就不算');
   assert.equal(to('market', 1, 12), null);
   // 小屋的门：旁边一格不算
-  assert.equal(to('cottage', 9, 14), 'yard');
-  assert.equal(to('cottage', 8, 14), null);
+  assert.equal(to('cottage', 8, 12), 'yard');
+  assert.equal(to('cottage', 7, 12), null);
 });

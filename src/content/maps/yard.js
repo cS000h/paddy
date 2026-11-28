@@ -13,10 +13,10 @@ const paint = [
   ['#', 0, 3, 0, 14], // 西边
   ['#', 0, 17, 0, H - 1],
   ['s', 0, 15, W - 1, 16], // 石板路，东西向
-  ['p', 4, 10, 13, 13], // 院子里的泥地
-  ['.', 4, 10, 6, 13], // 桃树下留草地，木墩旁晒竹篾
-  ['s', 8, 10, 8, 14], // 门槛到院门的一行石板
-  ['s', 9, 10, 12, 10], // 檐下避泥水的灶边
+  ['p', 4, 8, 17, 13], // 院子里的泥地
+  ['.', 4, 8, 6, 11], // 桃树下留草地，木墩旁晒竹篾
+  ['s', 8, 8, 8, 14], // 门槛到院门的一行石板
+  ['s', 9, 8, 12, 8], // 檐下避泥水的灶边
   ['p', 9, 14, 9, 14],
   ['p', 20, 17, 21, 26], // 去田里的土路
   ['f', 6, 19, 17, 25], // 自家的菜地
@@ -40,31 +40,33 @@ function ground() {
 }
 
 // 物件：[种类, 锚点格 x, y, 可选的附加数据]。锚点是物件“脚下”的那一格（房子是门的那一格）。
+// 篱笆圈 x 3–18：屋子靠北，屋前留出 14×6 的院子，东南角空着，往后添置东西
 const fenceTop = [];
-for (let y = 4; y <= 13; y++) fenceTop.push(['fence.v', 3, y], ['fence.v', 14, y]);
-for (let x = 3; x <= 14; x++)
+for (let y = 4; y <= 13; y++) fenceTop.push(['fence.v', 3, y], ['fence.v', 18, y]);
+for (let x = 3; x <= 18; x++)
   if (x < 7 || x > 10) fenceTop.push(['fence.h', x, 14]);
   else if (x === 7 || x === 10) fenceTop.push(['gate.post', x, 14]);
 
 const objects = [
-  ['house.hero', 8, 9, { to: 'cottage', arrival: 'entry', label: '进小屋' }],
+  ['house.hero', 8, 7, { to: 'cottage', arrival: 'entry', label: '进小屋' }],
   ['house.gui', 30, 9],
   ...fenceTop,
   ['gate.arch', 7, 14],
   // 东檐用火用水，树下编筐，走中间的石板回屋。
-  ['stove', 10, 10],
-  ['vat', 12, 10],
-  ['pickleJar', 13, 10, { station: 'pickle', label: '腌菜坛' }],
-  // 院子里：桃树下的木墩、晒匾、东南角的鸡窝
-  ['tree.peach', 4, 10],
-  ['workbench', 4, 12, { station: 'workbench', label: '木墩' }],
-  ['trays', 5, 11],
-  ['table', 6, 12, { station: 'rest', label: '桃树下的长凳', look: 'bench' }],
-  ['coop', 13, 12, { station: 'coop', label: '院角的鸡窝' }],
-  ['haystack', 16, 11],
-  ['flowers', 4, 13],
-  ['flowers', 6, 13],
-  ['flowers', 13, 13],
+  ['stove', 10, 8],
+  ['vat', 12, 8],
+  ['pickleJar', 13, 8, { station: 'pickle', label: '腌菜坛' }],
+  // 院子里：桃树下的木墩、晒匾，东南角的鸡窝
+  ['tree.peach', 4, 8],
+  ['workbench', 4, 10, { station: 'workbench', label: '木墩' }],
+  ['trays', 5, 9],
+  ['table', 6, 10, { station: 'rest', label: '桃树下的长凳', look: 'bench' }],
+  ['coop', 16, 12, { station: 'coop', label: '院角的鸡窝' }],
+  // 篱笆外东边的草垛（排在花丛前面：翻找照这个顺序，开春草垛、稻草人、瓜棚都翻不出东西，别让它们挨着）
+  ['haystack', 19, 10],
+  ['flowers', 4, 11],
+  ['flowers', 6, 11],
+  ['flowers', 13, 11],
   ['well', 18, 18],
   ['scarecrow', 5, 21],
   ['trellis', 4, 24],
@@ -75,11 +77,10 @@ const objects = [
   ['flowers', 34, 13],
   ['route', 42, 14, { to: 'tea', arrival: 'west', label: '去樟树茶摊' }],
   ['route', 2, 14, { to: 'market', arrival: 'west', label: '去村口杂货铺' }],
-  ['route', 17, 4, { to: 'creek', arrival: 'west', label: '去溪边竹径' }],
+  ['route', 19, 4, { to: 'creek', arrival: 'west', label: '去溪边竹径' }],
   // 北边的林子：前后两排，围住院子
   ['tree.broad', 1, 3],
   ['bamboo', 3, 2],
-  ['tree.broad', 6, 3],
   ['tree.pine', 10, 2],
   ['tree.broad', 13, 3],
   ['bamboo', 16, 3],
@@ -93,25 +94,22 @@ const objects = [
   ['tree.willow', 36, 6],
   ['bamboo', 43, 4],
   ['forage', 36, 17, { station: 'forage', label: '溪边野菜' }],
-  ['woodpile', 17, 6, { station: 'wood', label: '林边枯木' }],
-  ['shootPatch', 16, 8, { station: 'bamboo', label: '竹林' }],
-  ['mushroomPatch', 19, 7, { station: 'mushroom', label: '松针下的菌子' }],
-  ['teaBush', 24, 7, { station: 'tea', label: '坡边茶垄' }],
-  ['nutPatch', 26, 6, { station: 'chestnut', label: '栗子树下' }],
+  // 院外只留离家最近的一处枯木好捡柴；竹笋、菌子、茶、栗子在溪边和后山
+  ['woodpile', 21, 7, { station: 'wood', label: '林边枯木' }],
+  ['tree.broad', 24, 7],
+  ['bush', 26, 6],
+  ['fern', 19, 7],
   ['fishing', 38, 20, { station: 'fish', label: '溪湾钓点' }],
   // 院外的零碎：晒着的簸箕、粮袋、柴垛、邻家门口的木桶木箱，路边的蕨和乱石
-  ['trays', 17, 13],
-  ['sacks', 15, 12],
-  ['firewood', 18, 12],
+  ['sacks', 19, 12],
+  ['firewood', 21, 11],
   ['barrels', 34, 12],
   ['crates', 32, 13],
   ['trays', 3, 18],
   ['bench', 13, 17],
-  ['fern', 8, 3],
   ['fern', 21, 4],
   ['fern', 36, 24],
   ['fern', 12, 29],
-  ['rockPile', 12, 4],
   ['rockPile', 35, 22],
   // 溪边
   ['tree.willow', 37, 12],
@@ -158,12 +156,12 @@ export const yard = Object.freeze({
   spots: Object.freeze({
     west: [2, 15, 'right'],
     east: [42, 15, 'left'],
-    'creek.entry': [17, 5, 'down'],
+    'creek.entry': [19, 5, 'down'],
     'aman.field': [20, 20, 'left'],
     'shi.yard': [21, 13, 'right'], // 石伯没有自家院子，傍晚在院外老樟树下编筐，不进你的篱笆
     'gui.yard': [30, 10, 'down'],
-    start: [8, 11, 'down'],
-    'hero.bed': [8, 10, 'down'],
+    start: [8, 9, 'down'],
+    'hero.bed': [8, 8, 'down'],
     'shi.field': [23, 22, 'right'],
     // 院门外围着的人（满院飘香、彩头台围观），让开院门正中那两格
     'gate.0': [7, 15, 'up'],
@@ -171,12 +169,12 @@ export const yard = Object.freeze({
     'gate.2': [12, 15, 'up'],
     'gate.3': [5, 15, 'up'],
     // 修好的地方招进院来的人站在哪儿（content/yard-fix.js）
-    'guest.bench': [10, 12, 'up'],
+    'guest.bench': [10, 10, 'up'],
     'guest.well': [17, 18, 'right'],
-    'guest.coop': [12, 13, 'right'],
+    'guest.coop': [15, 12, 'right'],
     'guest.rack': [13, 15, 'up'],
-    'guest.shed': [12, 11, 'right'],
+    'guest.shed': [12, 9, 'right'],
   }),
   // 自家的院子（篱笆以内）：[x0, y0, x1, y1]。站在这里面，才够得着家里存的东西
-  home: Object.freeze([4, 10, 13, 13]),
+  home: Object.freeze([4, 8, 17, 13]),
 });

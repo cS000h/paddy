@@ -8,7 +8,8 @@
 //   第二天的贺喜一天只挑一件（G-31）：攒着、大成那档里最早没提过的，对口的村民见面先说（'talk.news'），
 //   茶摊传开另一件（'tea.gossip'）；其余顺延到后几天。戴着称号时，村民没别的好提，三天里有一天这么招呼你。
 //   查询 yard.keepsakes → 院里该摆出来的成就摆件和稻穗纪念（content/keepsakes.js），画面照着摆。
-//   进院的村民看见对口的摆件，没别的好提时隔天说一句（不记谁说过，不进存档）。
+//   进院的村民看见对口的摆件，没别的好提时隔天说一句；客人头一句被进院那件事占了，就留到再搭话时说
+//   （'talk.aside'，不记谁说过，不进存档）。
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { ACHIEVEMENTS } from '../../content/achievements.js';
@@ -192,6 +193,11 @@ export const achievements = {
       const mine = KEEPSAKES.filter(k => k.by === to && state.earned[k.for]);
       return mine.length ? mine[Math.floor(w.clock.day / 2) % mine.length].look : null;
     };
+    // 进院的客人头一句是进院那件事（yard-fix 的 talk.news），摆件留到再搭话时说
+    compute.tap('talk.aside', (r, { w, to }) => {
+      const look = keepsakeLook(w, to, Object.keys(PEOPLE).indexOf(to));
+      if (look) r.value = look;
+    });
     queries.define('yard.keepsakes', (w, map = people.me(w).map) =>
       map === 'yard' ? keepsakesOf(w) : [],
     );

@@ -474,7 +474,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   }
 
   function wander() {
-    if (hero().map === 'cottage') dress({ x: 8, y: 5, dir: 'up' });
+    if (hero().map === 'cottage') dress({ x: 6, y: 6, dir: 'up' });
     else send('wardrobe.wear', { coat: 'plain', hair: 'plain' });
     const p = pick(layout(hero().map).stand);
     send('person.place', { x: p.x, y: p.y, dir: pick(DIRS) });

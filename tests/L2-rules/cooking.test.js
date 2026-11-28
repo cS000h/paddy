@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { XP } from '../../src/content/growth.js';
-import { newGame, must, bestFire } from '../helpers.js';
+import { newGame, must, bestFire, STOVE } from '../helpers.js';
 import { POT } from '../../src/content/recipes.js';
 import { createGame } from '../../src/port/game.js';
 import { FIRE } from '../../src/content/cook-fire.js';
-const at = { x: 10, y: 11, dir: 'up' };
+const at = STOVE;
 const meal = { items: ['potato', 'bean'], method: 'stew', at };
 test('0.12菜谱对照：蛋炒饭、土豆炖豆子、香草烤土豆的名称与性味', () => {
   const g = newGame();

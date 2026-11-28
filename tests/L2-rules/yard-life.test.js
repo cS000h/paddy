@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
-import { newGame, must, refused, bestFire, carried, wait } from '../helpers.js';
+import { newGame, must, refused, bestFire, carried, wait, HOME, STOVE } from '../helpers.js';
 import { MATCH } from '../../src/content/fair-match.js';
 import { CROWD_DOING, MATCH_VISIT, VISIT_TEXT } from '../../src/content/crowd.js';
 import { YARD_FIX, FIX_IDS, YARD_GUESTS } from '../../src/content/yard-fix.js';
@@ -129,8 +129,8 @@ test('钱胖子被识破来赔不是，留下鸡蛋；被冤枉了来讨说法�
 });
 
 test('修院子：材料不够修不了；够了修好，用掉材料、花力气，画面上多一处；老鲁不在不能请', () => {
-  const g = staged(newGame(1), w => Object.assign(w.people.hero, { map: 'yard', x: 8, y: 11 }));
-  const at = { x: 8, y: 11 };
+  const g = staged(newGame(1), w => Object.assign(w.people.hero, { map: 'yard', ...HOME }));
+  const at = HOME;
   const row = g.ask('yard.fix', at).find(r => r.id === 'well');
   assert.match(row.reason, /鹅卵石不够/);
   assert.match(refused(g, 'yard.fix', { id: 'well', at }), /鹅卵石不够/);
@@ -226,12 +226,12 @@ test('修好的檐下长凳：雨天午前有人进院躲雨，说上话留下�
 /** 院里做一锅拿手的极品蛋炒饭。 */
 function aromaGame() {
   const g = staged(newGame(1), w => {
-    Object.assign(w.people.hero, { map: 'yard', x: 10, y: 11, dir: 'up' });
+    Object.assign(w.people.hero, { map: 'yard', ...STOVE });
     w.packs.hero.items['egg.fine'] = 1;
     delete w.packs.hero.items.egg;
   });
   const meal = { items: ['rice', 'egg.fine'], method: 'fry' };
-  const out = act(g, 'cook', { ...meal, log: bestFire(g, meal), at: { x: 10, y: 11, dir: 'up' } });
+  const out = act(g, 'cook', { ...meal, log: bestFire(g, meal), at: STOVE });
   return { g, out };
 }
 
@@ -250,7 +250,7 @@ test('满院飘香：拿手又用了极品料，爱来往的乡邻循着香到�
 
   const plain = newGame(1);
   const meal = { items: ['rice', 'egg'], method: 'fry' };
-  const at = { x: 10, y: 11, dir: 'up' };
+  const at = STOVE;
   const cooked = act(
     staged(plain, w => Object.assign(w.people.hero, { map: 'yard', ...at })),
     'cook',

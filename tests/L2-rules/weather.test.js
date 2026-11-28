@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, refused, growOne, FIELD, HOME, wait, stocked } from '../helpers.js';
+import { newGame, must, refused, growOne, FIELD, HOME, wait, stocked, STOVE } from '../helpers.js';
 import { CROPS } from '../../src/content/items.js';
 
 test('看天每天一次：提高预报把握、增长看天本事，不能重复刷经验', () => {
@@ -44,7 +44,11 @@ test('浇地与排水各有用处；施肥取灶灰，重复操作不扣资源',
   assert.equal(refused(g, 'farm.care', { ...FIELD, kind: 'bugs' }), '没有菜虫');
   assert.match(refused(g, 'farm.care', { ...FIELD, kind: 'manure' }), /灰/);
   for (let i = 0; i < 3; i++)
-    must(g, 'cook', { items: ['rice'], method: 'stew', at: { x: 11, y: 11, dir: 'up' } });
+    must(g, 'cook', {
+      items: ['rice'],
+      method: 'stew',
+      at: { x: STOVE.x + 1, y: STOVE.y, dir: 'up' },
+    });
   must(g, 'farm.care', { ...FIELD, kind: 'manure' });
   assert.equal(g.ask('farm.detail', 6, 19).fert, 8);
   assert.equal(refused(g, 'farm.care', { ...FIELD, kind: 'manure' }), '今天施过肥了');

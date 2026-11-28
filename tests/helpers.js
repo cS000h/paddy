@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createGame } from '../src/port/game.js';
 import { bestLog } from '../src/sim/cook-fire.js';
 import { LEVELS } from '../src/content/growth.js';
+import { MAPS, walkable } from '../src/content/maps/index.js';
 
 /** 新开一局，写入检查总是开着。 */
 export const newGame = (seed = 1) => createGame({ seed, debug: true });
@@ -80,8 +81,60 @@ export const carried = (game, item) => game.ask('pack').items.find(i => i.id ===
 /** 家里存着几份某样东西。 */
 export const stored = (game, item) => game.ask('home').items.find(i => i.id === item)?.n || 0;
 
-/** 站在自家院子里（橱柜、灶台都在这儿）。 */
-export const HOME = Object.freeze({ x: 8, y: 11, dir: 'down' });
+/**
+ * 照名字找地图上那件东西跟前能站的一格（先下面、再左右、再上面），面朝它。
+ * match 是工位名（station: 'wood'）或物件种类（'stove'），工位名先认。地图挪了东西，测试不用跟着改坐标。
+ */
+export function near(mapId, match) {
+  const map = MAPS[mapId];
+  const row =
+    map.objects.find(([, , , o]) => o?.station === match) || map.objects.find(([k]) => k === match);
+  assert.ok(row, `${mapId} 上没有 ${match}`);
+  const [, x, y] = row;
+  for (const [dx, dy, dir] of [
+    [0, 1, 'up'],
+    [-1, 0, 'right'],
+    [1, 0, 'left'],
+    [0, -1, 'down'],
+  ])
+    if (walkable(map, x + dx, y + dy)) return Object.freeze({ x: x + dx, y: y + dy, dir });
+  assert.fail(`${mapId} 的 ${match} 跟前站不了人`);
+}
+
+/** 地图上一个有名字的位置（作息、开局用的那些），照 near 的样子给 {x, y, dir}。 */
+export function spotOf(mapId, name) {
+  const [x, y, dir] = MAPS[mapId].spots[name];
+  return Object.freeze({ x, y, dir });
+}
+
+/** 站在自家院子里（橱柜、灶台都在这儿）：开局站的那一格。 */
+export const HOME = spotOf('yard', 'start');
+/** 院里的灶、水缸、木墩、鸡窝，林边的枯木，屋里的橱柜、衣镜跟前。 */
+export const STOVE = near('yard', 'stove');
+export const VAT = near('yard', 'vat');
+export const WORKBENCH = near('yard', 'workbench');
+export const COOP = near('yard', 'coop');
+/** 桃树下的长凳：歇脚、看天色。 */
+export const BENCH = near('yard', 'rest');
+export const WOOD = near('yard', 'wood');
+export const CUPBOARD = near('cottage', 'cupboard');
+export const MIRROR = near('cottage', 'dresser');
+
+/** 顺着路牌走到相邻的一张地图（要和当前地图直接相连）。 */
+export function travel(game, to) {
+  const map = MAPS[game.ask('hero').map];
+  const row = map.objects.find(o => o[3]?.to === to);
+  assert.ok(row, `${map.id}没有去${to}的出口`);
+  const [, x, y] = row;
+  const [dx, dy] = [
+    [0, 1],
+    [0, -1],
+    [1, 0],
+    [-1, 0],
+  ].find(([dx, dy]) => walkable(map, x + dx, y + dy));
+  must(game, 'travel', { x, y, at: { x: x + dx, y: y + dy, dir: 'up' } });
+  assert.equal(game.ask('hero').map, to);
+}
 
 /** 站在水井左边，面朝水井。水井在 (18, 18)。 */
 export const WELL = Object.freeze({
@@ -140,4 +193,11 @@ export function stocked(game, items) {
   const home = saved.state.world.households.home.items;
   for (const [k, n] of Object.entries(items)) home[k] = (home[k] || 0) + n;
   return createGame({ saved, debug: true });
+}
+
+/** 去溪边竹林砍一回竹子再回院里（院外北林的竹林挪走以后，竹篾得上溪边拿）。 */
+export function fetchBamboo(game) {
+  travel(game, 'creek');
+  must(game, 'gather', { id: 'bamboo', at: near('creek', 'bamboo') });
+  travel(game, 'yard');
 }

@@ -15,7 +15,7 @@ import {
 import { ITEMS } from '../../src/content/items.js';
 import { fishTable, thingTable, makeBout } from '../../src/sim/fishing-bout.js';
 import { gradeOf } from '../../src/sim/fishing-fight.js';
-import { newGame, must, carried, fishOnce, HOME, FISH_SPOT, FIELD } from '../helpers.js';
+import { newGame, must, carried, fishOnce, HOME, FISH_SPOT, FIELD, WORKBENCH } from '../helpers.js';
 
 const NOON = { season: 0, dusk: false, weather: 'sunny', wet: false };
 const share = (table, ids) =>
@@ -198,7 +198,7 @@ test('河虾、毛蟹跟鱼一起装进鱼篓，合起来只占一格；破草�
   });
   assert.equal(g.ask('pack').used, 2, '鱼篓一格，破草鞋一格');
   assert.ok(ITEMS.shrimp.creel && ITEMS.crab.creel);
-  must(g, 'homestead', { id: 'unpick', at: { x: 5, y: 12 } });
+  must(g, 'homestead', { id: 'unpick', at: WORKBENCH });
   assert.equal(carried(g, 'oldSandal'), 0);
   assert.equal(carried(g, 'straw'), 2);
   const fert = g.ask('farm.detail', FIELD.x, FIELD.y)?.fert;

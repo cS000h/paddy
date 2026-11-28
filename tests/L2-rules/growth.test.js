@@ -1,6 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, refused, settle, FIELD, wait, nearLevel } from '../helpers.js';
+import {
+  newGame,
+  must,
+  refused,
+  settle,
+  FIELD,
+  wait,
+  nearLevel,
+  WOOD,
+  STOVE,
+  BENCH,
+} from '../helpers.js';
 import { createGame } from '../../src/port/game.js';
 const skill = (g, id) => g.ask('growth').skills.find(s => s.id === id);
 const traits = g =>
@@ -73,7 +84,7 @@ test('熟悉度与厨艺做出特质；获得后预览与出锅仍一致', () =>
   for (let i = 0; i < 5; i++) {
     must(g, 'talk', { to: 'shi' });
     must(g, 'talk', { to: 'gui' });
-    must(g, 'gather', { id: 'sticks', at: { x: 17, y: 7 } }); // 攒柴，后面做八回饭
+    must(g, 'gather', { id: 'sticks', at: WOOD }); // 攒柴，后面做八回饭
     must(g, 'sleep');
   }
   assert.ok(traits(g).includes('familiar'));
@@ -83,7 +94,7 @@ test('熟悉度与厨艺做出特质；获得后预览与出锅仍一致', () =>
   must(g, 'talk', { to: 'shi' });
   assert.ok(once > before);
   assert.equal(skill(g, 'social').xp, once);
-  const at = { x: 10, y: 11 };
+  const at = STOVE;
   for (const items of [
     ['rice', 'egg'],
     ['rice', 'potato'],
@@ -122,10 +133,10 @@ test('慢热歇息的加成、好问看天的经验、独行采集额外经验',
   // 先多干些活，让额外恢复不被100上限吞掉。
   for (let x = 7; x < 12; x++) must(g, 'farm.till', { x, y: 19, at: { x, y: 18 } });
   const e = g.ask('hero').energy;
-  must(g, 'homestead', { id: 'rest', at: { x: 5, y: 13 } });
+  must(g, 'homestead', { id: 'rest', at: BENCH });
   assert.equal(g.ask('hero').energy, Math.min(100, e + 20));
   wait(g, 600);
-  must(g, 'homestead', { id: 'stars', at: { x: 5, y: 13 } });
+  must(g, 'homestead', { id: 'stars', at: BENCH });
   assert.ok(skill(g, 'sky').xp >= 12, '看天一回 1 点，好问再 1 点，看天的倍数是 6');
   const solo = newGame();
   settle(solo, { family: 'boat', own: 'shy' });

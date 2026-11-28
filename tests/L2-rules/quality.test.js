@@ -2,12 +2,11 @@
 // 连着没出，下一回把握大一截；极品下锅认原来那样、火候宽一截，送人多记一笔。一律通过端口发命令。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, carried } from '../helpers.js';
+import { newGame, must, carried, STOVE, WORKBENCH, COOP, fetchBamboo } from '../helpers.js';
 import { FINE_CHANCE, FIELD_ODDS, FINE_HEAT } from '../../src/content/quality.js';
 import { FIRE } from '../../src/content/cook-fire.js';
 
 const WELL_AT = { x: 18, y: 18, at: { x: 17, y: 18, dir: 'right' } };
-const STOVE = { x: 10, y: 11, dir: 'up' };
 const spotAt = x => ({ x, y: 19, at: { x, y: 18, dir: 'down' } });
 const SPOTS = [6, 7, 8, 9, 10, 11].map(spotAt);
 const odds = (g, s) => g.ask('farm.detail', s.x, s.y).odds;
@@ -141,8 +140,7 @@ test('采集点采到的也出极品：连着采几天总碰得上一回，说�
         assert.match(f.data.line, /极品/);
       }
       for (const i of g.ask('pack').items)
-        if (i.id !== 'seed.qingcai')
-          must(g, 'pack.take', { item: i.id, n: 'all', at: { x: 5, y: 12 } });
+        if (i.id !== 'seed.qingcai') must(g, 'pack.take', { item: i.id, n: 'all', at: WORKBENCH });
       must(g, 'sleep');
     }
   }
@@ -150,12 +148,12 @@ test('采集点采到的也出极品：连着采几天总碰得上一回，说�
 });
 
 test('捡蛋：一窝里偶尔有一枚极品蛋，总数照旧', () => {
-  const coop = { x: 12, y: 11 };
+  const coop = COOP;
   let fine = 0;
   let total = 0;
   for (let seed = 1; seed <= 4; seed++) {
     const g = newGame(seed);
-    must(g, 'gather', { id: 'bamboo', at: { x: 16, y: 9 } });
+    fetchBamboo(g);
     must(g, 'homestead', { id: 'buildCoop', at: coop });
     must(g, 'homestead', { id: 'buyHen', at: coop });
     for (let day = 0; day < 10; day++) {

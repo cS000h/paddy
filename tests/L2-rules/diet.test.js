@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, settle, stocked } from '../helpers.js';
+import { newGame, must, settle, stocked, STOVE } from '../helpers.js';
 import { DIET_LINES, DRY_GONE, GIFT_TASTE } from '../../src/content/diet.js';
 
-const at = { x: 10, y: 11, dir: 'up' };
+const at = STOVE;
 const states = g => g.ask('diet').states.map(s => s.name);
 const eat = (g, item) => must(g, 'eat', { item, at });
 
