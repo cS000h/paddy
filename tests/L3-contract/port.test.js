@@ -130,6 +130,7 @@ const QUERIES = [
   'match.visit.options',
   'yard.fix',
   'yard.fixes',
+  'yard.keepsakes',
   'leaning',
   'almanac',
   'hopes',

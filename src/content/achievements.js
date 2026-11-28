@@ -3,6 +3,11 @@
 // when 是事实以外的条件（G-31 的暗成就）：wet 下着雨，hours [从, 到) 分钟，perDay 只数当天的（第二天从头数），
 // prefix 是某个字段以这几个字开头（送的是鱼）。hidden 是暗成就，没得之前只露 clue 那一句线索。
 // 每个成就的话、对口的村民、大成的称号在 content/achievement-text.js。
+import { CALENDAR } from './calendar.js';
+
+/** 住满一整年要过几个清早：跟着日历走，季节天数改了这里也跟着变（G-31 回稿按 60 天写的）。 */
+const YEAR_DAYS = CALENDAR.seasonDays * CALENDAR.seasons.length;
+
 /** 图鉴和收集的成就：听图鉴插件发的 catalog.got。 */
 const book = (id, name, where, goal) => ({ id, name, event: 'catalog.got', where, goal });
 /** 暗成就：没得之前册子里只有「？？」和 clue。 */
@@ -89,7 +94,7 @@ export const ACHIEVEMENTS = [
   { id: 'harvest120', name: '岁稔年丰', event: 'crop.harvested', amount: 'n', goal: 120 },
   { id: 'recipes25', name: '灶台百味', event: 'meal.cooked', where: { first: true }, goal: 25 },
   { id: 'forage80', name: '踏遍青峰', event: 'forage.finished', goal: 80 },
-  { id: 'days60', name: '四季安居', event: 'day.started', goal: 60 },
+  { id: 'days60', name: '四季安居', event: 'day.started', goal: YEAR_DAYS },
   { id: 'gift40', name: '满村热面', event: 'gift.given', goal: 40 },
   { id: 'passer1', name: '四海皆邻', event: 'passer.picked', where: { end: 'ok' }, goal: 1 },
   { id: 'passer5', name: '留客一程', event: 'passer.picked', where: { end: 'ok' }, goal: 5 },

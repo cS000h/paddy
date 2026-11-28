@@ -7,11 +7,14 @@
 //   清早：便条里提昨天得了什么；攒到 10/25/40 根稻穗，村里来一回表示（RICE_MARKS）。
 //   第二天的贺喜一天只挑一件（G-31）：攒着、大成那档里最早没提过的，对口的村民见面先说（'talk.news'），
 //   茶摊传开另一件（'tea.gossip'）；其余顺延到后几天。戴着称号时，村民没别的好提，三天里有一天这么招呼你。
+//   查询 yard.keepsakes → 院里该摆出来的成就摆件和稻穗纪念（content/keepsakes.js），画面照着摆。
+//   进院的村民看见对口的摆件，没别的好提时隔天说一句（不记谁说过，不进存档）。
 import { is } from '../../kernel/schema.js';
 import { refuse } from '../../kernel/dispatch.js';
 import { ACHIEVEMENTS } from '../../content/achievements.js';
 import { ACH_TEXT, ACH_TITLES, RICE_MARKS, ME_IN_GOSSIP } from '../../content/achievement-text.js';
 import { PEOPLE } from '../../content/people.js';
+import { KEEPSAKES, COURT } from '../../content/keepsakes.js';
 import { fill } from '../../content/text.js';
 
 const BY_ID = new Map(ACHIEVEMENTS.map(a => [a.id, a]));
@@ -24,10 +27,21 @@ const idOk = id => id === null || BY_ID.has(id);
 
 export const achievements = {
   id: 'sim.achievements',
-  requires: ['schema', 'commands', 'reactions', 'queries', 'compute', 'people', 'weather', 'core'],
+  requires: [
+    'schema',
+    'commands',
+    'reactions',
+    'queries',
+    'compute',
+    'people',
+    'weather',
+    'core',
+    'residents',
+  ],
   writes: ['achievements'],
   install(ctx) {
-    const { schema, commands, reactions, queries, compute, people, weather, core } = ctx.services;
+    const { schema, commands, reactions, queries, compute, people, weather, core, residents } =
+      ctx.services;
     const ids = new Set(BY_ID.keys());
     const keyed = (o, ok) => is.obj(o) && Object.entries(o).every(([k, v]) => ids.has(k) && ok(v));
     schema.slice('achievements', {
@@ -140,6 +154,48 @@ export const achievements = {
       { priority: 85 },
     );
 
+    /** 院里摆出来的：成就得了的摆件，稻穗攒到昨天为止够数的纪念。 */
+    const keepsakesOf = w => {
+      const state = w.achievements[people.who(w)];
+      if (!state) return [];
+      const day = w.clock.day;
+      const rice = Object.values(state.earned).filter(d => d < day).length;
+      return [
+        ...KEEPSAKES.filter(k => state.earned[k.for]).map(k => ({
+          id: k.id,
+          art: k.id,
+          x: k.at[0],
+          y: k.at[1],
+          wall: !!k.wall,
+        })),
+        ...RICE_MARKS.filter(m => rice >= m.at).map(m => ({
+          id: m.art,
+          art: m.art,
+          x: m.pos[0],
+          y: m.pos[1],
+          wall: true,
+        })),
+      ];
+    };
+    /** 他站在院里、院里有他对口的摆件：两天里有一天说一句，几件轮着说。 */
+    const keepsakeLook = (w, to, n) => {
+      if ((w.clock.day + n) % 2) return null;
+      const p = residents.positions(w).find(x => x.id === to);
+      const inCourt =
+        p?.map === 'yard' &&
+        p.x >= COURT.x0 &&
+        p.x <= COURT.x1 &&
+        p.y >= COURT.y0 &&
+        p.y <= COURT.y1;
+      if (!inCourt) return null;
+      const state = w.achievements[people.who(w)];
+      const mine = KEEPSAKES.filter(k => k.by === to && state.earned[k.for]);
+      return mine.length ? mine[Math.floor(w.clock.day / 2) % mine.length].look : null;
+    };
+    queries.define('yard.keepsakes', (w, map = people.me(w).map) =>
+      map === 'yard' ? keepsakesOf(w) : [],
+    );
+
     const heraldOf = w => w.achievements[people.who(w)]?.herald;
     // 别的事（过客、比鱼、飘香）先提；这边排在最后
     compute.tap(
@@ -153,8 +209,15 @@ export const achievements = {
           r.value = text.meet;
           return;
         }
-        const worn = w.achievements[people.who(w)]?.title;
+        // 下面两样是闲话：昨天送过他东西，让他先道谢（social.js 的 AFTER_RETURN）
+        if (w.bonds.gifted[to] === w.clock.day - 1) return;
         const n = Object.keys(PEOPLE).indexOf(to);
+        const look = keepsakeLook(w, to, n);
+        if (look) {
+          r.value = look;
+          return;
+        }
+        const worn = w.achievements[people.who(w)]?.title;
         if (worn && n >= 0 && (w.clock.day + n) % 3 === 0) r.value = ACH_TITLES[worn].hail;
       },
       { priority: 95 },

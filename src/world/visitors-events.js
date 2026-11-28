@@ -8,6 +8,7 @@ import { createStir } from './stir.js';
 import { createGroundFinds } from './ground-finds.js';
 import { createPrizeTraces } from './prize-traces.js';
 import { createYardFixes } from './yard-fixes.js';
+import { createKeepsakes } from './keepsakes.js';
 import { createChatter } from './chatter.js';
 import { createSignposts } from './signposts.js';
 import { HeldItem } from './held.js';
@@ -53,6 +54,7 @@ export function createFieldExtras(scene) {
   const stir = createStir(scene);
   const traces = createPrizeTraces(scene);
   const fixes = createYardFixes(scene);
+  const keepsakes = createKeepsakes(scene);
   const chatter = createChatter(scene, () => [...walkers.values()]);
   const signs = createSignposts(scene);
   const held = new HeldItem(scene);
@@ -88,6 +90,7 @@ export function createFieldExtras(scene) {
     ground.sync();
     traces.sync();
     fixes.sync();
+    keepsakes.sync();
     const { game } = scene.deps;
     const mapId = scene.map.id;
     // 集日渡口立木牌的外乡钓客也照过客的样子站着（sim/plugins/fair-match.js）
@@ -248,6 +251,7 @@ export function createFieldExtras(scene) {
         showEmote(scene, scene.player, 'star');
         const near = d.tier === 'grand' && nearestVillager(scene);
         if (near) showEmote(scene, near, 'exclaim');
+        needSync = true; // 对口的摆件当场摆进院子
       } else if (f.type === 'pulse.resolved') {
         needSync = true;
         scene.player.setPose('raise');
@@ -322,6 +326,7 @@ export function createFieldExtras(scene) {
   function destroy() {
     ground.destroy();
     fixes.destroy();
+    keepsakes.destroy();
     signs.destroy();
     held.destroy();
     clearEvent();
