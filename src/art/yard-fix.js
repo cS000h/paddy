@@ -5,7 +5,8 @@ import { P } from './palette.js';
 import { INK } from './items-kit.js';
 import { YARD_FIX_SKETCHES } from './yard-fix-sketches.js';
 
-const LEGEND = {
+/** 字符表：物品图标那张，加上水、墨灰和亮石暗石；成就摆件（art/keepsakes.js）也用这张。 */
+export const LEGEND = {
   ...INK,
   '!': P.ink0,
   '^': P.ink2,
