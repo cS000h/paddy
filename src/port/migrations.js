@@ -18,6 +18,14 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  35(state) {
+    // 集场路南摆摊：铺子多记今天三个摊位上是谁、每个摊子收了几份。旧档今天摊位空着，明早摆出来。
+    const w = state.world;
+    w.meta.version = 36;
+    w.shops.out = [null, null, null];
+    w.shops.stallTook = {};
+    return state;
+  },
   34(state) {
     // 「四季安居」从 60 个清早改成一年的天数（那时是 14×4=56）。旧档已经过满 56 个清早还没得的，
     // 当场补上（记在今天，第二天照常有人道喜），不用再等一个清早。

@@ -64,7 +64,7 @@ test('时令与雨后限制显示在同一份提示里；背篓、夜晚不能�
 });
 
 test('腌菜确实扣三份菜和一份盐，雨后菌子可采', () => {
-  const g = newGame(21);
+  const g = newGame(22);
   growOne(g);
   must(g, 'farm.harvest', FIELD);
   must(g, 'homestead', { id: 'pickle', at: { x: 13, y: 11 } });

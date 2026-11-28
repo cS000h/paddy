@@ -1,7 +1,8 @@
-// 柜台（杂货铺、茶点摊）和樟树下的茶桌。
+// 柜台（杂货铺、茶点摊、路南的摊子）和樟树下的茶桌。
 import { TEA_DEEDS } from '../content/market.js';
+import { ITEMS } from '../content/items.js';
 import { signed } from '../content/text.js';
-import { takeKind } from '../content/pantry.js';
+import { takeKind, kindOf } from '../content/pantry.js';
 import { button, actions, close, title, para, itemRow, itemList, esc } from './html.js';
 
 /** 价钱为什么涨落：“刚上市+1，傍晚处理−1”。 */
@@ -22,11 +23,12 @@ export function marketView(m, game, here) {
       }),
     }),
   );
+  const stall = market.stall;
   const sellable = game
     .ask('goods', here)
-    .filter(item => item.sell > 0)
+    .filter(item => item.sell > 0 && (!stall || stall.takes.includes(kindOf(item.id))))
     .map(item => {
-      const t = market.takes[takeKind(item.id)];
+      const t = stall ? stall.left : market.takes[takeKind(item.id)];
       const left = t.full
         ? `今天原价还收${t.full}份`
         : t.half
@@ -46,11 +48,16 @@ export function marketView(m, game, here) {
         }),
       });
     });
+  const sellNote = stall
+    ? `${stall.owner}收这几样：${stall.takes.map(k => ITEMS[k]?.name || k).join('、')}。一天只收几份，集日收得多。`
+    : '铺子每样每天只收几份，收满了只给半价。鱼和鲜货也可以卖给想要的乡邻。';
   const sellSide = market.buys
-    ? `${itemList(sellable, '行囊里还没有可卖的东西。')}
-        ${para('铺子每样每天只收几份，收满了只给半价。鱼和鲜货也可以卖给想要的乡邻。', 'aside')}`
+    ? `${itemList(sellable, stall ? '行囊里没有这个摊子收的东西。' : '行囊里还没有可卖的东西。')}
+        ${para(sellNote, 'aside')}`
     : para('茶摊只卖不收。要卖东西去杂货铺，或者问问想要的乡邻。', 'aside');
-  return `${title(shop === 'tea' ? '茶点摊' : '杂货铺', `${market.fair ? '今日赶集 · ' : ''}手头 ${coins} 文`)}
+  const name = stall ? `${stall.name} · ${stall.owner}` : shop === 'tea' ? '茶点摊' : '杂货铺';
+  return `${title(name, `${market.fair ? '今日赶集 · ' : ''}手头 ${coins} 文`)}
+    ${stall ? para(`“${stall.hawk}”`, 'say') + para(stall.who, 'aside') : ''}
     <div class="two">
       <section><h3>今日的货</h3>${itemList(wares, '今天的货卖完了，明早再来。')}</section>
       <section><h3>卖点随身带的</h3>${sellSide}</section>

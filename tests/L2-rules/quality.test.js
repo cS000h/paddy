@@ -21,6 +21,9 @@ function water(g, s) {
 }
 
 /** 种下一排青菜，照料到熟，一格格收；返回每一格收菜的事实。 */
+// 收一排菜要有寻常的也有极品：极品看抽签，换了规则抽签次序就变，挑一颗收出来两样都有的种子
+const ROW_SEED = 1;
+
 function harvestRow(g) {
   for (const s of SPOTS) {
     must(g, 'farm.till', s);
@@ -69,7 +72,7 @@ test('看地照料写出极品的把握：底子、地力、干湿、本事、�
 });
 
 test('收菜时抽一下：有寻常的也有极品，极品进了行囊、飘的是「极品青菜」；连着没出把握一回比一回大', () => {
-  const g = newGame();
+  const g = newGame(ROW_SEED);
   const got = harvestRow(g);
   const fine = got.filter(f => f.fine);
   assert.ok(fine.length >= 1 && fine.length < got.length, '六格里有寻常的也有极品');
@@ -94,7 +97,7 @@ test('收菜时抽一下：有寻常的也有极品，极品进了行囊、飘�
 });
 
 test('极品下锅：菜名、性味照原来那样，火候宽一截；用掉的是极品那一份', () => {
-  const g = newGame();
+  const g = newGame(ROW_SEED);
   harvestRow(g);
   const fine = { items: ['veg.qingcai.fine'], method: 'fry', at: STOVE };
   const plain = { ...fine, items: ['veg.qingcai'] };
@@ -113,7 +116,7 @@ test('极品下锅：菜名、性味照原来那样，火候宽一截；用掉�
 });
 
 test('送人：极品照原来那样看合不合心意，对方多记一笔「送的是极品」', () => {
-  const g = newGame();
+  const g = newGame(ROW_SEED);
   harvestRow(g);
   const out = g.dispatch('gift', { to: 'gui', item: 'veg.qingcai.fine' });
   assert.equal(out.ok, true);

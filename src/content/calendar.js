@@ -14,7 +14,7 @@ export const CALENDAR = Object.freeze({
   legMinutes: 10, // 照着全村地图走过去时，每经过一块路牌（一段路）花的时辰
 });
 
-/** 这一天是不是集日：杂货铺多进货，茶摊有肉摊，云姑去集上摆茶叶摊。 */
+/** 这一天是不是集日：杂货铺多进货，路南三个摊位摆满（见 content/stalls.js）。 */
 export const isFairDay = day => day % CALENDAR.fairEvery === 0;
 
 const HOURS = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];

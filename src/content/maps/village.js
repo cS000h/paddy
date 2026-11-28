@@ -228,9 +228,9 @@ export const market = village(
     ['haystack', 22, 12],
     ['lantern', 6, 9],
     ['lantern', 22, 9],
-    ['stall', 8, 18],
-    ['stall', 14, 18],
-    ['stall', 20, 18],
+    ['stall', 8, 18, { spot: 0 }],
+    ['stall', 14, 18, { spot: 1 }],
+    ['stall', 20, 18, { spot: 2 }],
     ['cart', 24, 16],
     ['well', 4, 11],
     ['basket', 11, 16],
@@ -258,5 +258,9 @@ export const market = village(
     'aman.market': [12, 12, 'right'],
     'gui.market': [16, 12, 'up'],
     'qiao.market': [15, 11, 'left'],
+    // 云姑出摊时站在自己摊子左手边（三个摊位从西往东）
+    'yun.stall0': [6, 18, 'right'],
+    'yun.stall1': [12, 18, 'right'],
+    'yun.stall2': [18, 18, 'right'],
   },
 );
