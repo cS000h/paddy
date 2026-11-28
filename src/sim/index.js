@@ -42,6 +42,7 @@ import { market } from './plugins/market.js';
 import { neighbors } from './plugins/neighbors.js';
 import { fairGames } from './plugins/fair-games.js';
 import { decor } from './plugins/decor.js';
+import { town } from './plugins/town.js';
 import { guide } from './plugins/guide.js';
 import { visits } from './plugins/visits.js';
 import { opinion } from './plugins/opinion.js';
@@ -112,6 +113,7 @@ export const PLUGINS = Object.freeze([
   neighbors,
   fairGames,
   decor,
+  town,
   witness,
   stress,
   deeds,
