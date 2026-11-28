@@ -1,5 +1,6 @@
 // 集场路南的摊棚，各摊一副样子：两根竹竿撑一片两色条纹的布篷，案板上摆着自家的货（G-33 字符画），
 // 右边竹竿上挂一面写着字的竖幡。没摆摊的那天只剩空架子。锚点和原来的蓝白摊棚一样，在中间那格的底边。
+// 集日那副（'<摊>.fair'）篷顶多挂一串彩旗，两头篷角各吊一盏红灯笼（G-33 第四节）。
 import { Grid, fromText } from './pixel.js';
 import { P, SHADOW } from './palette.js';
 import { INK } from './items-kit.js';
@@ -28,7 +29,11 @@ const LOOKS = {
   peddler: { stripe: ['h', '%'], goods: 'stallPeddler', banner: 'bannerPeddler' },
   fish: { stripe: ['c', '%'], goods: 'stallFish', banner: 'bannerFish' },
 };
-export const STALL_LOOKS = Object.freeze([...Object.keys(LOOKS), 'empty']);
+export const STALL_LOOKS = Object.freeze([
+  ...Object.keys(LOOKS),
+  ...Object.keys(LOOKS).map(id => id + '.fair'),
+  'empty',
+]);
 
 const W = 60; // 原来 48 宽；右边多出 12 挂竖幡
 const H = 40;
@@ -56,15 +61,20 @@ function awning(g, [a, b]) {
   g.hline(7, 40, 4, P.ink1).hline(3, 44, 12, ca);
 }
 
-/** 一副摊棚：look 是摊子编号，或 'empty'（今天没人摆）。 */
+/** 一副摊棚：look 是摊子编号（集日加 '.fair'），或 'empty'（今天没人摆）。 */
 export function stallLook(look) {
   const g = frame();
-  const l = LOOKS[look];
+  const [id, fair] = look.split('.');
+  const l = LOOKS[id];
   if (!l) return { grid: g, ax: 24, ay: H };
   awning(g, l.stripe);
   // 案板上的货：40×10，底边落在案板面上（y=26）
   g.blit(fromText(S[l.goods], LEGEND), 4, 17);
   // 竖幡：12×24，挂在右边竹竿外侧
   g.blit(fromText(S[l.banner], LEGEND), 46, 12);
+  if (fair) {
+    g.blit(fromText(S.festFlags, LEGEND), 8, 0);
+    for (const x of [0, 40]) g.blit(fromText(S.festLantern, LEGEND), x, 12);
+  }
   return { grid: g, ax: 24, ay: H };
 }

@@ -318,6 +318,19 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     send('wardrobe.wear', { coat: one('coat'), hair: one('hair'), at });
   }
 
+  // 路南的摊位：今天摆的摊子当柜台买卖；集日偶尔玩一把猜斤两、比大瓜（没摆、玩过了，规则会拒绝）
+  function stall(t, at) {
+    const id = game.ask('stalls')[t.spot];
+    if (!id) return send('market.visit', { shop: 'stall.' + pick(['meat', 'veg', 'fish']), at });
+    if (chance(0.3)) {
+      const crop = pick(goods(at).filter(x => x.carried > 0));
+      return id === 'meat'
+        ? send('fair.guess', { choice: pick(['light', 'right', 'heavy', 'nope']), at })
+        : send('fair.weigh', { item: crop?.id || 'pumpkin', at });
+    }
+    market('stall.' + id, at);
+  }
+
   function useThing() {
     const things = layout(hero().map).things.filter(t => !t.to);
     if (!things.length) return;
@@ -328,6 +341,7 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     else if (t.act === 'kitchen') kitchenWork(at);
     else if (t.act === 'store') store(at);
     else if (t.act === 'market') market(t.shop, at);
+    else if (t.act === 'stall') stall(t, at);
     else if (t.act === 'tea') tea(at);
     else if (t.act === 'cloth') cloth(at);
     else if (t.act === 'wardrobe') dress(at);

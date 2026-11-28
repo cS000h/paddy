@@ -19,6 +19,17 @@ export function marketActions({ shell, run, here, world }) {
     clothBuy({ kind, id }) {
       if (run('wardrobe.buy', { kind, id, at: here() }).ok) world.perform('trade');
     },
+    // 集日摊子上的小玩意：猜斤两、比大瓜（规则在 sim/plugins/fair-games.js）；结果那句留在小窗里
+    fairPlay({ kind, choice, item }) {
+      const type = kind === 'guess' ? 'fair.guess' : 'fair.weigh';
+      const r = run(type, { choice, item, at: here() });
+      if (!r.ok) return;
+      world.perform('trade');
+      const fact = r.facts.find(
+        f => f.type === (kind === 'guess' ? 'fair.guessed' : 'fair.weighed'),
+      );
+      shell.set({ modal: { ...shell.get().modal, line: fact.data.line } });
+    },
     teaDo({ kind }) {
       const r = run('tea.do', { kind, at: here() });
       if (r.ok) world.perform('sip');
