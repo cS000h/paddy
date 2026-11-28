@@ -1,4 +1,5 @@
-// 成就的反馈和奖励（G-31）：三档、快到了提一嘴、暗成就、只数当天的、清早便条、一天一件贺喜、称号、稻穗。
+// 成就的反馈和奖励（G-31）：三档、快到了提一嘴、暗成就、只数当天的、清早便条、一天一件贺喜、称号、稻穗、
+// 院里的摆件。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
@@ -9,6 +10,9 @@ import {
   RICE_MARKS,
   ME_IN_GOSSIP,
 } from '../../src/content/achievement-text.js';
+import { KEEPSAKES } from '../../src/content/keepsakes.js';
+import { CALENDAR } from '../../src/content/calendar.js';
+import { KEEPSAKE_NAMES } from '../../src/art/keepsakes.js';
 import { newGame, must, refused } from '../helpers.js';
 
 const reload = (g, edit) => {
@@ -186,4 +190,51 @@ test('稻穗攒到十根，第二天清早村里来一回表示', () => {
   assert.ok(today().some(n => n.title === RICE_MARKS[0].title));
   must(g, 'sleep');
   assert.ok(!today().some(n => n.title === RICE_MARKS[0].title));
+});
+
+test('得了对口的成就，院里摆出那件摆件；稻穗够数第二天门上挂纪念；进院的人看见了说一句', () => {
+  const g = newGame();
+  assert.deepEqual(g.ask('yard.keepsakes', 'yard'), []);
+  for (const k of KEEPSAKES) {
+    assert.ok(
+      ACHIEVEMENTS.some(a => a.id === k.for && a.tier !== 'first'),
+      k.id,
+    );
+    assert.ok(KEEPSAKE_NAMES.includes(k.id), `${k.id} 要有图`);
+    assert.ok(len(k.look) <= 30, `${k.id} 的话太长`);
+  }
+  for (const m of RICE_MARKS) assert.ok(KEEPSAKE_NAMES.includes(m.art), m.title);
+  const hoe = KEEPSAKES.find(k => k.id === 'ornHoe');
+  const got = reload(g, w => {
+    w.achievements.hero.earned[hoe.for] = w.clock.day;
+  });
+  assert.deepEqual(
+    got.ask('yard.keepsakes', 'yard').map(k => k.id),
+    ['ornHoe'],
+  );
+  assert.deepEqual(got.ask('yard.keepsakes', 'village'), []);
+  // 稻穗：攒到十根当天还不挂，第二天才挂
+  const ten = ACHIEVEMENTS.slice(0, 10).map(a => a.id);
+  const rich = reload(g, w => {
+    for (const id of ten) w.achievements.hero.earned[id] = w.clock.day;
+  });
+  assert.ok(!rich.ask('yard.keepsakes', 'yard').some(k => k.id === RICE_MARKS[0].art));
+  must(rich, 'sleep');
+  assert.ok(rich.ask('yard.keepsakes', 'yard').some(k => k.id === RICE_MARKS[0].art));
+  // 石伯在院里（平常日子申时以后他在院里，见 content/people.js 的 ROUTINES）：两天里有一天提锄头架
+  const said = [2, 3].map(day =>
+    reload(got, w => {
+      w.clock.day = day;
+      w.clock.minute = 16 * 60;
+      w.bonds.known.shi = 5;
+      w.bonds.talked.shi = 0;
+    }),
+  );
+  for (const x of said) assert.equal(x.ask('residents').find(p => p.id === 'shi').map, 'yard');
+  assert.equal(said.filter(x => x.ask('resident.greeting', 'shi') === hoe.look).length, 1);
+});
+
+test('「四季安居」跟着日历，住满一整年', () => {
+  const a = ACHIEVEMENTS.find(x => x.id === 'days60');
+  assert.equal(a.goal, CALENDAR.seasonDays * CALENDAR.seasons.length);
 });
