@@ -18,6 +18,13 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  36(state) {
+    // 集日摊子上的小玩意（猜斤两、比大瓜）：多记今天玩过哪几个，旧档从没玩过记起。
+    const w = state.world;
+    w.meta.version = 37;
+    w.fairPlay = { day: 0, done: [] };
+    return state;
+  },
   35(state) {
     // 集场路南摆摊：铺子多记今天三个摊位上是谁、每个摊子收了几份。旧档今天摊位空着，明早摆出来。
     const w = state.world;

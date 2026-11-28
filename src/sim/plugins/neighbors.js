@@ -22,7 +22,10 @@ export function wantsToday(w, id) {
   const season = dateOf(w.clock.day).season;
   // 今天清早抄下的种子；旧档升级当天还没抄过，就用眼下的（升级时已经抄好，这里只是兜底）
   const seed = w.deals?.day === w.clock.day ? w.deals.seed : w.meta.seed;
-  const pool = NEIGHBORS[id].wants.filter(k => inSeason(k, season));
+  const only = NEIGHBORS[id].seasons || {};
+  const pool = NEIGHBORS[id].wants.filter(
+    k => inSeason(k, season) && (!only[k] || only[k].includes(season)),
+  );
   const picked = [];
   for (let k = 0; picked.length < Math.min(R.perDay, pool.length) && k < 20; k++) {
     const i = Math.floor(noise(seed, w.clock.day, 919, IDS.indexOf(id), k) * pool.length);
@@ -30,6 +33,29 @@ export function wantsToday(w, id) {
   }
   return picked;
 }
+
+/** 一样东西值几文：照卖价；种子卖不了钱，照买价的一半。 */
+const worth = item => ITEMS[item].sell || Math.max(1, Math.ceil((ITEMS[item].buy || 2) / 2));
+
+/**
+ * 拿 item 跟这户换，他给什么、给几份：先看稿里写明的那一对，再看他家拿得出的当季的东西，
+ * 挑第一样换得出「大致等值」（不超过 item 价钱的 swapCap 倍）的。都换不出给 null。
+ */
+export function swapFor(w, id, item) {
+  const h = NEIGHBORS[id];
+  if (!h || !ITEMS[item]) return null;
+  const season = dateOf(w.clock.day).season;
+  const options = [...new Set([h.pairs[kindOf(item)], ...h.gives])].filter(
+    g => g && inSeason(g, season),
+  );
+  for (const give of options) {
+    const n = Math.min(R.swapMax, Math.floor((worth(item) * R.swapCap) / worth(give)));
+    if (n >= 1) return { item: give, n };
+  }
+  return null;
+}
+
+const say = text => '“' + text + '”';
 
 export const neighbors = {
   id: 'sim.neighbors',
@@ -78,22 +104,23 @@ export const neighbors = {
       const him = residents.positions(w).find(p => p.id === to);
       const me = people.me(w);
       if (!him?.visible || him.map !== me.map || !near(me, him)) refuse(W.far);
-      if (dealsToday(w, to) >= R.dealsPerDay) refuse(W.done);
+      if (dealsToday(w, to) >= R.dealsPerDay) refuse(say(NEIGHBORS[to].lines.done));
       if (!ITEMS[input.item] || !wantsToday(w, to).includes(kindOf(input.item)))
         refuse(W.notWanted);
       pack.use(w, people.who(w), input.item, 1, '卖给乡邻');
       if (w.deals.day !== w.clock.day) fresh(w);
       w.deals.n[to] = dealsToday(w, to) + 1;
-      return { to, house: purse.houseOf(to), name: ITEMS[input.item].name };
+      return { to, house: purse.houseOf(to), name: ITEMS[input.item].name, n: w.deals.n[to] };
     }
 
     commands.register('neighbor.sell', ({ draft, input, fact }) => {
       const w = draft.world;
       if (NEIGHBORS[input.to]?.buys === false) refuse('他手头没闲钱，只换不买');
       const coins = ITEMS[input.item]?.sell ? priceOf(w, input.item) : 0;
-      const { to, house, name } = check(w, input);
+      const { to, house, name, n } = check(w, input);
       if (!coins) refuse('这样东西卖不了钱');
-      if (purse.coins(w, house) < coins) refuse(W.broke);
+      if (purse.coins(w, house) < coins) refuse(say(NEIGHBORS[to].lines.broke));
+      const said = NEIGHBORS[to].lines.sold;
       purse.move(w, house, -coins, '买了' + name);
       store.earn(w, coins, '卖给乡邻' + name);
       fact('neighbor.sold', {
@@ -101,14 +128,17 @@ export const neighbors = {
         house,
         item: input.item,
         coins,
-        line: fill(W.sold, { item: name, coins }),
+        line: say(fill(said[(n + w.clock.day) % said.length], { item: name })),
       });
     });
 
     commands.register('neighbor.swap', ({ draft, input, fact }) => {
       const w = draft.world;
-      const { to, house, name } = check(w, input);
-      const { item, n } = NEIGHBORS[to].swap;
+      const deal = swapFor(w, input.to, input.item);
+      if (IDS.includes(input.to) && ITEMS[input.item] && !deal) refuse(W.noSwap);
+      const { to, house, name, n: count } = check(w, input);
+      const { item, n } = deal;
+      const said = NEIGHBORS[to].lines.swapped;
       pack.receive(w, people.who(w), item, n, '和乡邻换的');
       fact('neighbor.swapped', {
         to,
@@ -116,13 +146,14 @@ export const neighbors = {
         item: input.item,
         give: item,
         n,
-        line: fill(W.swapped, { item: name, give: ITEMS[item].name + (n > 1 ? n + '份' : '') }),
+        line: say(said[(count + w.clock.day) % said.length]),
       });
     });
 
     for (const to of IDS)
       registerResidentOptions(ctx, to, ({ ask, at, day }) => {
         const wants = ask('neighbor.wants', to);
+        const lines = NEIGHBORS[to].lines;
         /** @type {Array<Record<string, any>>} */
         const rows = [
           {
@@ -130,7 +161,11 @@ export const neighbors = {
             group: '买卖',
             label: '今天要些什么？',
             line: wants.items.length
-              ? fill(W.wants, { items: wants.items.map(k => ITEMS[k].name).join('、') })
+              ? say(
+                  fill(lines.ask[day % lines.ask.length], {
+                    items: wants.items.map(k => ITEMS[k].name).join('、'),
+                  }),
+                )
               : W.none,
           },
         ];
@@ -138,7 +173,7 @@ export const neighbors = {
           g => g.carried > 0 && wants.items.includes(kindOf(g.id)),
         );
         for (const g of goods) {
-          const done = wants.left < 1 ? W.done : '';
+          const done = wants.left < 1 ? lines.done : '';
           if (wants.buys)
             rows.push({
               key: ['sell', day, g.id, wants.left].join('.'),
@@ -151,7 +186,8 @@ export const neighbors = {
               input: { to, item: g.id },
               result: 'neighbor.sold',
             });
-          const s = NEIGHBORS[to].swap;
+          const s = ask('neighbor.swapFor', to, g.id);
+          if (!s) continue;
           rows.push({
             key: ['swap', day, g.id, wants.left].join('.'),
             group: '买卖',
@@ -171,7 +207,9 @@ export const neighbors = {
       items: IDS.includes(to) ? wantsToday(w, to) : [],
       left: IDS.includes(to) ? R.dealsPerDay - dealsToday(w, to) : 0,
       buys: NEIGHBORS[to]?.buys !== false,
-      swap: NEIGHBORS[to]?.swap || null,
     }));
+    ctx.services.queries.define('neighbor.swapFor', (w, to, item) =>
+      IDS.includes(to) ? swapFor(w, to, item) : null,
+    );
   },
 };

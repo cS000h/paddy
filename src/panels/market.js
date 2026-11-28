@@ -56,13 +56,43 @@ export function marketView(m, game, here) {
         ${para(sellNote, 'aside')}`
     : para('茶摊只卖不收。要卖东西去杂货铺，或者问问想要的乡邻。', 'aside');
   const name = stall ? `${stall.name} · ${stall.owner}` : shop === 'tea' ? '茶点摊' : '杂货铺';
+  const play =
+    stall && market.fair ? fairGame(game.ask('fair.game', stall.id, here), game, here, m.line) : '';
   return `${title(name, `${market.fair ? '今日赶集 · ' : ''}手头 ${coins} 文`)}
     ${stall ? para(`“${stall.hawk}”`, 'say') + para(stall.who, 'aside') : ''}
     <div class="two">
       <section><h3>今日的货</h3>${itemList(wares, '今天的货卖完了，明早再来。')}</section>
       <section><h3>卖点随身带的</h3>${sellSide}</section>
     </div>
+    ${play}
     ${actions(close('收好东西，继续走', false))}`;
+}
+
+/** 集日摊子上的小玩意：猜斤两三个按钮；比大瓜列出行囊里能上秤的菜。玩过了只留一句。 */
+function fairGame(g, game, here, line) {
+  if (!g) return '';
+  const head = `<h3>集日小玩意 · ${esc(g.title)}</h3>`;
+  if (g.reason)
+    return `<section>${head}${line ? para(line, 'say') : ''}${para(g.reason, 'aside')}</section>`;
+  if (g.kind === 'guess')
+    return `<section>${head}${para(g.intro, 'say')}${para(`押${g.cost}文，猜中退押钱、白得一块肉。`, 'aside')}
+      <div class="acts">${Object.entries(g.choices)
+        .map(([choice, label]) => button('fairPlay', label, { data: { kind: 'guess', choice } }))
+        .join('')}</div></section>`;
+  const crops = game
+    .ask('goods', here)
+    .filter(item => item.carried > 0 && g.crops.includes(kindOf(item.id)))
+    .map(item =>
+      itemRow({
+        icon: item.id,
+        name: item.name,
+        count: item.carried,
+        notes: ['称完还归你'],
+        acts: button('fairPlay', '上秤', { data: { kind: 'weigh', item: item.id } }),
+      }),
+    );
+  return `<section>${head}${para(g.intro, 'say')}
+    ${itemList(crops, '行囊里没有能上秤的当季大菜（南瓜、白菜、萝卜、黄瓜）。')}</section>`;
 }
 
 /** 茶摊上一件事的说明：花多少时辰、钱和身上会怎样。数从 TEA_DEEDS 来，和规则结算的是同一份。 */

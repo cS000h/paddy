@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import { newGame, must, refused, growOne, carried, FIELD, stocked } from '../helpers.js';
 import { lifeLine } from '../../src/sim/talk.js';
 import { createGame } from '../../src/port/game.js';
+import { ITEMS } from '../../src/content/items.js';
+import { NEIGHBORS, NEIGHBOR_RULES } from '../../src/content/neighbors.js';
 
 test('时间一小段一小段地过，到半夜停住不催人，睡一觉到第二天清早', () => {
   const g = newGame();
@@ -105,7 +107,6 @@ test('乡邻买卖：每户每天想要一两样，走到跟前卖给他或者�
   const g0 = newGame();
   const wants = g0.ask('neighbor.wants', 'gui');
   assert.equal(wants.items.length, 2);
-  assert.deepEqual(wants.swap, { item: 'egg', n: 1 });
   const want = wants.items[0];
   const g = stocked(g0, { [want]: 3, pebble: 1 });
   const home = { x: 8, y: 11 };
@@ -115,19 +116,21 @@ test('乡邻买卖：每户每天想要一两样，走到跟前卖给他或者�
   if (gui.map !== g.ask('hero').map) must(g, 'travel.to', { to: gui.map });
   const at = { x: gui.x, y: gui.y };
   const ask = g.ask('interaction.options', 'gui', at);
-  assert.match(ask.find(r => r.key.startsWith('wants.')).line, /收一点/);
+  assert.match(ask.find(r => r.key.startsWith('wants.')).line, /嫂子/);
   assert.ok(ask.some(r => r.command === 'neighbor.sell' && r.input.item === want));
   assert.equal(refused(g, 'neighbor.sell', { to: 'gui', item: 'pebble', at }), '他今天不要这个');
   const coins = g.ask('home').coins;
-  const eggs = carried(g, 'egg');
+  const deal = g.ask('neighbor.swapFor', 'gui', want);
+  assert.ok(deal && deal.n >= 1, '桂嫂拿得出东西换');
+  const got = carried(g, deal.item);
   must(g, 'neighbor.sell', { to: 'gui', item: want, at });
   assert.ok(g.ask('home').coins > coins, '钱从桂嫂家出，到了自家');
   assert.ok(g.ask('guide').find(q => q.id === 'sell').done, '卖给乡邻也算「卖一回东西」');
   must(g, 'neighbor.swap', { to: 'gui', item: want, at });
-  assert.equal(carried(g, 'egg'), eggs + 1);
+  assert.equal(carried(g, deal.item), got + deal.n);
   assert.equal(
     refused(g, 'neighbor.sell', { to: 'gui', item: want, at }),
-    '今天已经和他做过两回买卖了',
+    '“今儿买齐啦，再买家里坛子装不下咯！”',
   );
   assert.equal(carried(g, want), 1);
   assert.equal(
@@ -362,4 +365,24 @@ test('招呼过后接话里能问近况、安排、天色，熟了能约茶摊�
   assert.ok(gui().atDoor);
   const night = rows().map(o => o.key);
   assert.ok(night.includes('topic.sky') && !night.includes('topic.plan'));
+});
+
+test('乡邻换东西大致等值：每户每样想要的东西，换回来的不超过它价钱的 1.25 倍，换不出就不换', () => {
+  const g = newGame();
+  const worth = item => ITEMS[item].sell || Math.max(1, Math.ceil((ITEMS[item].buy || 2) / 2));
+  let some = 0;
+  for (const [id, h] of Object.entries(NEIGHBORS))
+    for (const want of h.wants) {
+      const item = want === 'fish' ? 'fish.crucian' : want;
+      assert.ok(ITEMS[item], `${id} 想要的 ${want} 是游戏里有的东西`);
+      for (const give of h.gives) assert.ok(ITEMS[give], `${id} 拿得出的 ${give} 是游戏里有的东西`);
+      const deal = g.ask('neighbor.swapFor', id, item);
+      if (!deal) continue;
+      some++;
+      assert.ok(
+        worth(deal.item) * deal.n <= worth(item) * NEIGHBOR_RULES.swapCap,
+        `${id} 换 ${item}`,
+      );
+    }
+  assert.ok(some > 10, '大多数东西换得出');
 });
