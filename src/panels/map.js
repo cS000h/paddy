@@ -1,5 +1,5 @@
 // 全村地图：七个地方画在一张纸上，路连着路；你在哪儿、乡邻此刻在哪儿都标着。
-// 点一个地方，看那儿有什么、要走多久，再点“走过去”。路就是各张地图上的路牌连起来的那些。
+// 点一个地方，看那儿有什么、要走多久；再点同一个地方（或点“走过去”）就出发。路就是各张地图上的路牌连起来的那些。
 import { MAPS, roads, routeTo } from '../content/maps/index.js';
 import { ATLAS } from '../content/maps/atlas.js';
 import { CALENDAR } from '../content/calendar.js';

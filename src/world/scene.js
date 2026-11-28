@@ -190,7 +190,7 @@ export class VillageScene extends Phaser.Scene {
       this.player.path = [];
       this.player.onArrive = null;
       this.player.step(move.x, move.y, dt, (x, y) => this.blocked(x, y));
-      leaveByRoad(this, true);
+      leaveByRoad(this, move);
     } else if (!this.player.follow(dt)) this.player.animate(false);
     this.updateHint();
     repeatField(this);

@@ -32,3 +32,19 @@ test('再点所在的院子就保持选中', () => {
 test('点另一处只换选中', () => {
   assert.deepEqual(pick('tea', 'market'), { modal: { kind: 'map', pick: 'market' }, calls: [] });
 });
+
+test('路口一截路都算出口：路牌两边各一格、往里一格；门只认门口那格', async () => {
+  const { exitAt } = await import('../../src/world/travel.js');
+  const { MAPS } = await import('../../src/content/maps/index.js');
+  const to = (map, x, y) => exitAt(MAPS[map], { x, y })?.door.to ?? null;
+  // 村口集场西边的路牌在 (1, 14)，往西出去
+  assert.deepEqual(
+    [to('market', 1, 14), to('market', 1, 13), to('market', 1, 15), to('market', 2, 14)],
+    ['yard', 'yard', 'yard', 'yard'],
+  );
+  assert.equal(to('market', 3, 14), null, '离路口两格就不算');
+  assert.equal(to('market', 1, 12), null);
+  // 小屋的门：旁边一格不算
+  assert.equal(to('cottage', 9, 14), 'yard');
+  assert.equal(to('cottage', 8, 14), null);
+});
