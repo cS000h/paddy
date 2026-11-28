@@ -23,7 +23,8 @@ export const GROUND = Object.freeze({
 export const OBJECTS = Object.freeze({
   bed: { foot: [-1, -1, 1, 0], act: 'sleep' },
   roomWindow: { floor: true },
-  scroll: { floor: true }, // 后墙上挂的字画
+  scroll: { floor: true, act: 'furnish' }, // 后墙上挂的字画；走到跟前能换屋里六处摆设
+  sill: { floor: true }, // 东窗下的窗台摆件
   hangings: { floor: true }, // 后墙上挂的干辣椒、玉米
   rug: { floor: true },
   dresser: { act: 'wardrobe', foot: [0, 0, 0, 0] },

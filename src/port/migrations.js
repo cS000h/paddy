@@ -18,6 +18,13 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  37(state) {
+    // 小屋里六处摆设能换：多记买下了哪几样、每处摆的哪样，旧档全是原样。
+    const w = state.world;
+    w.meta.version = 38;
+    w.decor = { owned: [], on: {} };
+    return state;
+  },
   36(state) {
     // 集日摊子上的小玩意（猜斤两、比大瓜）：多记今天玩过哪几个，旧档从没玩过记起。
     const w = state.world;

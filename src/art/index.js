@@ -18,6 +18,7 @@ import { stove, bookshelf } from './kitchen.js';
 import * as props from './props.js';
 import * as landmarks from './landmarks.js';
 import { stallLook, STALL_LOOKS } from './stalls.js';
+import { decorSprite, DECOR_LOOKS, DECOR_OBJECTS } from './furniture.js';
 import * as waterside from './waterside.js';
 import * as village from './props-village.js';
 import * as traces from './traces.js';
@@ -57,6 +58,7 @@ const MAP_MAKERS = {
   rack: () => props.rack(),
   clothRack: () => props.clothRack(),
   jars: () => props.jars(),
+  sill: () => decorSprite('sill', 'default'),
   scarecrow: () => props.scarecrow(),
   trellis: seed => village.trellis(seed),
   sign: () => props.sign(),
@@ -101,7 +103,8 @@ const OBJECT_LOOKS = {
   cashBox: { closed: () => traces.cashBox('closed'), open: () => traces.cashBox('open') },
   ...wildLooks,
   ...indoorLooks,
-  table: { ...indoorLooks.table, bench: () => village.bench() },
+  ...DECOR_LOOKS,
+  table: { ...indoorLooks.table, bench: () => village.bench(), ...DECOR_LOOKS.table },
   trellis: {
     rear: seed => village.trellis(seed, 'rear'),
     front: seed => village.trellis(seed, 'front'),
@@ -150,7 +153,8 @@ export function objectSprite(kind, variant = 0, look = null) {
   if (!make) throw new Error('没有这种物件的画法：' + kind + (look ? '@' + look : ''));
   const sprite = make(101 + (variant % VARIANTS) * 37 + kind.length);
   if (NO_OUTLINE.has(kind)) return sprite;
-  return outlined(sprite, SOFT_LINE.has(look ? kind + '@' + look : kind) ? P.ink3 : P.o0);
+  const soft = SOFT_LINE.has(look ? kind + '@' + look : kind) || DECOR_OBJECTS.has(kind);
+  return outlined(sprite, soft ? P.ink3 : P.o0);
 }
 
 /** 一个物件在地图上用第几个样子（由位置决定，所以每次都一样）。 */

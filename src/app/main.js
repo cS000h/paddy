@@ -25,6 +25,7 @@ import { saveActions } from './saves.js';
 import { encounterActions } from './encounter.js';
 import { homeActions } from './home.js';
 import { marketActions } from './market.js';
+import { decorActions } from './decor.js';
 import { fieldActions } from './field.js';
 import { growthActions, growthNotices } from './growth.js';
 import { dietNotices } from './diet.js';
@@ -120,6 +121,7 @@ function start() {
     ...homeActions(deps),
     ...encounterActions(deps),
     ...marketActions(deps),
+    ...decorActions(deps),
     ...fieldActions(deps),
     ...growthActions({ ...deps, debug }),
     ...pulseActions(deps),

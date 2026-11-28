@@ -16,6 +16,7 @@ import { fireView } from './fire.js';
 import { cookedView } from './cooked.js';
 import { bagView, storeView } from './bag.js';
 import { mapView } from './map.js';
+import { decorView } from './decor.js';
 import * as n from './notices.js';
 import { actions, close, title, para } from './html.js';
 
@@ -24,6 +25,7 @@ const VIEWS = {
   cloth: clothView,
   saves: savesView,
   market: marketView,
+  furnish: decorView,
   tea: teaView,
   weather: weatherView,
   seeds: seedsView,
