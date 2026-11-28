@@ -304,7 +304,7 @@
           "energy": 100,
           "map": "yard",
           "x": 4,
-          "y": 9,
+          "y": 11,
           "dir": "up"
         },
         "shi": {
@@ -448,8 +448,8 @@
       },
       "search": {
         "hero": {
-          "cues": ["yard:19,7", "creek:9,5", "market:20,6", "tea:25,3", "hill:25,8", "river:6,3"],
-          "done": ["yard:4,8"],
+          "cues": ["yard:8,3", "creek:6,7", "market:8,6", "tea:25,18", "hill:5,18", "river:8,20"],
+          "done": ["yard:4,10"],
           "miss": 1,
           "found": {},
           "lost": {}
@@ -672,7 +672,7 @@
           },
           "innate": [],
           "coping": [],
-          "stress": 0
+          "stress": 3
         },
         "qiao": {
           "tempers": ["gregarious", "sly", "ambitious"],
@@ -841,20 +841,6 @@
             "why": "oldtie",
             "n": 12,
             "until": null
-          },
-          {
-            "from": "shi",
-            "to": "aman",
-            "why": "chat",
-            "n": 2,
-            "until": 13
-          },
-          {
-            "from": "aman",
-            "to": "shi",
-            "why": "chat",
-            "n": 2,
-            "until": 13
           },
           {
             "from": "shi",
@@ -1177,23 +1163,15 @@
         "owned": [],
         "on": {}
       },
+      "town": {
+        "errands": [],
+        "order": null,
+        "last": 0,
+        "done": 0
+      },
       "witness": {
-        "seq": 1,
-        "list": [
-          {
-            "id": 1,
-            "day": 3,
-            "who": "aman",
-            "to": "shi",
-            "act": "chat",
-            "map": "yard",
-            "place": "field",
-            "coping": null,
-            "secret": false,
-            "knows": ["aman", "shi", "hero"],
-            "until": 6
-          }
-        ]
+        "seq": 0,
+        "list": []
       },
       "vexes": {
         "hero": {
@@ -1213,7 +1191,7 @@
           "n": {
             "farm": 1
           },
-          "quiet": 0,
+          "quiet": 3,
           "coped": 0,
           "snap": null
         },
@@ -1231,7 +1209,7 @@
           "n": {
             "farm": 1
           },
-          "quiet": 0,
+          "quiet": 3,
           "coped": 0,
           "snap": null
         },

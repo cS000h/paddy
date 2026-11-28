@@ -412,6 +412,15 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     // 约下了还没到日子，偶尔托人带话作罢（不然约定多半赴了，带话作罢一年也碰不上一回）
     if (date.active && !date.active.due && chance(0.1)) return send('visit.cancel', { at });
     if (chance(0.08)) return send('invite', { to: p.id, at });
+    // 阿满：县城单子上要的身上有就交；偶尔托他捎一件县城家具（钱不够、捎满了、已经有了，规则会拒绝）
+    if (p.id === 'aman') {
+      const order = game.ask('town').order;
+      const due =
+        order &&
+        goods(at).find(x => x.carried > 0 && order.need.some(n => n.item === kindOf(x.id)));
+      if (due && chance(0.7)) return send('town.hand', { item: due.id, at });
+      if (chance(0.05)) return send('town.ask', { item: pick(game.ask('town').offer).id, at });
+    }
     // 乡邻今天想要的东西身上有：卖给他或者换（不要的、做够两回的，规则会拒绝）
     const wants = game.ask('neighbor.wants', p.id).items;
     const deal = pick(goods(at).filter(x => x.carried > 0 && wants.includes(kindOf(x.id))));

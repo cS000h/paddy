@@ -17,40 +17,47 @@ const CATALOG_V21 = [
 `),
 ];
 
-// v39 小屋收紧、小院扩大以后，篱笆里和屋里重新摆过的范围（写死，以后再挪不改这一份）
-const V39_YARD = { x0: 3, y0: 2, x1: 18, y1: 14 };
+// v40 小屋收紧、小院扩大以后，篱笆里和屋里重新摆过的范围（写死，以后再挪不改这一份）
+const V40_YARD = { x0: 3, y0: 2, x1: 18, y1: 14 };
 // 篱笆外新摆的东西压着的格子：草垛两格、粮袋、柴垛、枯木、树、灌木、蕨
-const V39_YARD_TAKEN = ['19,10', '20,10', '19,12', '21,11', '21,7', '24,7', '26,6', '19,7'];
-const inV39Yard = (x, y) =>
-  x >= V39_YARD.x0 && x <= V39_YARD.x1 && y >= V39_YARD.y0 && y <= V39_YARD.y1;
-const v39Moved = (map, x, y) =>
+const V40_YARD_TAKEN = ['19,10', '20,10', '19,12', '21,11', '21,7', '24,7', '26,6', '19,7'];
+const inV40Yard = (x, y) =>
+  x >= V40_YARD.x0 && x <= V40_YARD.x1 && y >= V40_YARD.y0 && y <= V40_YARD.y1;
+const v40Moved = (map, x, y) =>
   map === 'cottage' ||
-  (map === 'yard' && (inV39Yard(x, y) || V39_YARD_TAKEN.includes(`${x},${y}`)));
+  (map === 'yard' && (inV40Yard(x, y) || V40_YARD_TAKEN.includes(`${x},${y}`)));
 
 export const MIGRATIONS = {
-  38(state) {
+  39(state) {
     // 小屋收紧、小院扩大：站在屋里或篱笆里的人挪回床边、屋门口，当天冒出来的野物和翻找点
     // 落在重摆范围里的不要了（第二天照常重冒、重抽）。菜地一格没动。
     const w = state.world;
-    w.meta.version = 39;
+    w.meta.version = 40;
     for (const p of Object.values(w.people)) {
-      if (!v39Moved(p.map, p.x, p.y)) continue;
+      if (!v40Moved(p.map, p.x, p.y)) continue;
       Object.assign(
         p,
         p.map === 'cottage' ? { x: 3, y: 7, dir: 'down' } : { x: 8, y: 9, dir: 'down' },
       );
     }
     for (const g of Object.values(w.ground))
-      g.items = g.items.filter(i => !v39Moved(i.map, i.x, i.y));
+      g.items = g.items.filter(i => !v40Moved(i.map, i.x, i.y));
     const spotGone = id => {
       const [map, at] = id.split(':');
       const [x, y] = at.split(',').map(Number);
-      return v39Moved(map, x, y);
+      return v40Moved(map, x, y);
     };
     for (const s of Object.values(w.search)) {
       s.cues = s.cues.filter(id => !spotGone(id));
       s.done = s.done.filter(id => !spotGone(id));
     }
+    return state;
+  },
+  38(state) {
+    // 阿满进县城：多记托捎的货、县城大单，旧档从没托过、没接过单子记起。
+    const w = state.world;
+    w.meta.version = 39;
+    w.town = { errands: [], order: null, last: 0, done: 0 };
     return state;
   },
   37(state) {
