@@ -228,7 +228,7 @@ export const DOING = {
   shi: {
     field: '弯腰看土',
     tea: '端着茶杯不说话',
-    yard: '在檐下编竹筐',
+    yard: '在樟树下编竹筐',
   },
   qiao: {
     market: '趴在柜台上算账',
@@ -250,7 +250,7 @@ export const RAIN_DOING = {
     yard: '在屋檐下择菜',
   },
   shi: {
-    yard: '在檐下听雨',
+    yard: '在樟树下躲雨',
   },
   qiao: {
     market: '和猫一起看雨',
