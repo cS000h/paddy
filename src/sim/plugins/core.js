@@ -5,7 +5,7 @@ import { ITEMS } from '../../content/items.js';
 import { BUFFS, LEDGER_LABELS } from '../../content/body.js';
 import { MODIFIERS } from '../../content/modifiers.js';
 
-export const SAVE_VERSION = 34;
+export const SAVE_VERSION = 35;
 
 const LEDGER_MAX = 60;
 

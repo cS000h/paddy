@@ -209,6 +209,8 @@ export const achievements = {
           r.value = text.meet;
           return;
         }
+        // 下面两样是闲话：昨天送过他东西，让他先道谢（social.js 的 AFTER_RETURN）
+        if (w.bonds.gifted[to] === w.clock.day - 1) return;
         const n = Object.keys(PEOPLE).indexOf(to);
         const look = keepsakeLook(w, to, n);
         if (look) {

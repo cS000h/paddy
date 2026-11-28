@@ -18,6 +18,18 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  34(state) {
+    // 「四季安居」从 60 个清早改成一年的天数（那时是 14×4=56）。旧档已经过满 56 个清早还没得的，
+    // 当场补上（记在今天，第二天照常有人道喜），不用再等一个清早。
+    const w = state.world;
+    w.meta.version = 35;
+    for (const a of Object.values(w.achievements || {}))
+      if (!a.earned.days60 && (a.counts.days60 || 0) >= 56) {
+        a.counts.days60 = 56;
+        a.earned.days60 = w.clock.day;
+      }
+    return state;
+  },
   33(state) {
     // 收菜筐拆掉：筐里还没收走的东西、已经付了钱还没捎到的货，都收进自家橱柜。
     // 铺子多记今天每类收了几份、给出去多少钱（转手卖的本钱），旧档从零记起。

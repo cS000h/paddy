@@ -1,6 +1,7 @@
 // 成就的反馈和奖励（G-31）：三档、快到了提一嘴、暗成就、只数当天的、清早便条、一天一件贺喜、称号、稻穗、
 // 院里的摆件。
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_TIERS } from '../../src/content/achievements.js';
@@ -232,6 +233,22 @@ test('得了对口的成就，院里摆出那件摆件；稻穗够数第二天�
   );
   for (const x of said) assert.equal(x.ask('residents').find(p => p.id === 'shi').map, 'yard');
   assert.equal(said.filter(x => x.ask('resident.greeting', 'shi') === hoe.look).length, 1);
+  // 昨天送过他东西：先道谢，不提摆件
+  const look = said.find(x => x.ask('resident.greeting', 'shi') === hoe.look);
+  const thanked = reload(look, w => (w.bonds.gifted.shi = w.clock.day - 1));
+  assert.notEqual(thanked.ask('resident.greeting', 'shi'), hoe.look);
+});
+
+test('旧档已过满一年的清早还没得「四季安居」，读档就补上', () => {
+  const old = JSON.parse(
+    readFileSync(new URL('../fixtures/save-v34.json', import.meta.url), 'utf8'),
+  );
+  const a = old.state.world.achievements.hero;
+  delete a.earned.days60;
+  a.counts.days60 = 58;
+  const g = createGame({ saved: old, debug: true });
+  assert.ok(row(g, 'days60').day);
+  assert.equal(row(g, 'days60').count, 56);
 });
 
 test('「四季安居」跟着日历，住满一整年', () => {
