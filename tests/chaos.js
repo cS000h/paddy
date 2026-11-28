@@ -14,6 +14,9 @@ import { REASONS, KEEPSAKES, FAMILY, OLD_TIES } from '../src/content/settle.js';
 import { TEMPERS } from '../src/content/traits.js';
 import { ON_MAP } from '../src/content/people.js';
 import { CUTS, METHODS } from '../src/content/recipes.js';
+import { handheld } from '../src/content/table.js';
+import { FAIR_GAMES } from '../src/content/fair-games.js';
+import { isFairDay } from '../src/content/calendar.js';
 import { bestLog } from '../src/sim/cook-fire.js';
 import { COATS, HAIR } from '../src/content/wardrobe.js';
 import { PRIZE_TRACES, RELEASE_MAPS } from '../src/content/prizes.js';
@@ -189,6 +192,17 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   }
 
   function housework(t, at) {
+    // 窗下饭桌：手上端着菜就放下，桌上有菜就坐下吃（不抽随机数），都没有才歇脚
+    if (t.dining) {
+      const tb = game.ask('table', at);
+      if (tb.hands.length) return send('dish.set', { at });
+      // 摆着菜：端起头一样挪一挪再放下，然后坐下吃
+      if (tb.dishes.length) {
+        send('dish.lift', { id: tb.dishes[0].id, at });
+        send('dish.set', { at });
+        return send('table.eat', { at });
+      }
+    }
     const ids = Object.values(HOMEWORK).filter(a => a.station === t.station);
     if (ids.length) send('homestead', { id: pick(ids).id, at });
     else if (t.station === 'tea') tea(at);
@@ -262,8 +276,10 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
         if (!items.length) break;
         send('pack.take', { item: pick(items).id, n: 'all', at });
       }
-      const id = pick(k.dishes).id;
-      const out = send('dish.pack', { id, at });
+      const dish = pick(k.dishes);
+      const id = dish.id;
+      // 能随手吃的装进行囊，热菜端在手上
+      const out = send(handheld(dish) ? 'dish.pack' : 'dish.carry', { id, at });
       // 端错了一份，又放回灶台
       if (out.ok && chance(0.2)) send('dish.store', { id, at });
       return out;
@@ -323,7 +339,11 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     const id = game.ask('stalls')[t.spot];
     if (!id) return send('market.visit', { shop: 'stall.' + pick(['meat', 'veg', 'fish']), at });
     if (chance(0.3)) {
-      const crop = pick(goods(at).filter(x => x.carried > 0));
+      // 比大瓜挑上得了秤的菜，没有才乱拿一样
+      const weighable = goods(at).filter(
+        x => x.carried > 0 && Object.hasOwn(FAIR_GAMES.veg.crops, kindOf(x.id)),
+      );
+      const crop = pick(weighable.length ? weighable : goods(at).filter(x => x.carried > 0));
       return id === 'meat'
         ? send('fair.guess', { choice: pick(['light', 'right', 'heavy', 'nope']), at })
         : send('fair.weigh', { item: crop?.id || 'pumpkin', at });
@@ -335,7 +355,9 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   function furnish(at) {
     const slots = Object.entries(game.ask('decor'));
     const [slot, d] = pick(slots);
-    const s = pick(d.styles);
+    // 收着的挑一样没摆上的换；都摆着了就去置办
+    const spare = d.styles.filter(x => x.owned && x.id !== d.on);
+    const s = pick(spare.length ? spare : d.styles);
     send(s.owned ? 'decor.set' : 'decor.buy', { slot, style: s.id, at });
   }
 
@@ -481,8 +503,13 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     const board = game.ask('achievement.board');
     if (board.titles.length)
       send('achievement.wear', { id: board.worn ? null : board.titles[0].id });
-    if (chance(0.25)) send('sleep', { at: here() });
-    else send('clock.advance', { minutes: pick([10, 10, 10, 30, 60, 120]) });
+    if (chance(0.25)) {
+      // 白天在屋里就先上床歇个晌（不抽随机数），歇不了再睡到天亮
+      const m = game.ask('clock').minute;
+      const day = hero().map === 'cottage' && m >= 11 * 60 && m < 16 * 60;
+      const napped = day && send('nap', { mode: 'hour', at: { x: 3, y: 7, dir: 'up' } }).ok;
+      if (!napped) send('sleep', { at: here() });
+    } else send('clock.advance', { minutes: pick([10, 10, 10, 30, 60, 120]) });
   }
 
   function wander() {
@@ -621,6 +648,14 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
       return send('match.after', { at, choice: pick(['again', 'tea', 'leave', 'x']) });
   }
 
+  // 集日菜摊比大瓜：身上带着上得了秤的菜就走到摊子跟前比一把（不然一年也碰不上几回）
+  function fairWeigh(crop) {
+    if (hero().map !== 'market') return send('travel.to', { to: 'market', at: here() });
+    const spot = game.ask('stalls').indexOf('veg');
+    const stall = layout('market').things.find(t => t.act === 'stall' && t.spot === spot);
+    return send('fair.weigh', { item: crop.id, at: standBy(stall) });
+  }
+
   // 院里的事：门口有闻香来的人就端菜，钓客上门就答他，不然随手修一处（材料不够、站错地方的会被拒）
   function yard() {
     const at = here();
@@ -718,6 +753,15 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
     // 有人问认不认性情、眼前挂着局面：有时先去应（局面一挂好几天，太勤了别的事就做不成）
     if ((game.ask('leaning').offer || game.ask('scenes').some(e => e.now)) && chance(0.1))
       return scene();
+    // 集日早上在家、家里有上得了秤的菜、身上没带：揣一个出门比大瓜（不抽随机数，别的局不受影响）
+    const scale = x => Object.hasOwn(FAIR_GAMES.veg.crops, kindOf(x.id));
+    const crop = game.ask('home').items.find(scale);
+    const pack = game.ask('pack');
+    const carried = pack.items.find(scale);
+    if (isFairDay(game.ask('clock').day) && crop && !carried && pack.room > 0)
+      if (game.ask('hero').atHome) return send('pack.put', { item: crop.id, n: 1 });
+    if (carried && pack.room > 0 && !game.ask('fair.game', 'veg').reason && chance(0.3))
+      return fairWeigh(carried);
     if (hostile && chance(hostile)) return rough();
     if (chance(0.002)) return origin(); // 选过以后再选，应该被拒绝
     let roll = r() * total;

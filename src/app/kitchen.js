@@ -3,6 +3,7 @@
 // 亲自掌火时按的每一下（下料、翻锅、添柴、翻面）记在小窗里，出锅时连同时刻一起交给规则判火候。
 // 出锅以后先在灶前做一遍给人看，再翻出「出锅了」那一张（端走、再做一锅）。
 import { FIRE } from '../content/cook-fire.js';
+import { handheld } from '../content/table.js';
 export function kitchenActions({ game, shell, run, here, world }) {
   const edit = patch => shell.set({ modal: { ...shell.get().modal, ...patch } });
   const input = () => {
@@ -111,13 +112,18 @@ export function kitchenActions({ game, shell, run, here, world }) {
     /** 出锅那一张上的「端走」：端在身上，回到灶台。 */
     cookedPack({ id }) {
       const m = shell.get().modal;
-      const out = run('dish.pack', { id: Number(id), at: here() });
+      const dish = game.ask('kitchen', here()).dishes.find(d => d.id === Number(id));
+      const verb = dish && handheld(dish) ? 'dish.pack' : 'dish.carry';
+      const out = run(verb, { id: Number(id), at: here() });
       if (out.ok)
         shell.set({
           modal: {
             kind: 'kitchen',
             ...m.picks,
-            line: `${m.cooked.name}端在身上了。`,
+            line:
+              verb === 'dish.pack'
+                ? `${m.cooked.name}装进行囊了。`
+                : `${m.cooked.name}端在手上了，进屋摆上桌吃吧。`,
             x: m.x,
             y: m.y,
           },
@@ -152,6 +158,10 @@ export function kitchenActions({ game, shell, run, here, world }) {
     },
     dishPack({ id }) {
       run('dish.pack', { id: Number(id), at: here() });
+    },
+    dishCarry({ id }) {
+      const out = run('dish.carry', { id: Number(id), at: here() });
+      if (out.ok) shell.toast('端在手上了，进屋摆上饭桌吃吧。');
     },
     dishStore({ id }) {
       run('dish.store', { id: Number(id), at: here() });

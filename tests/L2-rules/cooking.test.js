@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { XP } from '../../src/content/growth.js';
-import { newGame, must, bestFire, STOVE } from '../helpers.js';
+import { newGame, must, refused, bestFire, stocked, dine, STOVE } from '../helpers.js';
+import { TABLE_LINES } from '../../src/content/table.js';
 import { POT } from '../../src/content/recipes.js';
 import { createGame } from '../../src/port/game.js';
 import { FIRE } from '../../src/content/cook-fire.js';
@@ -31,7 +32,7 @@ test('预览和实际出锅一致，吃饭恢复饱腹，菜谱留在户里', ()
     assert.equal(d[key], p[key]);
   assert.ok(k.recipes.find(r => r.name === p.base).known);
   const hunger = g.ask('body').hunger;
-  must(g, 'dish.eat', { id: d.id, at });
+  dine(g, [d.id]);
   assert.ok(g.ask('body').hunger > hunger);
   const saved = JSON.parse(JSON.stringify(g.save()));
   assert.deepEqual(createGame({ saved, debug: true }).save(), g.save());
@@ -51,42 +52,45 @@ test('缺材料、隔空做饭、无柴与生拌鸡蛋拒绝并整笔回滚', ()
   // 将柴带到田里，家里的人之外不能隔空够到；份数不足也不能扣掉其余材料。
   assert.equal(g.dispatch('cook', { ...meal, items: ['rice', 'rice'] }).ok, false);
 });
-test('端汤占两格；满了回滚；带出去可吃可送并收到回礼', () => {
+test('热菜端在手上、装不进行囊；端出门送人收到回礼', () => {
   const g = newGame();
   must(g, 'cook', meal);
   const d = g.ask('kitchen', at).dishes[0];
   const used = g.ask('pack').used;
-  must(g, 'dish.pack', { id: d.id, at });
-  assert.equal(g.ask('pack').used, used + 2);
+  assert.equal(refused(g, 'dish.pack', { id: d.id, at }), TABLE_LINES.pack);
+  must(g, 'dish.carry', { id: d.id, at });
+  assert.equal(g.ask('pack').used, used, '端在手上不占行囊');
   must(g, 'dish.store', { id: d.id, at });
-  assert.equal(g.ask('pack').used, used);
-  must(g, 'dish.pack', { id: d.id, at });
-  // 土豆炖豆子正是石伯最爱吃的那一道：熟悉 +4，他说的是那句“炖得好”，也记下了他爱吃这个
+  assert.equal(g.ask('table').hands.length, 0);
+  must(g, 'dish.carry', { id: d.id, at });
+  // 在外头不能吃，能送人：土豆炖豆子正是石伯最爱吃的那一道，熟悉 +4，他说的是那句“炖得好”
+  const out = { x: 20, y: 15 };
+  assert.equal(refused(g, 'dish.eat', { id: d.id, at: out }), TABLE_LINES.outside.soup);
   const given = g
-    .dispatch('gift', { to: 'shi', dish: d.id, at: { x: 20, y: 15 } })
+    .dispatch('gift', { to: 'shi', dish: d.id, at: out })
     .facts.find(f => f.type === 'gift.given').data;
   assert.equal(given.favorite, true);
   assert.match(given.line, /炖得好/);
-  assert.equal(g.ask('pack').dishes.length, 0);
-  assert.equal(g.ask('bonds').find(b => b.id === 'shi').known, 4);
-  assert.equal(g.ask('bonds').find(b => b.id === 'shi').favorite, '土豆炖豆子');
-  must(g, 'sleep');
-  assert.ok(g.ask('notes').some(n => n.title.includes('回礼')));
+  assert.equal(g.ask('table').hands.length, 0);
 });
 
-test('柴用尽不扣食材，汤菜装不下也不从灶台消失', () => {
-  const g = newGame();
-  for (const item of ['rice', 'egg', 'potato', 'bean'])
-    must(g, 'cook', { items: [item], method: 'stew', at });
+test('能随手吃的熟食（姜茶、烤栗子）照旧装进行囊、哪儿都能吃；汤水占两格，满了回滚', () => {
+  const g = stocked(newGame(), { ginger: 4 });
+  for (let i = 0; i < 4; i++) must(g, 'cook', { items: ['ginger'], method: 'stew', at });
   const before = g.save();
-  assert.match(g.dispatch('cook', { items: ['rice'], method: 'stew', at }).reason, /柴/);
+  assert.match(g.dispatch('cook', { items: ['ginger'], method: 'stew', at }).reason, /柴/);
   assert.deepEqual(g.save(), before);
   const dishes = g.ask('kitchen', at).dishes;
+  assert.equal(dishes[0].base, '姜茶');
+  const used = g.ask('pack').used;
   must(g, 'dish.pack', { id: dishes[0].id, at });
+  assert.equal(g.ask('pack').used, used + 2);
   must(g, 'dish.pack', { id: dishes[1].id, at });
   const packed = g.save();
   assert.match(g.dispatch('dish.pack', { id: dishes[2].id, at }).reason, /行囊满/);
   assert.deepEqual(g.save(), packed);
+  must(g, 'dish.eat', { id: dishes[0].id, at: { x: 20, y: 15 } });
+  must(g, 'dish.eat', { id: dishes[2].id, at });
 });
 
 test('刀工与黄酒沿用0.12：匹配切法饱腹加二、火候放宽，切丝多耗体力并长厨艺', () => {
@@ -161,7 +165,7 @@ test('吃腻了：最近几顿同一道菜吃得越多，饱腹越打折、心�
   const gains = [];
   for (const d of [...g.ask('kitchen', at).dishes]) {
     const hungry = g.ask('body').hunger;
-    must(g, 'dish.eat', { id: d.id, at });
+    dine(g, [d.id]);
     gains.push(g.ask('body').hunger - hungry);
     must(g, 'sleep');
   }

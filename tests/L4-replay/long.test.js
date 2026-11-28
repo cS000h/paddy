@@ -40,12 +40,12 @@ test('玩过一年多：不出错、不卡住，存档不走样，也不会越�
   // 比完鱼第二天钓客上门、院门口聚着闻香来的人也难碰上：睡到第二天清早，昨天算比过一场，
   // 再在灶上做一锅拿手的极品蛋炒饭
   const first = structuredClone(createGame({ seed: 24 }).save());
-  Object.assign(first.state.world.people.hero, { map: 'yard', x: 10, y: 11, dir: 'up' });
+  Object.assign(first.state.world.people.hero, { map: 'yard', x: 10, y: 9, dir: 'up' });
   first.state.world.packs.hero.items['egg.fine'] = 1;
   const cook = createGame({ saved: first });
   assert.ok(cook.dispatch('sleep', {}).ok);
   const meal = { items: ['rice', 'egg.fine'], method: 'fry' };
-  const at = { x: 10, y: 11, dir: 'up' };
+  const at = { x: 10, y: 9, dir: 'up' };
   assert.ok(cook.dispatch('cook', { ...meal, log: bestFire(cook, meal), at }).ok);
   const save = structuredClone(cook.save());
   save.state.world.match.echo = {
@@ -61,6 +61,8 @@ test('玩过一年多：不出错、不卡住，存档不走样，也不会越�
   Object.assign(save.state.world.households.home.items, prizes);
   // 修院子的材料也难攒齐：家里放够修院角彩头台的（不用检定）
   Object.assign(save.state.world.households.home.items, { pebble: 4, straw: 8 });
+  // 托阿满捎县城货要攒好些钱：家里放够
+  save.state.world.households.home.coins += 400;
   // 心烦满了、憋着没挑毛病的样子也难碰上：一并放进去
   save.state.world.persona.hero.stress = 100;
   save.state.world.vexes.hero.snap = ['drink', 'spree', 'recluse'];
@@ -69,6 +71,15 @@ test('玩过一年多：不出错、不卡住，存档不走样，也不会越�
   const lucky = createChaos(24, { debug: false, saved: save }).run(1500);
   assert.deepEqual(lucky.errors, [], show(lucky.errors));
   for (const [type, t] of Object.entries(lucky.tally)) done[type] = (done[type] || 0) + t.ok;
+  // 集日赶集比大瓜、托阿满捎货也难碰上：从集日早上开一局，身上带着瓜、家里放够钱
+  const fair = structuredClone(createGame({ seed: 25 }).save());
+  Object.assign(fair.state.world.clock, { day: 4, minute: 23 * 60 }); // 睡一觉就是第 5 日集日
+  fair.state.world.packs.hero.items.pumpkin = 3;
+  fair.state.world.households.home.items.pumpkin = 30;
+  fair.state.world.households.home.coins += 400;
+  const market = createChaos(25, { debug: false, saved: fair }).run(1500);
+  assert.deepEqual(market.errors, [], show(market.errors));
+  for (const [type, t] of Object.entries(market.tally)) done[type] = (done[type] || 0) + t.ok;
   // 以后加了命令，乱玩的人不会用，这里就提醒去 tests/chaos.js 里教它
   const never = createGame()
     .commands()

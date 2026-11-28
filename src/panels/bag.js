@@ -64,7 +64,7 @@ export function bagView(modal, game, here) {
   const where = pack.atHome
     ? '家里存的东西在小屋的橱柜里。'
     : '家里存的东西在小屋的橱柜里，出了院子就够不着了。';
-  const rows = [...items, dishRows(pack.dishes, true), flaskRow(pack)].filter(Boolean);
+  const rows = [...items, dishRows(pack.dishes, 'pack'), flaskRow(pack)].filter(Boolean);
   const how = pack.basket ? '野货装在竹篮里，连篮子只占一格' : '一格放一样东西';
   return `${title('行囊', `${pack.used}/${pack.cap} 格 · ${how}`)}
     ${bodyLine(game)}

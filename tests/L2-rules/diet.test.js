@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, settle, stocked, STOVE } from '../helpers.js';
+import { newGame, must, settle, stocked, STOVE, dine } from '../helpers.js';
 import { DIET_LINES, DRY_GONE, GIFT_TASTE } from '../../src/content/diet.js';
 
 const at = STOVE;
@@ -69,7 +69,7 @@ test('头一回吃到一道菜有一句；合口的菜腻得慢一点', () => {
   g.on('meal.eaten', e => tired.push(e.data.tired));
   for (let i = 0; i < 3; i++) must(g, 'cook', { items: ['rice'], method: 'stew', at });
   for (const d of [...g.ask('kitchen', at).dishes]) {
-    must(g, 'dish.eat', { id: d.id, at });
+    dine(g, [d.id]);
     must(g, 'sleep');
   }
   assert.equal(ate[0].fresh, true);

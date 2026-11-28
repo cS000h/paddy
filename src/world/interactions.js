@@ -93,6 +93,8 @@ export function drawWater(scene, target) {
 /** 手里拿着能吃的（零嘴、能生吃的、带着的饭菜），面前又没别的事：印上刻「吃」。 */
 export function heldHint(scene) {
   const { game, shell } = scene.deps;
+  const hand = game.ask('table').hands[0];
+  if (hand) return { text: `端着${hand.name}，进屋摆上饭桌再吃`, verb: '端着', ok: false };
   const key = shell.get().held;
   if (!key) return null;
   const slot = game.ask('pack', scene.at()).slots.find(s => s.key === key);
@@ -105,6 +107,9 @@ export function heldHint(scene) {
 /** 手里拿着的能不能递给人：一样东西或一份饭菜直接递；鱼篓、竹篮里不止一样，打开「递东西」挑。 */
 function heldGift(scene) {
   const { game, shell } = scene.deps;
+  // 手上端着热菜：递过去的就是这一碗
+  const hand = game.ask('table').hands[0];
+  if (hand) return { name: hand.name, input: { dish: hand.id } };
   const key = shell.get().held;
   const slot = key && game.ask('pack', scene.at()).slots.find(s => s.key === key);
   if (!slot) return null;

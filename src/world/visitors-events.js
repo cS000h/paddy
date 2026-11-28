@@ -12,6 +12,7 @@ import { createKeepsakes } from './keepsakes.js';
 import { createChatter } from './chatter.js';
 import { createSignposts } from './signposts.js';
 import { HeldItem } from './held.js';
+import { createTableDishes } from './table-dishes.js';
 import { syncStalls } from './stalls.js';
 import { createFairCrowd } from './fair-crowd.js';
 import { syncDecor } from './decor.js';
@@ -60,6 +61,7 @@ export function createFieldExtras(scene) {
   const chatter = createChatter(scene, () => [...walkers.values()]);
   const signs = createSignposts(scene);
   const held = new HeldItem(scene);
+  const tableDishes = createTableDishes(scene);
   const crowd = createFairCrowd(scene);
   let eventMark = null;
   let eventRing = null;
@@ -326,6 +328,7 @@ export function createFieldExtras(scene) {
     crowd.frame(delta);
     signs.frame();
     if (scene.player) held.frame();
+    tableDishes.frame();
   }
 
   function destroy() {

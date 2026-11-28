@@ -43,6 +43,7 @@ import { neighbors } from './plugins/neighbors.js';
 import { fairGames } from './plugins/fair-games.js';
 import { decor } from './plugins/decor.js';
 import { nap } from './plugins/nap.js';
+import { table } from './plugins/table.js';
 import { town } from './plugins/town.js';
 import { guide } from './plugins/guide.js';
 import { visits } from './plugins/visits.js';
@@ -87,6 +88,7 @@ export const PLUGINS = Object.freeze([
   ground,
   dawnNews,
   homestead,
+  table,
   cooking,
   foodEffects,
   quality,

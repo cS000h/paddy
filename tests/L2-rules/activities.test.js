@@ -17,6 +17,7 @@ import {
   near,
   travel,
   fetchBamboo,
+  dine,
 } from '../helpers.js';
 import { createGame } from '../../src/port/game.js';
 const at = { x: 35, y: 17 };
@@ -31,10 +32,7 @@ test('溪边采集每天两次，远处拒绝，拿来的食材能煮成饭', ()
   assert.deepEqual(g.save(), before);
   const ingredient = g.ask('pack').items.find(i => i.cook).id;
   must(g, 'cook', { items: [ingredient], method: 'stew', at: STOVE });
-  must(g, 'dish.eat', {
-    id: g.ask('kitchen', STOVE).dishes[0].id,
-    at: STOVE,
-  });
+  dine(g, [g.ask('kitchen', STOVE).dishes[0].id]);
   must(g, 'sleep');
   assert.equal(g.ask('outings', 'forage', at).options[0].left, 2);
 });

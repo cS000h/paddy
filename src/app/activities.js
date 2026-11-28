@@ -71,6 +71,22 @@ export function activityActions({ game, shell, run, here, world }) {
       shell.set({ modal: null });
       world.work(m.group, id, spotOf(m));
     },
+    /** 饭桌：手上的放下、桌上的端起、坐下吃一桌。放下、吃完都冒一句。 */
+    dishSet() {
+      const out = run('dish.set', { at: here() });
+      if (out.ok) shell.toast(out.facts.find(f => f.type === 'dish.set').data.line);
+    },
+    dishLift({ id }) {
+      run('dish.lift', { id: Number(id), at: here() });
+    },
+    tableEat() {
+      const out = run('table.eat', { at: here() });
+      if (!out.ok) return;
+      shell.set({ modal: null });
+      const meal = out.facts.find(f => f.type === 'meal.eaten').data;
+      const ate = out.facts.find(f => f.type === 'diet.ate')?.data.line || '';
+      shell.toast(meal.line + ate, true);
+    },
     /** 修院子一处：合上小窗，修没修成都冒一句（话和路过的人说的见 world/visitors-events.js）。 */
     yardFix({ id, help }) {
       shell.set({ modal: null });

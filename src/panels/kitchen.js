@@ -4,20 +4,32 @@ import { METHODS, CUTS } from '../content/recipes.js';
 import { ITEMS } from '../content/items.js';
 import { button, actions, close, title, para, itemRow, esc, paged } from './html.js';
 import { stovePicture, servedImg } from './stove-picture.js';
+import { handheld } from '../content/table.js';
 
-/** 做好的饭菜，一份一行：能吃，灶上的能端走，带着的能放回。carry = 这些是身上带着的。 */
-export const dishRows = (dishes, carry = false) =>
+/**
+ * 做好的饭菜，一份一行。where：stove 灶上（热菜端起、能随手吃的吃或装进行囊）、hands 手上端着（放回灶台）、
+ * pack 行囊里（吃、放回灶台）。热菜要端进屋摆上饭桌才吃得了。
+ */
+export const dishRows = (dishes, where = 'stove') =>
   dishes
-    .map(d =>
-      itemRow({
+    .map(d => {
+      const loose = handheld(d);
+      const acts =
+        where === 'stove'
+          ? loose
+            ? button('dishEat', '吃', { data: { id: d.id } }) +
+              button('dishPack', '装进行囊', { data: { id: d.id } })
+            : button('dishCarry', '端起', { data: { id: d.id } })
+          : (where === 'pack' ? button('dishEat', '吃', { data: { id: d.id } }) : '') +
+            button('dishStore', '放回灶台', { data: { id: d.id } });
+      const at = { stove: '灶上', hands: '端着', pack: '行囊里' }[where];
+      return itemRow({
         image: servedImg(d),
         name: d.name,
-        notes: [`饱腹 +${d.full} · ${d.buffText}${carry ? ' · 带着' : ' · 灶上'}`],
-        acts:
-          button('dishEat', '吃饭', { data: { id: d.id } }) +
-          button(carry ? 'dishStore' : 'dishPack', carry ? '放回' : '端走', { data: { id: d.id } }),
-      }),
-    )
+        notes: [`饱腹 +${d.full} · ${d.buffText || ''} · ${at}${loose ? '' : ' · 上桌吃'}`],
+        acts,
+      });
+    })
     .join('');
 
 const choices = list => `<div class="choices">${list.join('')}</div>`;
@@ -86,6 +98,19 @@ function preview(m, game, goods) {
     )}</section>`;
 }
 
+/** 身上的饭菜：手上端着的、行囊里的分开列。 */
+export function carriedRows(game, kitchen) {
+  const hands = game.ask('table').hands;
+  const ids = new Set(hands.map(d => d.id));
+  return (
+    dishRows(hands, 'hands') +
+    dishRows(
+      kitchen.carried.filter(d => !ids.has(d.id)),
+      'pack',
+    )
+  );
+}
+
 export function kitchenView(m, game, here) {
   const goods = game.ask('goods', here);
   const kitchen = game.ask('kitchen', here);
@@ -95,7 +120,7 @@ export function kitchenView(m, game, here) {
     <nav class="tabs">${button('recipes', '翻菜谱')}${close('离开灶台', false)}</nav>
     <div class="two kitchen-layout">${picker(m, goods)}${preview(m, game, goods)}</div>
     <h3>做好的饭菜</h3>
-    <ul class="items">${dishRows(kitchen.dishes)}${dishRows(kitchen.carried, true)}</ul>`;
+    <ul class="items">${dishRows(kitchen.dishes)}${carriedRows(game, kitchen)}</ul>`;
 }
 
 export function recipesView(m, game, here) {

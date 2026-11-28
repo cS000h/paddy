@@ -6,6 +6,7 @@ import { FIRE_PERFECT, FIRE_TWISTS } from '../content/cook-fire.js';
 import { QUALITY, HEAT } from '../content/recipes.js';
 import { button, actions, esc } from './html.js';
 import { servedImg } from './stove-picture.js';
+import { handheld } from '../content/table.js';
 
 const chip = (text, cls) => `<span class="fire-chip ${cls}">${esc(text)}</span>`;
 const WORD = { right: '正好', near: '差一点', early: '早了', late: '晚了', missed: '没按' };
@@ -59,7 +60,11 @@ export function cookedView(m, game, here) {
         <p class="cooked-line">${esc(c.line)}</p>
         <p class="cooked-note">${esc(note)}</p>
         ${actions(
-          onStove ? button('cookedPack', '端走', { data: { id: m.servedId } }) : '',
+          onStove
+            ? button('cookedPack', handheld(onStove) ? '装进行囊' : '端起', {
+                data: { id: m.servedId },
+              })
+            : '',
           button('cookedBack', '回灶台'),
           button('cookAgain', '再做一锅', {
             main: true,

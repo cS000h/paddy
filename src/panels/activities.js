@@ -31,6 +31,34 @@ function fixes(game, here) {
   return rows.map(r => one(r, false) + (r.help ? one(r, true) : '')).join('');
 }
 
+/** 窗下饭桌：手上端着的放下，桌上摆着的坐下一起吃，或端回手上；行囊里能随手吃的也在这儿吃。 */
+function diningPicks(game, here) {
+  const t = game.ask('table', here);
+  const hands = new Set(t.hands.map(d => d.id));
+  const dish = (act, label, d) =>
+    button(act, '', { data: { id: d.id }, html: servedImg(d) + esc(label + d.name) });
+  const set = t.hands.map(d => dish('dishSet', '放下', d)).join('');
+  const lift = t.dishes.map(d => dish('dishLift', '端起', d)).join('');
+  const eat = t.dishes.length
+    ? button('tableEat', '', {
+        main: true,
+        html: `<b>坐下吃饭</b><small>桌上${t.dishes.length}样一起吃，算一顿</small>`,
+      })
+    : '';
+  const packed = game
+    .ask('kitchen', here)
+    .carried.filter(d => !hands.has(d.id))
+    .map(d => dish('dishEat', '吃', d))
+    .join('');
+  return set + eat + lift + packed;
+}
+
+function diningNote(game, here) {
+  const t = game.ask('table', here);
+  if (t.dishes.length) return `桌上摆着${t.dishes.length}样（最多${t.seats}样）`;
+  return t.hands.length ? '把手上的菜放下' : '去院里灶台端一样热菜进来';
+}
+
 export function activityView(m, game, here) {
   const outing = m.group === 'outing';
   const data = game.ask(outing ? 'outings' : 'homestead', m.station, here);
@@ -38,19 +66,9 @@ export function activityView(m, game, here) {
     !outing && m.station === 'coop'
       ? `${data.coop ? '鸡窝搭好了' : '先用三根柴搭窝'} · ${data.hens}只鸡 · ${data.eggs}个蛋`
       : '';
-  const dishes = m.dining ? game.ask('kitchen', here).carried : [];
-  const supper = dishes
-    .map(d =>
-      button('dishEat', '', {
-        data: { id: d.id },
-        html: servedImg(d) + esc('吃' + d.name),
-      }),
-    )
-    .join('');
+  const supper = m.dining ? diningPicks(game, here) : '';
   const sub = m.dining
-    ? supper
-      ? '带来的饭菜'
-      : '可从院灶端一份饭进来吃'
+    ? diningNote(game, here)
     : coop || (data.weather ? data.weather.name : '挑一件做');
   return `${title(m.label || '院里院外', sub)}
     <div class="picks">${supper}${data.options.map(pick).join('')}${m.station === 'workbench' ? fixes(game, here) : ''}</div>

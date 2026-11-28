@@ -49,12 +49,14 @@ export const passers = {
     'modifiers',
     'residents',
     'persona',
+    'table',
+    'kitchen',
   ],
   writes: ['passers'],
   install(ctx) {
     const { schema, commands, queries, reactions, compute, core, people, store, pack } =
       ctx.services;
-    const { body, social, modifiers, residents, persona } = ctx.services;
+    const { body, social, modifiers, residents, persona, table, kitchen } = ctx.services;
 
     schema.slice('passers', { initial: passersInitial, validate: passersValid });
 
@@ -81,7 +83,9 @@ export const passers = {
       for (const alt of need.split('|')) {
         if (alt.startsWith('flag:') && e.flags.includes(alt.slice(5))) return { flag: true };
         if (alt === 'dish') {
-          const list = [...pack.dishes(w, people.who(w))];
+          // 手上端着的热菜和行囊里的都算带着
+          const me = people.who(w);
+          const list = [...table.hands(w, me), ...pack.dishes(w, me)];
           list.sort((a, b) => RANK.indexOf(b.quality) - RANK.indexOf(a.quality));
           if (list.length) return { dish: list[0] };
           continue;
@@ -189,7 +193,7 @@ export const passers = {
       const who = people.who(w);
       const p = PASSERS[e.id];
       const met = (w.passers.met[e.id] ||= { n: 0, last: -1, day: w.clock.day });
-      if (eff.take && got?.dish) pack.takeDish(w, who, got.dish.id);
+      if (eff.take && got?.dish) kitchen.take(w, who, got.dish.id, true);
       else if (eff.take && got?.item)
         pack.take(w, who, got.item, eff.take === true ? 1 : eff.take, p.title);
       if (eff.coins > 0) store.earn(w, eff.coins, p.title);
