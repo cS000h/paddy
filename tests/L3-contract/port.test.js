@@ -118,6 +118,7 @@ const QUERIES = [
   'visits',
   'modifiers',
   'neighbor.wants',
+  'neighbor.swapFor',
   'events',
   'visitors',
   'wardrobe',
