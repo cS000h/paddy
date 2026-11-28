@@ -41,8 +41,8 @@ export function randomPlay(seed, steps) {
     () => ['farm.refill', { x: 18, y: 18, at: { x: 17, y: 18, dir: 'right' } }],
     () => ['talk', { to: pick(['shi', 'gui']) }],
     () => ['gift', { to: pick(['shi', 'gui']), item: 'veg.qingcai' }],
-    () => ['basket.put', { item: 'veg.qingcai', n: 1 }],
-    () => ['basket.order', { item: 'seed.qingcai', n: 1 + Math.floor(r() * 3) }],
+    () => ['pack.take', { item: 'veg.qingcai', n: 'all' }],
+    () => ['pack.put', { item: 'veg.qingcai', n: 1 + Math.floor(r() * 3) }],
     () => ['clock.advance', { minutes: 10 * (1 + Math.floor(r() * 6)) }],
     () => ['sleep', {}],
     () => ['person.place', { x: 8, y: 11, dir: pick(['up', 'down', 'left', 'right']) }],
@@ -61,7 +61,7 @@ export function randomPlay(seed, steps) {
 }
 
 // 借、还、帮、传、拿（v33）：村民手头紧互借、到日子还或赖、大方的接济、茶摊上传闲话
-const GOLDEN = { seed: 20261113, steps: 600, fingerprint: 'b8e2eeea' };
+const GOLDEN = { seed: 20261113, steps: 600, fingerprint: '4f466030' };
 
 test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界始终合法', () => {
   const seen = {};
@@ -80,8 +80,8 @@ test('乱玩 12 局、每局 400 步：每种命令都真的成功过，世界�
     'farm.refill',
     'talk',
     'gift',
-    'basket.put',
-    'basket.order',
+    'pack.take',
+    'pack.put',
     'sleep',
   ])
     assert.ok(seen[type] > 0, `乱玩里 ${type} 一次都没成功，这条规则等于没测到`);

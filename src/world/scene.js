@@ -16,7 +16,7 @@ import { weatherEffects } from './weather.js';
 import { fieldInspection } from './field-inspection.js';
 import { refreshPlots } from './plots.js';
 import { repeatField, bindAction, bindKeyboard, bindPointer } from './input.js';
-import { hintFor, touchThing, drawWater, poke, heldHint, eatHeld } from './interactions.js';
+import { hintFor, touchThing, drawWater, poke, eatHeld, giveHeld } from './interactions.js';
 import { swing } from './farm-motion.js';
 import { tapAt } from './tap.js';
 import { leaveByRoad } from './travel.js';
@@ -247,7 +247,7 @@ export class VillageScene extends Phaser.Scene {
     if (t.kind === 'thing') return this.touch(t.thing);
     if (t.kind === 'water') return drawWater(this, t);
     if (t.kind === 'decor') return poke(this, t.decor);
-    if (!farmable(this.map, t.x, t.y)) return eatHeld(this, heldHint(this));
+    if (!farmable(this.map, t.x, t.y)) return eatHeld(this);
     const action = hintFor(this, t);
     if (!action.ok) return this.refuse(action.text);
     const tool = action.tool;
@@ -274,6 +274,7 @@ export class VillageScene extends Phaser.Scene {
     const { game, shell, platform } = this.deps;
     person.turnTo(this.player);
     this.player.face(dirTo(this.player.tile, person.tile));
+    if (giveHeld(this, person)) return;
     const line = game.ask('resident.greeting', person.id, person.commuting);
     if (!line) return;
     platform.audio.play('talk');

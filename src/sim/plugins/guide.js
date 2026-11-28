@@ -21,17 +21,19 @@ export const guide = {
         'done',
     });
 
+    // on 可以是一件事，也可以是几件事里随便哪件（卖给铺子、卖给乡邻都算「卖一回东西」）
     for (const goal of GOALS)
-      reactions.on(
-        goal.on,
-        (s, e, emit) => {
-          const done = s.world.guide.done;
-          if (done[goal.id]) return;
-          done[goal.id] = s.world.clock.day;
-          emit('guide.done', { id: goal.id, text: goal.text });
-        },
-        { priority: 90 },
-      );
+      for (const on of [goal.on].flat())
+        reactions.on(
+          on,
+          (s, e, emit) => {
+            const done = s.world.guide.done;
+            if (done[goal.id]) return;
+            done[goal.id] = s.world.clock.day;
+            emit('guide.done', { id: goal.id, text: goal.text });
+          },
+          { priority: 90 },
+        );
 
     queries.define('guide', w =>
       GOALS.map(g => ({ id: g.id, text: g.text, hint: g.hint, done: !!w.guide.done[g.id] })),

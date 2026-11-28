@@ -5,6 +5,7 @@ import { PEOPLE } from '../content/people.js';
 import { POKES } from '../content/pokes.js';
 import { SEARCH_LINES } from '../content/search.js';
 import { farmable } from '../content/maps/index.js';
+import { giftable } from '../content/pantry.js';
 import { costText, careNote } from '../shell/words.js';
 import { dirTo, toolVerb, fieldTool } from './logic.js';
 
@@ -20,7 +21,6 @@ export const ACT_HINT = {
   'door.gui': '敲敲门',
   water: '喝水、打水',
   store: '收拾橱柜',
-  basket: '看看收菜筐',
   sign: '看路牌',
   kitchen: '生火做饭',
   book: '翻一翻册子',
@@ -38,7 +38,6 @@ const STAMP = {
   'door.gui': '敲门',
   water: '打水',
   store: '橱柜',
-  basket: '菜筐',
   sign: '看看',
   kitchen: '做饭',
   book: '翻册',
@@ -99,8 +98,51 @@ export function heldHint(scene) {
   return null;
 }
 
+/** 手里拿着的能不能递给人：一样东西或一份饭菜直接递；鱼篓、竹篮里不止一样，打开「递东西」挑。 */
+function heldGift(scene) {
+  const { game, shell } = scene.deps;
+  const key = shell.get().held;
+  const slot = key && game.ask('pack', scene.at()).slots.find(s => s.key === key);
+  if (!slot) return null;
+  if (slot.slot === 'dish') return { name: slot.name, input: { dish: slot.id } };
+  if (slot.slot === 'item' && giftable(slot.id))
+    return { name: slot.name, input: { item: slot.id } };
+  if (['creel', 'basket'].includes(slot.slot)) return { name: slot.name, pick: true };
+  return null;
+}
+
+/** 拿着东西点人：递过去，对方的话照常在说话框里冒出来。手里空着或拿的不能送，返回 false 照常说话。 */
+export function giveHeld(scene, person) {
+  const { game, shell, platform } = scene.deps;
+  const gift = heldGift(scene);
+  if (!gift) return false;
+  const modal = {
+    kind: 'talk',
+    who: person.id,
+    walking: person.commuting,
+    anchor: scene.headOnScreen(person),
+  };
+  if (gift.pick) {
+    const line = game.ask('resident.greeting', person.id, person.commuting);
+    if (!line) return false;
+    shell.set({ modal: { ...modal, line, open: true, group: '递东西' } });
+    return true;
+  }
+  const out = game.dispatch('gift', { to: person.id, ...gift.input, at: scene.at() });
+  if (!out.ok) {
+    scene.refuse(out.reason);
+    return true;
+  }
+  const given = out.facts.find(f => f.type === 'gift.given')?.data;
+  platform.audio.play('talk');
+  const favorite = given?.favorite === true ? given.dish : given?.favorite;
+  shell.set({ modal: { ...modal, line: given?.line || '', open: true, favorite } });
+  return true;
+}
+
 /** 照 heldHint 吃下去；吃了什么由饮食那边的提示冒出来（app/diet.js）。 */
-export function eatHeld(scene, h) {
+export function eatHeld(scene) {
+  const h = heldHint(scene);
   if (!h) return undefined;
   const at = scene.at();
   const out = h.dish
@@ -128,8 +170,13 @@ export function hintFor(scene, t) {
       return { text: p.hint, verb: p.verb, ok: true };
     return { text: why, verb: p.verb, ok: true };
   }
-  if (t.kind === 'person')
-    return { text: `和${PEOPLE[t.person.id].name}说话`, verb: '说话', ok: true };
+  if (t.kind === 'person') {
+    const name = PEOPLE[t.person.id].name;
+    const gift = heldGift(scene);
+    if (gift?.pick) return { text: `从${gift.name}里挑一样递给${name}`, verb: '递', ok: true };
+    if (gift) return { text: `把${gift.name}递给${name}`, verb: '递', ok: true };
+    return { text: `和${name}说话`, verb: '说话', ok: true };
+  }
   if (t.kind === 'visitor')
     return { text: `和${t.visitor.visitor.name}说话`, verb: '说话', ok: true };
   if (t.kind === 'pulse') return { text: `看看${t.pulse.title}`, verb: '看看', ok: true };
@@ -201,7 +248,6 @@ export function touchThing(scene, thing) {
     store: 'store',
     wardrobe: 'wardrobe',
     cloth: 'cloth',
-    basket: 'basket',
     kitchen: 'kitchen',
     book: 'book',
     sleep: 'sleep',

@@ -20,7 +20,6 @@ import { prizes } from './plugins/prizes.js';
 import { land } from './plugins/land.js';
 import { interactions } from './plugins/interactions.js';
 import { social } from './plugins/social.js';
-import { basket } from './plugins/basket.js';
 import { cooking } from './plugins/cooking.js';
 import { foodEffects } from './plugins/food-effects.js';
 import { comfort } from './plugins/comfort.js';
@@ -40,6 +39,7 @@ import { achievements } from './plugins/achievements.js';
 import { residents } from './plugins/residents.js';
 import { teahouse } from './plugins/teahouse.js';
 import { market } from './plugins/market.js';
+import { neighbors } from './plugins/neighbors.js';
 import { guide } from './plugins/guide.js';
 import { visits } from './plugins/visits.js';
 import { opinion } from './plugins/opinion.js';
@@ -90,7 +90,6 @@ export const PLUGINS = Object.freeze([
   land,
   moods,
   social,
-  basket,
   persona,
   growth,
   growthPerks,
@@ -108,6 +107,7 @@ export const PLUGINS = Object.freeze([
   fairMatch,
   passers,
   purse,
+  neighbors,
   witness,
   stress,
   deeds,

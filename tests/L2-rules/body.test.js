@@ -12,6 +12,7 @@ import {
   FIELD,
   HOME,
   WELL,
+  stocked,
 } from '../helpers.js';
 
 const eaten = out => out.facts.find(f => f.type === 'meal.eaten').data;
@@ -158,10 +159,11 @@ test('水井、水缸、溪边都能喝，喝饱了就喝不下；水田的水�
 });
 
 test('竹筒水壶：在水边喝水时顺手灌满，带在身上随时喝三口', () => {
-  const g = newGame();
+  let g = newGame();
   assert.equal(refused(g, 'sip'), '身上没带竹筒水壶');
   assert.equal(g.ask('pack').flask, null);
-  must(g, 'basket.order', { item: 'flask', n: 1 });
+  g = stocked(g, { flask: 1 });
+  must(g, 'pack.put', { item: 'flask', at: HOME });
   must(g, 'sleep');
   assert.equal(carried(g, 'flask'), 1);
   assert.deepEqual(g.ask('pack').flask, { left: 0, max: 3 });
@@ -225,7 +227,7 @@ test('用东西先用身上的，不够的从家里补；够得着的东西列�
   const g = newGame();
   must(g, 'pack.put', { item: 'veg.qingcai', n: 1, at: HOME });
   const veg = g.ask('goods').find(i => i.id === 'veg.qingcai');
-  assert.deepEqual([veg.n, veg.carried, veg.gift, veg.basket, veg.eat], [2, 1, true, true, null]);
+  assert.deepEqual([veg.n, veg.carried, veg.gift, veg.eat], [2, 1, true, null]);
   assert.equal(
     g.ask('goods', FIELD.at).find(i => i.id === 'veg.qingcai').n,
     1,
@@ -235,9 +237,6 @@ test('用东西先用身上的，不够的从家里补；够得着的东西列�
     g.ask('goods', FIELD.at).some(i => i.id === 'rice'),
     false,
   );
-  must(g, 'basket.put', { item: 'veg.qingcai', n: 2 }); // 身上一份，家里一份
-  assert.deepEqual([carried(g, 'veg.qingcai'), stored(g, 'veg.qingcai')], [0, 0]);
-  assert.equal(refused(g, 'basket.put', { item: 'egg', n: 3 }), '鸡蛋不够了');
   assert.equal(g.ask('goods').find(i => i.id === 'seed.qingcai').gift, false);
 });
 
@@ -263,8 +262,8 @@ test('菜种放在家里，到了地里就够不着', () => {
 });
 
 test('吃得太饱会撑：干重活更费劲，过一个时辰消一点', () => {
-  const g = newGame();
-  must(g, 'basket.order', { item: 'cake', n: 3 });
+  const g = stocked(newGame(), { cake: 3 });
+  must(g, 'pack.put', { item: 'cake', n: 3, at: HOME });
   must(g, 'sleep');
   assert.equal(carried(g, 'cake'), 5);
   for (let i = 0; i < 4; i++) must(g, 'eat', { item: 'cake' });

@@ -52,7 +52,7 @@ export const OBJECTS = Object.freeze({
   bookshelf: { foot: [0, 0, 0, 0], act: 'book' },
   stove: { foot: [0, 0, 0, 0], act: 'kitchen' },
   cupboard: { foot: [0, 0, 0, 0], act: 'store' },
-  basket: { foot: [0, 0, 0, 0], act: 'basket' },
+  basket: { foot: [0, 0, 0, 0] },
   table: { foot: [0, 0, 1, 0], act: 'housework' },
   haystack: { foot: [0, 0, 1, 0] },
   rack: { foot: [0, 0, 1, 0] },

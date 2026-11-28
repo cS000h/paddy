@@ -9,7 +9,7 @@
 export const KEEPSAKES = Object.freeze([
   { id: 'ornHoe', name: '磨亮旧铁锄架', for: 'soil20', at: [112, 160], by: 'shi',
     look: '“锄头磨得发亮，靠在墙根看着就提气。”' },
-  { id: 'ornBaskets', name: '一摞青竹菜筐', for: 'harvest30', at: [192, 224], by: 'aman',
+  { id: 'ornBaskets', name: '一摞青竹菜筐', for: 'harvest30', at: [160, 224], by: 'aman',
     look: '“好家伙，摞这么高一排筐，明儿我多拉趟板车！”' },
   { id: 'ornBowls', name: '灶边一摞青花碗', for: 'servings30', at: [144, 176], by: 'gui',
     look: '“碗摞得齐齐整整，一看就是天天开火的院子。”' },

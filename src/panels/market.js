@@ -1,6 +1,7 @@
 // 柜台（杂货铺、茶点摊）和樟树下的茶桌。
 import { TEA_DEEDS } from '../content/market.js';
 import { signed } from '../content/text.js';
+import { takeKind } from '../content/pantry.js';
 import { button, actions, close, title, para, itemRow, itemList, esc } from './html.js';
 
 /** 价钱为什么涨落：“刚上市+1，傍晚处理−1”。 */
@@ -24,20 +25,35 @@ export function marketView(m, game, here) {
   const sellable = game
     .ask('goods', here)
     .filter(item => item.sell > 0)
-    .map(item =>
-      itemRow({
+    .map(item => {
+      const t = market.takes[takeKind(item.id)];
+      const left = t.full
+        ? `今天原价还收${t.full}份`
+        : t.half
+          ? `收满了，再收${t.half}份半价`
+          : '今天收够了';
+      return itemRow({
         icon: item.id,
         name: item.name,
         count: item.n,
-        notes: [`每份${item.sell}文起`],
-        acts: button('marketSell', '卖一份', { data: { item: item.id } }),
-      }),
-    );
+        notes: [
+          t.full ? `每份${item.sell}文起` : `半价每份${Math.max(1, Math.floor(item.sell / 2))}文`,
+          left,
+        ],
+        acts: button('marketSell', '卖一份', {
+          data: { item: item.id },
+          disabled: !t.full && !t.half,
+        }),
+      });
+    });
+  const sellSide = market.buys
+    ? `${itemList(sellable, '行囊里还没有可卖的东西。')}
+        ${para('铺子每样每天只收几份，收满了只给半价。鱼和鲜货也可以卖给想要的乡邻。', 'aside')}`
+    : para('茶摊只卖不收。要卖东西去杂货铺，或者问问想要的乡邻。', 'aside');
   return `${title(shop === 'tea' ? '茶点摊' : '杂货铺', `${market.fair ? '今日赶集 · ' : ''}手头 ${coins} 文`)}
     <div class="two">
       <section><h3>今日的货</h3>${itemList(wares, '今天的货卖完了，明早再来。')}</section>
-      <section><h3>卖点随身带的</h3>${itemList(sellable, '行囊里还没有可卖的东西。')}
-        ${para('鲜货也会卖给别的乡邻。傍晚剩下的便宜些，卖完明天再来。', 'aside')}</section>
+      <section><h3>卖点随身带的</h3>${sellSide}</section>
     </div>
     ${actions(close('收好东西，继续走', false))}`;
 }

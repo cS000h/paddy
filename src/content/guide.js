@@ -35,5 +35,10 @@ export const GOALS = Object.freeze([
     hint: '每天浇水，三个早晨之后就能收',
   },
   { id: 'gift', on: 'gift.given', text: '送一把自己种的菜', hint: '手里有菜的时候找人说话' },
-  { id: 'sell', on: 'basket.sold', text: '托阿满卖一回菜', hint: '把菜放进院门边的收菜筐，睡一觉' },
+  {
+    id: 'sell',
+    on: ['market.sold', 'neighbor.sold'],
+    text: '卖一回东西',
+    hint: '把菜拿到村口杂货铺，或者卖给想要的乡邻',
+  },
 ]);
