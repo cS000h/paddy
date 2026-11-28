@@ -1,6 +1,7 @@
 // 衣装和发式：单独的一个插件。每个人身上穿的（worn）、每户衣箱里有的（owned）都在这里；
 // 人的样子经过 'person.look' 计算管道，所以拿掉这个插件，人人都穿回原衣，别的玩法照常。
-//   wardrobe.wear {coat, hair, at}  在小屋衣镜跟前换上衣箱里有的            → wardrobe.worn
+//   wardrobe.wear {coat, hair, at}  在小屋衣镜跟前换上衣箱里有的            → wardrobe.worn {line}
+//     line 是镜子跟前那一句，走计算管道 'wardrobe.line'（合不合时令在 sim/plugins/attire.js）
 //   wardrobe.buy {kind, id, at}     在集上布摊买一件成衣、学一种发式          → wardrobe.got {how: 'buy'}
 //   到野外找菜、捡柴、劈篾、采菌、采茶、钓鱼时，有几成碰上一样还没有的   → wardrobe.got {how: 'find'}
 // 哪一样怎么得到、几文钱、几成碰上，都写在 content/wardrobe.js 的 GET 里。
@@ -143,7 +144,12 @@ export const wardrobe = {
       if (!owns(w, who, 'coat', coat)) refuse(`衣箱里还没有${COATS[coat]}`);
       if (!owns(w, who, 'hair', hair)) refuse(`还不会梳${HAIR[hair][0]}`);
       w.wardrobe.worn[who] = { coat, hair };
-      fact('wardrobe.worn', { who, coat, hair });
+      const line = compute.run(
+        'wardrobe.line',
+        { w, who, coat, hair },
+        { value: '', parts: [] },
+      ).value;
+      fact('wardrobe.worn', { who, coat, hair, line });
     });
 
     commands.register('wardrobe.buy', ({ draft, input, fact }) => {

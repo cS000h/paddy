@@ -38,11 +38,18 @@ export function wardrobeView(modal, game) {
         .map(p => `<li><b>${esc(p.name)}</b><small>${esc(wayText(p.way))}</small></li>`)
         .join('')}</ul>`
     : '';
+  // 这一身合不合今天（sim/plugins/attire.js），没那个插件就不说
+  const fit = game.ask('attire', coat, hair);
+  const say = fit?.line
+    ? `<p class="fitting-say${fit.warn ? ' warn' : ''}">${esc(fit.line)}${
+        fit.hair ? `<small>${esc(fit.hair)}</small>` : ''
+      }</p>`
+    : '';
   const count = pieces => `${pieces.filter(p => p.owned).length}/${pieces.length}`;
   return (
     title('小屋衣镜') +
     `<div class="fitting-body"><figure class="fitting-preview"><div>${views}</div>
-    <figcaption>${esc(COATS[coat])}<small>${esc(HAIR[hair][0])}</small></figcaption></figure>
+    <figcaption>${esc(COATS[coat])}<small>${esc(HAIR[hair][0])}</small></figcaption>${say}</figure>
     <section><div class="cloth-tabs">` +
     button('fittingTab', `衣装 ${count(box.coat)}`, { chosen: !hairTab, data: { tab: 'coat' } }) +
     button('fittingTab', `发式 ${count(box.hair)}`, { chosen: hairTab, data: { tab: 'hair' } }) +

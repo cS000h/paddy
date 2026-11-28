@@ -58,10 +58,15 @@ export function homeActions({ game, shell, run, here, world }) {
     fittingWear() {
       const m = shell.get().modal;
       const { worn } = game.ask('wardrobe');
-      if (
-        run('wardrobe.wear', { ...at(), coat: m.coat ?? worn.coat, hair: m.hair ?? worn.hair }).ok
-      )
-        shell.set({ modal: null });
+      const out = run('wardrobe.wear', {
+        ...at(),
+        coat: m.coat ?? worn.coat,
+        hair: m.hair ?? worn.hair,
+      });
+      if (!out.ok) return;
+      shell.set({ modal: null });
+      const line = out.facts.find(f => f.type === 'wardrobe.worn')?.data.line;
+      if (line) shell.toast(line);
     },
     drink() {
       const where = spot();

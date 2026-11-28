@@ -55,6 +55,7 @@ import { visitors } from './plugins/visitors.js';
 import { fairMatch } from './plugins/fair-match.js';
 import { passers } from './plugins/passers.js';
 import { wardrobe } from './plugins/wardrobe.js';
+import { attire } from './plugins/attire.js';
 import { purse } from './plugins/purse.js';
 import { witness } from './plugins/witness.js';
 import { stress } from './plugins/stress.js';
@@ -133,6 +134,7 @@ export const PLUGINS = Object.freeze([
   quietDeeds,
   reading,
   wardrobe,
+  attire,
   interactions,
 ]);
 

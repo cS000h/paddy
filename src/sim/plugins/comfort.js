@@ -20,6 +20,10 @@ export const comfort = {
       const row = FEEL_BANDS.find(r => v <= Number(r[0]));
       return { id: row[1], word: row[2] };
     };
+    // 下着雨，身上又没披蓑衣（计算管道 'body.dry'，sim/plugins/attire.js）
+    const rained = (w, who) =>
+      weather.has(w, 'wet') &&
+      !(compute.run('body.dry', { w, who }, { value: 0, parts: [] }).value > 0);
     const feel = (w, id) =>
       compute.run('body.feel', { w, who: id }, { value: weather.view(w).temperature, parts: [] });
     compute.tap(
@@ -28,8 +32,7 @@ export const comfort = {
         if (body.get(w, who)?.hunger < 20) compute.part(r, 'body.hungry', '饿着肚子', -2);
         if (w.people[who]?.energy < 25) compute.part(r, 'body.tired', '累了', -1);
         if (w.sensations[who]?.chill) compute.part(r, 'body.chill', '着凉', -3);
-        if (weather.has(w, 'wet') && !people.atHome(w, who))
-          compute.part(r, 'body.wet', '淋了雨', -2);
+        if (rained(w, who) && !people.atHome(w, who)) compute.part(r, 'body.wet', '淋了雨', -2);
         if (people.atHome(w, who) && r.value <= 10) compute.part(r, 'body.indoor', '屋里避风', 2);
       },
       { priority: 10 },
@@ -64,7 +67,7 @@ export const comfort = {
         )
           return;
         const b = band(feel(w, id).value).id;
-        if (!weather.has(w, 'wet') && !['cold', 'freezing'].includes(b)) return;
+        if (!rained(w, id) && !['cold', 'freezing'].includes(b)) return;
         const p = compute.run(
           'chill.chance',
           { w, who: id },
