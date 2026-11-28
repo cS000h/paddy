@@ -18,6 +18,14 @@ const CATALOG_V21 = [
 ];
 
 export const MIGRATIONS = {
+  34(state) {
+    // 集场路南摆摊：铺子多记今天三个摊位上是谁、每个摊子收了几份。旧档今天摊位空着，明早摆出来。
+    const w = state.world;
+    w.meta.version = 35;
+    w.shops.out = [null, null, null];
+    w.shops.stallTook = {};
+    return state;
+  },
   33(state) {
     // 收菜筐拆掉：筐里还没收走的东西、已经付了钱还没捎到的货，都收进自家橱柜。
     // 铺子多记今天每类收了几份、给出去多少钱（转手卖的本钱），旧档从零记起。

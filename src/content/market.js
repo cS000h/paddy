@@ -1,4 +1,4 @@
-// 数量和概率沿用0.12；售价仍沿用本工程统一的物品价。
+// 数量和概率沿用0.12；售价仍沿用本工程统一的物品价。杂货铺只卖放得住的，豆腐、鲜菜、鲜肉在路南的摊子（content/stalls.js）。
 export const STAPLES = {
   rice: [6, 10],
   bean: [3, 6],
@@ -11,7 +11,6 @@ export const STAPLES = {
   scallion: [2, 4],
   ginger: [2, 4],
   wood: [4, 8],
-  tofu: [3, 5],
 };
 export const SOMETIMES = { wine: 0.6, umbrella: 0.8, flask: 0.5 };
 export const FRESH = ['tofu', 'bun', 'pork', 'wholeChicken', 'lambLeg', 'porkSlab'];

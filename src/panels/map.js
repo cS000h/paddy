@@ -2,7 +2,7 @@
 // 点一个地方，看那儿有什么、要走多久；再点同一个地方（或点“走过去”）就出发。路就是各张地图上的路牌连起来的那些。
 import { MAPS, roads, routeTo } from '../content/maps/index.js';
 import { ATLAS } from '../content/maps/atlas.js';
-import { CALENDAR } from '../content/calendar.js';
+import { CALENDAR, isFairDay } from '../content/calendar.js';
 import { button, actions, title, para, esc } from './html.js';
 
 // 纸上的山水：一条河从东北流下来，西北是山，院子周围是田。只是画，不能点。
@@ -19,13 +19,15 @@ function road(a, b) {
   return `<path d="M${a.x} ${a.y} Q${cx} ${cy} ${b.x} ${b.y}" />`;
 }
 
-function place(id, a, { here, picked, folks }) {
+// 集场上的小红点：今天赶集写「今日集」，明天赶集写「明日集」
+function place(id, a, { here, picked, folks, fair }) {
   const cls = ['place', here && 'here', picked && 'picked'].filter(Boolean).join(' ');
   const who = folks.length ? `<small>${esc(folks.join(' '))}</small>` : '';
+  const dot = fair ? `<i class="fair-dot">${fair}</i>` : '';
   const mark = here ? '<em>你在这儿</em>' : '';
   return (
     `<button class="${cls}" data-do="mapPick" data-to="${id}" ` +
-    `style="left:${a.x}%;top:${a.y}%">${mark}<b>${esc(MAPS[id].name)}</b>${who}</button>`
+    `style="left:${a.x}%;top:${a.y}%">${dot}${mark}<b>${esc(MAPS[id].name)}</b>${who}</button>`
   );
 }
 
@@ -56,12 +58,15 @@ export function mapView(m, game) {
     .filter(([a, b]) => ATLAS[a] && ATLAS[b])
     .map(([a, b]) => road(ATLAS[a], ATLAS[b]))
     .join('');
+  const day = game.ask('clock').day;
+  const fair = isFairDay(day) ? '今日集' : isFairDay(day + 1) ? '明日集' : '';
   const places = Object.entries(ATLAS)
     .map(([id, a]) =>
       place(id, a, {
         here: id === hero.map,
         picked: id === m.pick,
         folks: folks.filter(r => r.map === id).map(r => r.name),
+        fair: id === 'market' ? fair : '',
       }),
     )
     .join('');

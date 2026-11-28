@@ -827,6 +827,20 @@
   border: 2px solid var(--cinnabar);
 }
 
+/* 集场上的小红点：今日集 / 明日集 */
+.place .fair-dot {
+  position: absolute;
+  top: -9px;
+  right: -10px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--cinnabar);
+  color: var(--moon);
+  font-size: 10px;
+  font-style: normal;
+  line-height: 16px;
+}
+
 .sheet .place.picked {
   border-color: var(--ink);
   background: var(--ink);

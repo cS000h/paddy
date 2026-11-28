@@ -7,6 +7,9 @@ import { dateOf, isFairDay } from '../../content/calendar.js';
 import { MAPS, actAt } from '../../content/maps/index.js';
 import { STAPLES, SOMETIMES, FRESH, TAKES, RESALE, TAKE_WORDS } from '../../content/market.js';
 import { takeKind } from '../../content/pantry.js';
+import { STALLS, STALL_IDS, FAIR_NOTES, stallShop, stallOf } from '../../content/stalls.js';
+import { fill } from '../../content/text.js';
+import { pickStalls, layStall, stallTakes, stallLeft, stallQuote } from '../stall-rules.js';
 import { near } from './people.js';
 function qiao({ ask, person, at }) {
   if (person.place !== 'market') return [];
@@ -42,6 +45,24 @@ export const market = {
   writes: ['shops'],
   install(ctx) {
     registerResidentOptions(ctx, 'qiao', qiao);
+    /** 摊子的说明：谁的摊、收哪几类、今天还收几份、吆喝一句。不是摊子返回 null。 */
+    const stallInfo = (w, shop) => {
+      const id = stallOf(shop);
+      if (!id) return null;
+      const s = STALLS[id],
+        fair = isFairDay(w.clock.day),
+        took = w.shops.day === w.clock.day ? w.shops.stallTook[id] || 0 : 0,
+        calls = fair ? s.lines.fair : s.lines.hawk;
+      return {
+        id,
+        name: s.name,
+        owner: s.owner,
+        who: s.who,
+        takes: s.takes,
+        left: stallLeft(fair, took),
+        hawk: calls[(w.clock.day + Math.floor(w.clock.minute / 60)) % calls.length],
+      };
+    };
     const {
       schema,
       commands,
@@ -56,14 +77,30 @@ export const market = {
       purse,
     } = ctx.services;
     schema.slice('shops', {
-      initial: () => ({ day: 0, wares: { market: [], tea: [] }, took: {}, paid: 0 }),
+      initial: () => ({
+        day: 0,
+        wares: { market: [], tea: [] },
+        took: {},
+        paid: 0,
+        out: [null, null, null],
+        stallTook: {},
+      }),
       validate: s =>
         (is.int(s.day) &&
+          is.arr(s.out, 3) &&
+          s.out.length === 3 &&
+          s.out.every(id => id === null || STALL_IDS.includes(id)) &&
+          is.obj(s.stallTook) &&
+          Object.entries(s.stallTook).every(
+            ([k, n]) => STALL_IDS.includes(k) && is.int(n, 1, 99),
+          ) &&
           is.obj(s.took) &&
           Object.entries(s.took).every(([k, n]) => Object.hasOwn(TAKES, k) && is.int(n, 1, 999)) &&
           is.int(s.paid, 0) &&
-          is.keyedBy(s.wares, ['market', 'tea']) &&
-          ['market', 'tea'].every(
+          is.obj(s.wares) &&
+          ['market', 'tea'].every(k => Object.hasOwn(s.wares, k)) &&
+          Object.keys(s.wares).every(k => ['market', 'tea'].includes(k) || stallOf(k)) &&
+          Object.keys(s.wares).every(
             k =>
               is.arr(s.wares[k], 80) &&
               s.wares[k].every(
@@ -94,7 +131,8 @@ export const market = {
       return {
         item,
         left,
-        price: Math.max(1, it.buy + reasons.reduce((n, r) => n + r[1], 0)),
+        // 村里铺子不卖的东西（鱼虾、山货）摊子也卖，照卖价的两倍要
+        price: Math.max(1, (it.buy || it.sell * 2) + reasons.reduce((n, r) => n + r[1], 0)),
         why: reasons,
       };
     };
@@ -118,16 +156,8 @@ export const market = {
           ((item === 'umbrella' && wet) || (item === 'flask' && si === 1) ? 1 : chance)
         )
           add('market', item, 1, 2);
+      // 杂货铺平常只卖放得住的（米、油盐酱醋、柴、常备菜种）；鲜菜、鲜肉归路南的摊子
       for (const it of Object.values(ITEMS)) {
-        if (
-          it.kind === 'food' &&
-          it.buy &&
-          it.season?.includes(si) &&
-          !STAPLES[it.id] &&
-          !it.tags.includes('meat') &&
-          core.random(w) < (wet && it.tags.includes('green') ? 0.5 : 0.75)
-        )
-          add('market', it.id, wet ? 1 : 2, wet ? 3 : 5);
         if (
           it.kind === 'seed' &&
           it.buy &&
@@ -136,30 +166,37 @@ export const market = {
         )
           add('market', it.id, 1, 3);
       }
-      if (!fair && core.random(w) < (si === 3 ? 0.5 : 0.3)) add('market', 'pork', 1, 2);
       add('tea', 'cake', 3, 6);
       add('tea', 'bun', 3, 6);
       if (si === 1) add('tea', 'melon', 2, 4);
       if (si >= 2) add('tea', 'yam', 2, 4);
       if (core.random(w) < 0.4) add('tea', 'candy', 2, 3);
-      if (fair) {
-        add('tea', 'pork', 2, 4, [['集日肉摊', -1]]);
-        add('tea', 'wholeChicken', 1, 2);
-        if (si >= 2 && core.random(w) < 0.7) add('tea', 'lambLeg', 1, 1);
-        if (si === 3 && core.random(w) < 0.5) add('tea', 'porkSlab', 1, 1);
+      // 路南的摊子：平常一个，集日三个，各摆各的货
+      const out = pickStalls(fair, () => core.random(w));
+      for (const id of out.filter(Boolean)) {
+        wares[stallShop(id)] = [];
+        layStall(id, { fair, season: si, random: () => core.random(w), add });
       }
+      const names = out.filter(Boolean).map(id => STALLS[id].name);
+      if (fair)
+        core.post(w, {
+          ...FAIR_NOTES.day,
+          text: fill(FAIR_NOTES.day.text, { names: names.join('、') }),
+        });
+      else if (isFairDay(w.clock.day + 1)) core.post(w, FAIR_NOTES.eve);
       // 昨天收进的货今早转手卖到外头，钱多一成回到钱匣
       if (w.shops.paid) purse.move(w, 'shop', Math.round(w.shops.paid * RESALE), '收的货转手卖了');
-      w.shops = { day: w.clock.day, wares, took: {}, paid: 0 };
+      w.shops = { day: w.clock.day, wares, took: {}, paid: 0, out, stallTook: {} };
     }
     const stock = (w, shop) =>
-      w.shops.wares[shop].map(x => {
+      (w.shops.wares[shop] || []).map(x => {
         const it = ITEMS[x.item],
           why = [...x.why];
         let price = x.price;
+        const stall = STALLS[stallOf(shop)];
         if (
           w.clock.minute >= 900 &&
-          (FRESH.includes(it.id) || (it.kind === 'food' && it.season)) &&
+          (stall ? stall.drop : FRESH.includes(it.id) || (it.kind === 'food' && it.season)) &&
           price > 1
         ) {
           price--;
@@ -167,17 +204,30 @@ export const market = {
         }
         return { ...x, price, why, name: it.name, qty: it.qty };
       });
+    /** 今天这个摊子摆在哪个摊位（0、1、2），没出来是 -1。 */
+    const spotOf = (w, shop) =>
+      w.shops.day === w.clock.day ? w.shops.out.indexOf(stallOf(shop)) : -1;
     const nearShop = (w, shop, at) => {
-      if (!['market', 'tea'].includes(shop)) return false;
       const p = people.me(w);
+      if (stallOf(shop)) {
+        const i = spotOf(w, shop);
+        return (
+          i >= 0 &&
+          MAPS[p.map].objects.some(
+            ([k, x, y, d]) => k === 'stall' && d?.spot === i && near(at || p, { x, y }),
+          )
+        );
+      }
+      if (!['market', 'tea'].includes(shop)) return false;
       return MAPS[p.map].objects.some(
         ([k, x, y]) => actAt(MAPS[p.map], x, y)?.shop === shop && near(at || p, { x, y }),
       );
     };
     const visit = (w, input) => {
       people.place(w, input.at);
-      if (!nearShop(w, input.shop)) refuse('走到柜台前再买卖');
       if (w.shops.day !== w.clock.day) lay(w);
+      if (!nearShop(w, input.shop))
+        refuse(stallOf(input.shop) ? '今天这个摊子没摆出来' : '走到柜台前再买卖');
     };
     commands.register('market.visit', ({ draft, input }) => visit(draft.world, input));
     commands.register('market.buy', ({ draft, input, fact }) => {
@@ -219,6 +269,8 @@ export const market = {
       if (!it?.sell) refuse('铺子不收这样东西');
       const n = input.n ?? 1;
       if (!is.int(n, 1, 99)) refuse('一次卖一至九十九份');
+      const stall = stallOf(input.shop);
+      if (stall) return sellToStall(w, stall, it, n, fact);
       const offer = quote(w, it.id, n);
       if (offer.full) refuse(TAKE_WORDS.full);
       pack.use(w, people.who(w), it.id, n, '卖给铺子');
@@ -241,6 +293,31 @@ export const market = {
         half: offer.half,
       });
     });
+    // 卖给摊子：钱是摊主从外头带来的，不走村里的钱匣；每摊每天原价收几份，再收同样多半价
+    function sellToStall(w, stall, it, n, fact) {
+      if (!stallTakes(stall, it.id)) refuse(`${STALLS[stall].owner}不收这样东西`);
+      const fair = isFairDay(w.clock.day);
+      const offer = stallQuote(fair, w.shops.stallTook[stall] || 0, it.id, n);
+      if (offer.full) refuse(STALLS[stall].lines.full);
+      pack.use(w, people.who(w), it.id, n, '卖给' + STALLS[stall].name);
+      const q = compute.run(
+        'sale.price',
+        { w, who: people.who(w), item: it.id },
+        { value: offer.value, parts: [] },
+      );
+      store.earn(w, q.value, '卖' + it.name);
+      w.shops.stallTook[stall] = (w.shops.stallTook[stall] || 0) + n;
+      const said = STALLS[stall].lines.take;
+      fact('market.sold', {
+        who: people.who(w),
+        shop: stallShop(stall),
+        item: it.id,
+        n,
+        coins: q.value,
+        half: offer.half,
+        line: said[(w.shops.stallTook[stall] + w.clock.day) % said.length],
+      });
+    }
     reactions.on('day.started', s => lay(s.world), { priority: 35 });
     reactions.on(
       'time.passed',
@@ -262,7 +339,8 @@ export const market = {
       ready: w.shops.day === w.clock.day,
       near: nearShop(w, shop, at),
       wares: stock(w, shop),
-      buys: shop === 'market',
+      buys: shop === 'market' || !!stallOf(shop),
+      stall: stallInfo(w, shop),
       /** 铺子今天每类还收几份原价、几份半价（kind → {full, half}）。 */
       takes: Object.fromEntries(
         Object.entries(TAKES).map(([k, cap]) => {
@@ -274,5 +352,9 @@ export const market = {
         }),
       ),
     }));
+    /** 今天三个摊位上各是哪个摊子（摊子编号或 null），画面照这个摆摊棚。 */
+    queries.define('stalls', w =>
+      w.shops.day === w.clock.day ? [...w.shops.out] : [null, null, null],
+    );
   },
 };

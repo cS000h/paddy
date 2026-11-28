@@ -178,7 +178,7 @@ test('上门借钱不扎堆：两家同时手头紧，一周里也只有一位�
 });
 
 test('小乔借了钱不守信：到日子拖着，你上门讨她还不上；拖过宽限拿东西抵了账，不赖你的', () => {
-  let g = fresh();
+  let g = fresh(2);
   sleepDays(g, 3);
   g = staged(g, w => {
     poorBut(w, ['qiao']);

@@ -17,6 +17,7 @@ import { wildProps, wildLooks } from './wild.js';
 import { stove, bookshelf } from './kitchen.js';
 import * as props from './props.js';
 import * as landmarks from './landmarks.js';
+import { stallLook, STALL_LOOKS } from './stalls.js';
 import * as waterside from './waterside.js';
 import * as village from './props-village.js';
 import * as traces from './traces.js';
@@ -105,6 +106,8 @@ const OBJECT_LOOKS = {
     rear: seed => village.trellis(seed, 'rear'),
     front: seed => village.trellis(seed, 'front'),
   },
+  // 集场的摊棚：今天摆的是哪个摊子就换哪副（world/stalls.js 照规则那边的 stalls 查询换）
+  stall: Object.fromEntries(STALL_LOOKS.map(look => [look, () => stallLook(look)])),
 };
 
 /** 某种物件除了平常的样子，还有哪几副样子。 */

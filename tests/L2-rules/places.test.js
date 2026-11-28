@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createGame } from '../../src/port/game.js';
 import { MAPS, walkable } from '../../src/content/maps/index.js';
 import { newGame, must, refused, wait, stocked, carried } from '../helpers.js';
+import { STALLS, STALL_TAKES } from '../../src/content/stalls.js';
 function travel(g, to) {
   const map = MAPS[g.ask('hero').map],
     row = map.objects.find(o => o[3]?.to === to);
@@ -71,9 +72,18 @@ test('柜台当面买卖、钱货一起结算，库存不能靠重进或读档�
   must(g, 'market.visit', { shop, at });
   const loaded = createGame({ saved: JSON.parse(JSON.stringify(g.save())), debug: true });
   assert.deepEqual(loaded.ask('market'), g.ask('market'));
-  const fresh = g.ask('market').wares.find(i => i.item === 'tofu');
+  // 杂货铺只卖放得住的；鲜货在路南的摊子上，平常只摆中间那个，卖鲜货的摊子傍晚降一文
+  assert.ok(!g.ask('market').wares.some(i => ['tofu', 'pork'].includes(i.item)));
+  const out = g.ask('stalls');
+  assert.deepEqual([out[0], out[2]], [null, null]);
+  const stall = 'stall.' + out[1];
+  const ware = g.ask('market', stall).wares.find(i => i.price > 1);
   wait(g, 540);
-  assert.equal(g.ask('market').wares.find(i => i.item === 'tofu').price, fresh.price - 1);
+  const drop = STALLS[out[1]].drop ? 1 : 0;
+  assert.equal(
+    g.ask('market', stall).wares.find(i => i.item === ware.item).price,
+    ware.price - drop,
+  );
   must(g, 'market.sell', { shop, item: 'rice', at });
   const before = JSON.stringify(g.save());
   assert.match(refused(g, 'market.sell', { shop, item: 'lambLeg', at }), /羊腿/);
@@ -136,7 +146,10 @@ test('茶摊喝茶补水，听闲话每天一次；集日有肉摊，下棋长�
   assert.ok(g.ask('bonds').find(p => p.id === 'shi').known > before);
   for (let n = 1; n < 5; n++) must(g, 'sleep');
   assert.ok(g.ask('market', 'tea').fair);
-  assert.ok(g.ask('market', 'tea').wares.some(i => i.item === 'wholeChicken'));
+  // 集日路南三个摊位摆满，鱼摊一定来；肉不在茶摊卖了，归肉摊
+  const out = g.ask('stalls');
+  assert.ok(out.every(Boolean) && out.includes('fish') && new Set(out).size === 3);
+  assert.ok(!g.ask('market', 'tea').wares.some(i => i.item === 'wholeChicken'));
 });
 
 test('照着全村地图走过去：沿路一段段走，每段花十分钟；走不到、没这地方、就在这儿都拒绝', async () => {
@@ -163,4 +176,38 @@ test('照着全村地图走过去：沿路一段段走，每段花十分钟；�
   const back = createGame({ saved: JSON.parse(JSON.stringify(g.save())), debug: true });
   must(back, 'travel.to', { to: 'yard' });
   assert.equal(back.ask('hero').map, 'yard');
+});
+
+test('路南的摊子：各卖各的货、只收自己要的；集日鱼摊收鱼最多，收满给半价再收满不收；赶集前一天和当天有便条', () => {
+  const g0 = newGame();
+  for (let n = 1; n < 4; n++) must(g0, 'sleep');
+  assert.ok(g0.ask('notes', 4).some(x => x.title === '明天赶集'));
+  must(g0, 'sleep');
+  assert.ok(g0.ask('notes', 5).some(x => x.title === '今天赶集'));
+  const out = g0.ask('stalls');
+  const spot = out.indexOf('fish');
+  const cap = STALL_TAKES.fair;
+  const g = stocked(g0, { 'fish.crucian': cap * 2 + 1, rice: 1 });
+  must(g, 'pack.put', { item: 'fish.crucian', n: cap * 2 + 1, at: { x: 8, y: 11 } });
+  must(g, 'pack.put', { item: 'rice', at: { x: 8, y: 11 } });
+  travel(g, 'market');
+  const at = { x: [8, 14, 20][spot], y: 17 };
+  const shop = 'stall.fish';
+  must(g, 'market.visit', { shop, at });
+  assert.match(
+    refused(g, 'market.sell', { shop, item: 'rice', at }),
+    new RegExp(STALLS.fish.owner),
+  );
+  const coins = g.ask('home').coins;
+  for (let i = 0; i < cap; i++) must(g, 'market.sell', { shop, item: 'fish.crucian', at });
+  const full = g.ask('home').coins - coins;
+  for (let i = 0; i < cap; i++) must(g, 'market.sell', { shop, item: 'fish.crucian', at });
+  assert.ok(g.ask('home').coins - coins - full < full, '后几份只给半价');
+  assert.equal(
+    refused(g, 'market.sell', { shop, item: 'fish.crucian', at }),
+    STALLS.fish.lines.full,
+  );
+  const ware = g.ask('market', shop).wares.find(i => i.left > 0);
+  must(g, 'market.buy', { shop, item: ware.item, at });
+  assert.match(refused(g, 'market.visit', { shop: 'stall.' + 'nope', at }), /柜台/);
 });

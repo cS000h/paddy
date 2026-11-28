@@ -75,6 +75,7 @@ const QUERIES = [
   'interaction.options',
   'residents',
   'market',
+  'stalls',
   'match',
   'match.options',
   'passers',

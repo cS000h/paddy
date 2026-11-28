@@ -26,6 +26,7 @@ export const ACT_HINT = {
   book: '翻一翻册子',
   wardrobe: '照衣镜',
   cloth: '看看布摊上的衣裳',
+  stall: '看看摊子上的货',
 };
 
 // 印上刻的字：一到两个字，竖着排，一眼看出按下去做什么
@@ -43,6 +44,7 @@ const STAMP = {
   book: '翻册',
   wardrobe: '换装',
   cloth: '布摊',
+  stall: '买卖',
 };
 const STATION_STAMP = {
   forage: '找菜',
@@ -207,7 +209,13 @@ export function hintFor(scene, t) {
 }
 
 export function touchThing(scene, thing) {
-  const { shell, platform } = scene.deps;
+  const { shell, platform, game } = scene.deps;
+  // 路南的摊位：今天摆的是哪个摊子，就当那个摊子的柜台用；空着就说一声
+  if (thing.act === 'stall') {
+    const id = game.ask('stalls')[thing.spot];
+    if (!id) return shell.toast('今天这个摊位空着，集日才摆满。');
+    thing = { ...thing, act: 'market', shop: 'stall.' + id, label: undefined };
+  }
   scene.player.face(dirTo(scene.player.tile, thing));
   if (thing.act === 'water') return drawWater(scene, thing);
   platform.audio.play('talk');

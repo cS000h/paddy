@@ -78,7 +78,7 @@ export const OBJECTS = Object.freeze({
   reeds: { sortOffset: -5 },
   // 各地的标志物（art/landmarks.js）
   lantern: { foot: [0, 0, 0, 0] },
-  stall: { foot: [-1, 0, 1, 0] },
+  stall: { foot: [-1, 0, 1, 0], act: 'stall' },
   pavilion: { foot: [-1, -1, 1, 0], act: 'housework' },
   lotus: { floor: true },
   shrine: { foot: [0, 0, 0, 0], act: 'sign' },
