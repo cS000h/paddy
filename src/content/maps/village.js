@@ -10,8 +10,9 @@ export const cottage = {
   width: 17,
   height: 14,
   indoor: true,
-  // 屋里收紧到 13×7：大件都贴墙。左边床和衣镜是睡的地方，后墙两窗之间挂字画、下面靠橱柜，
-  // 右窗下是饭桌，右墙根是书架；门口一道石阶。屋外留白；后墙三格高
+  // 屋里收紧到 13×7，照 A-39 整屋图摆：左边床（床右铺草席、床尾旧木箱）和衣镜是睡的地方；
+  // 饭桌在屋心偏右，两张凳子分坐东西；后墙两窗之间挂字画，右窗下橱柜，旁边碗架、屋角坛子；
+  // 右墙根书架，右前角矮书案；门口一道石阶，门边墙上一排挂蓑衣的木钉。屋外留白；后墙三格高
   ground: ground(17, 14, [
     ['x', 0, 0, 16, 13],
     ['o', 2, 5, 14, 11],
@@ -21,24 +22,29 @@ export const cottage = {
   home: [2, 5, 14, 12],
   objects: [
     ['bed', 3, 6],
+    ['rug', 4, 8],
+    ['chest', 3, 8],
     ['roomWindow', 5, 4],
     ['roomWindow', 11, 4],
     ['sill', 11, 4],
     ['scroll', 8, 4],
     ['dresser', 6, 5, { label: '小屋衣镜' }],
     ['hangings', 13, 4],
-    ['cupboard', 9, 5],
+    ['cupboard', 11, 5],
+    ['dishRack', 13, 5],
+    ['jars', 14, 5, { look: 'room' }],
     ['bookshelf', 14, 8],
     [
       'table',
-      11,
+      9,
       7,
-      { station: 'rest', label: '窗下饭桌', look: 'wood', oilLamp: true, dining: true },
+      { station: 'rest', label: '屋里饭桌', look: 'wood', oilLamp: true, dining: true },
     ],
-    ['rug', 4, 9],
-    ['jars', 14, 5],
-    ['stool', 11, 8],
-    ['stool', 13, 9],
+    ['stool', 8, 7, { look: 'room' }],
+    ['stool', 11, 7, { look: 'room' }],
+    ['hook', 10, 11],
+    ['stool', 11, 11, { look: 'room' }],
+    ['desk', 12, 11],
     ['route', 8, 12, { to: 'yard', arrival: 'hero.bed', label: '回小院', look: 'door' }],
   ],
   spots: { entry: [8, 11, 'up'], 'hero.bed': [3, 7, 'down'] },

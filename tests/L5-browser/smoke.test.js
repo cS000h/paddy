@@ -270,14 +270,14 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await until(p, () => window.__dao.world.scene().map.id === 'cottage');
       // 新开一局的种子是随机的，进屋时可能先碰上一件小事（米缸受潮之类）：关上再去橱柜
       const shelf = 'button[data-do="packPut"][data-item="rice"]';
-      await tap(p, 9, 5);
+      await tap(p, 11, 5);
       await until(
         p,
         `!!document.querySelector('${shelf}') || window.__dao.shell.get().modal?.kind === 'event'`,
       );
       if (!(await p.locator(shelf).count())) {
         await p.evaluate(() => window.__dao.shell.set({ modal: null }));
-        await tap(p, 9, 5);
+        await tap(p, 11, 5);
         await until(p, `!!document.querySelector('${shelf}')`);
       }
       const before = await p.evaluate(() => window.__dao.game.ask('body').hunger);
@@ -554,9 +554,9 @@ test('构建出来的游戏：桌面能种菜走路过夜；手机强制横屏�
       await frames(p, 400);
       await p.locator('[data-do="bookTab"]').first().waitFor();
       await p.locator('[data-do="close"]').click();
-      await tap(p, 11, 7);
+      await tap(p, 9, 7);
       await frames(p, 400);
-      assert.match(await p.locator('.sheet').textContent(), /窗下饭桌/);
+      assert.match(await p.locator('.sheet').textContent(), /屋里饭桌/);
       assert.equal(await p.locator('[data-do="activity"][data-id="stars"]').count(), 0);
       await p.locator('[data-do="close"]').click();
       await go(8, 12, 'yard');

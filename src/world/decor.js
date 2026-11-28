@@ -12,3 +12,11 @@ export function syncDecor(scene) {
     setLook(scene, s, d.on === 'default' ? s.base : d.on);
   }
 }
+
+/** 屋里的竹碗架：干净的碗盘晾在上面，没有就空着，一两三只、四只往上各一副样子（只是画面，碗盘归规则管）。 */
+export function syncRack(scene) {
+  const rack = scene.scenery.find(x => x.kind === 'dishRack');
+  if (!rack) return;
+  const clean = Object.values(scene.deps.game.ask('table').ware.clean).reduce((a, b) => a + b, 0);
+  setLook(scene, rack, clean === 0 ? 'empty' : clean <= 3 ? 'some' : 'full');
+}

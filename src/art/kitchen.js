@@ -1,4 +1,4 @@
-// 檐下和屋里的家什：柴火灶、放册子的书架。每个函数返回 {grid, ax, ay}，ax、ay 是脚下那一格的底边中点。
+// 檐下和屋里的家什：柴火灶（屋里的书架在 room.js）。每个函数返回 {grid, ax, ay}，ax、ay 是脚下那一格的底边中点。
 import { Grid } from './pixel.js';
 import { P, SHADOW } from './palette.js';
 
@@ -47,30 +47,4 @@ export function stove() {
   g.rect(24, 5, 7, 5, P.h1).hline(24, 30, 5, P.h0).hline(24, 30, 7, P.h3).hline(24, 30, 9, P.h3);
   g.hline(25, 29, 4, P.h2).hline(26, 28, 3, P.h1).vline(30, 5, 9, P.h2);
   return { grid: g, ax: 16, ay: 29 };
-}
-
-// 书架：两层浅色的旧木架，立着几册线装书，顶上一盏油灯。
-export function bookshelf() {
-  const g = new Grid(22, 30);
-  g.ellipse(12, 28, 10, 1.5, SHADOW);
-  g.rect(2, 6, 18, 22, P.t1).rect(3, 7, 16, 20, P.t2).vline(2, 6, 27, P.t0).vline(19, 6, 27, P.t2);
-  g.hline(1, 20, 5, P.e0).hline(1, 20, 6, P.t1).hline(3, 18, 16, P.t0).hline(3, 18, 17, P.t1);
-  g.hline(3, 18, 26, P.t0).hline(2, 19, 27, P.t2);
-  const books = [
-    [4, 9, P.i2, 7],
-    [6, 8, P.paper1, 8],
-    [8, 10, P.c2, 6],
-    [10, 9, P.paper2, 7],
-    [12, 8, P.i1, 8],
-    [15, 11, P.u1, 5],
-    [4, 19, P.paper1, 7],
-    [6, 20, P.u2, 6],
-    [8, 18, P.i3, 8],
-    [11, 21, P.paper0, 5],
-    [13, 19, P.c1, 7],
-    [16, 20, P.paper2, 6],
-  ];
-  for (const [x, y, c, h] of books) g.rect(x, y, 2, h, c).set(x, y + 1, P.ink3);
-  g.rect(9, 2, 4, 3, P.t1).hline(9, 12, 4, P.t3).set(10, 1, P.y1).set(11, 1, P.y0).set(10, 0, P.c0);
-  return { grid: g, ax: 11, ay: 29 };
 }

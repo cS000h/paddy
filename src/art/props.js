@@ -67,27 +67,6 @@ export function vat() {
   return made(g, 9, 21);
 }
 
-// 橱柜：靠墙立着的旧木柜，两扇门，柜顶搁着一只小坛子。家里存的东西都在这儿。
-export function cupboard() {
-  const g = new Grid(20, 28);
-  g.ellipse(11, 26, 9, 1.5, SHADOW);
-  g.rect(2, 7, 16, 18, P.t2).vline(2, 7, 24, P.t1).vline(17, 7, 24, P.t4);
-  g.rect(1, 5, 18, 2, P.t1).hline(1, 18, 5, P.t0).hline(1, 18, 7, P.t4); // 柜顶的板
-  for (const x of [4, 11]) {
-    g.rect(x, 9, 5, 13, P.t1)
-      .vline(x + 4, 9, 21, P.t3)
-      .hline(x, x + 4, 21, P.t3);
-    g.hline(x, x + 3, 9, P.t0)
-      .rect(x + 1, 11, 3, 4, P.t2)
-      .rect(x + 1, 16, 3, 4, P.t2);
-  }
-  g.vline(9, 8, 22, P.t4).vline(10, 8, 22, P.t3).set(8, 15, P.y2).set(11, 15, P.y2); // 门缝和铜拉手
-  g.hline(2, 17, 23, P.t3).hline(2, 17, 24, P.t4).rect(3, 25, 2, 1, P.t4).rect(15, 25, 2, 1, P.t4);
-  g.ellipse(6, 3, 2.5, 2, P.t3).set(5, 2, P.t1).hline(5, 7, 0, P.c1).hline(4, 8, 1, P.c2); // 小坛子
-  g.rect(12, 3, 4, 2, P.h1).hline(12, 15, 2, P.h0).hline(12, 15, 4, P.h3); // 一摞粗布
-  return made(g, 10, 27);
-}
-
 export function well() {
   const g = new Grid(22, 26);
   g.ellipse(12, 23, 9, 2, SHADOW);

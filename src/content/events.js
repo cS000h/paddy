@@ -44,7 +44,7 @@ export const EVENTS = Object.freeze({
   morning_rice_damp: {
     id: 'morning_rice_damp',
     trigger: 'morning',
-    spot: { map: 'cottage', x: 10, y: 6, place: '屋里橱柜边', hint: '屋里米缸边好像有点潮味' },
+    spot: { map: 'cottage', x: 11, y: 6, place: '屋里橱柜边', hint: '屋里米缸边好像有点潮味' },
     title: '米缸受潮',
     text: '掀开橱柜边的小缸盖，闻到一点潮气，缸底的米像是受了湿。',
     choices: [

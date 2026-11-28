@@ -14,11 +14,12 @@ import {
   bush,
 } from './trees.js';
 import { wildProps, wildLooks } from './wild.js';
-import { stove, bookshelf } from './kitchen.js';
+import { stove } from './kitchen.js';
+import { roomMakers, roomLooks } from './room.js';
 import * as props from './props.js';
 import * as landmarks from './landmarks.js';
 import { stallLook, STALL_LOOKS } from './stalls.js';
-import { decorSprite, DECOR_LOOKS, DECOR_OBJECTS } from './furniture.js';
+import { decorSprite, DECOR_LOOKS } from './furniture.js';
 import * as waterside from './waterside.js';
 import * as village from './props-village.js';
 import * as traces from './traces.js';
@@ -49,8 +50,7 @@ const MAP_MAKERS = {
   'gate.arch': () => props.gateArch(),
   vat: () => props.vat(),
   stove,
-  bookshelf,
-  cupboard: () => props.cupboard(),
+  ...roomMakers,
   well: () => props.well(),
   basket: () => props.basket(),
   table: () => props.table(),
@@ -103,8 +103,10 @@ const OBJECT_LOOKS = {
   cashBox: { closed: () => traces.cashBox('closed'), open: () => traces.cashBox('open') },
   ...wildLooks,
   ...indoorLooks,
+  ...roomLooks,
   ...DECOR_LOOKS,
   table: { ...indoorLooks.table, bench: () => village.bench(), ...DECOR_LOOKS.table },
+  jars: { ...roomLooks.jars, ...DECOR_LOOKS.jars },
   trellis: {
     rear: seed => village.trellis(seed, 'rear'),
     front: seed => village.trellis(seed, 'front'),
@@ -131,16 +133,8 @@ const NO_OUTLINE = new Set([
 ]);
 
 // 屋里的家什用淡墨描边：屋里要清淡，深色的边一圈圈压下来，整间屋子就沉了。
-const SOFT_LINE = new Set([
-  'bed',
-  'rug',
-  'roomWindow',
-  'scroll',
-  'hangings',
-  'bookshelf',
-  'table@wood',
-  'route@door',
-]);
+// 照 A-39 稿重画的那些自己描好了深木色的边（sprite.lined），这里不再描。
+const SOFT_LINE = new Set(['route@door']);
 
 function outlined({ grid, ax, ay }, line = P.o0) {
   const g = new Grid(grid.w + 2, grid.h + 2).blit(grid, 1, 1).outline(line);
@@ -152,8 +146,9 @@ export function objectSprite(kind, variant = 0, look = null) {
   const make = look ? OBJECT_LOOKS[kind]?.[look] : OBJECT_MAKERS[kind];
   if (!make) throw new Error('没有这种物件的画法：' + kind + (look ? '@' + look : ''));
   const sprite = make(101 + (variant % VARIANTS) * 37 + kind.length);
+  if (sprite.lined) return { grid: sprite.grid, ax: sprite.ax, ay: sprite.ay };
   if (NO_OUTLINE.has(kind)) return sprite;
-  const soft = SOFT_LINE.has(look ? kind + '@' + look : kind) || DECOR_OBJECTS.has(kind);
+  const soft = SOFT_LINE.has(look ? kind + '@' + look : kind);
   return outlined(sprite, soft ? P.ink3 : P.o0);
 }
 
