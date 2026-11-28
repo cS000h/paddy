@@ -14,6 +14,7 @@ import { REASONS, KEEPSAKES, FAMILY, OLD_TIES } from '../src/content/settle.js';
 import { TEMPERS } from '../src/content/traits.js';
 import { ON_MAP } from '../src/content/people.js';
 import { CUTS, METHODS } from '../src/content/recipes.js';
+import { handheld } from '../src/content/table.js';
 import { bestLog } from '../src/sim/cook-fire.js';
 import { COATS, HAIR } from '../src/content/wardrobe.js';
 import { PRIZE_TRACES, RELEASE_MAPS } from '../src/content/prizes.js';
@@ -189,6 +190,12 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
   }
 
   function housework(t, at) {
+    // 窗下饭桌：手上端着菜就放下，桌上有菜就坐下吃（不抽随机数），都没有才歇脚
+    if (t.dining) {
+      const tb = game.ask('table', at);
+      if (tb.hands.length) return send('dish.set', { at });
+      if (tb.dishes.length) return send('table.eat', { at });
+    }
     const ids = Object.values(HOMEWORK).filter(a => a.station === t.station);
     if (ids.length) send('homestead', { id: pick(ids).id, at });
     else if (t.station === 'tea') tea(at);
@@ -262,8 +269,10 @@ export function createChaos(seed, { hostile = 0, saved = null, debug = true } = 
         if (!items.length) break;
         send('pack.take', { item: pick(items).id, n: 'all', at });
       }
-      const id = pick(k.dishes).id;
-      const out = send('dish.pack', { id, at });
+      const dish = pick(k.dishes);
+      const id = dish.id;
+      // 能随手吃的装进行囊，热菜端在手上
+      const out = send(handheld(dish) ? 'dish.pack' : 'dish.carry', { id, at });
       // 端错了一份，又放回灶台
       if (out.ok && chance(0.2)) send('dish.store', { id, at });
       return out;

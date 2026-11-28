@@ -275,7 +275,7 @@ test('石伯读指定田块；过客交付选项和实际交付共用库存', ()
   assert.match(plots().line, /水分够/);
   must(g, 'cook', { items: ['rice'], method: 'stew', at: STOVE });
   const dish = g.ask('kitchen', STOVE).dishes[0];
-  must(g, 'dish.pack', { id: dish.id, at: STOVE });
+  must(g, 'dish.carry', { id: dish.id, at: STOVE });
   const v = g.ask('visitors').active[0];
   must(g, 'travel.to', { to: v.map });
   const at = { x: v.x, y: v.y };
@@ -286,7 +286,7 @@ test('石伯读指定田块；过客交付选项和实际交付共用库存', ()
   must(g, offer.command, { ...offer.input, at });
   assert.ok(!rows().some(c => c.command === 'visitor.fulfill'));
   assert.match(g.ask('visitors').active.find(p => p.id === v.id).greeting, /已经收到/);
-  assert.equal(g.ask('pack').dishes.length, 0);
+  assert.equal(g.ask('table').hands.length, 0, '端着的那碗交出去了');
   assert.match(refused(g, offer.command, { ...offer.input, at }), /帮完了/);
 });
 

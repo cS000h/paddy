@@ -69,11 +69,13 @@ export const aroma = {
     'modifiers',
     'residents',
     'witness',
+    'table',
   ],
   writes: ['aroma'],
   install(ctx) {
     const { schema, commands, reactions, compute, core, people, store, pack, body } = ctx.services;
-    const { kitchen, opinion, persona, purse, modifiers, residents, witness } = ctx.services;
+    const { kitchen, opinion, persona, purse, modifiers, residents, witness, table } =
+      ctx.services;
 
     schema.slice('aroma', {
       initial: () => ({ today: null, echo: null, count: 0 }),
@@ -250,11 +252,11 @@ export const aroma = {
       emit('aroma.returned', { to, line });
     });
 
-    // 灶上和身上还剩的这锅菜
+    // 灶上、桌上、手上和行囊里还剩的这锅菜
     function dishesLeft(w) {
       const me = people.who(w);
       const home = w.kitchens[store.id(w)]?.dishes || [];
-      return [...home, ...pack.dishes(w, me)];
+      return [...home, ...table.dishes(w), ...table.hands(w, me), ...pack.dishes(w, me)];
     }
   },
 };

@@ -201,3 +201,25 @@ export function fetchBamboo(game) {
   must(game, 'gather', { id: 'bamboo', at: near('creek', 'bamboo') });
   travel(game, 'yard');
 }
+
+/** 屋里窗下饭桌跟前。 */
+export const TABLE = near('cottage', 'table');
+
+/**
+ * 把灶台上这几份热菜一份一份端进屋摆上桌（手上一次端一样），坐下一起吃，再回院里。
+ * 返回这一顿的 meal.eaten 那段数据。人原来不在院里灶边也行：先回院里。
+ */
+export function dine(game, ids) {
+  if (game.ask('hero').map !== 'yard') travel(game, 'yard');
+  for (const id of ids) {
+    must(game, 'dish.carry', { id, at: STOVE });
+    travel(game, 'cottage');
+    must(game, 'dish.set', { at: TABLE });
+    travel(game, 'yard');
+  }
+  travel(game, 'cottage');
+  const out = game.dispatch('table.eat', { at: TABLE });
+  assert.equal(out.ok, true, `坐下吃饭应该成功：${out.reason}`);
+  travel(game, 'yard');
+  return out.facts.find(f => f.type === 'meal.eaten').data;
+}

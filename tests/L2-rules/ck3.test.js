@@ -1,7 +1,7 @@
 // L2 规则：六项属性、时限修正池、落到具体地点的小事与村中实景过客。一律通过端口发命令。
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newGame, must, refused, settle, bestFire, STOVE } from '../helpers.js';
+import { newGame, must, refused, settle, bestFire, STOVE, dine } from '../helpers.js';
 import { MAPS, walkable, farmable } from '../../src/content/maps/index.js';
 import { ATTRS, TEMPERS, LINES_OF_ORIGIN, OLD_TRAITS } from '../../src/content/traits.js';
 import { TRAITS } from '../../src/content/growth.js';
@@ -43,7 +43,7 @@ test('六项从底子 4 起，加上性情、出身线和身边风物，每项�
   });
   assert.equal(cooked.ok, true);
   const dishId = cooked.facts.find(f => f.type === 'meal.cooked').data.ids[0];
-  must(g, 'dish.eat', { id: dishId, at: STOVE });
+  dine(g, [dishId]);
   const mods = g.ask('modifiers').list;
   assert.ok(
     mods.some(m => m.id === 'good_meal' && m.left >= 2),
@@ -137,7 +137,7 @@ test('流动过客站在村里：不在跟前不能搭话端饭，走到茶摊�
   assert.match(refused(g, 'visitor.talk', { id: v.id }), /走到.*跟前再说话/);
   assert.match(refused(g, 'visitor.fulfill', { id: v.id, dish: 1 }), /走到.*跟前再说话/);
 
-  // 先在院里做份蛋炒饭装进行囊，再去樟树茶摊走到过客跟前
+  // 先在院里做份蛋炒饭端在手上，再去樟树茶摊走到过客跟前
   const meal = { items: ['rice', 'egg'], spices: [], method: 'fry', cut: null };
   const cooked = g.dispatch('cook', {
     ...meal,
@@ -146,7 +146,7 @@ test('流动过客站在村里：不在跟前不能搭话端饭，走到茶摊�
   });
   assert.equal(cooked.ok, true);
   const dishId = cooked.facts.find(f => f.type === 'meal.cooked').data.ids[0];
-  must(g, 'dish.pack', { id: dishId, at: STOVE });
+  must(g, 'dish.carry', { id: dishId, at: STOVE });
 
   must(g, 'travel.to', { to: v.map });
   const beside = { x: v.x, y: v.y + 1, dir: 'up' };

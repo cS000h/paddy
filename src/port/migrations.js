@@ -28,6 +28,15 @@ const v40Moved = (map, x, y) =>
   (map === 'yard' && (inV40Yard(x, y) || V40_YARD_TAKEN.includes(`${x},${y}`)));
 
 export const MIGRATIONS = {
+  41(state) {
+    // 饭桌：热菜端在手上、摆上屋里饭桌。旧档手上、桌上都空着；行囊里本来装着的热饭留着，照旧哪儿都能吃，
+    // 灶台上的一份不动。
+    const w = state.world;
+    w.meta.version = 42;
+    w.hands = Object.fromEntries(Object.keys(w.packs).map(id => [id, []]));
+    w.tables = Object.fromEntries(Object.keys(w.households).map(id => [id, []]));
+    return state;
+  },
   40(state) {
     // 白天能歇晌了：每人记一个「哪天歇过晌」，旧档从没歇过记起。
     const w = state.world;
@@ -345,52 +354,6 @@ export const MIGRATIONS = {
         old('yun', 'qiao', 'uphill', 8),
       ],
     };
-    return state;
-  },
-  15(state) {
-    // 人物档案（sim/plugins/persona.js）：主角开局两选给的旧特质换成性情和出身线，从成长里拿掉；
-    // 做出来的六个历练留在成长里。村民的档案照 2026-11-23 定的写进来。
-    const w = state.world;
-    w.meta.version = 16;
-    const OLD = {
-      easygoing: ['content', null],
-      handy: ['diligent', null],
-      slowwarm: ['calm', null],
-      lively: ['gregarious', null],
-      solitary: ['shy', null],
-      curious: [null, 'scholar'],
-    };
-    const PAIR = {
-      content: 'want',
-      diligent: 'work',
-      calm: 'temper',
-      gregarious: 'social',
-      shy: 'social',
-    };
-    const SKILL_OF = { scholar: 'sky', farmer: 'farm' };
-    const skillLevel = xp => [0, 4, 10, 18, 30, 45].filter(n => xp >= n).length - 1;
-    const lineLevel = lv => 1 + [2, 4, 5].filter(n => lv >= n).length;
-    const one = (tempers, line, innate = []) => ({ tempers, line, innate, coping: [], stress: 0 });
-    w.persona = {
-      hero: one([], null),
-      shi: one(['diligent', 'honest', 'stingy'], { id: 'farmer', lv: 3 }),
-      gui: one(['gregarious', 'generous', 'ambitious'], { id: 'cook', lv: 3 }, ['gourmet']),
-      aman: one(['gregarious', 'honest', 'hasty'], { id: 'peddler', lv: 2 }),
-      qiao: one(['gregarious', 'sly', 'ambitious'], { id: 'teahouse', lv: 2 }),
-      zhou: one(['calm', 'content', 'trusting'], { id: 'boatman', lv: 4 }, ['steady']),
-      yun: one(['diligent', 'shy', 'paranoid'], { id: 'herbalist', lv: 2 }),
-    };
-    for (const [id, g] of Object.entries(w.growth)) {
-      const p = (w.persona[id] ??= one([], null));
-      for (const t of g.traits.filter(t => OLD[t])) {
-        const [temper, line] = OLD[t];
-        if (line) p.line = { id: line, lv: 1 };
-        else if (!p.tempers.some(x => PAIR[x] === PAIR[temper])) p.tempers.push(temper);
-      }
-      g.traits = g.traits.filter(t => !OLD[t]);
-      if (g.origin) p.line ??= { id: 'farmer', lv: 1 };
-      if (p.line) p.line.lv = lineLevel(skillLevel(g.xp[SKILL_OF[p.line.id]] || 0));
-    }
     return state;
   },
   ...EARLY,

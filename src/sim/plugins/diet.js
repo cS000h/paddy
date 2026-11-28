@@ -109,12 +109,19 @@ export const diet = {
             lines.push(DRY_GONE);
           } else body.mood(w, d.who, DIET.dryMood, MODIFIERS.diet_dry.name);
         }
-        const fresh = !d.snack && !r.tasted.includes(d.base);
-        if (fresh) {
-          r.tasted = [...r.tasted, d.base].slice(-DIET.tasted);
-          body.mood(w, d.who, DIET.newMood, '头一回吃到' + d.dish);
-          lines.unshift(pick(NEW_DISH_LINES, w.clock.day, d.base));
-        } else if (d.times) lines.unshift(pick(TIRED_LINES[d.times], w.clock.day, d.base));
+        // 一桌几样（courses）：每样各看头一回吃到、吃腻了，一顿只说一句
+        const said = [];
+        let fresh = false;
+        for (const c of d.courses || [d]) {
+          const first = !d.snack && !r.tasted.includes(c.base);
+          fresh ||= first;
+          if (first) {
+            r.tasted = [...r.tasted, c.base].slice(-DIET.tasted);
+            body.mood(w, d.who, DIET.newMood, '头一回吃到' + c.dish);
+            said.push(pick(NEW_DISH_LINES, w.clock.day, c.base));
+          } else if (c.times) said.push(pick(TIRED_LINES[c.times], w.clock.day, c.base));
+        }
+        if (said.length) lines.unshift(said[0]);
         const v = verdict(palate(w, d.who), d.items, d.spices || []);
         if (v.liked.length) {
           body.mood(w, d.who, DIET.tasteMood, '合口：' + TASTES[v.liked[0]]);
